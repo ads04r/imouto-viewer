@@ -1,0 +1,134 @@
+<section class="content-header">
+    <h1>
+        Summary
+        <small>This Week</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li>Summary</li>
+    </ol>
+</section>
+
+<section class="content">
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-12 col-sm-6 col-md-3">
+                <div class="info-box bg-blue">
+                    <span class="info-box-icon"><i class="fa fa-comment-o"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Messages</span>
+                        <span class="info-box-number">{{ data.stats.messages }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xs-12 col-sm-6 col-md-3">
+                <div class="info-box bg-blue">
+                    <span class="info-box-icon"><i class="fa fa-camera-retro"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Photos</span>
+                        <span class="info-box-number">{{ data.stats.photos }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xs-12 col-sm-6 col-md-3">
+                <div class="info-box bg-blue">
+                    <span class="info-box-icon"><i class="fa fa-road"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Steps</span>
+                        <span class="info-box-number">{{ data.stats.steps }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xs-12 col-sm-6 col-md-3">
+                <div class="info-box bg-blue">
+                    <span class="info-box-icon">
+                        <i class="fa fa-calendar"></i>
+                    </span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">
+                            Events</span>
+                        <span class="info-box-number">64,431</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12 col-sm-6">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Steps</h3>
+                    </div>
+                    <div class="box-body">
+                        <div class="chart">
+                            <canvas class="bar-chart" style="height: 230px" data-data="{{ data.steps }}"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Sleep</h3>
+                    </div>
+                    <div class="box-body">
+                        <div class="chart">
+                            <canvas class="bar-chart" style="height: 230px" data-legend="[&quot;Restless sleep&quot;,&quot;Deep sleep&quot;]" data-data="{{ data.sleep }}"></canvas>
+                        </div>                        
+                    </div>
+                </div>
+            </div>
+            <div class="col-xs-12 col-sm-6">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Longest Walks</h3>
+                    </div>
+                    <div class="box-body">
+                        <p>
+                            <ul class="products-list product-list-in-box">
+
+{% for walk in data.walks %}
+
+                                <li class="item">
+                                    <div class="product-info">
+                                        {{ walk.friendly_time }}
+                                        <span class="product-description">{{ walk.friendly_length }}</span>
+                                    </div>
+                                </li>
+
+{% endfor %}
+                                
+                            </ul>
+                        </p>
+                    </div>
+                </div>
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Top Contacts</h3>
+                    </div>
+                    <div class="box-body">
+                        <p>
+                            <ul class="products-list product-list-in-box">
+                                
+{% for item in data.contact %}
+                                
+                                <li class="item">
+                                    <div class="product-img">
+                                        {% if item.person.image %}<img src="people/{{ item.person.uid }}_thumb.jpg"/>{% endif %}
+                                    </div>
+                                    <div class="product-info">
+                                        <a class="product-title personlink" href="#person_{{ item.person.uid }}">
+                                            {{ item.person.full_name }}</a>
+                                        <span class="product-description">
+                                            {{ item.messages }} messages sent/received</span>
+                                    </div>
+                                </li>
+                                
+{% endfor %}
+                                
+                            </ul>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</section>

@@ -1,0 +1,44 @@
+.content-wrapper
+{
+    background-image: url("../graphics/fuji.jpg");
+    background-size: cover;
+    background-position: top center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+.content-header
+{
+    background: rgba(255, 255, 255, 0.5) !important;
+    padding-top: 7.5px !important;
+    padding-bottom: 7.5px !important;
+}
+
+.content-header .breadcrumb { top: 7.5px !important; }
+
+.main-footer
+{
+    background: #222d32 !important;
+    color: #FFFFFF !important;
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
+}
+
+#places_map, #journey-map
+{
+    height: 20em !important;
+    width: 100%;
+}
+
+
+.box-image span
+{
+    display: inline-block;
+    background-size: cover;
+    background-position: top center;
+    background-repeat: no-repeat;
+    height: 20em !important;
+    width: 100%;
+}
+
+.eventmap { min-height: 250px; }

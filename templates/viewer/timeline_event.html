@@ -1,0 +1,44 @@
+
+<!-- timeline time label -->
+
+    <li class="time-label">
+        <span class="bg-blue">{{ data.label }}</span>
+    </li>
+
+<!-- /.timeline-label -->
+    
+    {% for event in data.events %}
+
+    <!-- timeline item -->
+    <li>
+
+        {% if event.type == 'journey' %}<i class="fa fa-road bg-green"></i>{% endif %}
+        {% if event.type == 'photo' %}<i class="fa fa-camera bg-orange"></i>{% endif %}
+        
+        <div class="timeline-item">
+            <span class="time"><i class="fa fa-clock-o"></i> {{ event.start_time|date:"g:ia" }}</span>
+            
+            <h3 class="timeline-header no-border">{{ event }}</h3>
+            <div class="timeline-body">
+            {% if event.description != '' %}<p>{{ event.description }}</p>{% endif %}
+            {% if event.geo != '' %}<div id="map{{ event.pk }}" class="eventmap" data-geojson="{{ event.geo }}"></div>{% endif %}
+            <div>
+                {% for photo in event.photos %}{% if forloop.counter < 10 %}<img src="photo/{{ photo.pk }}_thumb.jpg" width="100" height="100">{% endif %}{% endfor %}
+            </div>
+            </div>
+            <div class="timeline-footer">
+                <a class="btn btn-primary btn-xs eventlink" href="#event_{{ event.pk }}">Read more</a>
+            </div>
+        </div>
+    </li>
+    <!-- END timeline item -->
+    
+    {% endfor %}
+    
+    <ul class="timeline timeline-inverse" id="imouto-timeline">
+        <li>
+            <i class="fa fa-clock-o bg-gray" id="next-load" data-next="{{ data.next }}"></i>
+        </li>
+    </ul>
+
+
