@@ -1,0 +1,139 @@
+<section class="content-header">
+    <h1>
+        Places
+    </h1>
+    <ol class="breadcrumb">
+        <li>Places</li>
+    </ol>
+</section>
+
+<section class="content">
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12">
+
+                <div class="box box-primary">
+                    <div class="box-body">
+                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#admin_places_add" aria-hidden="true">Add New Place</button>
+                        <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#admin_places_import" aria-hidden="true">Import Place</button>
+                    </div>
+                </div>
+
+                <div class="box box-primary">
+                    <div class="box-body">
+                        <p>
+                            <ul class="products-list product-list-in-box">
+                                
+{% for place in data %}
+{% if place.num_events > 0 %}
+                                
+                                <li class="item">
+                                    <div class="product-img">
+                                        {% if place.image %}<img src="places/{{ place.uid }}_thumb.jpg"/>{% endif %}
+                                    </div>
+                                    <div class="product-info">
+                                        <a class="product-title personlink" href="#place_{{ place.uid }}">
+                                            {{ place }}</a>
+                                        <span class="product-description">
+                                            {{ place.address }}</span>
+                                        <span class="product-description">
+                                            {{ place.num_events }} events</span>
+                                    </div>
+                                </li>
+                                
+{% endif %}
+{% endfor %}
+                                
+                            </ul>
+                        </p>
+                    </div>
+                </div>
+            
+            </div>
+        </div>
+    </div>
+
+</section>
+
+<div class="modal fade nav-tabs-custom" id="admin_places_add" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+                <form id="place-add" action="places.html" method="POST">{% csrf_token %}
+
+                    <div role="tabpanel">
+                        <ul class="nav nav-tabs">
+                            <li class="active"><a href="#label" data-toggle="tab">Label</a></li>
+                            <li><a href="#loc" data-toggle="tab">Location</a></li>
+                            <li><a href="#link" data-toggle="tab">Links</a></li>
+                        </ul>
+                    </div>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="label">
+
+                              <table class="table table-hover">
+{% for field in form %}
+{% if forloop.counter < 6 %}
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                </tr>
+{% endif %}
+{% endfor %}
+                              </table>
+                        
+                        </div>
+                        <div class="tab-pane" id="loc">
+
+                              <table class="table table-hover">
+{% for field in form %}
+{% if forloop.counter == 7 %}
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                </tr>
+{% endif %}
+{% if forloop.counter == 8 %}
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                </tr>
+{% endif %}
+{% endfor %}
+                              </table>
+
+                        </div>
+                        <div class="tab-pane" id="link">
+
+                              <table class="table table-hover">
+{% for field in form %}
+{% if forloop.counter == 6 %}
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                </tr>
+{% endif %}
+{% if forloop.counter > 8 %}
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                </tr>
+{% endif %}
+{% endfor %}
+                              </table>
+
+                        </div>
+                    </div>
+
+                </form>
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary save-form-button">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

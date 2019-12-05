@@ -17,15 +17,32 @@ def generate_dashboard():
         except:
             person = None
         if(not(person is None)):
-            item = {'person': person, 'messages': int(i['messages'])}
+            item = {'person': person, 'address': address, 'messages': int(i['messages'])}
             contactdata.append(item)
+
+    locationdata = []
+    last_event = Event.objects.all().order_by('-start_time')[0].start_time
+    for event in Event.objects.filter(start_time__gte=(last_event - datetime.timedelta(days=7))):
+        location = event.location
+        if location in locationdata:
+            continue
+        if location is None:
+            continue
+        locationdata.append(location)
 
     stats['photos'] = 0
     try:
-        last_photo = Photo.objects.all().order_by('-date')[0].end_time
-        stats['photos'] = len(Photo.objects.filter(date__gte=(last_photo - datetime.timedelta(days=7))))
+        last_photo = Photo.objects.all().order_by('-time')[0].time
+        stats['photos'] = len(Photo.objects.filter(time__gte=(last_photo - datetime.timedelta(days=7))))
     except:
         stats['photos'] = 0
+
+    stats['events'] = 0
+    try:
+        last_event = Event.objects.all().order_by('-start_time')[0].start_time
+        stats['events'] = len(Event.objects.filter(start_time__gte=(last_event - datetime.timedelta(days=7))))
+    except:
+        stats['events'] = 0
 
     last_record = DataReading.objects.all().order_by('-end_time')[0].end_time
     
@@ -83,5 +100,5 @@ def generate_dashboard():
     walkdata = sorted(walkdata, key=lambda item: item['length'], reverse=True)
     walkdata = walkdata[0:5]
     
-    return {'stats': stats, 'steps': json.dumps(stepdata), 'sleep': json.dumps(sleepdata), 'contact': contactdata, 'walks': walkdata}
+    return {'stats': stats, 'steps': json.dumps(stepdata), 'sleep': json.dumps(sleepdata), 'contact': contactdata, 'places': locationdata, 'walks': walkdata}
 

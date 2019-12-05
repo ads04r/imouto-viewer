@@ -11,25 +11,27 @@
 {% block extra_head %}
     <link rel="stylesheet" href="{% static "viewer/script/chart/Chart.css" %}" />
     <link rel="stylesheet" href="{% static "viewer/script/leaflet/leaflet.css" %}" />
+    <link rel="stylesheet" href="{% static "viewer/script/fullcalendar/fullcalendar.min.css" %}" />
     <link rel="stylesheet" href="{% static "viewer/styles/imouto.css" %}" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ionicons/2.0.1/css/ionicons.min.css" />
 {% endblock %}
 {% block javascript %}
 
   {{ block.super }}
   <script src="{% static "viewer/script/chart/Chart.bundle.js" %}"></script>
   <script src="{% static "viewer/script/leaflet/leaflet.js" %}"></script>
+  <script src="{% static "viewer/script/moment/moment.min.js" %}"></script>
+  <script src="{% static "viewer/script/fullcalendar/fullcalendar.min.js" %}"></script>
   <script src="{% static "viewer/script/imouto.js" %}"></script>
 
 {% endblock %}
 {% block content_header %}
 <section class="content-header">
     <h1>
-        Dashboard
+        Summary
     </h1>
     {% block breadcrumbs %}
     <ol class="breadcrumb">
-        <li>Dashboard</li>
+        <li>Summary</li>
     </ol>
     {% endblock %}
 </section>

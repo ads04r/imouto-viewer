@@ -42,3 +42,26 @@
 }
 
 .eventmap { min-height: 250px; }
+
+.message-outgoing { padding-left: 3em; }
+.message-incoming { padding-right: 3em; }
+
+.box-event-banner
+{
+    background-size: cover;
+}
+
+.box-event-banner .box-body
+{
+    min-height: 250px !important;
+    overflow-y: hide;
+    color: #FFFFFF;
+    text-shadow: 0 0 0.2em #000000;
+}
+
+.box-event-banner .box-body .bottom-cling
+{
+    padding-top: 100px;
+    position: absolute;
+    bottom: 0;
+}

@@ -1,0 +1,48 @@
+<section class="content-header">
+    <h1>
+        People
+    </h1>
+    <ol class="breadcrumb">
+        <li>People</li>
+    </ol>
+</section>
+
+<section class="content">
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12">
+
+                <div class="box box-primary">
+                    <div class="box-body">
+                        <p>
+                            <ul class="products-list product-list-in-box">
+                                
+{% for person in data %}
+{% if person.num_events > 0 %}
+                                
+                                <li class="item">
+                                    <div class="product-img">
+                                        {% if person.image %}<img src="people/{{ person.uid }}_thumb.jpg"/>{% endif %}
+                                    </div>
+                                    <div class="product-info">
+                                        <a class="product-title personlink" href="#person_{{ person.uid }}">
+                                            {{ person.full_name }}</a>
+                                        <span class="product-description">
+                                            {{ person.num_events }} events</span>
+                                    </div>
+                                </li>
+                                
+{% endif %}
+{% endfor %}
+                                
+                            </ul>
+                        </p>
+                    </div>
+                </div>
+            
+            </div>
+        </div>
+    </div>
+
+</section>

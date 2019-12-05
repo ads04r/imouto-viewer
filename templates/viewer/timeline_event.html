@@ -14,17 +14,20 @@
 
         {% if event.type == 'journey' %}<i class="fa fa-road bg-green"></i>{% endif %}
         {% if event.type == 'photo' %}<i class="fa fa-camera bg-orange"></i>{% endif %}
+        {% if event.type == 'loc_prox' %}<i class="fa fa-map-marker bg-blue"></i>{% endif %}
+        {% if event.type == 'event' %}<i class="fa fa-calendar bg-white"></i>{% endif %}
+        {% if event.type == 'sleepover' %}<i class="fa fa-moon-o bg-black"></i>{% endif %}
         
         <div class="timeline-item">
             <span class="time"><i class="fa fa-clock-o"></i> {{ event.start_time|date:"g:ia" }}</span>
             
             <h3 class="timeline-header no-border">{{ event }}</h3>
             <div class="timeline-body">
-            {% if event.description != '' %}<p>{{ event.description }}</p>{% endif %}
             {% if event.geo != '' %}<div id="map{{ event.pk }}" class="eventmap" data-geojson="{{ event.geo }}"></div>{% endif %}
             <div>
-                {% for photo in event.photos %}{% if forloop.counter < 10 %}<img src="photo/{{ photo.pk }}_thumb.jpg" width="100" height="100">{% endif %}{% endfor %}
+                {% for photo in event.photos %}{% if forloop.counter <= 5 %}<img src="photo/{{ photo.pk }}_thumb.jpg" width="100" height="100">{% endif %}{% endfor %}
             </div>
+            {% if event.description != '' %}<p>{{ event.description }}</p>{% endif %}
             </div>
             <div class="timeline-footer">
                 <a class="btn btn-primary btn-xs eventlink" href="#event_{{ event.pk }}">Read more</a>

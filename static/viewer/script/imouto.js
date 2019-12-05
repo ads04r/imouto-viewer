@@ -27,12 +27,55 @@ function reportsScreen()
 
 function eventsScreen()
 {
-    $(".content-wrapper").load("./events.html", function(){ });
+    $(".content-wrapper").load("./events.html", function()
+    {
+
+        var date = new Date();
+        var d = date.getDate(),
+            m = date.getMonth(),
+            y = date.getFullYear();
+        $('#calendar').fullCalendar({
+           header: {
+               left: 'prev,next today',
+               center: 'title',
+               right: 'month,agendaWeek,agendaDay'
+           },
+           buttonText: {
+               today: 'today',
+               month: 'month',
+               week: 'week',
+               day: 'day'
+           },
+           events: {
+               url: 'events.json'
+           },
+           editable: false,
+           droppable: false, // this allows things to be dropped onto the calendar !!!
+
+        });
+
+    });
+}
+
+function peopleScreen()
+{
+    $(".content-wrapper").load("./people.html", function(){ });
+}
+
+function placesScreen(id)
+{
+    $(".content-wrapper").load("./places.html", function(){
+        $(".save-form-button").on('click', function()
+        {
+            $("#place-add").submit();
+            return true;
+        });
+    });
 }
 
 function placeScreen(id)
 {
-    $(".content-wrapper").load("./places/" + id + ".html", function(){ });
+    $(".content-wrapper").load("./places/" + id + ".html", function(){ makeMap(); });
 }
 
 function initialiseGraphics()
@@ -77,15 +120,23 @@ function loadTimelineSegment()
         var container = elem.parent();
         elem.remove();
         container.append(result);
+
+        makeMap();
         
-        $('.eventmap').each(function()
-        {
-            var id = $(this).attr('id');
-            var data = $(this).data('geojson');
-            
-            $(this).data('geojson', '');
-            if(data == '') { return true; }
-            
+        if($('body').height() <= $(window).height()) { loadTimelineSegment(); }
+    });
+}
+
+function makeMap()
+{
+    $('.eventmap').each(function()
+    {
+        var id = $(this).attr('id');
+        var data = $(this).data('geojson');
+        
+        $(this).data('geojson', '');
+        if(data == '') { return true; }
+                    
             var bb = L.latLngBounds(L.latLng(data.bbox[1], data.bbox[0]), L.latLng(data.bbox[3], data.bbox[2]));
             var map = L.map(id);
             L.geoJSON(data).addTo(map);
@@ -94,9 +145,6 @@ function loadTimelineSegment()
                 maxZoom: 18
             }).addTo(map);
             map.fitBounds(bb);
-        });
-        
-        if($('body').height() <= $(window).height()) { loadTimelineSegment(); }
     });
 }
 
@@ -218,45 +266,9 @@ function eventScreen(id)
 {
     $(".content-wrapper").load("./events/" + id + ".html", function()
     {
-        var mapdiv = $("#journey-map");
-        if(mapdiv.length > 0)
-        {
-            
-            var mapid = mapdiv.attr('id');
-            var eventid = mapdiv.data('event-id');
-            var pinlis = mapdiv.find('span');
-            var url = './events/' + eventid + '.json';
-            for(var i = 0; i < pinlis.length; i++)
-            {
-                pins[i] = pinlis[i].dataset;
-            }
-                    mapdiv.html("");
-                    map = L.map(mapid, {
-                        center: [50.93540, -1.39638],
-                        zoom: 13
-                    });
-                    L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/" target="_top">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/" target="_top">CC-BY-SA</a>',
-                        maxZoom: 20
-                    }).addTo(map);
-                    $.ajax({
-                        url: url,
-                        dataType: 'json',
-                        success: function(data) {
-                            var polylinedesc = data['journey'];
-                            var c = polylinedesc.length;
-                            var i = 0;
-                            latlngs = [];
-                            for(i = 0; i < c; i++)
-                            {
-                                var polyline = L.polyline(polylinedesc[i], {color: '#0000FF'}).addTo(map);
-                                latlngs.push(polyline);
-                            }
-                                           map.fitBounds(polylinedesc);
-                        }
-                    });
-                    
-        }
+        
+        makeMap();
+
     });
 }
 
@@ -264,12 +276,18 @@ function eventScreen(id)
 function pageRefresh()
 {
     var page = window.location.hash.replace('#', '');
+    var loading = '<section class="content"><div class="container-fluid"><div class="row"><div class="col-xs-1 col-sm-3 col-md-5"></div><div class="col-xs-10 col-sm-6 col-md-2"><div class="box box-primary"><div class="box-body text-center"><i class="fa fa-spin fa-refresh"></i>&nbsp;Loading</div></div></div></div></div></section>';
+    
+    $(".content-wrapper").html(loading);
     
     if(page == '') { homeScreen(); return true; }
     if(page == 'timeline') { timelineScreen(); return true; }
-    if(page == 'events') { eventsScreen(); return true; }
     if(page == 'reports') { reportsScreen(); return true; }
-                    
+
+    if(page == 'events') { eventsScreen(); return true; }
+    if(page == 'people') { peopleScreen(); return true; }
+    if(page == 'places') { placesScreen(); return true; }
+                                        
     if(page.startsWith('event_')) { eventScreen(page.replace('event_', '')); }
     if(page.startsWith('place_')) { placeScreen(page.replace('place_', '')); }
                     

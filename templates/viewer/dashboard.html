@@ -47,7 +47,7 @@
                     <div class="info-box-content">
                         <span class="info-box-text">
                             Events</span>
-                        <span class="info-box-number">64,431</span>
+                        <span class="info-box-number">{{ data.stats.events }}</span>
                     </div>
                 </div>
             </div>
@@ -74,6 +74,35 @@
                         </div>                        
                     </div>
                 </div>
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Places Visited</h3>
+                    </div>
+                    <div class="box-body">
+                        <p>
+                            <ul class="products-list product-list-in-box">
+                                
+{% for item in data.places %}
+                                
+                                <li class="item">
+                                    <div class="product-img">
+                                        
+                                    </div>
+                                    <div class="product-info">
+                                        <a class="product-title placelink" href="#place_{{ item.uid }}">
+                                            {{ item }}</a>
+                                        <span class="product-description">
+                                            {{ item.address }}</span>
+                                    </div>
+                                </li>
+                                
+{% endfor %}
+                                
+                            </ul>
+                        </p>
+                    </div>
+                </div>
+
             </div>
             <div class="col-xs-12 col-sm-6">
                 <div class="box box-primary">
@@ -81,22 +110,21 @@
                         <h3 class="box-title">Longest Walks</h3>
                     </div>
                     <div class="box-body">
-                        <p>
-                            <ul class="products-list product-list-in-box">
+                        <div class="table-responsive">
+                            <table class="table no-margin">
+                                <tbody>
 
 {% for walk in data.walks %}
 
-                                <li class="item">
-                                    <div class="product-info">
-                                        {{ walk.friendly_time }}
-                                        <span class="product-description">{{ walk.friendly_length }}</span>
-                                    </div>
-                                </li>
+                                    <tr>
+                                        <td>{{ walk.friendly_time }}<br><small class="muted">{{ walk.friendly_length }}</small></a></td>
+                                    </tr>
 
 {% endfor %}
-                                
-                            </ul>
-                        </p>
+
+                                </tbody>
+                            </table>
+                        </div>                                
                     </div>
                 </div>
                 <div class="box box-primary">
