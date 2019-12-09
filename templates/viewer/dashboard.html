@@ -79,14 +79,13 @@
                         <h3 class="box-title">Places Visited</h3>
                     </div>
                     <div class="box-body">
-                        <p>
                             <ul class="products-list product-list-in-box">
                                 
 {% for item in data.places %}
                                 
                                 <li class="item">
                                     <div class="product-img">
-                                        
+                                        {% if item.image %}<img src="places/{{ item.uid }}_thumb.jpg"/>{% endif %}
                                     </div>
                                     <div class="product-info">
                                         <a class="product-title placelink" href="#place_{{ item.uid }}">
@@ -99,7 +98,6 @@
 {% endfor %}
                                 
                             </ul>
-                        </p>
                     </div>
                 </div>
 
@@ -132,7 +130,6 @@
                         <h3 class="box-title">Top Contacts</h3>
                     </div>
                     <div class="box-body">
-                        <p>
                             <ul class="products-list product-list-in-box">
                                 
 {% for item in data.contact %}
@@ -152,7 +149,6 @@
 {% endfor %}
                                 
                             </ul>
-                        </p>
                     </div>
                 </div>
             </div>

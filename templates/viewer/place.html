@@ -1,3 +1,5 @@
+{% load static %}
+
 <section class="content-header">
     <h1>
         {{ data.label }}
@@ -45,7 +47,7 @@
 {% for item in data.people %}
                         
                             <li>
-                                {% if item.person.image %}<img src="people/{{ item.person.uid }}_thumb.jpg"/>{% endif %}
+                                {% if item.image %}<img src="people/{{ item.uid }}_thumb.jpg"/>{% else %}<img src="{% static "viewer/graphics/unknown_person.jpg" %}">{% endif %}
                                 <a class="users-list-name personlink" href="#person_{{ item.uid }}">
                                     {{ item.name }}</a>
                             </li>

@@ -90,6 +90,16 @@ class Person(models.Model):
         if label == '':
             label = self.nickname
         return label
+    def places(self):
+        ret = []
+        for event in Event.objects.filter(people=self):
+            loc = event.location
+            if loc is None:
+                continue
+            if loc in ret:
+                continue
+            ret.append(loc)
+        return ret
     def photo(self):
         im = Image.open(self.image.path)
         return im
@@ -118,6 +128,16 @@ class Person(models.Model):
                 continue
             ret.append(value)
         return ret
+    def get_stats(self):
+        ret = {'events': 0, 'photos': 0, 'places': 0}
+        ret['events'] = Event.objects.filter(people=self).count()
+        ret['photos'] = Photo.objects.filter(people=self).count()
+        ret['places'] = len(self.places())
+        #try:
+        ret['first_met'] = Event.objects.filter(people=self).order_by('start_time')[0].start_time
+        #except:
+        #    ret['first_met'] = None
+        return ret
     def __str__(self):
         return self.name()
     class Meta:
@@ -138,6 +158,22 @@ class Photo(models.Model):
     people = models.ManyToManyField(Person, through='PersonPhoto')
     location = models.ForeignKey(Location, null=True, blank=True, on_delete=models.CASCADE, related_name="photos")
     cached_thumbnail = models.ImageField(blank=True, null=True, upload_to=photo_thumbnail_upload_location)
+    def image(self):
+        im = Image.open(self.file.path)
+        if hasattr(im, '_getexif'):
+            orientation = 0x0112
+            exif = im._getexif()
+            if exif is not None:
+                if orientation in exif:
+                    orientation = exif[orientation]
+                    rotations = {
+                        3: Image.ROTATE_180,
+                        6: Image.ROTATE_270,
+                        8: Image.ROTATE_90
+                    }
+                    if orientation in rotations:
+                        im = im.transpose(rotations[orientation])
+        return im
     def thumbnail(self, size=200):
         if self.cached_thumbnail:
             im = Image.open(self.cached_thumbnail)
@@ -319,7 +355,7 @@ class Event(models.Model):
         return sorted(ret, key=lambda item: item[0].time)
     def music(self):
         ret = []
-        for event in MediaEvent.objects.filter(time__gte=self.start_time, time__lte=self.end_time):
+        for event in MediaEvent.objects.filter(time__gte=self.start_time, time__lte=self.end_time).order_by('time'):
             if event.media.type=='music':
                 ret.append(event)
         return ret
@@ -331,7 +367,7 @@ class Event(models.Model):
                     ret['steps'] = ret['steps'] + item.value
                 else:
                     ret['steps'] = item.value
-            if item.type=='pebble-app-activity' & item.value <= 2:
+            if (item.type=='pebble-app-activity') & (item.value <= 2):
                 if not('sleep' in ret):
                     ret['sleep'] = []
                 ret['sleep'].append(item)

@@ -20,4 +20,5 @@ urlpatterns = [
     path('people/<uid>_thumb.jpg', views.person_thumbnail),
     path('people/<uid>.jpg', views.person_photo),
     path('photo/<uid>_thumb.jpg', views.photo_thumbnail),
+    path('photo/<uid>.jpg', views.photo_full),
 ]

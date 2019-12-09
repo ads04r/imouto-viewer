@@ -62,6 +62,11 @@ function peopleScreen()
     $(".content-wrapper").load("./people.html", function(){ });
 }
 
+function personScreen(id)
+{
+    $(".content-wrapper").load("./people/" + id + ".html", function(){ });
+}
+
 function placesScreen(id)
 {
     $(".content-wrapper").load("./places.html", function(){
@@ -290,7 +295,8 @@ function pageRefresh()
                                         
     if(page.startsWith('event_')) { eventScreen(page.replace('event_', '')); }
     if(page.startsWith('place_')) { placeScreen(page.replace('place_', '')); }
-                    
+    if(page.startsWith('person_')) { personScreen(page.replace('person_', '')); }
+                            
     if(page.startsWith('events_'))
     {
         var ds = page.replace('events_', '');

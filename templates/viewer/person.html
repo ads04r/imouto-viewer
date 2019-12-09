@@ -1,0 +1,80 @@
+<section class="content-header">
+    <h1>
+        {{ data.full_name }}
+        <small>Person</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="#people">People</a></li>
+        <li>{{ data.full_name }}</li>
+    </ol>
+</section>
+
+<section class="content">
+
+    <div class="row">
+        <div class="col-xs-12 col-sm-6 col-md-3">
+        
+            <div class="box box-primary">
+                <div class="box-body box-profile">
+                    {% if data.image %}<img class="profile-user-img img-responsive img-circle" src="people/{{ data.uid }}_thumb.jpg" alt="Profile picture">{% endif %}
+                    <h3 class="profile-username text-center">{{ data.full_name }}</h3>
+                    <p class="text-muted text-center">Person</p>
+                    <ul class="list-group list-group-unbordered">
+                        <li class="list-group-item"><b>Events</b> <span class="pull-right">{{ data.get_stats.events }}</span></li>
+                        <li class="list-group-item"><b>Places met</b> <span class="pull-right">{{ data.get_stats.places }}</span></li>
+                        <li class="list-group-item"><b>Photos</b> <span class="pull-right">{{ data.get_stats.photos }}</span></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">About</h3>
+                </div>
+                <div class="box-body">
+                
+                    <strong><i class="fa fa-handshake-o margin-r-5"></i> First met</strong>
+                    <p class="text-muted">{{ data.get_stats.first_met|date:"F Y" }}</p>
+                    
+                    <hr>
+                    
+                    <strong><i class="fa fa-fish margin-r-5"></i> Fish</strong>
+                    <p class="text-muted">Many</p>
+
+                    
+                </div>
+            </div>
+
+        </div>
+        <div class="col-xs-12 col-sm-6 col-md-9">
+
+            <div class="nav-tabs-custom">
+                <ul class="nav nav-tabs">
+                    <li class="active"><a href="#profile-tab-events" data-toggle="tab">Events</a></li>
+                    <li><a href="#profile-tab-places" data-toggle="tab">Places</a></li>
+                    <li><a href="#profile-tab-photos" data-toggle="tab">Photos</a></li>
+                    <li><a href="#profile-tab-properties" data-toggle="tab">Properties</a></li>
+                </ul>
+                <div class="tab-content">
+                    <div class="active tab-pane" id="profile-tab-events">
+                    </div>
+                    <div class="tab-pane" id="profile-tab-places">
+
+{% for place in data.places %}
+
+                        <p>{{ place }}</p>
+
+{% endfor %}
+                    
+                    </div>
+                    <div class="tab-pane" id="profile-tab-photos">
+                    </div>
+                    <div class="tab-pane" id="profile-tab-properties">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</section>

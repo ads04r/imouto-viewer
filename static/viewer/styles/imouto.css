@@ -65,3 +65,11 @@
     position: absolute;
     bottom: 0;
 }
+
+.timeline-people-row
+{
+    margin-top: 0.5em;
+    padding: 0.5em;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+}

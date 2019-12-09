@@ -1,3 +1,4 @@
+{% load static %}
 
 <!-- timeline time label -->
 
@@ -28,6 +29,20 @@
                 {% for photo in event.photos %}{% if forloop.counter <= 5 %}<img src="photo/{{ photo.pk }}_thumb.jpg" width="100" height="100">{% endif %}{% endfor %}
             </div>
             {% if event.description != '' %}<p>{{ event.description }}</p>{% endif %}
+            {% if event.people.count > 0 %}
+            <div class="timeline-people-row">
+            {% for person in event.people.all %}
+                {% if person.image %}
+                <a href="#person_{{ person.uid }}"><img class="img-circle" src="people/{{ person.uid }}_thumb.jpg" width="50" height="50" alt="{{ person.full_name }}"></a>
+                {% endif %}
+            {% endfor %}
+            {% for person in event.people.all %}
+                {% if person.image == None %}
+                <a href="#person_{{ person.uid }}"><img class="img-circle" src="{% static "viewer/graphics/unknown_person.jpg" %}" width="50" height="50" alt="{{ person.full_name }}"></a>
+                {% endif %}
+            {% endfor %}
+            </div>
+            {% endif %}
             </div>
             <div class="timeline-footer">
                 <a class="btn btn-primary btn-xs eventlink" href="#event_{{ event.pk }}">Read more</a>

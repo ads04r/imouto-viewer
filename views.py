@@ -40,7 +40,10 @@ def reports(request):
     return render(request, 'viewer/reports.html', context)
 
 def events(request):
-    data = generate_dashboard()
+    data = {}
+    data['event'] = Event.objects.filter(type='event').order_by('-start_time')[0:10]
+    data['journey'] = Event.objects.filter(type='journey').order_by('-start_time')[0:10]
+    data['photo'] = Event.objects.filter(type='photo').order_by('-start_time')[0:10]
     context = {'type':'view', 'data':data}
     return render(request, 'viewer/calendar.html', context)
 
@@ -120,6 +123,13 @@ def person_photo(request, uid):
 def place_photo(request, uid):
     data = get_object_or_404(Location, uid=uid)
     im = data.photo()
+    response = HttpResponse(content_type='image/jpeg')
+    im.save(response, "JPEG")
+    return response
+
+def photo_full(request, uid):
+    data = get_object_or_404(Photo, pk=uid)
+    im = data.image()
     response = HttpResponse(content_type='image/jpeg')
     im.save(response, "JPEG")
     return response

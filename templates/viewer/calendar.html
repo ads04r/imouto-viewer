@@ -23,6 +23,55 @@
                 </div>
             
             </div>
+            <div class="col-xs-12 col-sm-6 col-md-3">
+
+                <div class="nav-tabs-custom">
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a href="#tab-event-event" data-toggle="tab"><i class="fa fa-calendar"></i></a></li>
+                        <li><a href="#tab-event-photo" data-toggle="tab"><i class="fa fa-camera-retro"></i></a></li>
+                        <li><a href="#tab-event-journey" data-toggle="tab"><i class="fa fa-road"></i></a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="active tab-pane" id="tab-event-event">
+
+{% for event in data.event %}
+
+                            <div class="users-list-name">
+                                <p><a href="#event_{{ event.id }}">{{ event.caption }}</a><br/>
+                                <small>{{ event.start_time }}</small></p>
+                            </div>
+
+{% endfor %}
+
+                        </div>
+                        <div class="tab-pane" id="tab-event-photo">
+
+{% for event in data.photo %}
+
+                            <div class="users-list-name">
+                                <p><a href="#event_{{ event.id }}">{{ event.caption }}</a><br/>
+                                <small>{{ event.start_time }}</small></p>
+                            </div>
+
+{% endfor %}
+
+                        </div>
+                        <div class="tab-pane" id="tab-event-journey">
+
+{% for event in data.journey %}
+
+                            <div class="users-list-name">
+                                <p><a href="#event_{{ event.id }}">{{ event.caption }}</a><br/>
+                                <small>{{ event.start_time }}</small></p>
+                            </div>
+
+{% endfor %}
+
+                        </div>
+                    </div>
+                </div>
+            
+            </div>
         </div>
     </div>
 

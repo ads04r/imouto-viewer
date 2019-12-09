@@ -1,6 +1,17 @@
 {% extends 'adminlte/lib/_main_header.html' %}
 
-{% block header_dropdowns %}{% endblock header_dropdowns %}
+{% block header_dropdowns %}
+
+<li class="dropdown">
+    <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="fa fa-search"></i></a>
+    <ul class="dropdown-menu">
+        <li class="input-group">
+            <input type="text" name="q" class="form-control" placeholder="Search...">
+        </li>
+    </ul>
+</li>
+
+{% endblock header_dropdowns %}
 
 {% block logo %}
 <a href="{% block logo_href %}/viewer{% endblock %}" class="logo">
