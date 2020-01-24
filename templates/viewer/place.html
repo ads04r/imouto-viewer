@@ -47,9 +47,9 @@
 {% for item in data.people %}
                         
                             <li>
-                                {% if item.image %}<img src="people/{{ item.uid }}_thumb.jpg"/>{% else %}<img src="{% static "viewer/graphics/unknown_person.jpg" %}">{% endif %}
+                                {% if item.image %}<img class="profile-user-img img-responsive img-circle" src="people/{{ item.uid }}_thumb.jpg"/>{% else %}<img class="profile-user-img img-responsive img-circle" src="{% static "viewer/graphics/unknown_person.jpg" %}">{% endif %}
                                 <a class="users-list-name personlink" href="#person_{{ item.uid }}">
-                                    {{ item.name }}</a>
+                                    {{ item.full_name }}</a>
                             </li>
 
 {% endfor %}

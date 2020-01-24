@@ -14,12 +14,31 @@
         <div class="row">
             <div class="col-xs-12 col-sm-6 col-md-9">
 
-                <div class="box box-primary">
-                    <div class="box-body">
-                        
-                        <div id="calendar"></div>
+                <div class="nav-tabs-custom">
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a href="#tab-calendar-all" data-toggle="tab">Calendar</a></li>
+                        <li><a href="#tab-calendar-event" data-toggle="tab">Life Events</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="active tab-pane" id="tab-calendar-all">
 
+                            <div id="calendar"></div>
+
+                        </div>
+                        <div class="tab-pane" id="tab-calendar-event">
+
+{% for event in data.life %}
+
+                            <div class="users-list-name">
+                                <p><a href="#event_{{ event.id }}">{{ event.caption }}</a><br/>
+                                <small>{{ event.start_time }}</small></p>
+                            </div>
+
+{% endfor %}
+                        
+                        </div>
                     </div>
+
                 </div>
             
             </div>

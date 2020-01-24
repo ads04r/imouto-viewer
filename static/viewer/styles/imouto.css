@@ -73,3 +73,15 @@
     background-color: rgba(0, 0, 0, 0.1);
     border-radius: 3px;
 }
+
+.timeline-item .timeline-gallery img
+{
+    margin-top: 5px;
+    margin-right: 5px;
+    border: solid 1px #000000;
+}
+
+.post .user-block span.no-image
+{
+    margin-left: 0px !important;
+}

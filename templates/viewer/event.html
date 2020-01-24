@@ -47,6 +47,21 @@
                     </div>
                 </div>
 {% endif %}
+
+{% if data.health.heart != None %}
+
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Heart Rate</h3>
+                    </div>
+                    <div class="box-body">
+                        <div class="chart">
+                            <canvas class="line-chart" style="height: 160px" data-data="{{ data.health.heart }}"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+{% endif %}
             
 {% if data.people.all.count > 0 %}
 
@@ -61,9 +76,9 @@
 {% for item in data.people.all %}
                         
                             <li>
-                                {% if item.image %}<img src="people/{{ item.uid }}_thumb.jpg"/>{% else %}<img src="{% static "viewer/graphics/unknown_person.jpg" %}">{% endif %}
+                                {% if item.image %}<img class="profile-user-img img-responsive img-circle" src="people/{{ item.uid }}_thumb.jpg"/>{% else %}<img class="profile-user-img img-responsive img-circle" src="{% static "viewer/graphics/unknown_person.jpg" %}">{% endif %}
                                 <a class="users-list-name personlink" href="#person_{{ item.uid }}">
-                                    {{ item.name }}</a>
+                                    {{ item.full_name }}</a>
                             </li>
 
 {% endfor %}
@@ -79,7 +94,7 @@
                 <div class="box box-primary">
                     <div class="box-header with-border">
     {% if conversation.0.person %}
-                        <h3 class="box-title">SMS with {{ conversation.0.person }}</h3>
+                        <h3 class="box-title">SMS with <a href="#person_{{ conversation.0.person.uid }}">{{ conversation.0.person.full_name }}</a></h3>
     {% else %}
                         <h3 class="box-title">SMS conversation</h3>
     {% endif %}
@@ -97,7 +112,7 @@
 
 {% endfor %}
 
-{% if data.music %}
+{% if data.music.count > 0 %}
 
                 <div class="box box-primary">
                     <div class="box-header with-border">
@@ -115,7 +130,7 @@
                             </thead>
                             <tbody>
                                                                     
-{% for track in data.music %}
+{% for track in data.music.all %}
 
                             <tr>
                                 <td>{{ track.time|date:"H:i" }}</td>
@@ -153,7 +168,7 @@
             </div>
             <div class="col-xs-12 col-sm-6 col-md-4">
 
-{% if data.location != None %}
+{% if data.location != None and data.geo == '' %}
 
                 <div class="box box-primary">
                     <div class="box-body">
@@ -163,22 +178,13 @@
 
 {% endif %}
 
-{% if data.subevents.count > 0 %}
+{% if data.location != None %}
 
-                <div class="box box-primary">
-                    <div class="box-body">
-                        <div class="table-responsive">
-                            <table class="table no-margin">
-                                <tbody>
-{% for item in data.subevents %}
-                                    <tr>
-                                        <td><a href="#event_{{ item.id }}"><small class="muted">{{ item.start_time }}</small><br>{{ item.caption }}</a></td>
-                                        <td><span class="badge">{{ item.type }}</span></td>
-                                    </tr>
-{% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                <div class="info-box bg-blue">
+                    <span class="info-box-icon"><i class="fa fa-map-pin"></i></span>
+                    <div class="info-box-content" style="overflow: hidden !important;">
+                        <span class="info-box-text">Location</span>
+                        <span class="info-box-number" style="max-height: 2.5em;"><a href="#place_{{ data.location.uid }}">{{ data.location }}</a></span>
                     </div>
                 </div>
 
@@ -215,14 +221,35 @@
                 </div>
 
 {% endif %}
-
-{% if data.health.heart != None %}
+{% if data.health.heartavg != None %}
 
                 <div class="info-box bg-blue">
                     <span class="info-box-icon"><i class="fa fa-heartbeat"></i></span>
                     <div class="info-box-content">
-                        <span class="info-box-text">Average Heart Rate</span>
-                        <span class="info-box-number">{{ data.health.heart }} bpm</span>
+                        <span class="info-box-text">Heart Rate</span>
+                        <span class="info-box-number">{{ data.health.heartavg }} bpm <small>(av)</small></span>
+                        <span class="info-box-number">{{ data.health.heartmax }} bpm <small>(max)</small></span>
+                    </div>
+                </div>
+
+{% endif %}
+
+{% if data.subevents.count > 0 %}
+
+                <div class="box box-primary">
+                    <div class="box-body">
+                        <div class="table-responsive">
+                            <table class="table no-margin">
+                                <tbody>
+{% for item in data.subevents %}
+                                    <tr>
+                                        <td><a href="#event_{{ item.id }}"><small class="muted">{{ item.start_time }}</small><br>{{ item.caption }}</a></td>
+                                        <td><span class="badge">{{ item.type }}</span></td>
+                                    </tr>
+{% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 

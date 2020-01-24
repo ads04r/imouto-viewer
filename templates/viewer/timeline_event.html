@@ -10,6 +10,8 @@
     
     {% for event in data.events %}
 
+    {% if event.photos > 0 or event.caption != 'Home' or event.type != 'loc_prox' %}
+    
     <!-- timeline item -->
     <li>
 
@@ -24,8 +26,16 @@
             
             <h3 class="timeline-header no-border">{{ event }}</h3>
             <div class="timeline-body">
-            {% if event.geo != '' %}<div id="map{{ event.pk }}" class="eventmap" data-geojson="{{ event.geo }}"></div>{% endif %}
-            <div>
+            {% if event.geo == '' %}
+                {% if event.location %}
+                    {% if event.location.image %}
+                        <img class="img-circle" src="places/{{ event.location.uid }}_thumb.jpg">
+                    {% endif %}
+                {% endif %}
+            {% else %}
+                <div id="map{{ event.pk }}" class="eventmap" data-geojson="{{ event.geo }}"></div>
+            {% endif %}
+            <div class="timeline-gallery">
                 {% for photo in event.photos %}{% if forloop.counter <= 5 %}<img src="photo/{{ photo.pk }}_thumb.jpg" width="100" height="100">{% endif %}{% endfor %}
             </div>
             {% if event.description != '' %}<p>{{ event.description }}</p>{% endif %}
@@ -51,6 +61,7 @@
     </li>
     <!-- END timeline item -->
     
+    {% endif %}
     {% endfor %}
     
     <ul class="timeline timeline-inverse" id="imouto-timeline">

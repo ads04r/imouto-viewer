@@ -92,6 +92,13 @@ function initialiseGraphics()
         if(!(legend)) { legend = '[]'; }
         makeBarChart($(this)[0].getContext('2d'), data, legend);
     });
+    
+    $(".line-chart").each(function()
+    {
+        var data = $(this).data('data').split(',');
+        makeLineChart($(this)[0].getContext('2d'), data);
+    });
+    
 }
 
 function checkTimelineScroll()
@@ -151,6 +158,51 @@ function makeMap()
             }).addTo(map);
             map.fitBounds(bb);
     });
+}
+
+function makeLineChart(lineChartCanvas, data)
+{
+    var labels = []
+    for(i = 0; i < data.length; i++)
+    {
+        labels.push(i);
+    }
+    var lineChart = new Chart(lineChartCanvas);
+    var config = {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    backgroundColor: '#0073b7',
+                    data: data,
+                    fill: true,
+                    pointRadius: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            tooltips: { enabled: false },
+            legend: {
+                display: false
+            },
+            scales: {
+                xAxes: [
+                    { 
+                        display: false
+                    }
+                ],
+                yAxes: [
+                    { 
+                        display: true
+                    }
+                ]
+            },
+            maintainAspectRatio: true
+        }
+    }
+    lineChart = new Chart(lineChartCanvas, config);
 }
 
 function makeBarChart(barChartCanvas, data, legend)
@@ -273,6 +325,7 @@ function eventScreen(id)
     {
         
         makeMap();
+        initialiseGraphics();
 
     });
 }

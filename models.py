@@ -5,6 +5,15 @@ from PIL import Image
 from io import BytesIO
 import datetime, pytz, json
 
+def user_thumbnail_upload_location(instance, filename):
+    return 'people/' + str(instance.pk) + '/' + filename
+
+def photo_thumbnail_upload_location(instance, filename):
+    return 'thumbnails/' + str(instance.pk) + '.jpg'
+
+def location_thumbnail_upload_location(instance, filename):
+    return 'places/' + str(instance.uid) + '/' + filename
+
 class Location(models.Model):
     uid = models.SlugField(unique=True, max_length=32)
     label = models.CharField(max_length=100)
@@ -18,7 +27,7 @@ class Location(models.Model):
     phone = models.CharField(max_length=20, blank=True, null=True)
     url = models.URLField(blank=True, null=True)
     wikipedia = models.URLField(blank=True, null=True)
-    image = models.ImageField(blank=True, null=True)
+    image = models.ImageField(blank=True, null=True, upload_to=location_thumbnail_upload_location)
     def people(self):
         ret = []
         for event in self.events.all():
@@ -65,12 +74,6 @@ class Location(models.Model):
             models.Index(fields=['label']),
             models.Index(fields=['full_label']),
         ]
-
-def user_thumbnail_upload_location(instance, filename):
-    return 'people/' + str(instance.pk) + '/' + filename
-
-def photo_thumbnail_upload_location(instance, filename):
-    return 'thumbnails/' + str(instance.pk) + '.jpg'
 
 class Person(models.Model):
     uid = models.SlugField(primary_key=True, max_length=32)
@@ -138,6 +141,10 @@ class Person(models.Model):
         #except:
         #    ret['first_met'] = None
         return ret
+    def photos(self):
+        return Photo.objects.filter(people__in=[self]).order_by('-time')
+    def events(self):
+        return Event.objects.filter(people=self).order_by('-start_time')
     def __str__(self):
         return self.name()
     class Meta:
@@ -354,23 +361,38 @@ class Event(models.Model):
                 ret.append(conversation)
         return sorted(ret, key=lambda item: item[0].time)
     def music(self):
-        ret = []
-        for event in MediaEvent.objects.filter(time__gte=self.start_time, time__lte=self.end_time).order_by('time'):
-            if event.media.type=='music':
-                ret.append(event)
-        return ret
+        return MediaEvent.objects.filter(time__gte=self.start_time, time__lte=self.end_time).filter(media__type='music').order_by('time')
     def health(self):
         ret = {}
-        for item in DataReading.objects.filter(end_time__gte=self.start_time).filter(start_time__lte=self.end_time):
+        heart_total = 0.0
+        heart_count = 0.0
+        heart_max = 0.0
+        heart_csv = []
+        step_count = 0
+        sleep = []
+        if self.length() > 86400:
+            eventsearch = DataReading.objects.filter(end_time__gte=self.start_time, start_time__lte=self.end_time).exclude(type='heart-rate')
+        else:
+            eventsearch = DataReading.objects.filter(end_time__gte=self.start_time, start_time__lte=self.end_time)
+        for item in eventsearch:
+            if item.type=='heart-rate':
+                heart_csv.append(str(item.value))
+                heart_total = heart_total + float(item.value)
+                heart_count = heart_count + 1.0
+                if item.value > heart_max:
+                    heart_max = item.value
             if item.type=='step-count':
-                if 'steps' in ret:
-                    ret['steps'] = ret['steps'] + item.value
-                else:
-                    ret['steps'] = item.value
+                step_count = step_count + item.value
             if (item.type=='pebble-app-activity') & (item.value <= 2):
-                if not('sleep' in ret):
-                    ret['sleep'] = []
-                ret['sleep'].append(item)
+                sleep.append(item)
+        if heart_count > 0:
+            ret['heartavg'] = int(heart_total / heart_count)
+            ret['heartmax'] = int(heart_max)
+            ret['heart'] = ','.join(heart_csv)
+        if len(sleep) > 0:
+            ret['sleep'] = sleep
+        if step_count > 0:
+            ret['steps'] = step_count
         return ret
     def __str__(self):
         if self.caption == '':

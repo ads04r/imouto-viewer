@@ -44,6 +44,7 @@ def events(request):
     data['event'] = Event.objects.filter(type='event').order_by('-start_time')[0:10]
     data['journey'] = Event.objects.filter(type='journey').order_by('-start_time')[0:10]
     data['photo'] = Event.objects.filter(type='photo').order_by('-start_time')[0:10]
+    data['life'] = Event.objects.filter(type='life_event').order_by('-start_time')
     context = {'type':'view', 'data':data}
     return render(request, 'viewer/calendar.html', context)
 
@@ -86,13 +87,19 @@ def eventjson(request):
 def places(request):
     data = Location.objects.annotate(num_events=Count('events')).order_by('-num_events')
     if request.method == 'POST':
-        form = LocationForm(request.POST)
+        form = LocationForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            #form.save()
+            post = form.save(commit=False)
             id = form.cleaned_data['uid']
+            if form.cleaned_data.get('uploaded_image'):
+                #image = Image(title=post.full_label, description=post.description, image=request.FILES['uploaded_image'])
+                #image.save()
+                post.image = request.FILES['uploaded_image']
+            post.save()
             return HttpResponseRedirect('./#place_' + str(id))
         else:
-            raise Http404("Error in POST input")
+            raise Http404(form.errors)
     else:
         form = LocationForm()
     context = {'type':'place', 'data':data, 'form':form}
@@ -110,7 +117,7 @@ def people(request):
 
 def person(request, uid):
     data = get_object_or_404(Person, uid=uid)
-    context = {'type':'person', 'data':data}
+    context = {'type':'person', 'data':data, 'properties':explode_properties(data)}
     return render(request, 'viewer/person.html', context)
 
 def person_photo(request, uid):

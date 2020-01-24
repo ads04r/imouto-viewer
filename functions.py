@@ -52,7 +52,10 @@ def generate_dashboard():
         dtbase = last_record - datetime.timedelta(days=(7 - i))
         dt = datetime.datetime(dtbase.year, dtbase.month, dtbase.day, 0, 0, 0, tzinfo=dtbase.tzinfo)
         obj = DataReading.objects.filter(type='step-count').filter(start_time__gte=dt).filter(end_time__lt=(dt + datetime.timedelta(days=1))).aggregate(Sum('value'))
-        steps = int(obj['value__sum'])
+        try:
+            steps = int(obj['value__sum'])
+        except:
+            steps = 0
         total_steps = total_steps + steps
 
         item = {}
@@ -102,3 +105,19 @@ def generate_dashboard():
     
     return {'stats': stats, 'steps': json.dumps(stepdata), 'sleep': json.dumps(sleepdata), 'contact': contactdata, 'places': locationdata, 'walks': walkdata}
 
+def explode_properties(person):
+    prop = {}
+    for k in person.get_properties():
+        if k == 'mhb':
+            continue
+        if k == 'image':
+            continue
+        if k == 'livesat':
+            continue
+        if k == 'birthday':
+            continue
+        if k == 'hasface':
+            continue
+        v = person.get_property(k)
+        prop[k] = v
+    return prop
