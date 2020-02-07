@@ -304,6 +304,50 @@ class Event(models.Model):
     people = models.ManyToManyField(Person, through='PersonEvent')
     location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name="events", null=True, blank=True)
     geo = models.TextField(default='', blank=True)
+    def __parse_sleep(self, sleep):
+        time_from = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+        time_to = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.UTC)
+        ret = []
+        for item in sleep:
+            if item.start_time < time_from:
+                time_from = item.start_time
+            if item.end_time > time_to:
+                time_to = item.end_time
+        dts = int(time_from.timestamp())
+        dte = int(time_to.timestamp())
+        mins = int((dte - dts) / 60)
+        lastval = -1
+        ct = 0
+        total = 0
+        for i in range(0, mins):
+            time_i = time_from + datetime.timedelta(minutes=i)
+            v = 0
+            for item in sleep:
+                if item.value > v:
+                    if ((item.start_time <= time_i) & (time_i <= item.end_time)):
+                        v = item.value
+            if lastval == v:
+                ct = ct + 1
+            else:
+                if lastval > -1:
+                    block = [lastval, ct]
+                    total = total + ct
+                    ret.append(block)
+                ct = 0
+                lastval = v
+        if ct > 0:
+            block = [lastval, ct]
+            total = total + ct
+            ret.append(block)
+        
+        preproc = ret
+        ret = []
+        for item in preproc:
+            item.append(int((float(item[1]) / float(total)) * 100.0))
+            ret.append(item)
+        
+        return ret
+
     def refresh(self):
         for photo in Photo.objects.filter(time__gte=self.start_time).filter(time__lte=self.end_time):
             for person in photo.people.all():
@@ -390,7 +434,7 @@ class Event(models.Model):
             ret['heartmax'] = int(heart_max)
             ret['heart'] = ','.join(heart_csv)
         if len(sleep) > 0:
-            ret['sleep'] = sleep
+            ret['sleep'] = self.__parse_sleep(sleep)
         if step_count > 0:
             ret['steps'] = step_count
         return ret
