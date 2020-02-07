@@ -1,6 +1,7 @@
 import datetime, pytz, json, random
-from viewer.models import *
+from .models import *
 from django.db.models import Sum, Count
+from geopy import distance
 
 def generate_dashboard():
 
@@ -121,3 +122,15 @@ def explode_properties(person):
         v = person.get_property(k)
         prop[k] = v
     return prop
+
+def nearest_location(lat, lon):
+    dist = 99999.9
+    ret = None
+    check = (lat, lon)
+    for loc in Location.objects.all():
+        test = (loc.lat, loc.lon)
+        newdist = distance.distance(test, check).km
+        if newdist < dist:
+            dist = newdist
+            ret = loc
+    return ret
