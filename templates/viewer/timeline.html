@@ -16,3 +16,39 @@
     </ul>
 
 </section>
+
+
+<div class="modal fade nav-tabs-custom" id="timeline_event_edit" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+                <form id="timeline-event-edit" action="event.html" method="POST" enctype="multipart/form-data">{% csrf_token %}
+
+                    
+
+                </form>
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary timeline-event-save-form-button">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade nav-tabs-custom" id="timeline_event_delete" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+                <p>Are you sure you want to permanently delete this event?</p>
+            
+                <button type="button" id="event-delete-button" class="btn btn-danger timeline-event-delete-form-button" data-id="">Delete</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

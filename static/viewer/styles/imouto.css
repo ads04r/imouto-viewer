@@ -85,3 +85,16 @@
 {
     margin-left: 0px !important;
 }
+
+.sleep-bar
+{
+    overflow: hidden;
+    white-space: nowrap;
+    background-color: rgba(0, 0, 0, 0);
+    margin-bottom: 0px;
+}
+
+.sleep-bar .progress-bar
+{
+    border-radius: 0px;
+}

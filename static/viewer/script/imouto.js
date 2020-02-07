@@ -9,6 +9,14 @@ function timelineScreen()
 {
     $(".content-wrapper").load("./timeline.html", function()
     {
+        $("#event-delete-button").on('click', function()
+        {
+            var id="#li_event_" + $(this).data('id');
+            console.log("Deleting " + id);
+            $(id).remove();
+            $("#timeline_event_delete").modal('hide');
+        });
+        
         $(window).on('scroll', function()
         {
             checkTimelineScroll();
@@ -133,6 +141,23 @@ function loadTimelineSegment()
         elem.remove();
         container.append(result);
 
+        $("a.eventedit").on('click', function()
+        {
+            $("#timeline_event_edit").modal();
+            return false;
+        });
+        $("a.eventdelete").on('click', function()
+        {
+            var id = $(this).data('event-id');
+            
+            $("#timeline_event_delete").on('show.bs.modal', function(e)
+            {
+                $("#event-delete-button").attr('data-id', id);
+
+            }).modal();
+
+            return false;
+        });
         makeMap();
         
         if($('body').height() <= $(window).height()) { loadTimelineSegment(); }

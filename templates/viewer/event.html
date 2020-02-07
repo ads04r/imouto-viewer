@@ -89,6 +89,36 @@
 
 {% endif %}
 
+{% if data.health.sleep != None %}
+
+
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Sleep</h3>
+                    </div>
+                    <div class="box-body">
+
+
+                        <div class="progress-group">
+                            <div class="progress sleep-bar">
+                        
+        {% for bar in data.health.sleep %}
+
+                                <div class="progress-bar" role="progressbar" aria-valuenow="{{ bar.2 }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ bar.2 }}%; background-color: {% if bar.0 == 0 %}rgba(0, 0, 0, 0){% endif %}{% if bar.0 == 1 %}#ABC1D8{% endif %}{% if bar.0 == 2 %}#3C8DBC{% endif %};">
+                                    <span class="sr-only">0 mins</span>
+                                </div>
+
+        {% endfor %}
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                             
+{% endif %}
+
+
 {% for conversation in data.sms %}
 
                 <div class="box box-primary">
