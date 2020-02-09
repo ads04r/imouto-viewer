@@ -14,6 +14,37 @@ def photo_thumbnail_upload_location(instance, filename):
 def location_thumbnail_upload_location(instance, filename):
     return 'places/' + str(instance.uid) + '/' + filename
 
+class WeatherLocation(models.Model):
+    id = models.SlugField(max_length=32, primary_key=True)
+    lat = models.FloatField()
+    lon = models.FloatField()
+    label = models.CharField(max_length=64)
+    def __str__(self):
+        return str(self.label)
+    class Meta:
+        app_label = 'viewer'
+        verbose_name = 'weather location'
+        verbose_name_plural = 'weather locations'
+        indexes = [
+            models.Index(fields=['label'])
+        ]
+
+class WeatherReading(models.Model):
+    time = models.DateTimeField()
+    location = models.ForeignKey(WeatherLocation, on_delete=models.CASCADE, related_name='readings')
+    description = models.CharField(max_length=128, blank=True, null=True)
+    temperature = models.FloatField(blank=True, null=True)
+    wind_speed = models.FloatField(blank=True, null=True)
+    wind_direction = models.IntegerField(blank=True, null=True)
+    humidity = models.IntegerField(blank=True, null=True)
+    visibility = models.IntegerField(blank=True, null=True)
+    def __str__(self):
+        return str(self.time) + ' at ' + self.location
+    class Meta:
+        app_label = 'viewer'
+        verbose_name = 'weather reading'
+        verbose_name_plural = 'weather readings'
+
 class Location(models.Model):
     uid = models.SlugField(unique=True, max_length=32)
     label = models.CharField(max_length=100)
@@ -28,6 +59,7 @@ class Location(models.Model):
     url = models.URLField(blank=True, null=True)
     wikipedia = models.URLField(blank=True, null=True)
     image = models.ImageField(blank=True, null=True, upload_to=location_thumbnail_upload_location)
+    weather_location = models.ForeignKey(WeatherLocation, on_delete=models.CASCADE, null=True, blank=True)
     def people(self):
         ret = []
         for event in self.events.all():
@@ -61,6 +93,19 @@ class Location(models.Model):
             ret = im.crop((x, 0, x + h, h))
         ret = ret.resize((size, size), 1)
         return ret
+    def get_property(self, key):
+        ret = []
+        for prop in LocationProperty.objects.filter(location=self).filter(key=key):
+            ret.append(str(prop.value))
+        return ret
+    def get_properties(self):
+        ret = []
+        for prop in LocationProperty.objects.filter(location=self):
+            value = str(prop.key)
+            if value in ret:
+                continue
+            ret.append(value)
+        return ret
     def __str__(self):
         label = self.label
         if self.full_label != '':
@@ -73,6 +118,21 @@ class Location(models.Model):
         indexes = [
             models.Index(fields=['label']),
             models.Index(fields=['full_label']),
+        ]
+
+class LocationProperty(models.Model):
+    location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name="properties")
+    key = models.SlugField(max_length=32)
+    value = models.CharField(max_length=255)
+    def __str__(self):
+        return str(self.location) + ' - ' + self.key
+    class Meta:
+        app_label = 'viewer'
+        verbose_name = 'location property'
+        verbose_name_plural = 'location properties'
+        indexes = [
+            models.Index(fields=['location']),
+            models.Index(fields=['key']),
         ]
 
 class Person(models.Model):
@@ -472,33 +532,65 @@ class MediaEvent(models.Model):
     media = models.ForeignKey(Media, on_delete=models.CASCADE, related_name="events")
     time = models.DateTimeField()
 
-class WeatherLocation(models.Model):
-    id = models.SlugField(max_length=32, primary_key=True)
-    lat = models.FloatField()
-    lon = models.FloatField()
-    label = models.CharField(max_length=64)
+class LifeReport(models.Model):
+    label = models.CharField(max_length=128)
+    type = models.SlugField(max_length=32, default='year')
+    style = models.SlugField(max_length=32, default='default')
+    people = models.ManyToManyField(Person, through='ReportPeople')
+    locations = models.ManyToManyField(Location, through='ReportLocations')
+    events = models.ManyToManyField(Event, through='ReportEvents')
     def __str__(self):
-        return str(self.label)
+        return self.label
     class Meta:
         app_label = 'viewer'
-        verbose_name = 'weather location'
-        verbose_name_plural = 'weather locations'
+        verbose_name = 'life report'
+        verbose_name_plural = 'life reports'
+
+class LifeReportProperties(models.Model):
+    report = models.ForeignKey(LifeReport, on_delete=models.CASCADE)
+    key = models.CharField(max_length=128)
+    value = models.CharField(max_length=255)
+    description = models.TextField(null=True, blank=True)
+    def __str__(self):
+        return str(self.report) + ' - ' + self.key
+    class Meta:
+        app_label = 'viewer'
+        verbose_name = 'life report property'
+        verbose_name_plural = 'life report properties'
         indexes = [
-            models.Index(fields=['label'])
+            models.Index(fields=['report']),
+            models.Index(fields=['key']),
         ]
 
-class WeatherReading(models.Model):
-    time = models.DateTimeField()
-    location = models.ForeignKey(WeatherLocation, on_delete=models.CASCADE, related_name='readings')
-    description = models.CharField(max_length=128, blank=True, null=True)
-    temperature = models.FloatField(blank=True, null=True)
-    wind_speed = models.FloatField(blank=True, null=True)
-    wind_direction = models.IntegerField(blank=True, null=True)
-    humidity = models.IntegerField(blank=True, null=True)
-    visibility = models.IntegerField(blank=True, null=True)
+class ReportPeople(models.Model):
+    report = models.ForeignKey(LifeReport, on_delete=models.CASCADE)
+    person = models.ForeignKey(Person, on_delete=models.CASCADE, related_name="reports")
+    comment = models.TextField(null=True, blank=True)
     def __str__(self):
-        return str(self.time) + ' at ' + self.location
+        return str(self.person) + ' in ' + str(self.report)
     class Meta:
         app_label = 'viewer'
-        verbose_name = 'weather reading'
-        verbose_name_plural = 'weather readings'
+        verbose_name = 'report person'
+        verbose_name_plural = 'report people'
+
+class ReportLocations(models.Model):
+    report = models.ForeignKey(LifeReport, on_delete=models.CASCADE)
+    location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name="reports")
+    comment = models.TextField(null=True, blank=True)
+    def __str__(self):
+        return str(self.location) + ' in ' + str(self.report)
+    class Meta:
+        app_label = 'viewer'
+        verbose_name = 'report location'
+        verbose_name_plural = 'report locations'
+
+class ReportEvents(models.Model):
+    report = models.ForeignKey(LifeReport, on_delete=models.CASCADE)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="reports")
+    comment = models.TextField(null=True, blank=True)
+    def __str__(self):
+        return str(self.event) + ' in ' + str(self.report)
+    class Meta:
+        app_label = 'viewer'
+        verbose_name = 'report event'
+        verbose_name_plural = 'report events'
