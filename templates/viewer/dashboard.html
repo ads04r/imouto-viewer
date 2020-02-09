@@ -1,3 +1,5 @@
+{% load static %}
+
 <section class="content-header">
     <h1>
         Summary
@@ -146,6 +148,39 @@
                                     </div>
                                 </li>
                                 
+{% endfor %}
+                                
+                            </ul>
+                    </div>
+                </div>
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">People Encountered</h3>
+                    </div>
+                    <div class="box-body">
+                            <ul class="users-list clearfix">
+                                
+{% for item in data.people %}
+{% if item.image %}
+
+                                <li>
+                                    <img class="profile-user-img img-responsive" src="people/{{ item.uid }}_thumb.jpg"/>
+                                    <a class="users-list-name personlink" href="#person_{{ item.uid }}">
+                                        {{ item.full_name }}</a>
+                                </li>
+
+{% endif %}
+{% endfor %}
+{% for item in data.people %}
+{% if item.image == None %}
+
+                                <li>
+                                    <img class="profile-user-img img-responsive" src="{% static "viewer/graphics/unknown_person.jpg" %}">
+                                    <a class="users-list-name personlink" href="#person_{{ item.uid }}">
+                                        {{ item.full_name }}</a>
+                                </li>
+
+{% endif %}
 {% endfor %}
                                 
                             </ul>

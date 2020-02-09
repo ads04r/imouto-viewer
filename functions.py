@@ -8,7 +8,7 @@ def generate_dashboard():
     stats = {}
     
     last_contact = RemoteInteraction.objects.all().order_by('-time')[0].time
-    
+
     contactdata = []
     stats['messages'] = len(RemoteInteraction.objects.filter(time__gte=(last_contact - datetime.timedelta(days=7))))
     for i in RemoteInteraction.objects.filter(time__gte=(last_contact - datetime.timedelta(days=7))).values('address').annotate(messages=Count('address')).order_by('-messages'):
@@ -21,15 +21,25 @@ def generate_dashboard():
             item = {'person': person, 'address': address, 'messages': int(i['messages'])}
             contactdata.append(item)
 
-    locationdata = []
     last_event = Event.objects.all().order_by('-start_time')[0].start_time
+
+    locationdata = []
     for event in Event.objects.filter(start_time__gte=(last_event - datetime.timedelta(days=7))):
         location = event.location
         if location in locationdata:
             continue
         if location is None:
             continue
+        if location.label == 'Home':
+            continue
         locationdata.append(location)
+
+    peopledata = []
+    for event in Event.objects.filter(start_time__gte=(last_event - datetime.timedelta(days=7))):
+        for person in event.people.all():
+            if person in peopledata:
+                continue
+            peopledata.append(person)
 
     stats['photos'] = 0
     try:
@@ -104,7 +114,7 @@ def generate_dashboard():
     walkdata = sorted(walkdata, key=lambda item: item['length'], reverse=True)
     walkdata = walkdata[0:5]
     
-    return {'stats': stats, 'steps': json.dumps(stepdata), 'sleep': json.dumps(sleepdata), 'contact': contactdata, 'places': locationdata, 'walks': walkdata}
+    return {'stats': stats, 'steps': json.dumps(stepdata), 'sleep': json.dumps(sleepdata), 'contact': contactdata, 'people': peopledata, 'places': locationdata, 'walks': walkdata}
 
 def explode_properties(person):
     prop = {}
