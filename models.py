@@ -406,7 +406,7 @@ class Event(models.Model):
             item.append(int((float(item[1]) / float(total)) * 100.0))
             ret.append(item)
         
-        return ret
+        return {'start': time_from, 'end': time_to, 'data': ret}
 
     def refresh(self):
         for photo in Photo.objects.filter(time__gte=self.start_time).filter(time__lte=self.end_time):

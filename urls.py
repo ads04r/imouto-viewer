@@ -11,6 +11,7 @@ urlpatterns = [
     path('events.html', views.events),
     path('events.json', views.eventjson),
     path('events/<eid>.html', views.event),
+    path('events/<eid>/delete', views.eventdelete),
     path('places.html', views.places),
     path('places/<uid>.html', views.place),
     path('places/<uid>_thumb.jpg', views.place_thumbnail),

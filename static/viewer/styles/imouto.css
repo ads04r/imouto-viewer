@@ -24,12 +24,13 @@
     padding-bottom: 5px !important;
 }
 
-#places_map, #journey-map
+#places_map, #journey-map, #mapselect
 {
     height: 20em !important;
     width: 100%;
 }
 
+#mapselect { cursor: crosshair; }
 
 .box-image span
 {

@@ -5,16 +5,35 @@ function homeScreen()
     $(".content-wrapper").load("./stats.html", function(){ initialiseGraphics(); });
 }
 
+function onMapClick(e)
+{
+    var RES = 100000;
+    var lat = Math.round(e.latlng.lat * RES) / RES;
+    var lon = Math.round(e.latlng.lng * RES) / RES;
+    
+    $('#id_lat').val(lat);
+    $('#id_lon').val(lon);
+}
+
 function timelineScreen()
 {
     $(".content-wrapper").load("./timeline.html", function()
     {
         $("#event-delete-button").on('click', function()
         {
-            var id="#li_event_" + $(this).data('id');
-            console.log("Deleting " + id);
+            var id="#li_event_" + $("#delete-id").val();
+            var url="events/" + $("#delete-id").val() + "/delete";
+
             $(id).remove();
             $("#timeline_event_delete").modal('hide');
+
+            $.ajax({
+                url: url,
+                dataType: 'json',
+                method: 'POST',
+                success: function(data) { }
+            });
+            
         });
         
         $(window).on('scroll', function()
@@ -78,6 +97,24 @@ function personScreen(id)
 function placesScreen(id)
 {
     $(".content-wrapper").load("./places.html", function(){
+        
+        var lat = 50.9;
+        var lon = -1.4;
+        var map = L.map('mapselect', {center: [lat, lon], zoom: 13});
+        L.tileLayer('https://tiles.flarpyland.com/osm/{z}/{x}/{y}.png', {
+            attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
+            maxZoom: 18
+        }).addTo(map);
+        $('#id_lat').val(lat);
+        $('#id_lon').val(lon);
+        map.on('click', onMapClick);
+        
+        // The following block is required because we've foolishly put a leaflet map in a tab in a modal.
+        $("a[href='#loc']").on('shown.bs.tab', function() 
+        {
+            map.invalidateSize();
+        });
+        
         $(".save-form-button").on('click', function()
         {
             $("#place-add").submit();
@@ -141,20 +178,32 @@ function loadTimelineSegment()
         elem.remove();
         container.append(result);
 
+        $("#timeline-event-save-form-button").on('click', function()
+        {
+            $("form#timeline-event-edit").submit();
+            
+            return false;
+        })
         $("a.eventedit").on('click', function()
         {
+            var id = $(this).data('event-id');
+            var caption = $(this).data('event-label');
+            var type = $(this).data('event-type');
+            var description = $(this).data('event-description');
+            $("#timeline-event-edit").attr('action', 'events/' + id + '.html');
+            $("#id_caption").val(caption);
+            $("#id_type").val(type);
+            $("#id_description").val(description);
+
             $("#timeline_event_edit").modal();
             return false;
         });
         $("a.eventdelete").on('click', function()
         {
             var id = $(this).data('event-id');
-            
-            $("#timeline_event_delete").on('show.bs.modal', function(e)
-            {
-                $("#event-delete-button").attr('data-id', id);
+            $("#delete-id").val(id);
 
-            }).modal();
+            $("#timeline_event_delete").modal('show');
 
             return false;
         });

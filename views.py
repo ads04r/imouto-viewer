@@ -1,5 +1,6 @@
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
 import datetime, pytz, dateutil.parser
 
 from .models import *
@@ -18,8 +19,9 @@ def dashboard(request):
 def timeline(request):
     dt = Event.objects.order_by('-start_time')[0].start_time
     ds = dt.strftime("%Y%m%d")
-    context = {'type':'view', 'data':{'current': ds}}
-    return render(request, 'viewer/timeline.html', context)    
+    form = QuickEventForm()
+    context = {'type':'view', 'data':{'current': ds}, 'form':form}
+    return render(request, 'viewer/timeline.html', context)
 
 def timelineitem(request, ds):
     dsyear = int(ds[0:4])
@@ -50,8 +52,24 @@ def events(request):
 
 def event(request, eid):
     data = get_object_or_404(Event, pk=eid)
+    if request.method == 'POST':
+        form = QuickEventForm(request.POST, instance=data)
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect('../#event_' + str(eid))
+        else:
+            raise Http404(form.errors)
     context = {'type':'event', 'data':data}
     return render(request, 'viewer/event.html', context)
+
+@csrf_exempt
+def eventdelete(request, eid):
+    if request.method != 'POST':
+        raise Http404()
+    data = get_object_or_404(Event, pk=eid)
+    ret = data.delete()
+    response = HttpResponse(json.dumps(ret), content_type='application/json')
+    return response
 
 def eventjson(request):
     dss = request.GET.get('start', '')

@@ -23,15 +23,24 @@
         <div class="modal-content">
             <div class="modal-body">
 
-                <form id="timeline-event-edit" action="event.html" method="POST" enctype="multipart/form-data">{% csrf_token %}
+                <form id="timeline-event-edit" action="" method="POST" enctype="multipart/form-data">{% csrf_token %}
 
-                    
+                              <table class="table table-hover">
+{% for field in form %}
+
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                </tr>
+
+{% endfor %}
+                              </table>
 
                 </form>
                 
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary timeline-event-save-form-button">Save</button>
+                <button type="button" class="btn btn-primary" id="timeline-event-save-form-button">Save</button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
             </div>
         </div>
@@ -45,8 +54,12 @@
             <div class="modal-body">
 
                 <p>Are you sure you want to permanently delete this event?</p>
+                
+                <form id="timeline-event-delete">
+                    <input type="hidden" id="delete-id" name="delete-id" value="" />
+                </form>
             
-                <button type="button" id="event-delete-button" class="btn btn-danger timeline-event-delete-form-button" data-id="">Delete</button>
+                <button type="button" id="event-delete-button" class="btn btn-danger timeline-event-delete-form-button">Delete</button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
             </div>
         </div>
