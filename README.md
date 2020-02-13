@@ -34,7 +34,10 @@ GPS tracks into it, and have it generate events based on when you
 were moving and when you were standing still, with most of the clever
 stuff being done by the location manager. Where it shines is its ability
 to display other types of data which - currently - you need to add
-to the database yourself, either manually or using a script.
+to the database yourself, either manually or using a script. And as my
+current scripts are terrible, badly written and contain things like
+API keys and database passwords hard-coded, I'm reluctant to release
+these!
 
 Most of the data I have is pretty unique to me (I mean, who else tracks
 their steps with a Pebble, right?) but I'm hoping to come up with some
