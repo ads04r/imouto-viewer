@@ -67,6 +67,11 @@
     bottom: 0;
 }
 
+.timeline-body
+{
+    min-height: 120px;
+}
+
 .timeline-people-row
 {
     margin-top: 0.5em;

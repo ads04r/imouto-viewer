@@ -29,30 +29,43 @@
             {% if event.geo == '' %}
                 {% if event.location %}
                     {% if event.location.image %}
-                        <img class="img-circle" src="places/{{ event.location.uid }}_thumb.jpg">
+                        <img class="pull-right img-circle" src="places/{{ event.location.uid }}_thumb.jpg">
                     {% endif %}
                 {% endif %}
             {% else %}
                 <div id="map{{ event.pk }}" class="eventmap" data-geojson="{{ event.geo }}"></div>
             {% endif %}
-            <div class="timeline-gallery">
-                {% for photo in event.photos %}{% if forloop.counter <= 5 %}<img src="photo/{{ photo.pk }}_thumb.jpg" width="100" height="100">{% endif %}{% endfor %}
-            </div>
-            {% if event.description != '' %}<p>{{ event.description }}</p>{% endif %}
-            {% if event.people.count > 0 %}
-            <div class="timeline-people-row">
-            {% for person in event.people.all %}
-                {% if person.image %}
-                <a href="#person_{{ person.uid }}"><img class="img-circle" src="people/{{ person.uid }}_thumb.jpg" width="50" height="50" alt="{{ person.full_name }}"></a>
-                {% endif %}
-            {% endfor %}
-            {% for person in event.people.all %}
-                {% if person.image == None %}
-                <a href="#person_{{ person.uid }}"><img class="img-circle" src="{% static "viewer/graphics/unknown_person.jpg" %}" width="50" height="50" alt="{{ person.full_name }}"></a>
-                {% endif %}
-            {% endfor %}
-            </div>
-            {% endif %}
+
+                <div{% if event.geo == '' %}{% if event.location %}{% if event.location.image %} style="margin-right: 120px;"{% endif %}{% endif %}{% endif %}>
+                
+                    <div class="timeline-gallery">
+                        {% for photo in event.photos %}{% if forloop.counter <= 5 %}<img src="photo/{{ photo.pk }}_thumb.jpg" width="100" height="100">{% endif %}{% endfor %}
+                    </div>
+                    {% if event.description != '' %}<p>{{ event.description }}</p>{% endif %}
+                    {% if event.people.count > 0 %}
+                    <div class="timeline-people-row">
+                    {% for person in event.people.all %}
+                        {% if person.image %}
+                        <a href="#person_{{ person.uid }}"><img class="img-circle" src="people/{{ person.uid }}_thumb.jpg" width="50" height="50" alt="{{ person.full_name }}"></a>
+                        {% endif %}
+                    {% endfor %}
+                    {% for person in event.people.all %}
+                        {% if person.image == None %}
+                        <a href="#person_{{ person.uid }}"><img class="img-circle" src="{% static "viewer/graphics/unknown_person.jpg" %}" width="50" height="50" alt="{{ person.full_name }}"></a>
+                        {% endif %}
+                    {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    {% if event.people.count == 0 and event.description == '' and event.photos.count == 0 and event.geo == '' %}
+                        {% if event.location %}
+                            <p>{{ event.length_string }} spent in/at {{ event.location.label }}.</p>
+                        {% else %}
+                            <p>No further information exists about this event.</p>
+                        {% endif %}
+                    {% endif %}
+                    
+                </div>
             </div>
             <div class="timeline-footer">
                 <span>
