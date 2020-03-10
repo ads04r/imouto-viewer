@@ -134,10 +134,11 @@ def explode_properties(person):
     return prop
 
 def nearest_location(lat, lon):
+    now = datetime.datetime.now().replace(tzinfo=pytz.UTC)
     dist = 99999.9
     ret = None
     check = (lat, lon)
-    for loc in Location.objects.all():
+    for loc in Location.objects.exclude(destruction_time__lt=now).exclude(creation_time__gt=now):
         test = (loc.lat, loc.lon)
         newdist = distance.distance(test, check).km
         if newdist < dist:
