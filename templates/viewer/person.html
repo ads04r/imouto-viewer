@@ -44,6 +44,14 @@
                     <p class="text-muted">{{ data.birthday|date:"jS F" }}</p>
 
 {% endif %}
+{% if data.home != None %}
+
+                    <hr>
+                    
+                    <strong><i class="fa fa-home margin-r-5"></i> Home</strong>
+                    <p class="text-muted"><a href="#place_{{ data.home.uid }}">{{ data.home.label }}</a><br><small>{{ data.home.address }}</small></p>
+
+{% endif %}
                     
                 </div>
             </div>

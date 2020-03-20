@@ -81,6 +81,14 @@ class Location(models.Model):
     def photo(self):
         im = Image.open(self.image.path)
         return im
+    def allphotos(self):
+        ret = []
+        for photo in Photo.objects.filter(location=self):
+            ret.append(photo)
+        for event in Event.objects.filter(location=self):
+            for photo in event.photos():
+                ret.append(photo)
+        return ret
     def thumbnail(self, size):
         im = Image.open(self.image.path)
         bbox = im.getbbox()
@@ -153,6 +161,23 @@ class Person(models.Model):
         if label == '':
             label = self.nickname
         return label
+    def home(self):
+        ret = None
+        dt = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+        for prop in PersonProperty.objects.filter(person=self).filter(key='livesat'):
+            value = int(str(prop.value))
+            try:
+                place = Location.objects.get(pk=value)
+            except:
+                continue
+            if not(place.creation_time is None):
+                if place.creation_time > dt:
+                    continue
+            if not(place.destruction_time is None):
+                if place.destruction_time < dt:
+                    continue
+            ret = place
+        return ret
     def places(self):
         ret = []
         for event in Event.objects.filter(people=self):
