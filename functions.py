@@ -10,8 +10,8 @@ def generate_dashboard():
     last_contact = RemoteInteraction.objects.all().order_by('-time')[0].time
 
     contactdata = []
-    stats['messages'] = len(RemoteInteraction.objects.filter(time__gte=(last_contact - datetime.timedelta(days=7))))
-    for i in RemoteInteraction.objects.filter(time__gte=(last_contact - datetime.timedelta(days=7))).values('address').annotate(messages=Count('address')).order_by('-messages'):
+    stats['messages'] = len(RemoteInteraction.objects.filter(type='sms', time__gte=(last_contact - datetime.timedelta(days=7))))
+    for i in RemoteInteraction.objects.filter(type='sms', time__gte=(last_contact - datetime.timedelta(days=7))).values('address').annotate(messages=Count('address')).order_by('-messages'):
         address = i['address'].replace(' ', '')
         try:
             person = PersonProperty.objects.get(value=address).person
