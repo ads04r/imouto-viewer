@@ -16,6 +16,10 @@ def dashboard(request):
     context = {'type':'view', 'data':data}
     return render(request, 'viewer/dashboard.html', context)    
 
+def importer(request):
+    context = {}
+    return render(request, 'viewer/import.html', context)
+
 def timeline(request):
     dt = Event.objects.order_by('-start_time')[0].start_time
     ds = dt.strftime("%Y%m%d")

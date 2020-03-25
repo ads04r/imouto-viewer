@@ -5,6 +5,72 @@ function homeScreen()
     $(".content-wrapper").load("./stats.html", function(){ initialiseGraphics(); });
 }
 
+function uploadScreen()
+{
+    $(".content-wrapper").load("./upload.html", function(){
+
+	window.setInterval(updateUploadStats, 1000);
+	window.setInterval(updateUploadQueue, 5000);
+	updateUploadStats();
+	updateUploadQueue();
+
+    });
+}
+
+function updateUploadQueue()
+{
+    var url = "/location-manager/import";
+
+    $.ajax({
+        url: url,
+        dataType: 'json',
+        method: 'GET',
+        success: function(data) {
+
+		var tasks = data.tasks;
+		var html = "";
+
+		for(i = 0; i < tasks.length; i++)
+		{
+			var item = tasks[i];
+			var dt = new Date(item.time * 1000);
+			var filename = item.parameters[0][0];
+			var source = item.parameters[0][1];
+			var path = filename.split('/');
+
+			html = html + '<div class="post">';
+			html = html + '<div class="user-block">';
+			html = html + '<span class="username no-image">' + path[path.length - 1] + ' [' + source + ']</span>';
+			html = html + '<span class="description no-image">' + dt.toLocaleString() + '</span>';
+			html = html + '</div>';
+			html = html + '</div>';
+		}
+
+		$("#import-queue").html(html);
+        }
+    });
+}
+
+function updateUploadStats()
+{
+    var url = "/location-manager/process";
+
+    $.ajax({
+        url: url,
+        dataType: 'json',
+        method: 'GET',
+        success: function(data) {
+
+		var ps = new Date(data.stats['last_calculated_positon'] * 1000);
+		var ev = new Date(data.stats['last_generated_event'] * 1000);
+
+		$('#stats-last-position').html(ps.toLocaleString());
+		$('#stats-last-event').html(ev.toLocaleString());
+
+        }
+    });
+}
+
 function onMapClick(e)
 {
     var RES = 100000;
@@ -414,6 +480,7 @@ function pageRefresh()
     
     if(page == '') { homeScreen(); return true; }
     if(page == 'timeline') { timelineScreen(); return true; }
+    if(page == 'files') { uploadScreen(); return true; }
     if(page == 'reports') { reportsScreen(); return true; }
 
     if(page == 'events') { eventsScreen(); return true; }
