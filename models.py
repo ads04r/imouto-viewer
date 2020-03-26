@@ -455,6 +455,16 @@ class Event(models.Model):
                 return str(m) + ' min, ' + str(s) + ' sec'
             else:
                 return str(m) + ' minutes'
+        if h > 36:
+            d = int(h / 24)
+            h = h - (d * 24)
+            if d == 1 & h == 1:
+                return '1 day, 1 hour'
+            if d == 1:
+                return '1 day, ' + str(h) + ' hours'
+            if h == 1:
+                return str(d) + ' days, 1 hour'
+            return str(d) + ' days, ' + str(h) + ' hours'
         return str(h) + ' hour, ' + str(m) + ' min'
     def photos(self):
         ret = Photo.objects.filter(time__gte=self.start_time).filter(time__lte=self.end_time)
