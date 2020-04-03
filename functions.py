@@ -33,6 +33,14 @@ def generate_dashboard():
         if location.label == 'Home':
             continue
         locationdata.append(location)
+    if len(locationdata) == 0:
+        for event in Event.objects.filter(start_time__gte=(last_event - datetime.timedelta(days=7))):
+            location = event.location
+            if location in locationdata:
+                continue
+            if location is None:
+                continue
+            locationdata.append(location)
 
     peopledata = []
     for event in Event.objects.filter(start_time__gte=(last_event - datetime.timedelta(days=7))):
