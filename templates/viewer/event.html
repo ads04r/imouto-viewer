@@ -208,6 +208,15 @@
 
 {% endif %}
 
+                <div class="info-box bg-blue">
+                    <span class="info-box-icon"><i class="fa fa-calendar-o"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Event Date</span>
+                        <span class="info-box-number">{{ data.start_time|date:"jS F Y" }}</span>
+                        <span class="info-box-number">{{ data.start_time|date:"l, g:i a" }}</span>
+                    </div>
+                </div>
+
 {% if data.location != None %}
 
                 <div class="info-box bg-blue">
