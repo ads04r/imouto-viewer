@@ -114,6 +114,17 @@ class Location(models.Model):
                 continue
             ret.append(value)
         return ret
+    def exists(self):
+        dt = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+        if((self.destruction_time is None) & (self.creation_time is None)):
+            return True
+        if(not(self.destruction_time is None)):
+            if dt > self.destruction_time:
+                return False
+        if(not(self.creation_time is None)):
+            if dt < self.creation_time:
+                return False
+        return True
     def __str__(self):
         label = self.label
         if self.full_label != '':
@@ -448,17 +459,17 @@ class Event(models.Model):
         s = s - (m * 60)
         h = int(m / 60)
         m = m - (h * 60)
-        if m == 0 & h == 0:
-            return str(s) + ' seconds'
+        if((m == 0) & (h == 0)):
+            return str(s) + ' seconds '
         if h == 0:
-            if m < 10 & s > 0:
+            if((m < 10) & (s > 0)):
                 return str(m) + ' min, ' + str(s) + ' sec'
             else:
                 return str(m) + ' minutes'
         if h > 36:
             d = int(h / 24)
             h = h - (d * 24)
-            if d == 1 & h == 1:
+            if((d == 1) & (h == 1)):
                 return '1 day, 1 hour'
             if d == 1:
                 return '1 day, ' + str(h) + ' hours'

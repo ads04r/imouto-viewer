@@ -20,13 +20,47 @@
                     </div>
                 </div>
 
-                <div class="box box-primary">
-                    <div class="box-body">
+                <div class="nav-tabs-custom">
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a href="#tab-places-recent" data-toggle="tab">Recent Places</a></li>
+                        <li><a href="#tab-places-all" data-toggle="tab">All Current Places</a></li>
+                        <li><a href="#tab-places-destroyed" data-toggle="tab">Historical Places</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="active tab-pane" id="tab-places-recent">
+
                         <p>
                             <ul class="products-list product-list-in-box">
                                 
-{% for place in data %}
+{% for place in data.recent %}
 {% if place.num_events > 0 %}
+                                
+                                <li class="item">
+                                    <div class="product-img">
+                                        {% if place.image %}<img src="places/{{ place.uid }}_thumb.jpg"/>{% endif %}
+                                    </div>
+                                    <div class="product-info">
+                                        <a class="product-title personlink" href="#place_{{ place.uid }}">
+                                            {{ place }}</a>
+                                        <span class="product-description">
+                                            {{ place.address }}</span>
+                                    </div>
+                                </li>
+                                
+{% endif %}
+{% endfor %}
+                                
+                            </ul>
+                        </p>
+
+                        </div>
+                        <div class="tab-pane" id="tab-places-all">
+                        <p>
+                            <ul class="products-list product-list-in-box">
+                                
+{% for place in data.all %}
+{% if place.num_events > 0 %}
+{% if place.exists %}
                                 
                                 <li class="item">
                                     <div class="product-img">
@@ -43,10 +77,42 @@
                                 </li>
                                 
 {% endif %}
+{% endif %}
 {% endfor %}
                                 
                             </ul>
                         </p>
+                        </div>
+                        <div class="tab-pane" id="tab-places-destroyed">
+                        <p>
+                            <ul class="products-list product-list-in-box">
+                                
+{% for place in data.all %}
+{% if place.num_events > 0 %}
+{% if place.exists == False %}
+                                
+                                <li class="item">
+                                    <div class="product-img">
+                                        {% if place.image %}<img src="places/{{ place.uid }}_thumb.jpg"/>{% endif %}
+                                    </div>
+                                    <div class="product-info">
+                                        <a class="product-title personlink" href="#place_{{ place.uid }}">
+                                            {{ place }}</a>
+                                        <span class="product-description">
+                                            {{ place.address }}</span>
+                                        <span class="product-description">
+                                            {{ place.num_events }} events</span>
+                                    </div>
+                                </li>
+                                
+{% endif %}
+{% endif %}
+{% endfor %}
+                                
+                            </ul>
+                        </p>
+                        </div>
+
                     </div>
                 </div>
             

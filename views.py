@@ -14,7 +14,7 @@ def index(request):
 def dashboard(request):
     data = generate_dashboard()
     context = {'type':'view', 'data':data}
-    return render(request, 'viewer/dashboard.html', context)    
+    return render(request, 'viewer/dashboard.html', context)
 
 def importer(request):
     context = {}
@@ -107,7 +107,10 @@ def eventjson(request):
     return response
 
 def places(request):
-    data = Location.objects.annotate(num_events=Count('events')).order_by('-num_events')
+    data = {}
+    datecutoff = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC) - datetime.timedelta(days=60)
+    data['recent'] = Location.objects.filter(events__start_time__gte=datecutoff).annotate(num_events=Count('events')).order_by('-num_events')
+    data['all'] = Location.objects.annotate(num_events=Count('events')).order_by('label')
     if request.method == 'POST':
         form = LocationForm(request.POST, request.FILES)
         if form.is_valid():
