@@ -395,6 +395,7 @@ function makeBarChart(barChartCanvas, data, legend)
         {
             barChartData.datasets[i].label = legend[i];
             if(legend[i].indexOf('sleep') !== -1) { sleep = 1; }
+            if(legend[i].indexOf('%') !== -1) { sleep = 1; }
         }
         barChartOptions.legend.display = true;
     }
@@ -411,7 +412,16 @@ function makeBarChart(barChartCanvas, data, legend)
                 },
                 label: function(tooltipItem, chart)
                 {
-                    var ret = parseInt(tooltipItem.value / (60 * 60)) + ' hours';
+                    var hours = parseInt(tooltipItem.value / (60 * 60));
+                    var minutes = parseInt(tooltipItem.value / 60);
+                    var ret = "";
+
+                    if (hours > 0)
+                    {
+                        ret = hours + ' hours';
+                    } else {
+                        ret = minutes + ' minutes';
+                    }
                     return ret;
                 }
             }
