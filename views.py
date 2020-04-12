@@ -57,13 +57,20 @@ def events(request):
 def event(request, eid):
     data = get_object_or_404(Event, pk=eid)
     if request.method == 'POST':
-        form = QuickEventForm(request.POST, instance=data)
+
+        form = EventForm(request.POST, instance=data)
         if form.is_valid():
             form.save()
             return HttpResponseRedirect('../#event_' + str(eid))
         else:
-            raise Http404(form.errors)
-    context = {'type':'event', 'data':data}
+            form = QuickEventForm(request.POST, instance=data)
+            if form.is_valid():
+                form.save()
+                return HttpResponseRedirect('../#event_' + str(eid))
+            else:
+                raise Http404(form.errors)
+    form = EventForm(instance=data)
+    context = {'type':'event', 'data':data, 'form':form}
     return render(request, 'viewer/event.html', context)
 
 @csrf_exempt

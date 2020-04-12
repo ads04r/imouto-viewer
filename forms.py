@@ -10,3 +10,8 @@ class QuickEventForm(ModelForm):
     class Meta:
         model = Event
         fields = ['caption', 'type', 'description']
+
+class EventForm(ModelForm):
+    class Meta:
+        model = Event
+        fields = ['caption', 'type', 'description', 'start_time', 'end_time', 'location']

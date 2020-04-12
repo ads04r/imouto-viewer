@@ -294,8 +294,76 @@
 
 {% endif %}
 
+                <div class="box box-primary">
+                    <div class="box-body">
+                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#admin_event_edit" aria-hidden="true">Edit Event</button>
+                        <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#admin_event_people" aria-hidden="true">Edit People</button>
+                        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#admin_event_delete" aria-hidden="true">Delete</button>
+                    </div>
+                </div>
+
+
+
             </div>
         </div>
     </div>
 
 </section>
+
+
+
+<div class="modal fade nav-tabs-custom" id="admin_event_edit" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+                <form id="event-edit" action="events/{{ data.pk }}.html" method="POST" enctype="multipart/form-data">{% csrf_token %}
+
+                    <div role="tabpanel">
+                        <ul class="nav nav-tabs">
+                            <li class="active"><a href="#label" data-toggle="tab">Event</a></li>
+                            <li><a href="#link" data-toggle="tab">Narrative</a></li>
+                        </ul>
+                    </div>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="label">
+
+                              <table class="table table-hover">
+{% for field in form %}
+{% if forloop.counter != 3 %}
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                </tr>
+{% endif %}
+{% endfor %}
+                              </table>
+                        
+                        </div>
+                        <div class="tab-pane" id="link">
+
+                              <table class="table table-hover">
+{% for field in form %}
+{% if forloop.counter == 3 %}
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                </tr>
+{% endif %}
+{% endfor %}
+                              </table>
+
+                        </div>
+                    </div>
+
+                </form>
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="event-save-form-button">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -476,6 +476,12 @@ function eventScreen(id)
         
         makeMap();
         initialiseGraphics();
+        $("#event-save-form-button").on('click', function()
+        {
+            $("form#event-edit").submit();
+            
+            return false;
+        })
 
     });
 }
