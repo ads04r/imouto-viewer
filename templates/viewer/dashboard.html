@@ -25,6 +25,18 @@
             </div>
             <div class="col-xs-12 col-sm-6 col-md-3">
                 <div class="info-box bg-blue">
+                    <span class="info-box-icon">
+                        <i class="fa fa-phone"></i>
+                    </span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">
+                            Phone Calls</span>
+                        <span class="info-box-number">{{ data.stats.phone_calls }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xs-12 col-sm-6 col-md-3">
+                <div class="info-box bg-blue">
                     <span class="info-box-icon"><i class="fa fa-camera-retro"></i></span>
                     <div class="info-box-content">
                         <span class="info-box-text">Photos</span>
@@ -38,18 +50,6 @@
                     <div class="info-box-content">
                         <span class="info-box-text">Steps</span>
                         <span class="info-box-number">{{ data.stats.steps }}</span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xs-12 col-sm-6 col-md-3">
-                <div class="info-box bg-blue">
-                    <span class="info-box-icon">
-                        <i class="fa fa-calendar"></i>
-                    </span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">
-                            Events</span>
-                        <span class="info-box-number">{{ data.stats.events }}</span>
                     </div>
                 </div>
             </div>
