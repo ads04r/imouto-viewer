@@ -220,7 +220,7 @@
 {% if data.location != None %}
 
                 <div class="info-box bg-blue">
-                    <span class="info-box-icon"><i class="fa fa-map-pin"></i></span>
+                    <span class="info-box-icon"><i class="fa fa-map-marker"></i></span>
                     <div class="info-box-content" style="overflow: hidden !important;">
                         <span class="info-box-text">Location</span>
                         <span class="info-box-number" style="max-height: 2.5em;"><a href="#place_{{ data.location.uid }}">{{ data.location }}</a></span>
@@ -236,6 +236,18 @@
                         <span class="info-box-number">{{ data.length_string }}</span>
                     </div>
                 </div>
+
+{% if data.distance > 0 %}
+
+                <div class="info-box bg-blue">
+                    <span class="info-box-icon"><i class="fa fa-map-signs"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Total Distance</span>
+                        <span class="info-box-number">{{ data.distance }}&nbsp;miles</span>
+                    </div>
+                </div>
+
+{% endif %}
 
 {% if data.music %}
 

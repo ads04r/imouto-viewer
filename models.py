@@ -451,6 +451,14 @@ class Event(models.Model):
         self.save()
     def subevents(self):
         return Event.objects.filter(start_time__gte=self.start_time).filter(end_time__lte=self.end_time).exclude(id=self.id).order_by('start_time')
+    def distance(self):
+        if not(self.geo):
+            return 0
+        geo = json.loads(self.geo)
+        if 'properties' in geo:
+            if 'distance' in geo['properties']:
+                return (float(int((geo['properties']['distance'] / 1.609) * 100)) / 100)
+        return 0
     def length(self):
         return((self.end_time - self.start_time).total_seconds())
     def length_string(self):
