@@ -13,12 +13,19 @@
         <div class="row">
             <div class="col-xs-12 col-sm-12 col-md-12">
 
-                <div class="box box-primary">
-                    <div class="box-body">
+
+                <div class="nav-tabs-custom">
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a href="#tab-people-recent" data-toggle="tab">Last 12 Months</a></li>
+                        <li><a href="#tab-people-all" data-toggle="tab">All People</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="active tab-pane" id="tab-people-recent">
+
                         <p>
                             <ul class="products-list product-list-in-box">
                                 
-{% for person in data %}
+{% for person in data.recent %}
 {% if person.num_events > 0 %}
                                 
                                 <li class="item">
@@ -38,6 +45,35 @@
                                 
                             </ul>
                         </p>
+                        </div>
+
+                        <div class="tab-pane" id="tab-people-all">
+                        <p>
+                            <ul class="products-list product-list-in-box">
+                                
+{% for person in data.all %}
+{% if person.num_events > 0 %}
+                                
+                                <li class="item">
+                                    <div class="product-img">
+                                        {% if person.image %}<img src="people/{{ person.uid }}_thumb.jpg"/>{% endif %}
+                                    </div>
+                                    <div class="product-info">
+                                        <a class="product-title personlink" href="#person_{{ person.uid }}">
+                                            {{ person.full_name }}</a>
+                                        <span class="product-description">
+                                            {{ person.num_events }} events</span>
+                                    </div>
+                                </li>
+                                
+{% endif %}
+{% endfor %}
+                                
+                            </ul>
+                        </p>
+                        </div>
+
+
                     </div>
                 </div>
             

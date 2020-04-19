@@ -143,7 +143,11 @@ def place(request, uid):
     return render(request, 'viewer/place.html', context)
 
 def people(request):
-    data = Person.objects.annotate(num_events=Count('event')).order_by('-num_events')
+
+    data = {}
+    datecutoff = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC) - datetime.timedelta(days=365)
+    data['recent'] = Person.objects.filter(event__start_time__gte=datecutoff).annotate(num_events=Count('event')).order_by('-num_events')
+    data['all'] = Person.objects.annotate(num_events=Count('event')).order_by('given_name', 'family_name')
     context = {'type':'person', 'data':data}
     return render(request, 'viewer/people.html', context)
 
