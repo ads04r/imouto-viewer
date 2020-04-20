@@ -29,10 +29,22 @@
 
 {% for event in data.life %}
 
-                            <div class="users-list-name">
-                                <p><a href="#event_{{ event.id }}">{{ event.caption }}</a><br/>
-                                <small>{{ event.start_time }}</small></p>
+                        <div class="post">
+                            <div class="user-block">
+                                <span class="username no-image">{{ event }}<a class="pull-right btn btn-primary btn-xs eventlink" href="#event_{{ event.id }}">View Event</a></span>
+                                <span class="description no-image">{{ event.start_time }}{% if event.location %} | {{ event.location }}{% endif %}</span>
                             </div>
+
+                            {% if event.description %}<p>{{ event.description }}</p>{% endif %}
+
+{% for person in event.people.all %}
+
+                            {% if person.image %}<a href="#person_{{ person.uid }}"><img class="img-circle img-bordered-sm" src="people/{{ person.uid }}_thumb.jpg" alt="{{ person }}" height="50" width="50"></a>{% endif %}
+
+{% endfor %}
+
+
+                        </div>
 
 {% endfor %}
                         

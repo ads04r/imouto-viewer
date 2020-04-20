@@ -144,6 +144,7 @@ function eventsScreen()
            },
            editable: false,
            droppable: false, // this allows things to be dropped onto the calendar !!!
+           contentHeight: "auto",
 
         });
 
