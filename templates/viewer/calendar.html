@@ -18,6 +18,9 @@
                     <ul class="nav nav-tabs">
                         <li class="active"><a href="#tab-calendar-all" data-toggle="tab">Calendar</a></li>
                         <li><a href="#tab-calendar-event" data-toggle="tab">Life Events</a></li>
+			<li class="pull-right">
+				<a class="btn btn-primary btn-xs" data-toggle="modal" data-target="#admin_event_add" aria-hidden="true" href="#">Add Event</a>
+			</li>
                     </ul>
                     <div class="tab-content">
                         <div class="active tab-pane" id="tab-calendar-all">
@@ -107,3 +110,73 @@
     </div>
 
 </section>
+
+<div class="modal fade nav-tabs-custom" id="admin_event_add" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+                <form id="event-edit" action="events.html" method="POST" enctype="multipart/form-data">{% csrf_token %}
+
+                    <div role="tabpanel">
+                        <ul class="nav nav-tabs">
+                            <li class="active"><a href="#label" data-toggle="tab">Event</a></li>
+                            <li><a href="#time" data-toggle="tab">Time</a></li>
+                            <li><a href="#nar" data-toggle="tab">Narrative</a></li>
+                        </ul>
+                    </div>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="label">
+
+                              <table class="table table-hover">
+{% for field in form %}
+{% if forloop.counter < 3 or forloop.counter == 6 %}
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                </tr>
+{% endif %}
+{% endfor %}
+                              </table>
+                        
+                        </div>
+                        <div class="tab-pane" id="time">
+                              <table class="table table-hover">
+
+{% for field in form %}
+{% if forloop.counter == 4 or forloop.counter == 5 %}
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                </tr>
+{% endif %}
+{% endfor %}
+                              </table>
+
+                        </div>
+                        <div class="tab-pane" id="nar">
+
+                              <table class="table table-hover">
+{% for field in form %}
+{% if forloop.counter == 3 %}
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                </tr>
+{% endif %}
+{% endfor %}
+                              </table>
+
+                        </div>
+                    </div>
+
+                </form>
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="event-save-form-button">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

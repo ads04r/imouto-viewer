@@ -46,12 +46,21 @@ def reports(request):
     return render(request, 'viewer/reports.html', context)
 
 def events(request):
+    if request.method == 'POST':
+        form = EventForm(request.POST)
+        if form.is_valid():
+            event = form.save()
+            return HttpResponseRedirect('./#event_' + str(event.id))
+        else:
+            raise Http404(form.errors)
+
     data = {}
     data['event'] = Event.objects.filter(type='event').order_by('-start_time')[0:10]
     data['journey'] = Event.objects.filter(type='journey').order_by('-start_time')[0:10]
     data['photo'] = Event.objects.filter(type='photo').order_by('-start_time')[0:10]
     data['life'] = Event.objects.filter(type='life_event').order_by('-start_time')
-    context = {'type':'view', 'data':data}
+    form = EventForm()
+    context = {'type':'view', 'data':data, 'form':form}
     return render(request, 'viewer/calendar.html', context)
 
 def event(request, eid):
