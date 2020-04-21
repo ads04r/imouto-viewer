@@ -71,7 +71,10 @@ def event(request, eid):
                 raise Http404(form.errors)
     form = EventForm(instance=data)
     context = {'type':'event', 'data':data, 'form':form}
-    return render(request, 'viewer/event.html', context)
+    template = 'viewer/event.html'
+    if data.type=='life_event':
+        template = 'viewer/lifeevent.html'
+    return render(request, template, context)
 
 @csrf_exempt
 def eventdelete(request, eid):
