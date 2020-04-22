@@ -50,6 +50,10 @@ def events(request):
         form = EventForm(request.POST)
         if form.is_valid():
             event = form.save()
+            if event.type == 'journey':
+                event.geo = getgeoline(event.start_time, event.end_time, request.META['HTTP_HOST'])
+                event.save()
+
             return HttpResponseRedirect('./#event_' + str(event.id))
         else:
             raise Http404(form.errors)
@@ -69,7 +73,10 @@ def event(request, eid):
 
         form = EventForm(request.POST, instance=data)
         if form.is_valid():
-            form.save()
+            event = form.save()
+            if event.type == 'journey':
+                event.geo = getgeoline(event.start_time, event.end_time, request.META['HTTP_HOST'])
+                event.save()
             return HttpResponseRedirect('../#event_' + str(eid))
         else:
             form = QuickEventForm(request.POST, instance=data)

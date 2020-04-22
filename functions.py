@@ -1,8 +1,22 @@
-import datetime, pytz, json, random
+import datetime, pytz, json, random, urllib.request
 from .models import *
 from django.db.models import Sum, Count, F, ExpressionWrapper, fields
 from django.conf import settings
 from geopy import distance
+
+def getgeoline(dts, dte, address='127.0.0.1:8000'):
+
+    id = dts.strftime("%Y%m%d%H%M%S") + dte.strftime("%Y%m%d%H%M%S")
+    url = "http://" + address + "/location-manager/route/" + id + "?format=json"
+    data = {}
+    with urllib.request.urlopen(url) as h:
+        data = json.loads(h.read().decode())
+    if 'geo' in data:
+        if 'geometry' in data['geo']:
+            if 'coordinates' in data['geo']['geometry']:
+                if len(data['geo']['geometry']['coordinates']) > 0:
+                    return json.dumps(data['geo'])
+    return ""
 
 def generate_dashboard():
 
