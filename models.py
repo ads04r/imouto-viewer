@@ -261,6 +261,7 @@ class Photo(models.Model):
     people = models.ManyToManyField(Person, through='PersonPhoto')
     location = models.ForeignKey(Location, null=True, blank=True, on_delete=models.CASCADE, related_name="photos")
     cached_thumbnail = models.ImageField(blank=True, null=True, upload_to=photo_thumbnail_upload_location)
+    face_count = models.IntegerField(null=True, blank=True)
     def image(self):
         im = Image.open(self.file.path)
         if hasattr(im, '_getexif'):
