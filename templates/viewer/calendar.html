@@ -19,7 +19,7 @@
                         <li class="active"><a href="#tab-calendar-all" data-toggle="tab">Calendar</a></li>
                         <li><a href="#tab-calendar-event" data-toggle="tab">Life Events</a></li>
 			<li class="pull-right">
-				<a class="btn btn-primary btn-xs" data-toggle="modal" data-target="#admin_event_add" aria-hidden="true" href="#">Add Event</a>
+				<a class="btn btn-primary btn-xs" data-toggle="modal" data-target="#admin_event_add" aria-hidden="true" href="#"><i class="fa fa-plus"></i></a>
 			</li>
                     </ul>
                     <div class="tab-content">
@@ -147,7 +147,8 @@
 {% if forloop.counter == 4 or forloop.counter == 5 %}
                                 <tr class="form-row">
                                   <td>{{ field.errors }}</td>
-                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                  <td>{{ field.label_tag }}</td>
+                                  <td>{{ field }}</td>
                                 </tr>
 {% endif %}
 {% endfor %}

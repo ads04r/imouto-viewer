@@ -86,83 +86,9 @@
                         </div>                        
                     </div>
                 </div>
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title">Places Visited</h3>
-                    </div>
-                    <div class="box-body">
-                            <ul class="products-list product-list-in-box">
-                                
-{% for item in data.places %}
-                                
-                                <li class="item">
-                                    <div class="product-img">
-                                        {% if item.image %}<img src="places/{{ item.uid }}_thumb.jpg"/>{% endif %}
-                                    </div>
-                                    <div class="product-info">
-                                        <a class="product-title placelink" href="#place_{{ item.uid }}">
-                                            {{ item }}</a>
-                                        <span class="product-description">
-                                            {{ item.address }}</span>
-                                    </div>
-                                </li>
-                                
-{% endfor %}
-                                
-                            </ul>
-                    </div>
-                </div>
 
             </div>
             <div class="col-xs-12 col-sm-6">
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title">Longest Walks</h3>
-                    </div>
-                    <div class="box-body">
-                        <div class="table-responsive">
-                            <table class="table no-margin">
-                                <tbody>
-
-{% for walk in data.walks %}
-
-                                    <tr>
-                                        <td>{{ walk.friendly_time }}<br><small class="muted">{{ walk.friendly_length }}</small></a></td>
-                                    </tr>
-
-{% endfor %}
-
-                                </tbody>
-                            </table>
-                        </div>                                
-                    </div>
-                </div>
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title">Top Contacts</h3>
-                    </div>
-                    <div class="box-body">
-                            <ul class="products-list product-list-in-box">
-                                
-{% for item in data.contact %}
-                                
-                                <li class="item">
-                                    <div class="product-img">
-                                        {% if item.person.image %}<img src="people/{{ item.person.uid }}_thumb.jpg"/>{% endif %}
-                                    </div>
-                                    <div class="product-info">
-                                        <a class="product-title personlink" href="#person_{{ item.person.uid }}">
-                                            {{ item.person.full_name }}</a>
-                                        <span class="product-description">
-                                            {{ item.messages }} messages sent/received</span>
-                                    </div>
-                                </li>
-                                
-{% endfor %}
-                                
-                            </ul>
-                    </div>
-                </div>
                 <div class="box box-primary">
                     <div class="box-header with-border">
                         <h3 class="box-title">People Encountered</h3>
@@ -191,6 +117,58 @@
                                 </li>
 
 {% endif %}
+{% endfor %}
+                                
+                            </ul>
+                    </div>
+                </div>
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Places Visited</h3>
+                    </div>
+                    <div class="box-body">
+                            <ul class="products-list product-list-in-box">
+                                
+{% for item in data.places %}
+                                
+                                <li class="item">
+                                    <div class="product-img">
+                                        {% if item.image %}<img src="places/{{ item.uid }}_thumb.jpg"/>{% endif %}
+                                    </div>
+                                    <div class="product-info">
+                                        <a class="product-title placelink" href="#place_{{ item.uid }}">
+                                            {{ item }}</a>
+                                        <span class="product-description">
+                                            {{ item.address }}</span>
+                                    </div>
+                                </li>
+                                
+{% endfor %}
+                                
+                            </ul>
+                    </div>
+                </div>
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Messages</h3>
+                    </div>
+                    <div class="box-body">
+                            <ul class="products-list product-list-in-box">
+                                
+{% for item in data.contact %}
+                                
+                                <li class="item">
+                                    <div class="product-img">
+                                        {% if item.person.image %}<img src="people/{{ item.person.uid }}_thumb.jpg"/>{% endif %}
+                                    </div>
+                                    <div class="product-info">
+                                        <a class="product-title personlink" href="#person_{{ item.person.uid }}">
+                                            {{ item.person.full_name }}</a>
+                                        <span class="product-description">
+                                            {{ item.messages }} messages sent/received</span>
+                                    </div>
+                                </li>
+                                
 {% endfor %}
                                 
                             </ul>
