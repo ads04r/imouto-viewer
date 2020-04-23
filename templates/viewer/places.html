@@ -13,18 +13,14 @@
         <div class="row">
             <div class="col-xs-12 col-sm-12 col-md-12">
 
-                <div class="box box-primary">
-                    <div class="box-body">
-                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#admin_places_add" aria-hidden="true">Add New Place</button>
-                        <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#admin_places_import" aria-hidden="true">Import Place</button>
-                    </div>
-                </div>
-
                 <div class="nav-tabs-custom">
                     <ul class="nav nav-tabs">
                         <li class="active"><a href="#tab-places-recent" data-toggle="tab">Recent Places</a></li>
                         <li><a href="#tab-places-all" data-toggle="tab">All Current Places</a></li>
                         <li><a href="#tab-places-destroyed" data-toggle="tab">Historical Places</a></li>
+                        <li class="pull-right">
+                                <a class="btn btn-primary btn-xs" data-toggle="modal" data-target="#admin_places_add" aria-hidden="true" href="#">Add New Place</a>
+                        </li>
                     </ul>
                     <div class="tab-content">
                         <div class="active tab-pane" id="tab-places-recent">
