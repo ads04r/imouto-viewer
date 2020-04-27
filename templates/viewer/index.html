@@ -5,6 +5,9 @@
 {% block nav_header %}
     {% include 'viewer/_main_header.html' %}
 {% endblock %}
+{% block nav_footer %}
+    {% include 'viewer/_main_footer.html' %}
+{% endblock %}
 {% block nav_sidebar %}
     {% include 'viewer/_main_sidebar.html' %}
 {% endblock %}
@@ -13,6 +16,9 @@
     <link rel="stylesheet" href="{% static "viewer/script/leaflet/leaflet.css" %}" />
     <link rel="stylesheet" href="{% static "viewer/script/fullcalendar/fullcalendar.min.css" %}" />
     <link rel="stylesheet" href="{% static "viewer/styles/imouto.css" %}" />
+{% endblock %}
+{% block extra_foot %}
+    {% include 'viewer/search.html' %}    
 {% endblock %}
 {% block javascript %}
 
