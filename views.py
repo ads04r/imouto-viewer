@@ -1,7 +1,7 @@
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
-import datetime, pytz, dateutil.parser
+import datetime, pytz, dateutil.parser, json
 
 from .models import *
 from .forms import *
@@ -215,4 +215,24 @@ def place_thumbnail(request, uid):
     im = data.thumbnail(100)
     response = HttpResponse(content_type='image/jpeg')
     im.save(response, "JPEG")
+    return response
+
+@csrf_exempt
+def search(request):
+    if request.method != 'POST':
+        raise Http404()
+    data = json.loads(request.body)
+    query = data['query']
+    ret = []
+    for event in Event.objects.filter(caption__icontains=query).order_by('-start_time')[0:10]:
+        description = event.description[0:50]
+        if len(description) == 50:
+            description = description[0:(description.rfind(' '))]
+            if len(description) > 0:
+                description = description + ' ...'
+        if description == '':
+            description = event.start_time.strftime("%A %-d %B")
+        item = {'label': event.caption, 'id': event.id, 'description': description, 'date': event.start_time.strftime("%A %-d %B"), 'type': event.type, 'link': 'event_' + str(event.id)}
+        ret.append(item)
+    response = HttpResponse(json.dumps(ret), content_type='application/json')
     return response

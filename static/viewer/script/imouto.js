@@ -493,12 +493,64 @@ function eventScreen(id)
     });
 }
 
+function search(query, callback)
+{
+            var url = './search.json';
+            var data = {'query': query};
+            $.ajax({
+                url: url,
+                dataType: 'json',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                method: 'POST',
+                success: callback
+            });
+}
 
 function pageRefresh()
 {
     var page = window.location.hash.replace('#', '');
     var loading = '<section class="content"><div class="container-fluid"><div class="row"><div class="col-xs-1 col-sm-3 col-md-5"></div><div class="col-xs-10 col-sm-6 col-md-2"><div class="box box-primary"><div class="box-body text-center"><i class="fa fa-spin fa-refresh"></i>&nbsp;Loading</div></div></div></div></div></section>';
     
+    $("#imouto-search-text").on('keyup', function()
+    {
+        var text = $(this).val();
+        search(text, function(data)
+        {
+            var html = '';
+            for(i = 0; i < data.length; i++)
+            {
+                item = data[i];
+                html = html + '<li><a href="#' + item.link + '">';
+                if(item.link.startsWith('person')) { html = html + '<i class="menu-icon fa fa-user-o bg-gray"></i>'; }
+                if(item.link.startsWith('place')) { html = html + '<i class="menu-icon fa fa-map-marker bg-gray"></i>'; }
+                if(item.link.startsWith('event'))
+                {
+                    switch(item.type) {
+                    case 'life_event':
+                        html = html + '<i class="menu-icon fa fa-calendar bg-gray"></i>';
+                        break;
+                    case 'loc_prox':
+                        html = html + '<i class="menu-icon fa fa-map-marker bg-blue"></i>';
+                        break;
+                    case 'journey':
+                        html = html + '<i class="menu-icon fa fa-road bg-green"></i>';
+                        break;
+                    case 'sleepover':
+                        html = html + '<i class="menu-icon fa fa-moon-o bg-green"></i>';
+                        break;
+                    case 'photo':
+                        html = html + '<i class="menu-icon fa fa-camera bg-orange"></i>';
+                        break;
+                    default:
+                        html = html + '<i class="menu-icon fa fa-calendar bg-gray"></i>';
+                    }
+                }
+                html = html + '<div class="menu-info"><h4 class="control-sidebar-subheading">' + item.label + '</h4><p>' + item.description + '</p></div></a></li>';
+            }
+            $("#imouto-search-results").html('<ul class="control-sidebar-menu">' + html + '</ul>');
+        });
+    });
     $(".content-wrapper").html(loading);
     
     if(page == '') { homeScreen(); return true; }

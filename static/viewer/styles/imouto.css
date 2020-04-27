@@ -104,3 +104,9 @@
 {
     border-radius: 0px;
 }
+
+.search-results
+{
+	margin-left: 1em;
+        overflow-x: hidden;
+}
