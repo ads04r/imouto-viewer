@@ -72,6 +72,13 @@ def generate_dashboard():
                 continue
             peopledata.append(person)
 
+    weights = DataReading.objects.filter(type='weight', start_time__gte=(last_event - datetime.timedelta(days=7)))
+    if weights.count() > 0:
+        total_weight = 0.0
+        for weight in weights:
+            total_weight = total_weight + float(weight.value)
+        stats['weight'] = total_weight / float(weights.count())
+
     stats['photos'] = 0
     try:
         last_photo = Photo.objects.all().order_by('-time')[0].time
