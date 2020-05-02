@@ -77,7 +77,7 @@ def generate_dashboard():
         total_weight = 0.0
         for weight in weights:
             total_weight = total_weight + float(weight.value)
-        stats['weight'] = total_weight / float(weights.count())
+        stats['weight'] = (float(int((total_weight / float(weights.count())) * 100)) / 100)
 
     stats['photos'] = 0
     try:
