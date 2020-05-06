@@ -231,7 +231,7 @@ def search(request):
             if len(description) > 0:
                 description = description + ' ...'
         if description == '':
-            description = event.start_time.strftime("%A %-d %B")
+            description = event.start_time.strftime("%a %-d %b %Y")
         item = {'label': event.caption, 'id': event.id, 'description': description, 'date': event.start_time.strftime("%A %-d %B"), 'type': event.type, 'link': 'event_' + str(event.id)}
         ret.append(item)
     response = HttpResponse(json.dumps(ret), content_type='application/json')
