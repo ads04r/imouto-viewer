@@ -594,6 +594,8 @@ class LifeReport(models.Model):
     people = models.ManyToManyField(Person, through='ReportPeople')
     locations = models.ManyToManyField(Location, through='ReportLocations')
     events = models.ManyToManyField(Event, through='ReportEvents')
+    created_date = models.DateTimeField(auto_now_add=True, blank=True)
+    modified_date = models.DateTimeField(default=datetime.datetime.now)
     def __str__(self):
         return self.label
     class Meta:
@@ -602,7 +604,7 @@ class LifeReport(models.Model):
         verbose_name_plural = 'life reports'
 
 class LifeReportProperties(models.Model):
-    report = models.ForeignKey(LifeReport, on_delete=models.CASCADE)
+    report = models.ForeignKey(LifeReport, on_delete=models.CASCADE, related_name='properties')
     key = models.CharField(max_length=128)
     value = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)

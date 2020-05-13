@@ -41,7 +41,7 @@ def timelineitem(request, ds):
     return render(request, 'viewer/timeline_event.html', context)
 
 def reports(request):
-    data = generate_dashboard()
+    data = LifeReport.objects.all().order_by('-modified_date')
     context = {'type':'view', 'data':data}
     return render(request, 'viewer/reports.html', context)
 
@@ -174,6 +174,11 @@ def person(request, uid):
     data = get_object_or_404(Person, uid=uid)
     context = {'type':'person', 'data':data, 'properties':explode_properties(data)}
     return render(request, 'viewer/person.html', context)
+
+def report(request, id):
+    data = get_object_or_404(LifeReport, id=id)
+    context = {'type':'report', 'data':data}
+    return render(request, 'viewer/report.html', context)
 
 def person_photo(request, uid):
     data = get_object_or_404(Person, uid=uid)

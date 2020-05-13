@@ -9,6 +9,7 @@ urlpatterns = [
     path('timeline.html', views.timeline),
     path('timeline/<ds>.html', views.timelineitem),
     path('reports.html', views.reports),
+    path('reports/<id>.html', views.report),
     path('events.html', views.events),
     path('events.json', views.eventjson),
     path('events/<eid>.html', views.event),

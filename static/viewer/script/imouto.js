@@ -118,6 +118,11 @@ function reportsScreen()
     $(".content-wrapper").load("./reports.html", function(){ });
 }
 
+function reportScreen(id)
+{
+    $(".content-wrapper").load("./reports/" + id + ".html", function(){ });
+}
+
 function eventsScreen()
 {
     $(".content-wrapper").load("./events.html", function()
@@ -565,6 +570,7 @@ function pageRefresh()
     if(page.startsWith('event_')) { eventScreen(page.replace('event_', '')); }
     if(page.startsWith('place_')) { placeScreen(page.replace('place_', '')); }
     if(page.startsWith('person_')) { personScreen(page.replace('person_', '')); }
+    if(page.startsWith('report_')) { reportScreen(page.replace('report_', '')); }
                             
     if(page.startsWith('events_'))
     {

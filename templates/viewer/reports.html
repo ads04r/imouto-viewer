@@ -9,6 +9,30 @@
 
 <section class="content">
 
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12">
 
+{% for item in data %}
+
+                <div class="box box-primary">
+                    <div class="box-body with-border">
+
+                        <h4>{{ item.label }}</h4>
+
+                    </div>
+                    <div class="box-footer clearfix">
+                        <span class="pull-right">
+                            <a class="btn btn-primary" href="#report_{{ item.pk }}">View</a>
+                            <a class="btn btn-secondary" href="">Download PDF</a>
+                        </span>
+                    </div>
+                </div>
+
+{% endfor %}
+
+            </div>
+        </div>
+    </div>
 
 </section>
