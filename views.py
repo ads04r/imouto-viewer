@@ -1,7 +1,7 @@
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
-import datetime, pytz, dateutil.parser, json
+import datetime, pytz, dateutil.parser, json, tzlocal
 
 from .models import *
 from .forms import *
@@ -106,14 +106,15 @@ def eventjson(request):
     dse = request.GET.get('end', '')
     dts = dateutil.parser.parse(dss)
     dte = dateutil.parser.parse(dse)
+    tz = tzlocal.get_localzone()
     ret = []
     for event in Event.objects.filter(end_time__gte=dts).filter(start_time__lte=dte):
         item = {}
         item['id'] = event.pk
         item['url'] = "#event_" + str(event.pk)
         item['title'] = event.caption
-        item['start'] = event.start_time.isoformat()
-        item['end'] = event.end_time.isoformat()
+        item['start'] = event.start_time.astimezone(tz).isoformat()
+        item['end'] = event.end_time.astimezone(tz).isoformat()
         item['backgroundColor'] = 'white'
         item['textColor'] = 'black'
         if event.type == 'journey':
