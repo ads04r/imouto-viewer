@@ -42,6 +42,7 @@
     width: 100%;
 }
 
+.journeyeventmap { min-height: 480px !important; }
 .eventmap { min-height: 250px; }
 
 .message-outgoing { padding-left: 3em; }

@@ -43,7 +43,11 @@
 
                 <div class="box box-primary">
                     <div class="box-body">
+    {% if data.description == '' and data.photos.count == 0 and data.music.count == 0 %}
+                        <div id="map{{ data.pk }}" class="journeyeventmap eventmap" data-geojson="{{ data.geo }}"></div>
+    {% else %}
                         <div id="map{{ data.pk }}" class="eventmap" data-geojson="{{ data.geo }}"></div>
+    {% endif %}
                     </div>
                 </div>
 {% endif %}
