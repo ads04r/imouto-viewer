@@ -16,7 +16,7 @@
 {% for year in data %}
 
         <div class="row">
-            <div class="col-xs-12 col-sm-12 col-md-12">
+            <div class="col-xs-12 col-sm-6 col-md-9">
 
                 <div class="box box-primary">
                     <div class="box-header with-border">
@@ -24,11 +24,37 @@
                     </div>
                     <div class="box-body">
 
-{% for event in year.events %}
+{% for place in year.places %}
 
-<p>{{ event.caption }}</p>
+                        <p>{% if place.full_label %}{{ place.full_label }}{% else %}{{ place.label }}{% endif %}</p>
 
 {% endfor %}
+{% for event in year.events %}
+
+                        <p>{{ event.caption }}</p>
+
+{% endfor %}
+
+                        <div class="timeline-gallery">
+                            {% for photo in year.photos %}{% if forloop.counter <= 5 %}<a href="photo/{{ photo.pk }}.jpg" target="_blank"><img src="photo/{{ photo.pk }}_thumb.jpg" width="100" height="100"></a>{% endif %}{% endfor %}
+                        </div>
+
+{% if year.people %}
+
+                        <div class="timeline-people-row">
+                    {% for person in year.people %}
+                        {% if person.image %}
+                            <a href="#person_{{ person.uid }}"><img class="img-circle" src="people/{{ person.uid }}_thumb.jpg" width="50" height="50" alt="{{ person.full_name }}"></a>
+                        {% endif %}
+                    {% endfor %}
+                    {% for person in year.people %}
+                        {% if person.image == None %}
+                            <a href="#person_{{ person.uid }}"><img class="img-circle" src="{% static "viewer/graphics/unknown_person.jpg" %}" width="50" height="50" alt="{{ person.full_name }}"></a>
+                        {% endif %}
+                    {% endfor %}
+                        </div>
+
+{% endif %}
 
                     </div>
                 </div>

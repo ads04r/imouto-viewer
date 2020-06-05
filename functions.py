@@ -29,11 +29,34 @@ def generate_onthisday():
         dt = dt.replace(year=year)
         dts = dt.replace(hour=0, minute=0, second=0)
         dte = dt.replace(hour=23, minute=59, second=59)
-        events = []
 
+        events = []
+        places = []
+        people = []
         for event in Event.objects.filter(end_time__gte=dts, start_time__lte=dte):
-            events.append(event)
-        if len(events) > 0:
+            for person in event.people.all():
+                if not(person in people):
+                    people.append(person)
+            if not(event.location is None):
+                if event.location.label != 'Home':
+                    if not(event.location in places):
+                        places.append(event.location)
+            if len(str(event.description)) > 0:
+                events.append(event)
+                continue
+            if event.type == 'life_event' or event.type == 'event': # or event.type == 'photo':
+                events.append(event)
+            if event.type == 'journey':
+                if event.distance() > 10:
+                    events.append(event)
+        photos = []
+        for photo in Photo.objects.filter(time__gte=dts, time__lte=dte):
+            photos.append(photo)
+            for person in photo.people.all():
+                if not(person in people):
+                    people.append(person)
+
+        if len(events) > 0 or len(photos) > 0 or len(places) > 0:
             item = {}
             item['year'] = dts.year
             if i == 1:
@@ -41,6 +64,9 @@ def generate_onthisday():
             else:
                 item['label'] = str(i) + ' years ago'
             item['events'] = events
+            item['photos'] = photos
+            item['places'] = places
+            item['people'] = people
             ret.append(item)
 
     return ret
