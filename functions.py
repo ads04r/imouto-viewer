@@ -3,6 +3,7 @@ from .models import *
 from django.db.models import Sum, Count, F, ExpressionWrapper, fields
 from django.conf import settings
 from geopy import distance
+from tzlocal import get_localzone
 
 def getgeoline(dts, dte, address='127.0.0.1:8000'):
 
@@ -24,7 +25,7 @@ def generate_onthisday():
 
     for i in range(1, 20):
 
-        dt = datetime.datetime.now().replace(tzinfo=pytz.UTC)
+        dt = datetime.datetime.now().replace(tzinfo=get_localzone())
         year = dt.year - i
         dt = dt.replace(year=year)
         dts = dt.replace(hour=0, minute=0, second=0)
