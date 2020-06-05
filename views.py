@@ -1,6 +1,7 @@
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.cache import cache_page
 import datetime, pytz, dateutil.parser, json, tzlocal
 
 from .models import *
@@ -11,11 +12,13 @@ def index(request):
     context = {'type':'index', 'data':[]}
     return render(request, 'viewer/index.html', context)
 
+@cache_page(60 * 60)
 def dashboard(request):
     data = generate_dashboard()
     context = {'type':'view', 'data':data}
     return render(request, 'viewer/dashboard.html', context)
 
+@cache_page(60 * 60 * 6)
 def onthisday(request):
     data = generate_onthisday()
     context = {'type':'view', 'data':data}
@@ -25,6 +28,7 @@ def importer(request):
     context = {}
     return render(request, 'viewer/import.html', context)
 
+@cache_page(60 * 5)
 def timeline(request):
     dt = Event.objects.order_by('-start_time')[0].start_time
     ds = dt.strftime("%Y%m%d")
@@ -32,6 +36,7 @@ def timeline(request):
     context = {'type':'view', 'data':{'current': ds}, 'form':form}
     return render(request, 'viewer/timeline.html', context)
 
+@cache_page(60 * 5)
 def timelineitem(request, ds):
     dsyear = int(ds[0:4])
     dsmonth = int(ds[4:6])
@@ -50,6 +55,7 @@ def reports(request):
     context = {'type':'view', 'data':data}
     return render(request, 'viewer/reports.html', context)
 
+@cache_page(60 * 60)
 def events(request):
     if request.method == 'POST':
         form = EventForm(request.POST)
@@ -72,6 +78,7 @@ def events(request):
     context = {'type':'view', 'data':data, 'form':form}
     return render(request, 'viewer/calendar.html', context)
 
+@cache_page(60 * 5)
 def event(request, eid):
     data = get_object_or_404(Event, pk=eid)
     if request.method == 'POST':
@@ -138,6 +145,7 @@ def eventjson(request):
     response = HttpResponse(json.dumps(ret), content_type='application/json')
     return response
 
+@cache_page(60 * 5)
 def places(request):
     data = {}
     datecutoff = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC) - datetime.timedelta(days=60)
@@ -162,13 +170,14 @@ def places(request):
     context = {'type':'place', 'data':data, 'form':form}
     return render(request, 'viewer/places.html', context)
 
+@cache_page(60 * 60)
 def place(request, uid):
     data = get_object_or_404(Location, uid=uid)
     context = {'type':'place', 'data':data}
     return render(request, 'viewer/place.html', context)
 
+@cache_page(60 * 5)
 def people(request):
-
     data = {}
     datecutoff = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC) - datetime.timedelta(days=365)
     data['recent'] = Person.objects.filter(event__start_time__gte=datecutoff).annotate(num_events=Count('event')).order_by('-num_events')
@@ -176,6 +185,7 @@ def people(request):
     context = {'type':'person', 'data':data}
     return render(request, 'viewer/people.html', context)
 
+@cache_page(60 * 60)
 def person(request, uid):
     data = get_object_or_404(Person, uid=uid)
     context = {'type':'person', 'data':data, 'properties':explode_properties(data)}
