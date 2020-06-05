@@ -5,6 +5,11 @@ function homeScreen()
     $(".content-wrapper").load("./stats.html", function(){ initialiseGraphics(); });
 }
 
+function anniversaryScreen()
+{
+    $(".content-wrapper").load("./onthisday.html", function(){ initialiseGraphics(); });
+}
+
 function uploadScreen()
 {
     $(".content-wrapper").load("./upload.html", function(){
@@ -562,6 +567,7 @@ function pageRefresh()
     if(page == 'timeline') { timelineScreen(); return true; }
     if(page == 'files') { uploadScreen(); return true; }
     if(page == 'reports') { reportsScreen(); return true; }
+    if(page == 'onthisday') { anniversaryScreen(); return true; }
 
     if(page == 'events') { eventsScreen(); return true; }
     if(page == 'people') { peopleScreen(); return true; }

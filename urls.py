@@ -5,6 +5,7 @@ from . import views
 urlpatterns = [
     path('', views.index),
     path('stats.html', views.dashboard),
+    path('onthisday.html', views.onthisday),
     path('upload.html', views.importer),
     path('timeline.html', views.timeline),
     path('timeline/<ds>.html', views.timelineitem),

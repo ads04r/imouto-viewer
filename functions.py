@@ -18,6 +18,33 @@ def getgeoline(dts, dte, address='127.0.0.1:8000'):
                     return json.dumps(data['geo'])
     return ""
 
+def generate_onthisday():
+
+    ret = []
+
+    for i in range(1, 20):
+
+        dt = datetime.datetime.now().replace(tzinfo=pytz.UTC)
+        year = dt.year - i
+        dt = dt.replace(year=year)
+        dts = dt.replace(hour=0, minute=0, second=0)
+        dte = dt.replace(hour=23, minute=59, second=59)
+        events = []
+
+        for event in Event.objects.filter(end_time__gte=dts, start_time__lte=dte):
+            events.append(event)
+        if len(events) > 0:
+            item = {}
+            item['year'] = dts.year
+            if i == 1:
+                item['label'] = 'Last year'
+            else:
+                item['label'] = str(i) + ' years ago'
+            item['events'] = events
+            ret.append(item)
+
+    return ret
+
 def generate_dashboard():
 
     stats = {}

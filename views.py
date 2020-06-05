@@ -16,6 +16,11 @@ def dashboard(request):
     context = {'type':'view', 'data':data}
     return render(request, 'viewer/dashboard.html', context)
 
+def onthisday(request):
+    data = generate_onthisday()
+    context = {'type':'view', 'data':data}
+    return render(request, 'viewer/onthisday.html', context)
+
 def importer(request):
     context = {}
     return render(request, 'viewer/import.html', context)
