@@ -78,7 +78,6 @@ def events(request):
     context = {'type':'view', 'data':data, 'form':form}
     return render(request, 'viewer/calendar.html', context)
 
-@cache_page(60 * 5)
 def event(request, eid):
     data = get_object_or_404(Event, pk=eid)
     if request.method == 'POST':
