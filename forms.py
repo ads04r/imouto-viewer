@@ -6,7 +6,7 @@ import datetime, pytz
 class LocationForm(ModelForm):
     class Meta:
         model = Location
-        fields = ['uid', 'label', 'full_label', 'address', 'phone', 'description', 'lat', 'lon', 'url', 'wikipedia', 'image', 'creation_time', 'destruction_time']
+        fields = ['uid', 'label', 'full_label', 'address', 'phone', 'description', 'lat', 'lon', 'url', 'wikipedia', 'image', 'creation_time', 'destruction_time', 'country']
         widgets = {
             'uid': TextInput(attrs={'class': 'form-control'}),
             'label': TextInput(attrs={'class': 'form-control'}),
@@ -20,6 +20,7 @@ class LocationForm(ModelForm):
             'description': Textarea(attrs={'class': 'form-control'}),
             'creation_time': TextInput(attrs={'class': 'form-control'}),
             'destruction_time': TextInput(attrs={'class': 'form-control'}),
+            'country': Select(attrs={'class': 'form-control'}),
         }
 
 class QuickEventForm(ModelForm):

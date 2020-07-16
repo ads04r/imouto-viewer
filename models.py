@@ -45,6 +45,18 @@ class WeatherReading(models.Model):
         verbose_name = 'weather reading'
         verbose_name_plural = 'weather readings'
 
+class LocationCountry(models.Model):
+    a2 = models.SlugField(primary_key=True, max_length=2)
+    a3 = models.SlugField(unique=True, max_length=3)
+    label = models.CharField(max_length=100)
+    wikipedia = models.URLField(blank=True, null=True)
+    def __str__(self):
+        return str(self.label)
+    class Meta:
+        app_label = 'viewer'
+        verbose_name = 'country'
+        verbose_name_plural = 'countries'
+
 class Location(models.Model):
     uid = models.SlugField(unique=True, max_length=32)
     label = models.CharField(max_length=100)
@@ -52,6 +64,7 @@ class Location(models.Model):
     description = models.TextField(blank=True, null=True)
     lat = models.FloatField()
     lon = models.FloatField()
+    country = models.ForeignKey(LocationCountry, related_name='locations', null=True, blank=True, on_delete=models.SET_NULL)
     creation_time = models.DateTimeField(blank=True, null=True)
     destruction_time = models.DateTimeField(blank=True, null=True)
     address = models.TextField(blank=True, null=True)
@@ -232,10 +245,10 @@ class Person(models.Model):
         ret['events'] = Event.objects.filter(people=self).count()
         ret['photos'] = Photo.objects.filter(people=self).count()
         ret['places'] = len(self.places())
-        #try:
-        ret['first_met'] = Event.objects.filter(people=self).order_by('start_time')[0].start_time
-        #except:
-        #    ret['first_met'] = None
+        try:
+            ret['first_met'] = Event.objects.filter(people=self).order_by('start_time')[0].start_time
+        except:
+            ret['first_met'] = None
         return ret
     def photos(self):
         return Photo.objects.filter(people__in=[self]).order_by('-time')
@@ -596,6 +609,42 @@ class LifeReport(models.Model):
     events = models.ManyToManyField(Event, through='ReportEvents')
     created_date = models.DateTimeField(auto_now_add=True, blank=True)
     modified_date = models.DateTimeField(default=datetime.datetime.now)
+    def addproperty(self, key, value):
+        ret = LifeReportProperties(key=key, value=str(value), report=self)
+        ret.save()
+        return ret
+    def geo(self):
+        features = []
+        minlat = 360.0
+        maxlat = -360.0
+        minlon = 360.0
+        maxlon = -360.0
+        for location in self.locations.all():
+            point = {}
+            point['type'] = "Point"
+            point['coordinates'] = [location.lon, location.lat]
+            if location.lon > maxlon:
+                maxlon = location.lon
+            if location.lon < minlon:
+                minlon = location.lon
+            if location.lat > maxlat:
+                maxlat = location.lat
+            if location.lat < minlat:
+                minlat = location.lat
+            feature = {}
+            properties = {}
+            properties['label'] = str(location)
+            if location.image:
+                properties['image'] = 'places/' + location.uid + '_thumb.jpg'
+            feature['type'] = 'Feature'
+            feature['geometry'] = point
+            feature['properties'] = properties
+            features.append(feature)
+        ret = {}
+        ret['type'] = "FeatureCollection"
+        ret['bbox'] = [minlon - 0.0025, minlat - 0.0025, maxlon + 0.0025, maxlat + 0.0025]
+        ret['features'] = features
+        return json.dumps(ret);
     def __str__(self):
         return self.label
     class Meta:

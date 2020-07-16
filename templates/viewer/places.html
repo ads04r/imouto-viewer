@@ -165,6 +165,12 @@
                                   <td>{{ field.label_tag }}</td><td>{{ field }}</td>
                                 </tr>
 {% endif %}
+{% if forloop.counter == 14 %}
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                </tr>
+{% endif %}
 {% endfor %}
                               </table>
 
@@ -179,7 +185,7 @@
                                   <td>{{ field.label_tag }}</td><td>{{ field }}</td>
                                 </tr>
 {% endif %}
-{% if forloop.counter > 8 %}
+{% if forloop.counter > 8 and forloop.counter < 14 %}
                                 <tr class="form-row">
                                   <td>{{ field.errors }}</td>
                                   <td>{{ field.label_tag }}</td><td>{{ field }}</td>

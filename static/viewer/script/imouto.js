@@ -125,7 +125,9 @@ function reportsScreen()
 
 function reportScreen(id)
 {
-    $(".content-wrapper").load("./reports/" + id + ".html", function(){ });
+    $(".content-wrapper").load("./reports/" + id + ".html", function(){
+        makeMap();
+    });
 }
 
 function eventsScreen()

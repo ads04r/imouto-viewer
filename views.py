@@ -99,6 +99,7 @@ def event(request, eid):
         template = 'viewer/lifeevent.html'
     return render(request, template, context)
 
+@csrf_exempt
 def eventdelete(request, eid):
     if request.method != 'POST':
         raise Http404()
