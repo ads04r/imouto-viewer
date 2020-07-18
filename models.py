@@ -609,6 +609,15 @@ class LifeReport(models.Model):
     events = models.ManyToManyField(Event, through='ReportEvents')
     created_date = models.DateTimeField(auto_now_add=True, blank=True)
     modified_date = models.DateTimeField(default=datetime.datetime.now)
+    def life_events(self):
+        return self.events.filter(type='life_event')
+    def countries(self):
+        ret = LocationCountry.objects.none()
+        for data in self.locations.values('country').distinct():
+            if not('country' in data):
+                continue
+            ret = ret | LocationCountry.objects.filter(a2=str(data['country']))
+        return ret
     def addproperty(self, key, value):
         ret = LifeReportProperties(key=key, value=str(value), report=self)
         ret.save()
@@ -656,6 +665,7 @@ class LifeReportProperties(models.Model):
     report = models.ForeignKey(LifeReport, on_delete=models.CASCADE, related_name='properties')
     key = models.CharField(max_length=128)
     value = models.CharField(max_length=255)
+    icon = models.SlugField(max_length=64, default='bar-chart')
     description = models.TextField(null=True, blank=True)
     def __str__(self):
         return str(self.report) + ' - ' + self.key
@@ -665,6 +675,25 @@ class LifeReportProperties(models.Model):
         verbose_name_plural = 'life report properties'
         indexes = [
             models.Index(fields=['report']),
+            models.Index(fields=['key']),
+        ]
+
+class LifeReportGraph(models.Model):
+    report = models.ForeignKey(LifeReport, on_delete=models.CASCADE, related_name='graphs')
+    key = models.CharField(max_length=128)
+    data = models.TextField(default='', blank=True)
+    type = models.SlugField(max_length=16, default='bar')
+    icon = models.SlugField(max_length=64, default='bar-chart')
+    description = models.TextField(null=True, blank=True)
+    def __str__(self):
+        return str(self.report) + ' - ' + self.key
+    class Meta:
+        app_label = 'viewer'
+        verbose_name = 'life report graph'
+        verbose_name_plural = 'life report graphs'
+        indexes = [
+            models.Index(fields=['report']),
+            models.Index(fields=['type']),
             models.Index(fields=['key']),
         ]
 

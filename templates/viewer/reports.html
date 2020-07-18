@@ -20,6 +20,9 @@
 
                         <h4>{{ item.label }}</h4>
 
+			<p>{% for property in item.properties.all %}{% if forloop.counter > 1 %}, {% endif %}{{ property.key }}: {{ property.value }}{% endfor %}</p>
+			<p><small class="text-muted">{% if item.life_events.count > 0 %}{{ item.life_events.count }} life events, {% endif %}{{ item.locations.count }} places visited, {{ item.people.distinct.count }} people encountered.</small></p>
+
                     </div>
                     <div class="box-footer clearfix">
                         <span class="pull-right">
