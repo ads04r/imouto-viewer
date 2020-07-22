@@ -2,8 +2,10 @@ from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import cache_page
+from background_task.models import Task
 import datetime, pytz, dateutil.parser, json, tzlocal
 
+from .tasks import *
 from .models import *
 from .forms import *
 from .functions import *

@@ -14,6 +14,9 @@ def photo_thumbnail_upload_location(instance, filename):
 def location_thumbnail_upload_location(instance, filename):
     return 'places/' + str(instance.uid) + '/' + filename
 
+def report_pdf_upload_location(instance, filename):
+    return 'reports/report_' + str(instance.id) + '.pdf'
+
 class WeatherLocation(models.Model):
     id = models.SlugField(max_length=32, primary_key=True)
     lat = models.FloatField()
@@ -609,6 +612,7 @@ class LifeReport(models.Model):
     events = models.ManyToManyField(Event, through='ReportEvents')
     created_date = models.DateTimeField(auto_now_add=True, blank=True)
     modified_date = models.DateTimeField(default=datetime.datetime.now)
+    pdf = models.FileField(blank=True, null=True, upload_to=report_pdf_upload_location)
     def life_events(self):
         return self.events.filter(type='life_event')
     def countries(self):
