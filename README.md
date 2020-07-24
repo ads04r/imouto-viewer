@@ -3,6 +3,8 @@ Imouto Viewer
 
 A web app for visualising life annotations and other 'quantified self' data.
 
+[![Imouto Viewer sample event screen](static/viewer/graphics/imouto-screenshot.png)]
+
 Imouto
 ------
 Imouto is a life annotation system first introduced in my PhD thesis, and
@@ -42,7 +44,7 @@ these!
 Most of the data I have is pretty unique to me (I mean, who else tracks
 their steps with a Pebble, right?) but I'm hoping to come up with some
 kind of framework that makes it easy for anyone to import and process
-any kind of data. For now, however, I'm just concentrating on the view
+any kind of data. I've already got scripts that read Garmin FIT files
 and edit features so I can get *something* out the door, and worry
 about which formats I'm going to try and support later, because they
 *will* change over time (and, in fact, already have, several times).
