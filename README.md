@@ -3,7 +3,7 @@ Imouto Viewer
 
 A web app for visualising life annotations and other 'quantified self' data.
 
-[![Imouto Viewer sample event screen](static/viewer/graphics/imouto-screenshot.png)]
+![Imouto Viewer sample event screen](static/viewer/graphics/imouto-screenshot.png)
 
 Imouto
 ------
