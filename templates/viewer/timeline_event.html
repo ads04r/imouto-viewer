@@ -10,8 +10,6 @@
     
     {% for event in data.events %}
 
-    {% if event.photos.count > 0 or event.caption != 'Home' or event.type != 'loc_prox' %}
-    
     <!-- timeline item -->
     <li id="li_event_{{ event.pk }}">
 
@@ -80,7 +78,6 @@
     </li>
     <!-- END timeline item -->
 
-    {% endif %}
     {% endfor %}
     
     <ul class="timeline timeline-inverse" id="imouto-timeline">

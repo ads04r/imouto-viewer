@@ -40,10 +40,11 @@ def timelineitem(request, ds):
     dsyear = int(ds[0:4])
     dsmonth = int(ds[4:6])
     dsday = int(ds[6:])
-    dtq = datetime.datetime(dsyear, dsmonth, dsday, tzinfo=pytz.UTC)
-    events = Event.objects.filter(start_time__gte=dtq).filter(start_time__lt=(dtq + datetime.timedelta(hours=24))).order_by('-start_time')
+    dtq = datetime.datetime(dsyear, dsmonth, dsday, 0, 0, 0, tzinfo=tzlocal.get_localzone())
+    events = get_timeline_events(dtq)
 
-    dtn = Event.objects.filter(start_time__lt=dtq).order_by('-start_time')[0].start_time
+    dtq = events[0].start_time
+    dtn = dtq - datetime.timedelta(days=1)
     dsn = dtn.strftime("%Y%m%d")
 
     context = {'type':'view', 'data':{'label': dtq.strftime("%A %-d %B"), 'next': dsn, 'events': events}}

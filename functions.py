@@ -5,6 +5,37 @@ from django.conf import settings
 from geopy import distance
 from tzlocal import get_localzone
 
+def __display_timeline_event(event):
+
+    if event.type == 'life_event':
+        return False
+    if event.description == '':
+        if event.type == 'loc_prox':
+            if event.location is None:
+                return False
+            if event.location.label == 'Home':
+                if event.photos().count() == 0:
+                    return False
+        if event.type == 'journey':
+            ddt = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC) - datetime.timedelta(days=7)
+            if event.end_time < ddt:
+                if event.people.all().count() == 0:
+                    if event.photos().count() == 0:
+                        if (float(event.distance()) < 1):
+                            return False
+    return True
+
+def get_timeline_events(dt):
+
+    dtq = dt
+    events = []
+    while len(events) == 0:
+        for event in Event.objects.filter(start_time__gte=dtq, start_time__lt=(dtq + datetime.timedelta(hours=24))).order_by('-start_time'):
+            if __display_timeline_event(event):
+                events.append(event)
+        dtq = dtq - datetime.timedelta(hours=24)
+    return events
+
 def getgeoline(dts, dte, address='127.0.0.1:8000'):
 
     id = dts.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S") + dte.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S")
