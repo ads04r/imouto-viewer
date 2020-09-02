@@ -388,6 +388,26 @@
         <div class="modal-content">
             <div class="modal-body">
 
+		<div class="input-group input-group-sm">
+
+			<select id="person_add" class="form-control">
+{% for person in people %}
+				<option value="{{ person.uid }}">{{ person.full_name }}</option>
+{% endfor %}
+			</select>
+			<span class="input-group-btn"><button class="btn btn-success btn-flat" type="button" id="person_add_submit">Add</button></span>
+
+		</div>
+
+		<div id="event_people_list">
+{% for item in data.people.all %}
+                        
+                        <div class="person_delete" data-id="{{ item.uid }}">{{ item.full_name }} <small><a href="#" class="delete_person" data-id="{{ item.uid }}">Delete</a></small></div>
+
+{% endfor %}
+		</div>
+
+
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" id="event-people-save-form-button">Save</button>

@@ -96,7 +96,7 @@ def event(request, eid):
             else:
                 raise Http404(form.errors)
     form = EventForm(instance=data)
-    context = {'type':'event', 'data':data, 'form':form}
+    context = {'type':'event', 'data':data, 'form':form, 'people':Person.objects.all()}
     template = 'viewer/event.html'
     if data.type=='life_event':
         template = 'viewer/lifeevent.html'

@@ -488,6 +488,14 @@ function initialiseJourneyMap(mapdiv)
         });
 }
 
+function eventPeopleDeleteName(id)
+{
+	$('.person_delete').each(function() {
+		if($(this).data('id') == id) { $(this).remove(); }
+	});
+	return false;
+}
+
 function eventScreen(id)
 {
     $(".content-wrapper").load("./events/" + id + ".html", function()
@@ -500,7 +508,28 @@ function eventScreen(id)
             $("form#event-edit").submit();
             
             return false;
-        })
+        });
+	$("#person_add_submit").on('click', function()
+	{
+		var id = $('#person_add').val();
+		var label = $('#person_add').find("option[value='" + id + "']").text();
+		var html = '<div class="person_delete" data-id="' + id + '">';
+		html = html + label + ' ';
+		html = html + '<small><a class="delete_person" href="#" data-id="' + id + '">Delete</a></small>'
+		html = html + '</div>';
+		$('#event_people_list').append(html);
+		$('.delete_person').off('click');
+		$('.delete_person').on('click', function() { return eventPeopleDeleteName($(this).data('id')); });
+	});
+	$('.delete_person').on('click', function() { return eventPeopleDeleteName($(this).data('id')); });
+	$('#event-people-save-form-button').on('click', function() {
+		var data = [];
+		$('.person_delete').each(function() {
+			data.push($(this).data('id'));
+		});
+		console.log(data);
+		return false;
+	});
 
     });
 }
