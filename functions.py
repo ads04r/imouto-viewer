@@ -199,24 +199,25 @@ def generate_dashboard():
     stats['steps'] = total_steps
 
     heartdata = []
-    duration = ExpressionWrapper(F('end_time') - F('start_time'), output_field=fields.BigIntegerField())
+    if DataReading.objects.filter(type='heart-rate', start_time__gte=(last_record - datetime.timedelta(days=7))).count() > 0:
+        duration = ExpressionWrapper(F('end_time') - F('start_time'), output_field=fields.BigIntegerField())
 
-    for i in range(0, 7):
-        dtbase = last_record - datetime.timedelta(days=(7 - i))
-        dt = datetime.datetime(dtbase.year, dtbase.month, dtbase.day, 0, 0, 0, tzinfo=dtbase.tzinfo)
-        hrl = 0
-        hrm = 0
-        obj = DataReading.objects.filter(type='heart-rate').filter(value__gte=user_heart_low).filter(start_time__gte=dt, end_time__lt=(dt + datetime.timedelta(days=1)))
-        for item in obj:
-            if item.value >= user_heart_medium:
-                hrm = hrm + ((item.end_time) - (item.start_time)).total_seconds()
-            else:
-                hrl = hrl + ((item.end_time) - (item.start_time)).total_seconds()
+        for i in range(0, 7):
+            dtbase = last_record - datetime.timedelta(days=(7 - i))
+            dt = datetime.datetime(dtbase.year, dtbase.month, dtbase.day, 0, 0, 0, tzinfo=dtbase.tzinfo)
+            hrl = 0
+            hrm = 0
+            obj = DataReading.objects.filter(type='heart-rate').filter(value__gte=user_heart_low).filter(start_time__gte=dt, end_time__lt=(dt + datetime.timedelta(days=1)))
+            for item in obj:
+                if item.value >= user_heart_medium:
+                    hrm = hrm + ((item.end_time) - (item.start_time)).total_seconds()
+                else:
+                    hrl = hrl + ((item.end_time) - (item.start_time)).total_seconds()
 
-        item = {}
-        item['label'] = dt.strftime("%a")
-        item['value'] = [hrl, hrm]
-        heartdata.append(item)
+            item = {}
+            item['label'] = dt.strftime("%a")
+            item['value'] = [hrl, hrm]
+            heartdata.append(item)
 
     sleepdata = []
     for i in range(0, 7):
@@ -257,7 +258,10 @@ def generate_dashboard():
     walkdata = sorted(walkdata, key=lambda item: item['length'], reverse=True)
     walkdata = walkdata[0:5]
     
-    return {'stats': stats, 'steps': json.dumps(stepdata), 'sleep': json.dumps(sleepdata), 'heart': json.dumps(heartdata), 'contact': contactdata, 'people': peopledata, 'places': locationdata, 'walks': walkdata}
+    ret = {'stats': stats, 'steps': json.dumps(stepdata), 'sleep': json.dumps(sleepdata), 'contact': contactdata, 'people': peopledata, 'places': locationdata, 'walks': walkdata}
+    if len(heartdata) > 0:
+        ret['heart'] = json.dumps(heartdata)
+    return ret
 
 def explode_properties(person):
     prop = {}
