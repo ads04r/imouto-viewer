@@ -2,7 +2,9 @@ from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import cache_page
+from django.core.cache import cache
 from background_task.models import Task
+from haystack.query import SearchQuerySet
 import datetime, pytz, dateutil.parser, json, tzlocal
 
 from .tasks import *
@@ -239,7 +241,15 @@ def search(request):
     data = json.loads(request.body)
     query = data['query']
     ret = []
-    for event in Event.objects.filter(caption__icontains=query).order_by('-start_time')[0:10]:
+
+    cache_key = 'search_' + query
+    sq = cache.get(cache_key)
+    if sq is None:
+        sq = SearchQuerySet().filter(content=query)
+        cache.set(cache_key, sq, 86400)
+
+    for searchresult in sq:
+        event = searchresult.object
         description = event.description[0:50]
         if len(description) == 50:
             description = description[0:(description.rfind(' '))]

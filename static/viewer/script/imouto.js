@@ -548,12 +548,27 @@ function search(query, callback)
             });
 }
 
+function typingDelay(callback, ms)
+{
+        var timer = 0;
+        return function()
+        {
+                var context = this, args = arguments;
+                clearTimeout(timer);
+                timer = setTimeout(function()
+                {
+                        callback.apply(context, args);
+                }, ms || 0);
+        }
+}
+
 function pageRefresh()
 {
     var page = window.location.hash.replace('#', '');
     var loading = '<section class="content"><div class="container-fluid"><div class="row"><div class="col-xs-1 col-sm-3 col-md-5"></div><div class="col-xs-10 col-sm-6 col-md-2"><div class="box box-primary"><div class="box-body text-center"><i class="fa fa-spin fa-refresh"></i>&nbsp;Loading</div></div></div></div></div></section>';
     
-    $("#imouto-search-text").on('keyup', function()
+    $("#imouto-search-text").on('keydown', function() { $("#imouto-search-results").html(''); });
+    $("#imouto-search-text").on('keyup', typingDelay(function()
     {
         var text = $(this).val();
         search(text, function(data)
@@ -591,7 +606,7 @@ function pageRefresh()
             }
             $("#imouto-search-results").html('<ul class="control-sidebar-menu">' + html + '</ul>');
         });
-    });
+    }, 500));
     $(".content-wrapper").html(loading);
     
     if(page == '') { homeScreen(); return true; }

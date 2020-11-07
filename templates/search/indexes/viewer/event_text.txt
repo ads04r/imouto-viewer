@@ -1,0 +1,4 @@
+{{ object.caption }}
+{{ object.type }}
+{{ object.location.label }}
+{{ object.description }}
