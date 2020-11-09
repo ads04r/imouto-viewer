@@ -80,8 +80,12 @@ def events(request):
     return render(request, 'viewer/calendar.html', context)
 
 def event(request, eid):
-    data = get_object_or_404(Event, pk=eid)
+
+    cache_key = 'event_' + str(eid)
+
     if request.method == 'POST':
+
+        data = get_object_or_404(Event, pk=eid)
 
         form = EventForm(request.POST, instance=data)
         if form.is_valid():
@@ -89,14 +93,22 @@ def event(request, eid):
             if event.type == 'journey':
                 event.geo = getgeoline(event.start_time, event.end_time, request.META['HTTP_HOST'])
                 event.save()
+            cache.set(cache_key, data, 86400)
             return HttpResponseRedirect('../#event_' + str(eid))
         else:
             form = QuickEventForm(request.POST, instance=data)
             if form.is_valid():
                 form.save()
+                cache.set(cache_key, data, 86400)
                 return HttpResponseRedirect('../#event_' + str(eid))
             else:
                 raise Http404(form.errors)
+
+    data = cache.get(cache_key)
+    if data is None:
+        data = get_object_or_404(Event, pk=eid)
+        cache.set(cache_key, data, 86400)
+
     form = EventForm(instance=data)
     context = {'type':'event', 'data':data, 'form':form, 'people':Person.objects.all()}
     template = 'viewer/event.html'

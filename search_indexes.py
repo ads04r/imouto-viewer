@@ -11,9 +11,8 @@ class EventIndex(indexes.SearchIndex, indexes.Indexable):
 	def get_model(self):
 		return Event
 
-	def index_queryset(self, using=None):
-		return self.get_model().objects.filter(start_time__lte=datetime.datetime.now().replace(tzinfo=pytz.UTC))
-
+	def get_updated_field(self):
+		return 'start_time'
 
 
 #    start_time = models.DateTimeField()

@@ -1,4 +1,12 @@
 {{ object.caption }}
-{{ object.type }}
-{{ object.location.label }}
+{% if object.location %}
+  {{ object.location.label }}
+{% endif %}
+{% for person in object.people.all %}
+  {{ person.full_name }}
+{% endfor %}
 {{ object.description }}
+{{ object.type }}
+{% if object.location %}
+  {{ object.location.address }}
+{% endif %}

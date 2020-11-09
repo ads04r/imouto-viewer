@@ -571,6 +571,7 @@ function pageRefresh()
     $("#imouto-search-text").on('keyup', typingDelay(function()
     {
         var text = $(this).val();
+        if(text == '') { return; }
         search(text, function(data)
         {
             var html = '';
