@@ -50,6 +50,9 @@ class Command(BaseCommand):
 		c = conn.cursor()
 
 		sys.stdout.write("Parsing Pebble file...\n")
+
+		# This bit looks for activities, specifically 'long walk' and 'sleep' events.
+
 		query = "SELECT start_utc_secs, end_utc_secs, type FROM activity_sessions WHERE start_utc_secs>='" + str(int(last_entry.start_time.timestamp())) + "' ORDER BY start_utc_secs ASC;"
 		if last_event.start_time < last_entry.start_time:
 			query = "SELECT start_utc_secs, end_utc_secs, type FROM activity_sessions WHERE start_utc_secs>='" + str(int(last_event.start_time.timestamp())) + "' ORDER BY start_utc_secs ASC;"
@@ -61,7 +64,6 @@ class Command(BaseCommand):
 			sys.exit(1)
 
 		for row in res:
-
 			dts = datetime.datetime.fromtimestamp(int(row[0]), tz=pytz.UTC)
 			dte = datetime.datetime.fromtimestamp(int(row[1]), tz=pytz.UTC)
 			type = 'pebble-app-activity'
@@ -72,6 +74,8 @@ class Command(BaseCommand):
 				dp = DataReading(start_time=dts, end_time=dte, type=type, value=value)
 				dp.save()
 
+		# This bit counts steps and adds them as DataReadings
+
 		step_count = 0
 		try:
 			res = c.execute("SELECT date_utc_secs, step_count FROM minute_samples WHERE date_utc_secs>='" + str(int(last_step.start_time.timestamp())) + "';")
@@ -79,8 +83,8 @@ class Command(BaseCommand):
 			sys.stderr.write(self.style.ERROR("File error: '" + uploaded_file + "' is malformed\n"))
 			os.remove(file)
 			sys.exit(1)
-		for row in res:
 
+		for row in res:
 			dts = datetime.datetime.fromtimestamp(int(row[0]), tz=pytz.UTC)
 			dte = datetime.datetime.fromtimestamp((int(row[0]) + 59), tz=pytz.UTC)
 			steps = row[1]
