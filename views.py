@@ -1,7 +1,6 @@
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.cache import cache_page
 from django.core.cache import cache
 from background_task.models import Task
 from haystack.query import SearchQuerySet
@@ -21,11 +20,15 @@ def dashboard(request):
     context = {'type':'view', 'data':data}
     return render(request, 'viewer/dashboard.html', context)
 
-@cache_page(60 * 60 * 6)
 def onthisday(request):
-    data = generate_onthisday()
-    context = {'type':'view', 'data':data}
-    return render(request, 'viewer/onthisday.html', context)
+    key = 'onthisday_' + datetime.date.today().strftime("%Y%m%d")
+    ret = cache.get(key)
+    if ret is None:
+        data = generate_onthisday()
+        context = {'type':'view', 'data':data}
+        ret = render(request, 'viewer/onthisday.html', context)
+        cache.set(key, ret, timeout=86400)
+    return ret
 
 def importer(request):
     context = {}
