@@ -230,6 +230,12 @@ class Person(models.Model):
             ret = im.crop((x, 0, x + h, h))
         ret = ret.resize((size, size), 1)
         return ret
+    def messages(self):
+        ret = []
+        for phone in PersonProperty.objects.filter(person=self, key='mobile'):
+            for ri in RemoteInteraction.objects.filter(address=phone.value):
+                ret.append(ri)
+        return sorted(ret, key=lambda k: k.time, reverse=True)
     def get_property(self, key):
         ret = []
         for prop in PersonProperty.objects.filter(person=self).filter(key=key):

@@ -62,6 +62,7 @@
             <div class="nav-tabs-custom">
                 <ul class="nav nav-tabs">
                     <li class="active"><a href="#profile-tab-events" data-toggle="tab">Events</a></li>
+                    <li><a href="#profile-tab-comms" data-toggle="tab">Communication</a></li>
                     <li><a href="#profile-tab-places" data-toggle="tab">Places</a></li>
                     <li><a href="#profile-tab-photos" data-toggle="tab">Photos</a></li>
                     <li><a href="#profile-tab-properties" data-toggle="tab">Properties</a></li>
@@ -86,6 +87,22 @@
 {% endfor %}
 
 
+                        </div>
+
+{% endfor %}
+                    
+                    </div>
+                    <div class="tab-pane" id="profile-tab-comms">
+
+{% for msg in data.messages %}
+
+                        <div class="post">
+                            <div class="user-block">
+                                {% if data.image %}<img class="img-circle img-bordered-sm" src="people/{{ data.uid }}_thumb.jpg" alt="Profile picture">{% endif %}
+                                <span class="username">{{ msg.time }}</span>
+                                <span class="description">{{ msg.type }} | {{ msg.address }} | {% if msg.incoming %}Incoming{% else %}Outgoing{% endif %}</span>
+                            </div>
+                            <p>{{ msg.message }}</p>
                         </div>
 
 {% endfor %}
