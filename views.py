@@ -16,9 +16,14 @@ def index(request):
     return render(request, 'viewer/index.html', context)
 
 def dashboard(request):
-    data = generate_dashboard()
-    context = {'type':'view', 'data':data}
-    return render(request, 'viewer/dashboard.html', context)
+    key = 'dashboard'
+    ret = cache.get(key)
+    if ret is None:
+        data = generate_dashboard()
+        context = {'type':'view', 'data':data}
+        ret = render(request, 'viewer/dashboard.html', context)
+        cache.set(key, ret, timeout=86400)
+    return ret
 
 def onthisday(request):
     key = 'onthisday_' + datetime.date.today().strftime("%Y%m%d")
@@ -62,6 +67,7 @@ def reports(request):
 
 def events(request):
     if request.method == 'POST':
+        cache.delete('dashboard')
         form = EventForm(request.POST)
         if form.is_valid():
             event = form.save()
@@ -88,6 +94,7 @@ def event(request, eid):
 
     if request.method == 'POST':
 
+        cache.delete('dashboard')
         data = get_object_or_404(Event, pk=eid)
 
         form = EventForm(request.POST, instance=data)
@@ -121,6 +128,7 @@ def event(request, eid):
 
 @csrf_exempt
 def eventdelete(request, eid):
+    cache.delete('dashboard')
     if request.method != 'POST':
         raise Http404()
     data = get_object_or_404(Event, pk=eid)
@@ -166,6 +174,7 @@ def places(request):
     data['recent'] = Location.objects.filter(events__start_time__gte=datecutoff).annotate(num_events=Count('events')).order_by('-num_events')
     data['all'] = Location.objects.annotate(num_events=Count('events')).order_by('label')
     if request.method == 'POST':
+        cache.delete('dashboard')
         form = LocationForm(request.POST, request.FILES)
         if form.is_valid():
             #form.save()

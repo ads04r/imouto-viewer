@@ -49,6 +49,7 @@ class Command(BaseCommand):
 
 		c = conn.cursor()
 
+		cache.delete('dashboard')
 		sys.stdout.write("Parsing Pebble file...\n")
 
 		# This bit looks for activities, specifically 'long walk' and 'sleep' events.
@@ -102,3 +103,4 @@ class Command(BaseCommand):
 			sys.stderr.write(self.style.SUCCESS("Added " + str(step_count) + " steps\n"))
 
 		os.remove(file)
+		cache.delete('dashboard')
