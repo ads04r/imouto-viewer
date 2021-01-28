@@ -21,6 +21,7 @@ class WeatherLocation(models.Model):
     id = models.SlugField(max_length=32, primary_key=True)
     lat = models.FloatField()
     lon = models.FloatField()
+    api_id = models.SlugField(max_length=32, default='')
     label = models.CharField(max_length=64)
     def __str__(self):
         return str(self.label)
