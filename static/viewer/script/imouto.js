@@ -118,9 +118,24 @@ function timelineScreen()
     });
 }
 
+function updateReportYearSelect()
+{
+	var year = $('#generate-life-report-year').val();
+	$('#id_label').val(year);
+	$('#new-report-generate-year').val(year);
+}
+
 function reportsScreen()
 {
-    $(".content-wrapper").load("./reports.html", function(){ });
+    $(".content-wrapper").load("./reports.html", function(){
+        updateReportYearSelect();
+        $("#generate-life-report-year").on('change', function() {
+            updateReportYearSelect();
+        });
+        $("#report-save-form-button").on('click', function(){
+            $("#report-edit").submit();
+        });
+    });
 }
 
 function reportScreen(id)

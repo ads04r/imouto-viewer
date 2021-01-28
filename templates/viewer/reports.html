@@ -21,13 +21,15 @@
                         <h4>{{ item.label }}</h4>
 
 			<p>{% for property in item.properties.all %}{% if forloop.counter > 1 %}, {% endif %}{{ property.key }}: {{ property.value }}{% endfor %}</p>
-			<p><small class="text-muted">{% if item.life_events.count > 0 %}{{ item.life_events.count }} life events, {% endif %}{{ item.locations.count }} places visited, {{ item.people.distinct.count }} people encountered.</small></p>
+			{% if item.life_events.count > 0 %}<p>Life Events<br><small>{% for event in item.life_events %}{{ event.caption }}<br>{% endfor %}</small></p>{% endif %}
+			<p><small class="text-muted">{% if item.events.count > 0 %}{{ item.events.count }} significant events, {% endif %}{{ item.locations.count }} places visited, {{ item.people.distinct.count }} people encountered.</small></p>
 
                     </div>
                     <div class="box-footer clearfix">
                         <span class="pull-right">
                             <a class="btn btn-primary" href="#report_{{ item.pk }}">View</a>
                             {% if item.pdf %}<a class="btn btn-secondary" href="{{ item.pdf }}">Download PDF</a>{% endif %}
+                            <a class="btn btn-danger" data-toggle="modal" data-target="#admin_report_delete_{{ item.pk }}" aria-hidden="true" href="#">Delete</a>
                         </span>
                     </div>
                 </div>
@@ -42,8 +44,17 @@
 
                         <h4>Report Generation</h4>
 
-			<form id="generate-life-report" action="" method="POST">
+			<form id="generate-life-report" action="/report.html" method="POST">
 
+                              <table class="table table-hover">
+                                <tr class="form-row">
+                                  <td>Year:</td><td><select id="generate-life-report-year">
+{% for year in years %}
+                                      <option value="{{ year }}">{{ year }}</option>
+{% endfor %}
+                                  </select></td>
+                                </tr>
+                              </table>
 				
 
 			</form>
@@ -51,13 +62,72 @@
                     </div>
                     <div class="box-footer clearfix">
                         <span class="pull-right">
-                            <a class="btn btn-primary" href="">Generate</a>
+                            <a class="btn btn-success" data-toggle="modal" data-target="#admin_report_add" aria-hidden="true" href="#">Generate</a>
                         </span>
                     </div>
-                </div>		
+                </div>
 
             </div>
         </div>
     </div>
 
 </section>
+
+
+<div class="modal fade nav-tabs-custom" id="admin_report_add" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+                <form id="report-edit" action="reports.html" method="POST" enctype="multipart/form-data">{% csrf_token %}
+                              <input type="hidden" id="new-report-generate-year" name="year" value=""/>
+{% if settings.moonshine_url %}
+                              <input type="hidden" id="new-report-moonshine-url" name="moonshine-url" value="{{ settings.moonshine_url }}"/>
+{% endif %}
+
+                              <table class="table table-hover">
+{% for field in form %}
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                </tr>
+{% endfor %}
+{% if settings.moonshine_url %}
+                                <tr class="form-row">
+                                  <td></td><td><label for="id_moonshine">Moonshine URL:</label></td><td>{{ settings.moonshine_url }}</td>
+                                </tr>
+{% endif %}
+                              </table>
+
+
+                </form>
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="report-save-form-button">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% for item in data %}
+
+<div class="modal fade nav-tabs-custom" id="admin_report_delete_{{ item.pk }}" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+		<h1>Are you sure?</h1>
+		<p>This will delete "{{ item.label }}" and cannot be undone.</p>
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-report-id="{{ item.pk }}" id="report-delete-form-button">Delete</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endfor %}

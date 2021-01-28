@@ -621,6 +621,8 @@ class LifeReport(models.Model):
     pdf = models.FileField(blank=True, null=True, upload_to=report_pdf_upload_location)
     def life_events(self):
         return self.events.filter(type='life_event')
+    def diary_entries(self):
+        return self.events.exclude(type='life_event').exclude(description='').order_by('start_time')
     def countries(self):
         ret = LocationCountry.objects.none()
         for data in self.locations.values('country').distinct():

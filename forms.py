@@ -1,5 +1,5 @@
 from django.forms import ModelForm, ImageField, TextInput, Textarea, Select
-from viewer.models import Location, Event
+from viewer.models import Location, Event, LifeReport
 from django.db.models import Sum, Count
 import datetime, pytz
 
@@ -49,3 +49,8 @@ class EventForm(ModelForm):
             'start_time': TextInput(attrs={'class': 'form-control'}),
             'end_time': TextInput(attrs={'class': 'form-control'}),
         }
+
+class CreateReportForm(ModelForm):
+    class Meta:
+        model = LifeReport
+        fields = ['label', 'style']

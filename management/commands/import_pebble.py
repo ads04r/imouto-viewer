@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand
+from django.core.cache import cache
 from django.conf import settings
 from viewer.models import DataReading, Event
 import os, sys, datetime, shutil, sqlite3, pytz

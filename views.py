@@ -2,6 +2,7 @@ from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
+from django.conf import settings
 from background_task.models import Task
 from haystack.query import SearchQuerySet
 import datetime, pytz, dateutil.parser, json, tzlocal
@@ -61,8 +62,30 @@ def timelineitem(request, ds):
     return render(request, 'viewer/timeline_event.html', context)
 
 def reports(request):
+    if request.method == 'POST':
+        form = CreateReportForm(request.POST)
+        if form.is_valid():
+            year = int(request.POST['year'])
+            dss = datetime.datetime(year, 1, 1, 0, 0, 0, tzinfo=pytz.UTC).strftime("%Y-%m-%d %H:%M:%S %Z")
+            dse = datetime.datetime(year, 12, 31, 23, 59, 59, tzinfo=pytz.UTC).strftime("%Y-%m-%d %H:%M:%S %Z")
+            title = str(request.POST['label'])
+            style = str(request.POST['style'])
+#            return HttpResponse(json.dumps(request.POST))
+            generate_report(title, dss, dse, 'year', style)
+            return HttpResponseRedirect('./#reports')
+        else:
+            raise Http404(form.errors)
+
+    form = CreateReportForm()
     data = LifeReport.objects.all().order_by('-modified_date')
-    context = {'type':'view', 'data':data}
+    context = {'type':'view', 'data':data, 'form': form, 'settings': {}, 'years': []}
+    y1 = Event.objects.all().order_by('start_time')[0].start_time.year + 1
+    y2 = Event.objects.all().order_by('-start_time')[0].start_time.year - 1
+    for y in range(y2, y1 - 1, -1):
+        context['years'].append(y)
+    if hasattr(settings, 'MOONSHINE_URL'):
+        if settings.MOONSHINE_URL != '':
+            context['settings']['moonshine_url'] = settings.MOONSHINE_URL
     return render(request, 'viewer/reports.html', context)
 
 def events(request):
