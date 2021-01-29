@@ -70,8 +70,10 @@ def reports(request):
             dse = datetime.datetime(year, 12, 31, 23, 59, 59, tzinfo=pytz.UTC).strftime("%Y-%m-%d %H:%M:%S %Z")
             title = str(request.POST['label'])
             style = str(request.POST['style'])
-#            return HttpResponse(json.dumps(request.POST))
-            generate_report(title, dss, dse, 'year', style)
+            if 'moonshine_url' in request.POST:
+                generate_report(title, dss, dse, 'year', style, str(request.POST['moonshine_url']))
+            else:
+                generate_report(title, dss, dse, 'year', style)
             return HttpResponseRedirect('./#reports')
         else:
             raise Http404(form.errors)

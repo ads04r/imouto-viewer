@@ -328,7 +328,7 @@ function makeMap()
             L.geoJSON(data).addTo(map);
             L.tileLayer('https://tiles.flarpyland.com/osm/{z}/{x}/{y}.png', {
                 attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
-                maxZoom: 18
+                maxZoom: 18, minZoom: 2
             }).addTo(map);
             map.fitBounds(bb);
     });
