@@ -42,18 +42,18 @@ def generate_report(title, dss, dse, type='year', style='default', moonshine_url
 			report.events.add(event)
 		photos = photos + event.photos().count()
 
-	report.addproperty(key='Photos Taken', value=photos)
+	report.addproperty(key='Photos Taken', value=photos, category='photos')
 
 	countries = report.countries().count()
 	if countries > 1:
-		prop = report.addproperty(key='Countries Visited', value=(countries - 1))
+		prop = report.addproperty(key='Countries Visited', value=(countries - 1), category='travel')
 		prop.icon = 'globe'
 		prop.save()
 
 	phone_calls_made = RemoteInteraction.objects.filter(type='phone-call', time__gte=dts, time__lte=dte, incoming=False).count()
 	phone_calls_recv = RemoteInteraction.objects.filter(type='phone-call', time__gte=dts, time__lte=dte, incoming=True).exclude(message__icontains='(missed call)').count()
 	if (phone_calls_made + phone_calls_recv) > 1:
-		prop = report.addproperty(key='Phone Calls', value=(phone_calls_made + phone_calls_recv))
+		prop = report.addproperty(key='Phone Calls', value=(phone_calls_made + phone_calls_recv), category='contact')
 		prop.icon = 'phone'
 		prop.description = str(phone_calls_made) + ' made / ' + str(phone_calls_recv) + ' received'
 		prop.save()
@@ -61,7 +61,7 @@ def generate_report(title, dss, dse, type='year', style='default', moonshine_url
 	sms_sent = RemoteInteraction.objects.filter(type='sms', time__gte=dts, time__lte=dte, incoming=False).count()
 	sms_recv = RemoteInteraction.objects.filter(type='sms', time__gte=dts, time__lte=dte, incoming=True).count()
 	if (sms_sent + sms_recv) > 1:
-		prop = report.addproperty(key='SMS', value=(sms_sent + sms_recv))
+		prop = report.addproperty(key='SMS', value=(sms_sent + sms_recv), category='contact')
 		prop.icon = 'comment-o'
 		prop.description = str(sms_sent) + ' sent / ' + str(sms_recv) + ' received'
 		prop.save()
