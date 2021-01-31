@@ -631,8 +631,8 @@ class LifeReport(models.Model):
                 continue
             ret = ret | LocationCountry.objects.filter(a2=str(data['country']))
         return ret
-    def addproperty(self, key, value):
-        ret = LifeReportProperties(key=key, value=str(value), report=self)
+    def addproperty(self, key, value, category=""):
+        ret = LifeReportProperties(key=key, value=str(value), category=str(category), report=self)
         ret.save()
         return ret
     def geo(self):
@@ -678,6 +678,7 @@ class LifeReportProperties(models.Model):
     report = models.ForeignKey(LifeReport, on_delete=models.CASCADE, related_name='properties')
     key = models.CharField(max_length=128)
     value = models.CharField(max_length=255)
+    category = models.SlugField(max_length=32, default='')
     icon = models.SlugField(max_length=64, default='bar-chart')
     description = models.TextField(null=True, blank=True)
     def __str__(self):
