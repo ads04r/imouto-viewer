@@ -65,6 +65,7 @@ def generate_onthisday():
         events = []
         places = []
         people = []
+        journeys = []
         for event in Event.objects.filter(end_time__gte=dts, start_time__lte=dte):
             for person in event.people.all():
                 if not(person in people):
@@ -73,14 +74,15 @@ def generate_onthisday():
                 if event.location.label != 'Home':
                     if not(event.location in places):
                         places.append(event.location)
+            if event.type == 'journey':
+                if ((event.distance() > 10) or (len(event.description) > 0)):
+                    journeys.append(event)
+                    continue
             if len(str(event.description)) > 0:
                 events.append(event)
                 continue
             if event.type == 'life_event' or event.type == 'event': # or event.type == 'photo':
                 events.append(event)
-            if event.type == 'journey':
-                if event.distance() > 10:
-                    events.append(event)
         photos = []
         for photo in Photo.objects.filter(time__gte=dts, time__lte=dte):
             photos.append(photo)
@@ -88,7 +90,7 @@ def generate_onthisday():
                 if not(person in people):
                     people.append(person)
 
-        if len(events) > 0 or len(photos) > 0 or len(places) > 0:
+        if len(events) > 0 or len(photos) > 0 or len(places) > 0 or len(journeys) > 0:
             item = {}
             item['year'] = dts.year
             if i == 1:
@@ -99,6 +101,15 @@ def generate_onthisday():
             item['photos'] = photos
             item['places'] = places
             item['people'] = people
+            item['journeys'] = journeys
+            countries = []
+            for loc in places:
+                if loc.country in countries:
+                    continue
+                countries.append(loc.country)
+            if len(countries) > 0:
+                item['country'] = countries[0]
+
             ret.append(item)
 
     return ret

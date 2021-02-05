@@ -28,12 +28,12 @@ def dashboard(request):
 
 def onthisday(request):
     key = 'onthisday_' + datetime.date.today().strftime("%Y%m%d")
-    ret = cache.get(key)
-    if ret is None:
+    data = cache.get(key)
+    if data is None:
         data = generate_onthisday()
-        context = {'type':'view', 'data':data}
-        ret = render(request, 'viewer/onthisday.html', context)
-        cache.set(key, ret, timeout=86400)
+        cache.set(key, data, timeout=86400)
+    context = {'type':'view', 'data':data}
+    ret = render(request, 'viewer/onthisday.html', context)
     return ret
 
 def importer(request):

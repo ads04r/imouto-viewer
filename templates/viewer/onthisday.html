@@ -21,22 +21,51 @@
                 <div class="box box-primary">
                     <div class="box-header with-border">
                         <h3 class="box-title">{{ year.label }}</h3>
+{% if year.country %}
+                        <h3 class="box-title pull-right">{{ year.country }}</h3>
+{% endif %}
                     </div>
                     <div class="box-body">
 
+{% for event in year.events %}
+{% if event.type == 'life_event' %}
+
+                        <h4><a href="#event_{{ event.id }}">{{ event.caption }}</a></h4>
+
+{% endif %}
+{% endfor %}
+
+{% for event in year.events %}
+{% if event.type == 'event' %}
+
+                        <p><a href="#event_{{ event.id }}"><i class="fa fa-calendar"></i>&nbsp;{{ event.caption }}</a><br>
+                        <small class="muted">{{ event.start_time|date:"jS F, g:ia" }}</small></p>
+
+{% endif %}
+{% endfor %}
+
+{% for event in year.events %}
+{% if event.type == 'loc_prox' and event.description != '' %}
+
+                        <p><a href="#event_{{ event.id }}"><i class="fa fa-book"></i>&nbsp;{{ event.caption }}</a></p>
+
+{% endif %}
+{% endfor %}
+
 {% for place in year.places %}
 
-                        <p>{% if place.full_label %}{{ place.full_label }}{% else %}{{ place.label }}{% endif %}</p>
+                        <p><a href="#place_{{ place.uid }}"><i class="fa fa-map-marker"></i>&nbsp;{% if place.full_label %}{{ place.full_label }}{% else %}{{ place.label }}{% endif %}</a></p>
 
 {% endfor %}
-{% for event in year.events %}
+{% for event in year.journeys %}
 
-                        <p>{{ event.caption }}</p>
+                        <p><a href="#event_{{ event.id }}"><i class="fa fa-map-signs"></i>&nbsp;{{ event.caption }}</a><br>
+                        <small class="muted">{{ event.distance }} miles</small></p>
 
 {% endfor %}
 
                         <div class="timeline-gallery">
-                            {% for photo in year.photos %}{% if forloop.counter <= 5 %}<a href="photo/{{ photo.pk }}.jpg" target="_blank"><img src="photo/{{ photo.pk }}_thumb.jpg" width="100" height="100"></a>{% endif %}{% endfor %}
+                            {% for photo in year.photos %}{% if forloop.counter <= 12 %}<a href="photo/{{ photo.pk }}.jpg" target="_blank"><img src="photo/{{ photo.pk }}_thumb.jpg" width="100" height="100"></a>{% endif %}{% endfor %}
                         </div>
 
 {% if year.people %}
