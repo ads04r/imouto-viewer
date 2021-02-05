@@ -5,7 +5,7 @@ from django.core.cache import cache
 from django.conf import settings
 from background_task.models import Task
 from haystack.query import SearchQuerySet
-import datetime, pytz, dateutil.parser, json, tzlocal
+import datetime, pytz, dateutil.parser, json, tzlocal, markdown
 
 from .tasks import *
 from .models import *
@@ -143,6 +143,9 @@ def event(request, eid):
     if data is None:
         data = get_object_or_404(Event, pk=eid)
         cache.set(cache_key, data, 86400)
+
+    md = markdown.Markdown()
+    data.description = md.convert(data.description)
 
     form = EventForm(instance=data)
     context = {'type':'event', 'data':data, 'form':form, 'people':Person.objects.all()}
