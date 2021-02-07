@@ -26,4 +26,5 @@ urlpatterns = [
     path('photo/<uid>_thumb.jpg', views.photo_thumbnail),
     path('photo/<uid>.jpg', views.photo_full),
     path('search.json', views.search),
+    path('add-people-to-event', views.eventpeople),
 ]

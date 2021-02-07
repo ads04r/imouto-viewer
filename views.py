@@ -5,7 +5,7 @@ from django.core.cache import cache
 from django.conf import settings
 from background_task.models import Task
 from haystack.query import SearchQuerySet
-import datetime, pytz, dateutil.parser, json, tzlocal, markdown
+import datetime, pytz, dateutil.parser, json, tzlocal
 
 from .tasks import *
 from .models import *
@@ -144,9 +144,6 @@ def event(request, eid):
         data = get_object_or_404(Event, pk=eid)
         cache.set(cache_key, data, 86400)
 
-    md = markdown.Markdown()
-    data.description = md.convert(data.description)
-
     form = EventForm(instance=data)
     context = {'type':'event', 'data':data, 'form':form, 'people':Person.objects.all()}
     template = 'viewer/event.html'
@@ -163,6 +160,22 @@ def eventdelete(request, eid):
     ret = data.delete()
     response = HttpResponse(json.dumps(ret), content_type='application/json')
     return response
+
+@csrf_exempt
+def eventpeople(request):
+    cache.delete('dashboard')
+    if request.method != 'POST':
+        raise Http404()
+    eid = request.POST['id']
+    pids = request.POST['people'].split('|')
+    data = get_object_or_404(Event, pk=eid)
+    people = []
+    for pid in pids:
+        people.append(get_object_or_404(Person, uid=pid))
+    data.people.clear()
+    for person in people:
+        data.people.add(person)
+    return HttpResponseRedirect('./#event_' + str(data.id))
 
 def eventjson(request):
     dss = request.GET.get('start', '')

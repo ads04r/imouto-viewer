@@ -324,7 +324,12 @@ function makeMap()
         if(data == '') { return true; }
                     
             var bb = L.latLngBounds(L.latLng(data.bbox[1], data.bbox[0]), L.latLng(data.bbox[3], data.bbox[2]));
-            var map = L.map(id);
+            if($(this).hasClass('reportmap'))
+            {
+                var map = L.map(id, { zoomControl: false });
+            } else {
+                var map = L.map(id);
+            }
             L.geoJSON(data).addTo(map);
             L.tileLayer('https://tiles.flarpyland.com/osm/{z}/{x}/{y}.png', {
                 attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
@@ -542,7 +547,7 @@ function eventScreen(id)
 		$('.person_delete').each(function() {
 			data.push($(this).data('id'));
 		});
-		console.log(data);
+		$('<form method="POST" action="./add-people-to-event"><input type="hidden" id="id" name="id" value="' + id + '"/><input type="hidden" id="people" name="people" value="' + data.join('|') + '"/></form>').appendTo('body').submit();
 		return false;
 	});
 
