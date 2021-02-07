@@ -3,7 +3,7 @@ from django.core.files import File
 from django.db.models import Count
 from PIL import Image
 from io import BytesIO
-import datetime, pytz, json
+import datetime, pytz, json, markdown
 
 def user_thumbnail_upload_location(instance, filename):
     return 'people/' + str(instance.pk) + '/' + filename
@@ -424,6 +424,11 @@ class Event(models.Model):
     people = models.ManyToManyField(Person, through='PersonEvent')
     location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name="events", null=True, blank=True)
     geo = models.TextField(default='', blank=True)
+    def description_html(self):
+        if self.description == '':
+            return ''
+        md = markdown.Markdown()
+        return md.convert(self.description)
     def __parse_sleep(self, sleep):
         time_from = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
         time_to = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.UTC)

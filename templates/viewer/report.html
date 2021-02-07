@@ -68,7 +68,7 @@
                     </div>
                     <div class="box-body">
 
-			{{ event.description }}
+			{{ event.description_html|safe }}
 
                     </div>
                 </div>
@@ -104,12 +104,19 @@
                     </div>
                     <div class="box-body">
 			<small class="muted">{{ event.start_time|date:"l jS F" }}</small><br>
-			{{ event.description }}
+			{{ event.description_html|safe }}
 
                     </div>
                 </div>
 
             </div>
+{% if event.geo %}
+
+            <div class="col-xs-12 col-sm-6 col-md-3">
+                <div id="map{{ event.pk }}" class="eventmap reportmap" data-geojson="{{ event.geo }}"></div>
+            </div>
+
+{% endif %}
         </div>
 
 {% endfor %}
