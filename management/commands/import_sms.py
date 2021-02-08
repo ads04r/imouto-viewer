@@ -4,7 +4,7 @@ from django.conf import settings
 from viewer.models import DataReading, Event
 from io import StringIO
 from dateutil.tz import tzlocal
-import os, sys, datetime, shutil, sqlite3, pytz, csv, json
+import os, sys, datetime, shutil, sqlite3, pytz, csv
 from viewer.models import RemoteInteraction
 
 class Command(BaseCommand):
@@ -27,8 +27,13 @@ class Command(BaseCommand):
 			sys.stderr.write(self.style.ERROR("File not found: '" + uploaded_file + "'\n"))
 			sys.exit(1)
 
+		self.import_ncc_file(uploaded_file)
+		cache.delete('dashboard')
+
+	def import_ncc_file(self, filename):
+
 		data = []
-		fp = open(uploaded_file, 'rb')
+		fp = open(filename, 'rb')
 		csvb = fp.read()
 		fp.close()
 		csvs = csvb.decode('utf16')
@@ -71,8 +76,7 @@ class Command(BaseCommand):
 			try:
 				msg = RemoteInteraction.objects.get(type='sms', time=dt, address=message['1081'], incoming=True)
 			except:
-				msg = RemoteInteraction(type='sms', time=dt, address=message['1081'], incoming=True, title='testing', message=message['1033'])
+				msg = RemoteInteraction(type='sms', time=dt, address=message['1081'], incoming=True, title='', message=message['1033'])
 				print(msg.message)
 				msg.save()
 
-		cache.delete('dashboard')
