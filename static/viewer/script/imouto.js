@@ -244,6 +244,12 @@ function initialiseGraphics()
         makeLineChart($(this)[0].getContext('2d'), data);
     });
     
+    $(".time-chart").each(function()
+    {
+        var data = $(this).data('data');
+        makeLineChart($(this)[0].getContext('2d'), data);
+    });
+    
 }
 
 function checkTimelineScroll()

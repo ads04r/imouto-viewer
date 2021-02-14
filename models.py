@@ -555,6 +555,7 @@ class Event(models.Model):
         heart_count = 0.0
         heart_max = 0.0
         heart_csv = []
+        heart_json = []
         step_count = 0
         sleep = []
         if self.length() > 86400:
@@ -564,6 +565,7 @@ class Event(models.Model):
         for item in eventsearch:
             if item.type=='heart-rate':
                 heart_csv.append(str(item.value))
+                heart_json.append({"x": item.start_time.strftime("%Y-%m-%d %H:%M:%S"), "y": item.value})
                 heart_total = heart_total + float(item.value)
                 heart_count = heart_count + 1.0
                 if item.value > heart_max:
@@ -576,6 +578,7 @@ class Event(models.Model):
             ret['heartavg'] = int(heart_total / heart_count)
             ret['heartmax'] = int(heart_max)
             ret['heart'] = ','.join(heart_csv)
+            ret['heart'] = json.dumps(heart_json)
         if len(sleep) > 0:
             ret['sleep'] = self.__parse_sleep(sleep)
         if step_count > 0:
