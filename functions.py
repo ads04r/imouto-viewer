@@ -50,6 +50,18 @@ def getgeoline(dts, dte, address='127.0.0.1:8000'):
                     return json.dumps(data['geo'])
     return ""
 
+def getelevation(dts, dte, address='127.0.0.1:8000'):
+
+    id = dts.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S") + dte.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S")
+    url = "http://" + address + "/location-manager/elevation/" + id + "?format=json"
+    data = []
+    with urllib.request.urlopen(url) as h:
+        for item in json.loads(h.read().decode()):
+            data.append({'x': item[0], 'y': item[1]})
+    if len(data) > 0:
+        return json.dumps(data)
+    return ""
+
 def generate_onthisday():
 
     ret = []

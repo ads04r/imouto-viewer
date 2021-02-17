@@ -50,6 +50,21 @@
     {% endif %}
                     </div>
                 </div>
+
+{% if data.elevation != '' %}
+
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Elevation</h3>
+                    </div>
+                    <div class="box-body">
+                        <div class="chart">
+                            <canvas class="time-chart" style="height: 160px" data-data="{{ data.elevation|escape }}"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+{% endif %}
 {% endif %}
 
 {% if data.health.heart != None %}

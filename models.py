@@ -424,6 +424,7 @@ class Event(models.Model):
     people = models.ManyToManyField(Person, through='PersonEvent')
     location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name="events", null=True, blank=True)
     geo = models.TextField(default='', blank=True)
+    elevation = models.TextField(default='', blank=True)
     def description_html(self):
         if self.description == '':
             return ''
