@@ -76,9 +76,12 @@ def generate_report_pdf(reportid, style):
 	""" A background task for creating a PDF report based on a LifeReport object """
 
 	report = LifeReport.objects.get(id=reportid)
+	im = report.wordcloud()
 	filename = os.path.join(settings.MEDIA_ROOT, 'reports', 'report_' + str(report.id) + '.pdf')
 	pdf = DefaultReport()
 	pdf.add_title_page(str(report.year()), report.label)
+	if(report.cached_wordcloud):
+	        pdf.add_image_page(str(report.cached_wordcloud.file))
 	categories = []
 	for prop in report.properties.all():
 		if prop.category in categories:

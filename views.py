@@ -108,7 +108,7 @@ def events(request):
     data = {}
     data['event'] = Event.objects.filter(type='event').order_by('-start_time')[0:10]
     data['journey'] = Event.objects.filter(type='journey').order_by('-start_time')[0:10]
-    data['photo'] = Event.objects.filter(type='photo').order_by('-start_time')[0:10]
+    data['photo'] = Event.objects.filter(type='photo').exclude(caption='Photos').order_by('-start_time')[0:10]
     data['life'] = Event.objects.filter(type='life_event').order_by('-start_time')
     form = EventForm()
     context = {'type':'view', 'data':data, 'form':form}
@@ -265,6 +265,19 @@ def report_pdf(request, id):
     response = HttpResponse(content=pdf)
     response['Content-Type'] = 'application/pdf'
     response['Content-Disposition'] = 'attachment; filename="%s.pdf"' % str(data)
+    return response
+
+def report_words(request, id):
+    data = get_object_or_404(LifeReport, id=id)
+    txt = data.words()
+    response = HttpResponse(content=txt, content_type='text/plain')
+    return response
+
+def report_wordcloud(request, id):
+    data = get_object_or_404(LifeReport, id=id)
+    im = data.wordcloud()
+    response = HttpResponse(content_type='image/png')
+    im.save(response, "PNG")
     return response
 
 def person_photo(request, uid):

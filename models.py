@@ -3,7 +3,8 @@ from django.core.files import File
 from django.db.models import Count
 from PIL import Image
 from io import BytesIO
-import datetime, pytz, json, markdown
+from wordcloud import WordCloud, STOPWORDS
+import datetime, pytz, json, markdown, re
 
 def user_thumbnail_upload_location(instance, filename):
     return 'people/' + str(instance.pk) + '/' + filename
@@ -16,6 +17,9 @@ def location_thumbnail_upload_location(instance, filename):
 
 def report_pdf_upload_location(instance, filename):
     return 'reports/report_' + str(instance.id) + '.pdf'
+
+def report_wordcloud_upload_location(instance, filename):
+    return 'reports/report_wc_' + str(instance.id) + '.png'
 
 class WeatherLocation(models.Model):
     id = models.SlugField(max_length=32, primary_key=True)
@@ -629,6 +633,30 @@ class LifeReport(models.Model):
     created_date = models.DateTimeField(auto_now_add=True, blank=True)
     modified_date = models.DateTimeField(default=datetime.datetime.now)
     pdf = models.FileField(blank=True, null=True, upload_to=report_pdf_upload_location)
+    cached_wordcloud = models.ImageField(blank=True, null=True, upload_to=report_wordcloud_upload_location)
+    def words(self):
+        text = ''
+        for event in self.events.all():
+            text = text + event.description + ' '
+            for msg in event.messages():
+                if msg.incoming:
+                    continue
+                if msg.type != 'sms':
+                    continue
+                text = text + msg.message + ' '
+        text = re.sub('=[0-9A-F][0-9A-F]', '', text)
+        text = text.strip()
+        return text
+    def wordcloud(self):
+        text = self.words()
+        stopwords = set(STOPWORDS)
+        wc = WordCloud(width=1024, height=1280, background_color=None, mode='RGBA', max_words=500, stopwords=stopwords).generate(text)
+        im = wc.to_image()
+        blob = BytesIO()
+        im.save(blob, 'PNG')
+        self.cached_wordcloud.save(report_wordcloud_upload_location, File(blob), save=False)
+        self.save()
+        return im
     def year(self):
         return int(self.events.order_by('start_time').first().end_time.year)
     def life_events(self):

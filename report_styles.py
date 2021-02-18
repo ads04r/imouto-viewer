@@ -24,6 +24,11 @@ class DefaultReport(FPDF):
 		self.cell(200, 0, subtitle, 0, 2, 'C')
 		self.set_font('Arial', '', 14)
 
+	def add_image_page(self, image):
+		self.add_page()
+		self.image(image, 5.0, 5.0, 200.0, 287.0, type='PNG')
+		self.set_font('Arial', '', 14)
+
 	def add_stats_category(self, title, properties):
 		self.add_page()
 		self.set_font('Arial', 'B', 24)
