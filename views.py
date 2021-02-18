@@ -259,6 +259,14 @@ def report(request, id):
     context = {'type':'report', 'data':data}
     return render(request, 'viewer/report.html', context)
 
+def report_pdf(request, id):
+    data = get_object_or_404(LifeReport, id=id)
+    pdf = open(data.pdf.path, 'rb')
+    response = HttpResponse(content=pdf)
+    response['Content-Type'] = 'application/pdf'
+    response['Content-Disposition'] = 'attachment; filename="%s.pdf"' % str(data)
+    return response
+
 def person_photo(request, uid):
     data = get_object_or_404(Person, uid=uid)
     im = data.photo()

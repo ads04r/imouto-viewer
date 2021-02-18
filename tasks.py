@@ -1,6 +1,7 @@
 from background_task import background
 from .models import *
 from .functions import *
+from .report_styles import *
 from xml.dom import minidom
 from tzlocal import get_localzone
 import datetime, pytz, os
@@ -53,7 +54,7 @@ def generate_report(title, dss, dse, type='year', style='default', moonshine_url
 	phone_calls_made = RemoteInteraction.objects.filter(type='phone-call', time__gte=dts, time__lte=dte, incoming=False).count()
 	phone_calls_recv = RemoteInteraction.objects.filter(type='phone-call', time__gte=dts, time__lte=dte, incoming=True).exclude(message__icontains='(missed call)').count()
 	if (phone_calls_made + phone_calls_recv) > 1:
-		prop = report.addproperty(key='Phone Calls', value=(phone_calls_made + phone_calls_recv), category='contact')
+		prop = report.addproperty(key='Phone Calls', value=(phone_calls_made + phone_calls_recv), category='communication')
 		prop.icon = 'phone'
 		prop.description = str(phone_calls_made) + ' made / ' + str(phone_calls_recv) + ' received'
 		prop.save()
@@ -61,7 +62,7 @@ def generate_report(title, dss, dse, type='year', style='default', moonshine_url
 	sms_sent = RemoteInteraction.objects.filter(type='sms', time__gte=dts, time__lte=dte, incoming=False).count()
 	sms_recv = RemoteInteraction.objects.filter(type='sms', time__gte=dts, time__lte=dte, incoming=True).count()
 	if (sms_sent + sms_recv) > 1:
-		prop = report.addproperty(key='SMS', value=(sms_sent + sms_recv), category='contact')
+		prop = report.addproperty(key='SMS', value=(sms_sent + sms_recv), category='communication')
 		prop.icon = 'comment-o'
 		prop.description = str(sms_sent) + ' sent / ' + str(sms_recv) + ' received'
 		prop.save()
@@ -75,6 +76,19 @@ def generate_report_pdf(reportid, style):
 	""" A background task for creating a PDF report based on a LifeReport object """
 
 	report = LifeReport.objects.get(id=reportid)
+	filename = os.path.join(settings.MEDIA_ROOT, 'reports', 'report_' + str(report.id) + '.pdf')
+	pdf = DefaultReport()
+	pdf.add_title_page(str(report.year()), report.label)
+	categories = []
+	for prop in report.properties.all():
+		if prop.category in categories:
+			continue
+		categories.append(prop.category)
+	for category in categories:
+		pdf.add_stats_category(category.capitalize(), report.properties.filter(category=category))
+	pdf.output(filename, 'F')
+	report.pdf = filename
+	report.save()
 
 	return report
 

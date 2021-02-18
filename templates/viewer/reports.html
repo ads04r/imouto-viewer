@@ -28,7 +28,7 @@
                     <div class="box-footer clearfix">
                         <span class="pull-right">
                             <a class="btn btn-primary" href="#report_{{ item.pk }}">View</a>
-                            {% if item.pdf %}<a class="btn btn-secondary" href="{{ item.pdf }}">Download PDF</a>{% endif %}
+                            {% if item.pdf %}<a class="btn btn-secondary" href="reports/{{ item.pk }}.pdf">Download PDF</a>{% endif %}
                             <a class="btn btn-danger" data-toggle="modal" data-target="#admin_report_delete_{{ item.pk }}" aria-hidden="true" href="#">Delete</a>
                         </span>
                     </div>

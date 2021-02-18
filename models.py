@@ -629,6 +629,8 @@ class LifeReport(models.Model):
     created_date = models.DateTimeField(auto_now_add=True, blank=True)
     modified_date = models.DateTimeField(default=datetime.datetime.now)
     pdf = models.FileField(blank=True, null=True, upload_to=report_pdf_upload_location)
+    def year(self):
+        return int(self.events.order_by('start_time').first().end_time.year)
     def life_events(self):
         return self.events.filter(type='life_event')
     def diary_entries(self):
