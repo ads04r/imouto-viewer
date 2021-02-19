@@ -29,6 +29,15 @@ class DefaultReport(FPDF):
 		self.image(image, 5.0, 5.0, 200.0, 287.0, type='PNG')
 		self.set_font('Arial', '', 14)
 
+	def add_life_event_page(self, event):
+		self.add_page()
+		self.set_font('Arial', 'B', 24)
+		self.set_xy(5.0, 25.0)
+		self.cell(200, 0, event.caption, 0, 0, 'C')
+		self.set_font('Arial', '', 16)
+		self.set_xy(30.0, 40.0)
+		self.set_font('Arial', '', 14)
+
 	def add_stats_category(self, title, properties):
 		self.add_page()
 		self.set_font('Arial', 'B', 24)

@@ -89,6 +89,8 @@ def generate_report_pdf(reportid, style):
 		categories.append(prop.category)
 	for category in categories:
 		pdf.add_stats_category(category.capitalize(), report.properties.filter(category=category))
+	for event in report.events.filter(type='life_event').order_by('start_time'):
+		pdf.add_life_event_page(event)
 	pdf.output(filename, 'F')
 	report.pdf = filename
 	report.save()
