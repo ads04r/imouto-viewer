@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.files import File
 from django.db.models import Count
+from django.conf import settings
 from PIL import Image
 from io import BytesIO
 from wordcloud import WordCloud, STOPWORDS
@@ -646,11 +647,23 @@ class LifeReport(models.Model):
                 text = text + msg.message + ' '
         text = re.sub('=[0-9A-F][0-9A-F]', '', text)
         text = text.strip()
-        return text
+        ret = []
+        for word in text.split(' '):
+            if len(word) < 3:
+                continue
+            if word.startswith("I'"):
+                continue
+            if word.endswith("'s"):
+                word = word[:-2]
+            ret.append(word)
+        return ' '.join(ret)
     def wordcloud(self):
         text = self.words()
-        stopwords = set(STOPWORDS)
-        wc = WordCloud(width=1024, height=1280, background_color=None, mode='RGBA', max_words=500, stopwords=stopwords).generate(text)
+        stopwords = set()
+        for word in set(STOPWORDS):
+            stopwords.add(word)
+            stopwords.add(word.capitalize())
+        wc = WordCloud(width=2598, height=3543, background_color=None, mode='RGBA', max_words=500, stopwords=stopwords, font_path=settings.WORDCLOUD_FONT).generate(text)
         im = wc.to_image()
         blob = BytesIO()
         im.save(blob, 'PNG')
