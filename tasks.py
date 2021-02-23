@@ -17,11 +17,9 @@ def generate_report(title, dss, dse, type='year', style='default', moonshine_url
 	now = pytz.UTC.localize(datetime.datetime.utcnow())
 	report = LifeReport(label=title, type=type, style=style, modified_date=now)
 	report.save()
-	photos = 0
 	subevents = []
 	for event in Event.objects.filter(type='life_event', start_time__lte=dte, end_time__gte=dts).order_by('start_time'):
 		report.events.add(event)
-		photos = photos + event.photos().count()
 		if event.location:
 			report.locations.add(event.location)
 		for person in event.people.all():
@@ -30,6 +28,7 @@ def generate_report(title, dss, dse, type='year', style='default', moonshine_url
 			if e in subevents:
 				continue
 			subevents.append(e)
+
 	for event in Event.objects.filter(start_time__lte=dte, end_time__gte=dts).order_by('start_time').exclude(type='life_event'):
 		if event.location:
 			report.locations.add(event.location)
@@ -41,9 +40,22 @@ def generate_report(title, dss, dse, type='year', style='default', moonshine_url
 			report.events.add(event)
 		if event.photos().count() > 5:
 			report.events.add(event)
-		photos = photos + event.photos().count()
 
-	report.addproperty(key='Photos Taken', value=photos, category='photos')
+	photos = Photo.objects.filter(time__gte=dts, time__lte=dte).count()
+	photos_gps = Photo.objects.filter(time__gte=dts, time__lte=dte).exclude(lat=None).exclude(lon=None).count()
+	photos_people = Photo.objects.filter(time__gte=dts, time__lte=dte).annotate(Count('people')).exclude(people__count=0).count()
+
+	prop = report.addproperty(key='Photos Taken', value=photos, category='photos')
+	prop.icon = 'camera'
+	prop.save()
+
+	prop = report.addproperty(key='Photos with GPS', value=photos_gps, category='photos')
+	prop.icon = 'map-marker'
+	prop.save()
+
+	prop = report.addproperty(key='Photos of People', value=photos_people, category='photos')
+	prop.icon = 'user'
+	prop.save()
 
 	countries = report.countries().count()
 	if countries > 1:
@@ -81,7 +93,7 @@ def generate_report_pdf(reportid, style):
 	pdf = DefaultReport()
 	pdf.add_title_page(str(report.year()), report.label)
 	if(report.cached_wordcloud):
-	        pdf.add_image_page(str(report.cached_wordcloud.file))
+		pdf.add_image_page(str(report.cached_wordcloud.file))
 	categories = []
 	for prop in report.properties.all():
 		if prop.category in categories:
