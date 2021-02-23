@@ -35,8 +35,41 @@ class DefaultReport(FPDF):
 		self.set_xy(5.0, 25.0)
 		self.cell(200, 0, event.caption, 0, 0, 'C')
 		self.set_font('Arial', '', 16)
-		self.set_xy(30.0, 40.0)
+		self.set_xy(15.0, 40.0)
 		self.set_font('Arial', '', 14)
+
+		if event.description != '':
+			self.multi_cell(180, 7, event.description, 0, 2, 'L')
+			y = self.get_y()
+			self.set_xy(15.0, y + 20)
+
+		for e in event.subevents():
+			if e.description == '':
+				continue
+			y = self.get_y()
+			if y > 230:
+				self.add_page()
+				self.set_xy(15.0, 15.0)
+				y = self.get_y()
+			self.set_font('Arial', 'B', 16)
+			self.cell(200, 0, e.caption, 0, 0, 'L')
+			self.set_font('Arial', '', 12)
+			self.set_xy(15, y + 7)
+			ds = e.start_time.strftime("%A") + ' '
+			ds = ds + (e.start_time.strftime("%d").lstrip('0')) + ' '
+			ds = ds + e.start_time.strftime("%B, ")
+			time_h = int(e.start_time.strftime("%I"))
+			time_h_24 = int(e.start_time.strftime("%H"))
+			if time_h == time_h_24:
+				ds = ds + str(time_h) + e.start_time.strftime(":%M") + "am"
+			else:
+				ds = ds + str(time_h) + e.start_time.strftime(":%M") + "pm"
+			self.cell(200, 0, ds, 0, 0, 'L')
+			self.set_font('Arial', '', 14)
+			self.set_xy(20, y + 15)
+			self.multi_cell(175, 7, e.description, 0, 2, 'L')
+			y = self.get_y()
+			self.set_xy(15.0, y + 20)
 
 	def add_stats_category(self, title, properties):
 		self.add_page()
