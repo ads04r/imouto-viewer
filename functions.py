@@ -208,7 +208,7 @@ def generate_dashboard():
     for i in range(0, 7):
         dtbase = last_record - datetime.timedelta(days=(7 - i))
         dt = datetime.datetime(dtbase.year, dtbase.month, dtbase.day, 0, 0, 0, tzinfo=dtbase.tzinfo)
-        obj = DataReading.objects.filter(type='step-count').filter(start_time__gte=dt).filter(end_time__lt=(dt + datetime.timedelta(days=1))).aggregate(Sum('value'))
+        obj = DataReading.objects.filter(type='step-count').filter(start_time__gte=dt, end_time__lt=(dt + datetime.timedelta(days=1))).aggregate(Sum('value'))
         try:
             steps = int(obj['value__sum'])
         except:
@@ -220,6 +220,18 @@ def generate_dashboard():
         item['value'] = [steps]
         stepdata.append(item)
     stats['steps'] = total_steps
+    walk_dist = 0.0
+    dt = (last_record - datetime.timedelta(days=7)).replace(hour=0, minute=0, second=0, tzinfo=pytz.UTC)
+    for walk in DataReading.objects.filter(start_time__gte=dt, type='pebble-app-activity', value='5'):
+        try:
+            ev = Event.objects.get(start_time=walk.start_time, end_time=walk.end_time, type='journey')
+        except:
+            ev = None
+        if ev is None:
+            continue
+        walk_dist = walk_dist + ev.distance()
+    if walk_dist > 0:
+        stats['walk_distance'] = float(int(walk_dist * 100)) / 100
 
     heartdata = []
     if DataReading.objects.filter(type='heart-rate', start_time__gte=(last_record - datetime.timedelta(days=7))).count() > 0:

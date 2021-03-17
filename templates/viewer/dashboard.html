@@ -20,6 +20,9 @@
                     <div class="info-box-content">
                         <span class="info-box-text">Steps</span>
                         <span class="info-box-number">{{ data.stats.steps }}</span>
+{% if data.stats.walk_distance %}
+                        <span class="progress-description">{{ data.stats.walk_distance }} miles</span>
+{% endif %}
                     </div>
                 </div>
             </div>

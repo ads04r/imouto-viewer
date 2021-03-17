@@ -748,6 +748,7 @@ class LifeReportGraph(models.Model):
     report = models.ForeignKey(LifeReport, on_delete=models.CASCADE, related_name='graphs')
     key = models.CharField(max_length=128)
     data = models.TextField(default='', blank=True)
+    category = models.SlugField(max_length=32, default='')
     type = models.SlugField(max_length=16, default='bar')
     icon = models.SlugField(max_length=64, default='bar-chart')
     description = models.TextField(null=True, blank=True)
