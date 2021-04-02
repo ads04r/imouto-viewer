@@ -642,7 +642,7 @@ class LifeReport(models.Model):
             for msg in event.messages():
                 if msg.incoming:
                     continue
-                if msg.type != 'sms':
+                if ((msg.type != 'sms') & (msg.type != 'microblogpost')):
                     continue
                 text = text + msg.message + ' '
         text = re.sub('=[0-9A-F][0-9A-F]', '', text)
