@@ -177,6 +177,8 @@ def eventpeople(request):
     data.people.clear()
     for person in people:
         data.people.add(person)
+        key = 'person_' + str(person.uid) + '_' + datetime.date.today().strftime("%Y%m%d")
+        cache.delete(key)
     return HttpResponseRedirect('./#event_' + str(data.id))
 
 def eventjson(request):
@@ -237,9 +239,14 @@ def places(request):
     return render(request, 'viewer/places.html', context)
 
 def place(request, uid):
-    data = get_object_or_404(Location, uid=uid)
-    context = {'type':'place', 'data':data}
-    return render(request, 'viewer/place.html', context)
+    key = 'place_' + str(uid) + '_' + datetime.date.today().strftime("%Y%m%d")
+    ret = cache.get(key)
+    if ret is None:
+        data = get_object_or_404(Location, uid=uid)
+        context = {'type':'place', 'data':data}
+        ret = render(request, 'viewer/place.html', context)
+        cache.set(key, ret, timeout=86400)
+    return ret
 
 def people(request):
     data = {}
@@ -247,12 +254,18 @@ def people(request):
     data['recent'] = Person.objects.filter(event__start_time__gte=datecutoff).annotate(num_events=Count('event')).order_by('-num_events')
     data['all'] = Person.objects.annotate(num_events=Count('event')).order_by('given_name', 'family_name')
     context = {'type':'person', 'data':data}
-    return render(request, 'viewer/people.html', context)
+    ret = render(request, 'viewer/people.html', context)
+    return ret
 
 def person(request, uid):
-    data = get_object_or_404(Person, uid=uid)
-    context = {'type':'person', 'data':data, 'properties':explode_properties(data)}
-    return render(request, 'viewer/person.html', context)
+    key = 'person_' + str(uid) + '_' + datetime.date.today().strftime("%Y%m%d")
+    ret = cache.get(key)
+    if ret is None:
+        data = get_object_or_404(Person, uid=uid)
+        context = {'type':'person', 'data':data, 'properties':explode_properties(data)}
+        ret = render(request, 'viewer/person.html', context)
+        cache.set(key, ret, timeout=86400)
+    return ret
 
 def report(request, id):
     data = get_object_or_404(LifeReport, id=id)
