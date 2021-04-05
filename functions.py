@@ -68,11 +68,13 @@ def generate_onthisday():
 
     for i in range(1, 20):
 
+        offset = datetime.timedelta(hours=4)
+
         dt = datetime.datetime.now().replace(tzinfo=get_localzone())
         year = dt.year - i
         dt = dt.replace(year=year)
-        dts = dt.replace(hour=0, minute=0, second=0)
-        dte = dt.replace(hour=23, minute=59, second=59)
+        dts = dt.replace(hour=0, minute=0, second=0) + offset
+        dte = dt.replace(hour=23, minute=59, second=59) + offset
 
         events = []
         places = []
