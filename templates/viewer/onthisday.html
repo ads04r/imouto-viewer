@@ -39,7 +39,7 @@
 {% if event.type == 'event' %}
 
                         <p><a href="#event_{{ event.id }}"><i class="fa fa-calendar"></i>&nbsp;{{ event.caption }}</a><br>
-                        <small class="muted">{{ event.start_time|date:"jS F, g:ia" }}</small></p>
+                        <small class="muted">{{ event.start_time|date:"l jS F Y, g:ia" }}</small></p>
 
 {% endif %}
 {% endfor %}
@@ -87,6 +87,18 @@
 
                     </div>
                 </div>
+
+{% for tweet in year.tweets %}
+
+        <div class="callout callout-info">
+          <table>
+            <td valign="top"><i class="fa fa-twitter"></i>&nbsp;</td>
+            <td valign="top">{{ tweet.message }}<br><small class="muted">{{ tweet.time|date:"l jS F Y, g:ia" }}</small></td>
+          </table>
+        </div>
+
+{% endfor %}
+
 
             </div>
         </div>

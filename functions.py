@@ -97,6 +97,9 @@ def generate_onthisday():
                 continue
             if event.type == 'life_event' or event.type == 'event': # or event.type == 'photo':
                 events.append(event)
+        tweets = []
+        for tweet in RemoteInteraction.objects.filter(type='microblogpost', address='', time__gte=dts, time__lte=dte):
+            tweets.append(tweet)
         photos = []
         for photo in Photo.objects.filter(time__gte=dts, time__lte=dte):
             photos.append(photo)
