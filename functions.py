@@ -118,6 +118,7 @@ def generate_onthisday():
             item['photos'] = photos
             item['places'] = places
             item['people'] = people
+            item['tweets'] = tweets
             item['journeys'] = journeys
             countries = []
             for loc in places:
@@ -277,7 +278,7 @@ def generate_dashboard():
         item['label'] = dt.strftime("%a")
         item['value'] = [light_sleep, deep_sleep]
         sleepdata.append(item)
-        
+
     walkdata = []
     for walk in DataReading.objects.filter(end_time__gte=(last_contact - datetime.timedelta(days=7))).filter(type='pebble-app-activity').filter(value=5):
         item = {}
@@ -297,8 +298,18 @@ def generate_dashboard():
         walkdata.append(item)
     walkdata = sorted(walkdata, key=lambda item: item['length'], reverse=True)
     walkdata = walkdata[0:5]
-    
-    ret = {'stats': stats, 'steps': json.dumps(stepdata), 'sleep': json.dumps(sleepdata), 'contact': contactdata, 'people': peopledata, 'places': locationdata, 'walks': walkdata}
+
+    birthdays = []
+    dtd = datetime.datetime.now().date()
+    for person in Person.objects.exclude(birthday=None).order_by('birthday__month', 'birthday__day'):
+        dtp = person.birthday.replace(year=dtd.year)
+        if dtp < dtd:
+            dtp = person.birthday.replace(year=(dtd.year + 1))
+        ttb = (dtp - dtd).days
+        if ttb <= 14:
+            birthdays.append(person)
+
+    ret = {'stats': stats, 'birthdays': birthdays, 'steps': json.dumps(stepdata), 'sleep': json.dumps(sleepdata), 'contact': contactdata, 'people': peopledata, 'places': locationdata, 'walks': walkdata}
     if len(heartdata) > 0:
         ret['heart'] = json.dumps(heartdata)
     return ret
