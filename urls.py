@@ -4,6 +4,7 @@ from . import views
 
 urlpatterns = [
     path('', views.index),
+    path('script/imouto.js', views.script),
     path('stats.html', views.dashboard),
     path('onthisday.html', views.onthisday),
     path('upload.html', views.importer),

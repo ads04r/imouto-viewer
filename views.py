@@ -16,6 +16,13 @@ def index(request):
     context = {'type':'index', 'data':[]}
     return render(request, 'viewer/index.html', context)
 
+def script(request):
+    context = {'tiles': 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'}
+    if hasattr(settings, 'MAP_TILES'):
+        if settings.MAP_TILES != '':
+            context['tiles'] = str(settings.MAP_TILES)
+    return render(request, 'viewer/imouto.js', context=context, content_type='text/javascript')
+
 def dashboard(request):
     key = 'dashboard'
     ret = cache.get(key)

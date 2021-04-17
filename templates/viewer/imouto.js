@@ -201,9 +201,9 @@ function placesScreen(id)
         var lat = 50.9;
         var lon = -1.4;
         var map = L.map('mapselect', {center: [lat, lon], zoom: 13});
-        L.tileLayer('https://tiles.flarpyland.com/osm/{z}/{x}/{y}.png', {
+        L.tileLayer('{{ tiles }}', {
             attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
-            maxZoom: 18
+            maxZoom: 16
         }).addTo(map);
         $('#id_lat').val(lat);
         $('#id_lon').val(lon);
@@ -337,9 +337,9 @@ function makeMap()
                 var map = L.map(id);
             }
             L.geoJSON(data).addTo(map);
-            L.tileLayer('https://tiles.flarpyland.com/osm/{z}/{x}/{y}.png', {
+            L.tileLayer('{{ tiles }}', {
                 attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
-                maxZoom: 18, minZoom: 2
+                maxZoom: 16, minZoom: 2
             }).addTo(map);
             map.fitBounds(bb);
     });
@@ -492,9 +492,9 @@ function initialiseJourneyMap(mapdiv)
             center: [50.93540, -1.39638],
             zoom: 13
         });
-        L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        L.tileLayer('{{ tiles }}', {
             attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/" target="_top">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/" target="_top">CC-BY-SA</a>',
-            maxZoom: 20
+            maxZoom: 16
         }).addTo(map);
         $.ajax({
             url: url,
