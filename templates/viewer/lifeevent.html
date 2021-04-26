@@ -24,7 +24,7 @@
                         <div class="bottom-cling">
                             <h2>{{ data.location }}</h2>
     {% if data.description != '' %}
-                            <p>{{ data.description|safe }}</p>
+                            <p>{{ data.description_html|safe }}</p>
     {% endif %}
                         </div>
                     </div>
@@ -34,7 +34,7 @@
 
                 <div class="box box-primary">
                     <div class="box-body">
-                        <p>{{ data.description|safe }}</p>
+                        <p>{{ data.description_html|safe }}</p>
                     </div>
                 </div>
 {% endif %}
