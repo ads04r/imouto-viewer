@@ -228,7 +228,6 @@ def places(request):
         cache.delete('dashboard')
         form = LocationForm(request.POST, request.FILES)
         if form.is_valid():
-            #form.save()
             post = form.save(commit=False)
             id = form.cleaned_data['uid']
             if form.cleaned_data.get('uploaded_image'):
