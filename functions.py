@@ -141,9 +141,8 @@ def generate_dashboard():
     user_home = settings.USER_HOME_LOCATION
     user_age = (datetime.datetime.now().date() - user_dob).total_seconds() / (86400 * 365.25)
     user_heart_max = int(220.0 - user_age)
-    user_heart_low = int((220.0 - user_age) * 0.5)
-    user_heart_medium = int((220.0 - user_age) * 0.7)
-    user_heart_high = int((220.0 - user_age) * 0.85)
+    user_heart_low = int((220.0 - user_age) * 0.64)
+    user_heart_high = int((220.0 - user_age) * 0.76)
 
     contactdata = []
     stats['messages'] = len(RemoteInteraction.objects.filter(type='sms', time__gte=(last_contact - datetime.timedelta(days=7))))
@@ -250,7 +249,7 @@ def generate_dashboard():
             hrm = 0
             obj = DataReading.objects.filter(type='heart-rate').filter(value__gte=user_heart_low).filter(start_time__gte=dt, end_time__lt=(dt + datetime.timedelta(days=1)))
             for item in obj:
-                if item.value >= user_heart_medium:
+                if item.value >= user_heart_high:
                     hrm = hrm + ((item.end_time) - (item.start_time)).total_seconds()
                 else:
                     hrl = hrl + ((item.end_time) - (item.start_time)).total_seconds()

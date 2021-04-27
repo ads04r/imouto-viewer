@@ -430,6 +430,9 @@ class Event(models.Model):
     location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name="events", null=True, blank=True)
     geo = models.TextField(default='', blank=True)
     elevation = models.TextField(default='', blank=True)
+    def max_heart_rate(self):
+        age = int(((self.start_time - datetime.datetime(settings.USER_DATE_OF_BIRTH.year, settings.USER_DATE_OF_BIRTH.month, settings.USER_DATE_OF_BIRTH.day, 0, 0, 0, tzinfo=self.start_time.tzinfo)).days) / 365.25)
+        return (220 - age)
     def description_html(self):
         if self.description == '':
             return ''
@@ -560,8 +563,10 @@ class Event(models.Model):
         heart_total = 0.0
         heart_count = 0.0
         heart_max = 0.0
+        heart_threshold = self.max_heart_rate() * 0.64
         heart_csv = []
         heart_json = []
+        heart_zone = 0.0
         step_count = 0
         sleep = []
         if self.length() > 86400:
@@ -576,6 +581,9 @@ class Event(models.Model):
                 heart_count = heart_count + 1.0
                 if item.value > heart_max:
                     heart_max = item.value
+                if item.value > heart_threshold:
+                    zone_secs = (item.end_time - item.start_time).total_seconds()
+                    heart_zone = heart_zone + zone_secs
             if item.type=='step-count':
                 step_count = step_count + item.value
             if (item.type=='pebble-app-activity') & (item.value <= 2):
@@ -583,6 +591,7 @@ class Event(models.Model):
         if heart_count > 0:
             ret['heartavg'] = int(heart_total / heart_count)
             ret['heartmax'] = int(heart_max)
+            ret['heartzonetime'] = int(heart_zone)
             ret['heart'] = ','.join(heart_csv)
             ret['heart'] = json.dumps(heart_json)
         if len(sleep) > 0:
