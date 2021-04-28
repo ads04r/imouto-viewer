@@ -563,7 +563,7 @@ class Event(models.Model):
         heart_total = 0.0
         heart_count = 0.0
         heart_max = 0.0
-        heart_threshold = self.max_heart_rate() * 0.64
+        heart_threshold = self.max_heart_rate() * 0.5
         heart_csv = []
         heart_json = []
         heart_zone = 0.0
