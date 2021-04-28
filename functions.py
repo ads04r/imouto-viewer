@@ -141,8 +141,8 @@ def generate_dashboard():
     user_home = settings.USER_HOME_LOCATION
     user_age = (datetime.datetime.now().date() - user_dob).total_seconds() / (86400 * 365.25)
     user_heart_max = int(220.0 - user_age)
-    user_heart_low = int((220.0 - user_age) * 0.64)
-    user_heart_high = int((220.0 - user_age) * 0.76)
+    user_heart_low = int((220.0 - user_age) * 0.5)
+    user_heart_high = int((220.0 - user_age) * 0.7)
 
     contactdata = []
     stats['messages'] = len(RemoteInteraction.objects.filter(type='sms', time__gte=(last_contact - datetime.timedelta(days=7))))
