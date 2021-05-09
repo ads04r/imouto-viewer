@@ -159,6 +159,13 @@ def event(request, eid):
         template = 'viewer/lifeevent.html'
     return render(request, template, context)
 
+def event_collage(request, eid):
+    data = get_object_or_404(Event, id=eid)
+    im = data.photo_collage()
+    response = HttpResponse(content_type='image/jpeg')
+    im.save(response, "JPEG")
+    return response
+
 @csrf_exempt
 def eventdelete(request, eid):
     cache.delete('dashboard')

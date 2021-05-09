@@ -5,7 +5,8 @@ from django.conf import settings
 from PIL import Image
 from io import BytesIO
 from wordcloud import WordCloud, STOPWORDS
-import datetime, pytz, json, markdown, re
+from viewer.eventcollage import make_collage
+import datetime, pytz, json, markdown, re, os
 
 def user_thumbnail_upload_location(instance, filename):
     return 'people/' + str(instance.pk) + '/' + filename
@@ -21,6 +22,9 @@ def report_pdf_upload_location(instance, filename):
 
 def report_wordcloud_upload_location(instance, filename):
     return 'reports/report_wc_' + str(instance.id) + '.png'
+
+def event_collage_upload_location(instance, filename):
+    return 'events/event_collage_' + str(instance.id) + '.jpg'
 
 class WeatherLocation(models.Model):
     id = models.SlugField(max_length=32, primary_key=True)
@@ -430,6 +434,7 @@ class Event(models.Model):
     location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name="events", null=True, blank=True)
     geo = models.TextField(default='', blank=True)
     elevation = models.TextField(default='', blank=True)
+    collage = models.ImageField(blank=True, null=True, upload_to=event_collage_upload_location)
     def max_heart_rate(self):
         age = int(((self.start_time - datetime.datetime(settings.USER_DATE_OF_BIRTH.year, settings.USER_DATE_OF_BIRTH.month, settings.USER_DATE_OF_BIRTH.day, 0, 0, 0, tzinfo=self.start_time.tzinfo)).days) / 365.25)
         return (220 - age)
@@ -438,6 +443,25 @@ class Event(models.Model):
             return ''
         md = markdown.Markdown()
         return md.convert(self.description)
+    def photo_collage(self):
+        if self.collage:
+            if os.path.exists(self.collage.path):
+                im = Image.open(self.collage.path)
+                return im
+        photos = []
+        for photo in Photo.objects.filter(time__gte=self.start_time).filter(time__lte=self.end_time):
+            photo_path = str(photo.file.path)
+            if photo_path in photos:
+                continue
+            photos.append(photo_path)
+        im = Image.new(mode='RGB', size=(10, 10))
+        blob = BytesIO()
+        im.save(blob, 'JPEG')
+        self.collage.save(event_collage_upload_location, File(blob), save=False)
+        self.save()
+        filename = make_collage(self.collage.path, photos, 2480, 3543)
+        im = Image.open(self.collage.path)
+        return im
     def __parse_sleep(self, sleep):
         time_from = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
         time_to = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.UTC)
