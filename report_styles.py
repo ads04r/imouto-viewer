@@ -1,4 +1,5 @@
 from fpdf import FPDF
+import os
 
 class DefaultReport(FPDF):
 
@@ -24,9 +25,9 @@ class DefaultReport(FPDF):
 		self.cell(200, 0, subtitle, 0, 2, 'C')
 		self.set_font('Times', '', 14)
 
-	def add_image_page(self, image):
+	def add_image_page(self, image, format='PNG'):
 		self.add_page()
-		self.image(image, 5.0, 5.0, 200.0, 287.0, type='PNG')
+		self.image(image, 5.0, 5.0, 200.0, 287.0, type=format)
 		self.set_font('Arial', '', 14)
 
 	def render_event(self, event):
@@ -56,6 +57,7 @@ class DefaultReport(FPDF):
 		self.set_xy(15.0, y + 20)
 
 	def add_life_event_page(self, event):
+		collage_buffer = []
 		self.add_page()
 		self.set_font('Arial', 'B', 24)
 		self.set_xy(5.0, 25.0)
@@ -70,9 +72,22 @@ class DefaultReport(FPDF):
 			self.set_xy(15.0, y + 20)
 
 		for e in event.subevents():
+			if e.collage:
+				if os.path.exists(e.collage.path):
+					collage_buffer.append(e.collage.path)
 			if ((e.type != 'event') & (e.description == '')):
 				continue
 			self.render_event(e)
+			if ((self.get_y() > 200) & (len(collage_buffer) > 0)):
+				for collage in collage_buffer:
+					self.add_image_page(collage, 'JPEG')
+				self.add_page()
+				collage_buffer = []
+		if len(collage_buffer) > 0:
+			for collage in collage_buffer:
+				self.add_image_page(collage, 'JPEG')
+			self.add_page()
+			collage_buffer = []
 
 	def add_stats_category(self, title, properties):
 		self.add_page()
