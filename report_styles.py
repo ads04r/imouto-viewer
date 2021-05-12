@@ -11,7 +11,12 @@ class DefaultReport(FPDF):
 
 	def add_title_page(self, title, subtitle=''):
 		self.set_title(title)
-		self.add_page()
+		try:
+			y = self.get_y()
+		except AttributeError:
+			y = 200
+		if y >= 11:
+			self.add_page()
 		self.set_line_width(0.0)
 		self.line(5.0, 5.0, 205.0, 5.0)
 		self.line(5.0, 292.0, 205.0, 292.0)
@@ -25,9 +30,53 @@ class DefaultReport(FPDF):
 		self.cell(200, 0, subtitle, 0, 2, 'C')
 		self.set_font('Times', '', 14)
 
+	def add_people_page(self, people, properties):
+		try:
+			y = self.get_y()
+		except AttributeError:
+			y = 200
+		if y >= 11:
+			self.add_page()
+		self.set_font('Arial', 'B', 24)
+		self.set_xy(5.0, 25.0)
+		self.cell(200, 0, 'People', 0, 0, 'C')
+		self.set_font('Times', '', 16)
+		self.set_xy(30.0, 40.0)
+		y = self.get_y()
+		self.set_font('Times', '', 16)
+		self.set_xy(15.0, y)
+		self.cell(130, 0, 'People Encountered', 0, 0, 'L')
+		self.set_xy(145.0, y)
+		self.cell(40, 0, str(people.count()), 0, 0, 'R')
+		self.set_xy(15.0, y)
+		y = y + 16
+		self.set_xy(15.0, y)
+		for prop in properties:
+			y = self.get_y()
+			self.set_font('Times', '', 16)
+			self.set_xy(15.0, y)
+			self.cell(130, 0, str(prop.key), 0, 0, 'L')
+			self.set_xy(145.0, y)
+			self.cell(40, 0, str(prop.value), 0, 0, 'R')
+			self.set_xy(15.0, y)
+			if prop.description:
+				self.set_font('Times', '', 12)
+				self.cell(200, 12, str(prop.description), 0, 0, 'L')
+				y = y + 12
+			y = y + 16
+			self.set_xy(15.0, y)
+		self.set_font('Times', '', 14)
+
+
 	def add_image_page(self, image, format='PNG'):
-		self.add_page()
+		try:
+			y = self.get_y()
+		except AttributeError:
+			y = 200
+		if y >= 11:
+			self.add_page()
 		self.image(image, 5.0, 5.0, 200.0, 287.0, type=format)
+		self.set_xy(200.0, 150.0)
 		self.set_font('Arial', '', 14)
 
 	def render_event(self, event):
@@ -58,7 +107,12 @@ class DefaultReport(FPDF):
 
 	def add_life_event_page(self, event):
 		collage_buffer = []
-		self.add_page()
+		try:
+			y = self.get_y()
+		except AttributeError:
+			y = 200
+		if y >= 11:
+			self.add_page()
 		self.set_font('Arial', 'B', 24)
 		self.set_xy(5.0, 25.0)
 		self.cell(200, 0, event.caption, 0, 0, 'C')
@@ -90,7 +144,13 @@ class DefaultReport(FPDF):
 			collage_buffer = []
 
 	def add_stats_category(self, title, properties):
-		self.add_page()
+		try:
+			y = self.get_y()
+		except AttributeError:
+			y = 200
+		if y >= 11:
+			self.add_page()
+
 		self.set_font('Arial', 'B', 24)
 		self.set_xy(5.0, 25.0)
 		self.cell(200, 0, title, 0, 0, 'C')

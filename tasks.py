@@ -99,7 +99,11 @@ def generate_report_pdf(reportid, style):
 		if prop.category in categories:
 			continue
 		categories.append(prop.category)
+	if report.people.count() > 0:
+		pdf.add_people_page(report.people, report.properties.filter(category='people'))
 	for category in categories:
+		if category == 'people':
+			continue
 		pdf.add_stats_category(category.capitalize(), report.properties.filter(category=category))
 	for event in report.events.filter(type='life_event').order_by('start_time'):
 		pdf.add_life_event_page(event)

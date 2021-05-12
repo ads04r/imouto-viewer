@@ -691,6 +691,9 @@ class LifeReport(models.Model):
             ret.append(word)
         return ' '.join(ret)
     def wordcloud(self):
+        if self.cached_wordcloud:
+            im = Image.open(self.cached_wordcloud.path)
+            return im
         text = self.words()
         stopwords = set()
         for word in set(STOPWORDS):
