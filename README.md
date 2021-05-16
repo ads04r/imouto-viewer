@@ -30,7 +30,7 @@ this becomes trivial. But the data is only useful if you do something with
 it, and that is the point of Imouto Viewer.
 
 I'll be completely honest, the viewer is pretty useless on its own.
-You need at least the location manager running as well in order to
+You need at least the [location manager](/ads04r/imouto-location-manager) running as well in order to
 make it do anything at all, and even then you'll just be able to import
 GPS tracks into it, and have it generate events based on when you
 were moving and when you were standing still, with most of the clever
