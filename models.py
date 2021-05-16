@@ -5,6 +5,7 @@ from django.conf import settings
 from PIL import Image
 from io import BytesIO
 from wordcloud import WordCloud, STOPWORDS
+from configparser import ConfigParser
 from viewer.eventcollage import make_collage
 import datetime, pytz, json, markdown, re, os
 
@@ -294,8 +295,56 @@ class Photo(models.Model):
     location = models.ForeignKey(Location, null=True, blank=True, on_delete=models.CASCADE, related_name="photos")
     cached_thumbnail = models.ImageField(blank=True, null=True, upload_to=photo_thumbnail_upload_location)
     face_count = models.IntegerField(null=True, blank=True)
+    def picasa_info(self):
+        image_path = str(self.file.path)
+        parsed = os.path.split(image_path)
+        picasa_path = os.path.join(parsed[0], 'picasa.ini')
+        if not(os.path.exists(picasa_path)):
+            picasa_path = os.path.join(parsed[0], '.picasa.ini')
+        if not(os.path.exists(picasa_path)):
+            return {}
+        ret = {}
+        cfg = ConfigParser()
+        try:
+            cfg.read(picasa_path)
+        except:
+            pass
+        ret['ini_filename'] = picasa_path
+        if 'Picasa' in cfg:
+            ret['directory'] = {}
+            for k in cfg['Picasa']:
+                try:
+                    ret['directory'][k] = cfg['Picasa'][k]
+                except:
+                    pass
+        ret['filename'] = parsed[1]
+        fn = parsed[1]
+        if fn in cfg:
+            cfgcat = cfg[fn]
+            for k in cfgcat:
+                try:
+                    v = cfgcat[k]
+                except:
+                    continue
+                if k == 'rotate':
+                    ret[k] = (int(v.replace('rotate(', '').replace(')', '')) * 90)
+                    continue
+                if k == 'faces':
+                    ret[k] = v.split(';')
+                    continue
+                if k == 'filters':
+                    vv = []
+                    for vi in v.split(';'):
+                        if '=' in vi:
+                            vv.append(vi.split('='))
+                    ret[k] = vv
+                    continue
+                ret[k] = v
+        return ret
     def image(self):
-        im = Image.open(self.file.path)
+        image_path = str(self.file.path)
+        picasa_info = self.picasa_info()
+        im = Image.open(image_path)
         if hasattr(im, '_getexif'):
             orientation = 0x0112
             exif = im._getexif()
@@ -309,25 +358,20 @@ class Photo(models.Model):
                     }
                     if orientation in rotations:
                         im = im.transpose(rotations[orientation])
+        if 'rotate' in picasa_info:
+            deg = picasa_info['rotate']
+            if deg == 270:
+                im = im.transpose(Image.ROTATE_90)
+            if deg == 180:
+                im = im.transpose(Image.ROTATE_180)
+            if deg == 90:
+                im = im.transpose(Image.ROTATE_270)
         return im
     def thumbnail(self, size=200):
         if self.cached_thumbnail:
             im = Image.open(self.cached_thumbnail)
             return im
-        im = Image.open(self.file.path)
-        if hasattr(im, '_getexif'):
-            orientation = 0x0112
-            exif = im._getexif()
-            if exif is not None:
-                if orientation in exif:
-                    orientation = exif[orientation]
-                    rotations = {
-                        3: Image.ROTATE_180,
-                        6: Image.ROTATE_270,
-                        8: Image.ROTATE_90
-                    }
-                    if orientation in rotations:
-                        im = im.transpose(rotations[orientation])
+        im = self.image()
         bbox = im.getbbox()
         w = bbox[2]
         h = bbox[3]
