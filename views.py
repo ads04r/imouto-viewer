@@ -120,6 +120,20 @@ def events(request):
     context = {'type':'view', 'data':data, 'form':form}
     return render(request, 'viewer/calendar.html', context)
 
+def day(request, ds):
+
+    if len(ds) != 8:
+        raise Http404()
+    y = int(ds[0:4])
+    m = int(ds[4:6])
+    d = int(ds[6:])
+    dts = datetime.datetime(y, m, d, 4, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
+    dte = dts + datetime.timedelta(seconds=86400)
+    events = Event.objects.filter(end_time__gte=dts, start_time__lte=dte).order_by('start_time')
+    dss = dts.strftime('%A, %-d %B %Y')
+    context = {'type':'view', 'caption': dss, 'events':events}
+    return render(request, 'viewer/day.html', context)
+
 def event(request, eid):
 
     cache_key = 'event_' + str(eid)

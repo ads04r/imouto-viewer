@@ -184,6 +184,11 @@ function eventsScreen()
     });
 }
 
+function dayScreen(id)
+{
+    $(".content-wrapper").load("./days/" + id + ".html", function(){ });
+}
+
 function peopleScreen()
 {
     $(".content-wrapper").load("./people.html", function(){ });
@@ -646,6 +651,7 @@ function pageRefresh()
     if(page == 'people') { peopleScreen(); return true; }
     if(page == 'places') { placesScreen(); return true; }
                                         
+    if(page.startsWith('day_')) { dayScreen(page.replace('day_', '')); }
     if(page.startsWith('event_')) { eventScreen(page.replace('event_', '')); }
     if(page.startsWith('place_')) { placeScreen(page.replace('place_', '')); }
     if(page.startsWith('person_')) { personScreen(page.replace('person_', '')); }
