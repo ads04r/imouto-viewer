@@ -62,9 +62,10 @@ def timelineitem(request, ds):
 
     dtq = events[0].start_time
     dtn = dtq - datetime.timedelta(days=1)
+    dsq = dtq.strftime("%Y%m%d")
     dsn = dtn.strftime("%Y%m%d")
 
-    context = {'type':'view', 'data':{'label': dtq.strftime("%A %-d %B"), 'next': dsn, 'events': events}}
+    context = {'type':'view', 'data':{'label': dtq.strftime("%A %-d %B"), 'id': dsq, 'next': dsn, 'events': events}}
     return render(request, 'viewer/timeline_event.html', context)
 
 def reports(request):

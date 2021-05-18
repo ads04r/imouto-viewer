@@ -112,3 +112,6 @@
 	margin-left: 1em;
         overflow-x: hidden;
 }
+
+.time-label a { color: #FFFFFF; }
+.info-box-content a { color: #000000; text-decoration: underline; }
