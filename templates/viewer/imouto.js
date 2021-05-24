@@ -186,7 +186,36 @@ function eventsScreen()
 
 function dayScreen(id)
 {
-    $(".content-wrapper").load("./days/" + id + ".html", function(){ });
+    $(".content-wrapper").load("./days/" + id + ".html", function()
+    {
+        $("a.eventdelete").on('click', function()
+        {
+            var id = $(this).data('event-id');
+            $("#delete-id").val(id);
+
+            $("#timeline_event_delete").modal('show');
+
+            return false;
+        });
+
+        $("#event-delete-button").on('click', function()
+        {
+            var id="#day_event_" + $("#delete-id").val();
+            var url="events/" + $("#delete-id").val() + "/delete";
+
+            $(id).remove();
+            $("#timeline_event_delete").modal('hide');
+
+            $.ajax({
+                url: url,
+                dataType: 'json',
+                method: 'POST',
+                success: function(data) { }
+            });
+
+        });
+
+    });
 }
 
 function peopleScreen()
