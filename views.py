@@ -130,7 +130,7 @@ def day(request, ds):
     d = int(ds[6:])
     dts = datetime.datetime(y, m, d, 4, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
     dte = dts + datetime.timedelta(seconds=86400)
-    events = Event.objects.filter(end_time__gte=dts, start_time__lte=dte).order_by('start_time')
+    events = Event.objects.filter(end_time__gte=dts, start_time__lte=dte).exclude(type='life_event').order_by('start_time')
     dss = dts.strftime('%A, %-d %B %Y')
     context = {'type':'view', 'caption': dss, 'events':events}
     return render(request, 'viewer/day.html', context)

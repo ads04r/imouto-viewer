@@ -215,6 +215,8 @@ function dayScreen(id)
 
         });
 
+        makeMap();
+
     });
 }
 

@@ -110,6 +110,7 @@ def generate_onthisday():
         if len(events) > 0 or len(photos) > 0 or len(places) > 0 or len(journeys) > 0:
             item = {}
             item['year'] = dts.year
+            item['id'] = "day_" + dts.strftime("%Y%m%d")
             if i == 1:
                 item['label'] = 'Last year'
             else:
