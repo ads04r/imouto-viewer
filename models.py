@@ -7,6 +7,7 @@ from io import BytesIO
 from wordcloud import WordCloud, STOPWORDS
 from configparser import ConfigParser
 from viewer.eventcollage import make_collage
+from tempfile import NamedTemporaryFile
 import datetime, pytz, json, markdown, re, os
 
 def user_thumbnail_upload_location(instance, filename):
@@ -497,7 +498,13 @@ class Event(models.Model):
             photo_path = str(photo.file.path)
             if photo_path in photos:
                 continue
-            photos.append(photo_path)
+            if len(photo.picasa_info()) == 0:
+                photos.append(photo_path)
+            else:
+                tf = NamedTemporaryFile(delete=False)
+                im = photo.image()
+                im.save(tf, format='JPEG')
+                photos.append(tf.name)
         im = Image.new(mode='RGB', size=(10, 10))
         blob = BytesIO()
         im.save(blob, 'JPEG')
@@ -505,6 +512,8 @@ class Event(models.Model):
         self.save()
         filename = make_collage(self.collage.path, photos, 2480, 3543)
         im = Image.open(self.collage.path)
+        for photo in photos:
+            os.remove(photo)
         return im
     def __parse_sleep(self, sleep):
         time_from = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
