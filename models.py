@@ -494,6 +494,7 @@ class Event(models.Model):
                 im = Image.open(self.collage.path)
                 return im
         photos = []
+        tempphotos = []
         for photo in Photo.objects.filter(time__gte=self.start_time).filter(time__lte=self.end_time):
             photo_path = str(photo.file.path)
             if photo_path in photos:
@@ -505,6 +506,7 @@ class Event(models.Model):
                 im = photo.image()
                 im.save(tf, format='JPEG')
                 photos.append(tf.name)
+                tempphotos.append(tf.name)
         im = Image.new(mode='RGB', size=(10, 10))
         blob = BytesIO()
         im.save(blob, 'JPEG')
@@ -512,7 +514,7 @@ class Event(models.Model):
         self.save()
         filename = make_collage(self.collage.path, photos, 2480, 3543)
         im = Image.open(self.collage.path)
-        for photo in photos:
+        for photo in tempphotos:
             os.remove(photo)
         return im
     def __parse_sleep(self, sleep):
