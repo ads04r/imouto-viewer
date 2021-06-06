@@ -7,11 +7,11 @@ from tzlocal import get_localzone
 import datetime, pytz, os
 
 @background(schedule=0, queue='reports')
-def generate_report(title, dss, dse, type='year', style='default', moonshine_url=''):
+def generate_report(title, dss, dse, type='year', style='default', moonshine_url='', pdf=True):
 	""" A background task for generating LifeReport objects"""
 
-	dts = datetime.datetime.strptime(dss, "%Y-%m-%d %H:%M:%S %Z")
-	dte = datetime.datetime.strptime(dse, "%Y-%m-%d %H:%M:%S %Z")
+	dts = datetime.datetime.strptime(dss, "%Y-%m-%d %H:%M:%S %z")
+	dte = datetime.datetime.strptime(dse, "%Y-%m-%d %H:%M:%S %z")
 
 	tz = get_localzone()
 	now = pytz.UTC.localize(datetime.datetime.utcnow())
@@ -79,7 +79,8 @@ def generate_report(title, dss, dse, type='year', style='default', moonshine_url
 		prop.description = str(sms_sent) + ' sent / ' + str(sms_recv) + ' received'
 		prop.save()
 
-	generate_report_pdf(report.id, style)
+	if pdf:
+		generate_report_pdf(report.id, style)
 
 	return report
 

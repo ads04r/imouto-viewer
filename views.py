@@ -73,8 +73,8 @@ def reports(request):
         form = CreateReportForm(request.POST)
         if form.is_valid():
             year = int(request.POST['year'])
-            dss = datetime.datetime(year, 1, 1, 0, 0, 0, tzinfo=pytz.UTC).strftime("%Y-%m-%d %H:%M:%S %Z")
-            dse = datetime.datetime(year, 12, 31, 23, 59, 59, tzinfo=pytz.UTC).strftime("%Y-%m-%d %H:%M:%S %Z")
+            dss = datetime.datetime(year, 1, 1, 0, 0, 0, tzinfo=pytz.UTC).strftime("%Y-%m-%d %H:%M:%S %z")
+            dse = datetime.datetime(year, 12, 31, 23, 59, 59, tzinfo=pytz.UTC).strftime("%Y-%m-%d %H:%M:%S %z")
             title = str(request.POST['label'])
             style = str(request.POST['style'])
             if 'moonshine_url' in request.POST:
