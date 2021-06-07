@@ -387,6 +387,10 @@ class Photo(models.Model):
         self.cached_thumbnail.save(photo_thumbnail_upload_location, File(blob), save=False)
         self.save()
         return ret
+    def events(self):
+        if self.time is None:
+            return Event.objects.none()
+        return Event.objects.filter(start_time__lte=self.time, end_time__gte=self.time)
     def __str__(self):
         return 'Photo ' + str(self.file.path)
     class Meta:
