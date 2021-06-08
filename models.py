@@ -508,9 +508,12 @@ class Event(models.Model):
             else:
                 tf = NamedTemporaryFile(delete=False)
                 im = photo.image()
-                im.save(tf, format='JPEG')
-                photos.append(tf.name)
-                tempphotos.append(tf.name)
+                try:
+                    im.save(tf, format='JPEG')
+                    photos.append(tf.name)
+                    tempphotos.append(tf.name)
+                except:
+                    photos.append(photo_path)
         im = Image.new(mode='RGB', size=(10, 10))
         blob = BytesIO()
         im.save(blob, 'JPEG')
