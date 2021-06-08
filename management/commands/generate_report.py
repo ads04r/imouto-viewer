@@ -32,7 +32,7 @@ class Command(BaseCommand):
 		for year in years:
 			report_title = title
 			try:
-				reports = LifeReport.objects.filter(reportevents__event__start_time__year=year).distinct()
+				reports = LifeReport.objects.filter(reportevents__event__start_time__year=year, reportevents__event__end_time__year=year).distinct()
 				report = None
 				if reports.count() == 1:
 					report = reports[0]
