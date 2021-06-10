@@ -105,6 +105,42 @@ class DefaultReport(FPDF):
 		y = self.get_y()
 		self.set_xy(15.0, y + 20)
 
+	def add_month_page(self, month, events):
+		months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+		collage_buffer = []
+		try:
+			y = self.get_y()
+		except AttributeError:
+			y = 200
+		if y >= 11:
+			self.add_page()
+		self.set_font('Arial', 'B', 24)
+		self.set_xy(5.0, 25.0)
+		self.cell(200, 0, months[month - 1], 0, 0, 'C')
+		self.set_font('Times', '', 16)
+		self.set_xy(15.0, 40.0)
+		self.set_font('Times', '', 14)
+
+		for e in events:
+			if e.type == 'life_event':
+				continue
+			if e.collage:
+				if os.path.exists(e.collage.path):
+					collage_buffer.append(e.collage.path)
+			if ((e.type != 'event') & (e.description == '')):
+				continue
+			self.render_event(e)
+			if ((self.get_y() > 200) & (len(collage_buffer) > 0)):
+				for collage in collage_buffer:
+					self.add_image_page(collage, 'JPEG')
+				self.add_page()
+				collage_buffer = []
+		if len(collage_buffer) > 0:
+			for collage in collage_buffer:
+				self.add_image_page(collage, 'JPEG')
+			self.add_page()
+			collage_buffer = []
+
 	def add_life_event_page(self, event):
 		collage_buffer = []
 		try:
@@ -126,6 +162,9 @@ class DefaultReport(FPDF):
 			self.set_xy(15.0, y + 20)
 
 		for e in event.subevents():
+			if not(e.collage):
+				if e.photos().count() >= 3:
+					e.photo_collage()
 			if e.collage:
 				if os.path.exists(e.collage.path):
 					collage_buffer.append(e.collage.path)
