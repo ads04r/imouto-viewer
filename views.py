@@ -237,6 +237,9 @@ def eventjson(request):
         if event.type == 'loc_prox':
             item['backgroundColor'] = '#0073b7'
             item['textColor'] = 'white'
+        if event.type == 'calendar':
+            item['backgroundColor'] = '#ffc0ff'
+            item['textColor'] = 'black'
         ret.append(item)
     response = HttpResponse(json.dumps(ret), content_type='application/json')
     return response
