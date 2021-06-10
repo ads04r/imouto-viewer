@@ -24,6 +24,11 @@ class Command(BaseCommand):
 
 	def handle(self, *args, **kwargs):
 
+		moonshine_url = ''
+		if hasattr(settings, 'MOONSHINE_URL'):
+			if settings.MOONSHINE_URL != '':
+				moonshine_url = settings.MOONSHINE_URL
+
 		years = kwargs['year']
 		title = kwargs['title']
 		if len(years) > 1:
@@ -53,7 +58,7 @@ class Command(BaseCommand):
 				report.delete()
 			sys.stdout.write(self.style.SUCCESS("Generating " + report_title + "\n"))
 
-			report = generate_report.now(report_title, str(year) + "-01-01 00:00:00 +0000", str(year) + "-12-31 23:59:59 +0000", pdf=False)
+			report = generate_report.now(report_title, str(year) + "-01-01 00:00:00 +0000", str(year) + "-12-31 23:59:59 +0000", pdf=False, moonshine_url=moonshine_url)
 			sys.stdout.write(self.style.SUCCESS("* Adding properties\n"))
 			for prop in properties:
 				try:

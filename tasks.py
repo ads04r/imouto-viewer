@@ -79,6 +79,38 @@ def generate_report(title, dss, dse, type='year', style='default', moonshine_url
 		prop.description = str(sms_sent) + ' sent / ' + str(sms_recv) + ' received'
 		prop.save()
 
+	if len(moonshine_url) > 0:
+		report_url = moonshine_url.rstrip('/') + '/report/' + str(dts.year)
+		music_data = {}
+		try:
+			req = urllib.request.urlopen(report_url)
+			if(req.getcode() == 200):
+				music_data = json.loads(req.read())
+		except:
+			music_data = {}
+		if len(music_data) > 0:
+			if 'play_count' in music_data:
+				prop = report.addproperty(key='Tracks played', value=str(music_data['play_count']), category='music')
+				prop.icon = 'music'
+				if 'track_count' in music_data:
+					prop.description = str(music_data['track_count']) + ' unique tracks'
+				prop.save()
+			if 'artist_count' in music_data:
+				prop = report.addproperty(key='Artists played', value=str(music_data['artist_count']), category='music')
+				prop.icon = 'users'
+				if 'discovery' in music_data:
+					if 'artists' in music_data['discovery']:
+						prop.description = str(len(music_data['discovery']['artists'])) + ' new artists discovered'
+				prop.save()
+			if 'album_count' in music_data:
+				prop = report.addproperty(key='Albums played', value=str(music_data['album_count']), category='music')
+				prop.icon = 'play-circle'
+				if 'discovery' in music_data:
+					if 'albums' in music_data['discovery']:
+						prop.description = str(len(music_data['discovery']['albums'])) + ' albums discovered'
+				prop.save()
+
+
 	if pdf:
 		generate_report_pdf(report.id, style)
 
@@ -89,6 +121,7 @@ def generate_report_pdf(reportid, style):
 	""" A background task for creating a PDF report based on a LifeReport object """
 
 	report = LifeReport.objects.get(id=reportid)
+	year = report.events.order_by('start_time').first().end_time.year
 	im = report.wordcloud()
 	filename = os.path.join(settings.MEDIA_ROOT, 'reports', 'report_' + str(report.id) + '.pdf')
 	pdf = DefaultReport()
@@ -108,6 +141,15 @@ def generate_report_pdf(reportid, style):
 		pdf.add_stats_category(category.capitalize(), report.properties.filter(category=category))
 	for event in report.events.filter(type='life_event').order_by('start_time'):
 		pdf.add_life_event_page(event)
+	for i in range(1, 13):
+		mts = datetime.datetime(year, i, 1, 0, 0, 0, tzinfo=pytz.UTC)
+		if i == 12:
+			mte = datetime.datetime(year + 1, 1, 1, 0, 0, 0, tzinfo=pytz.UTC)
+		else:
+			mte = datetime.datetime(year, i + 1, 1, 0, 0, 0, tzinfo=pytz.UTC)
+		mte = mte - datetime.timedelta(seconds=1)
+		events = report.events.filter(end_time__gte=mts, start_time__lte=mte).order_by('start_time')
+		pdf.add_month_page(i, events)
 	pdf.output(filename, 'F')
 	report.pdf = filename
 	report.save()
