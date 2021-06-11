@@ -62,7 +62,7 @@ class Command(BaseCommand):
 			sys.stdout.write(self.style.SUCCESS("* Adding properties\n"))
 			for prop in properties:
 				try:
-					item = LifeReportProperties.objects.get(category=prop[2], key=prop[0], value=prop[1], report=report)
+					item = LifeReportProperties.objects.get(category=prop[2], key=prop[0], report=report)
 				except:
 					item = None
 				if not(item is None):
