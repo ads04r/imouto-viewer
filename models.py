@@ -894,3 +894,29 @@ class ReportEvents(models.Model):
         app_label = 'viewer'
         verbose_name = 'report event'
         verbose_name_plural = 'report events'
+
+class EventWorkoutCategory(models.Model):
+    events = models.ManyToManyField(Event, related_name='workout_categories')
+    id = models.SlugField(max_length=32, primary_key=True)
+    label = models.CharField(max_length=32, default='')
+    comment = models.TextField(null=True, blank=True)
+    def __str__(self):
+        r = self.id
+        if len(self.label) > 0:
+            r = self.label
+        return(r)
+    class Meta:
+        app_label = 'viewer'
+        verbose_name = 'workout category'
+        verbose_name_plural = 'workout categories'
+
+class EventTag(models.Model):
+    events = models.ManyToManyField(Event, related_name='tags')
+    id = models.SlugField(max_length=32, primary_key=True)
+    comment = models.TextField(null=True, blank=True)
+    def __str__(self):
+        return(self.id)
+    class Meta:
+        app_label = 'viewer'
+        verbose_name = 'event tag'
+        verbose_name_plural = 'event tags'
