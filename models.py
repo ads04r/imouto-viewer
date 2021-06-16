@@ -900,6 +900,7 @@ class EventWorkoutCategory(models.Model):
     id = models.SlugField(max_length=32, primary_key=True)
     label = models.CharField(max_length=32, default='')
     comment = models.TextField(null=True, blank=True)
+    icon = models.SlugField(max_length=64, default='calendar')
     def __str__(self):
         r = self.id
         if len(self.label) > 0:
