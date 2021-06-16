@@ -57,7 +57,7 @@ def getelevation(dts, dte, address='127.0.0.1:8000'):
     data = []
     with urllib.request.urlopen(url) as h:
         for item in json.loads(h.read().decode()):
-            data.append({'x': item[0], 'y': item[1]})
+            data.append({'x': item[1], 'y': item[2]})
     if len(data) > 0:
         return json.dumps(data)
     return ""

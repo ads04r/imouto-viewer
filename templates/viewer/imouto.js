@@ -277,13 +277,19 @@ function initialiseGraphics()
     $(".line-chart").each(function()
     {
         var data = $(this).data('data').split(',');
-        makeLineChart($(this)[0].getContext('2d'), data);
+        makeLineChart($(this)[0].getContext('2d'), data, '#3C8DBC');
+    });
+    
+    $(".line-chart-irregular").each(function()
+    {
+        var data = $(this).data('data');
+        makeLineChart($(this)[0].getContext('2d'), data, '#3C8DBC');
     });
     
     $(".time-chart").each(function()
     {
         var data = $(this).data('data');
-        makeLineChart($(this)[0].getContext('2d'), data);
+        makeLineChart($(this)[0].getContext('2d'), data, '#0073b7');
     });
     
 }
@@ -381,7 +387,7 @@ function makeMap()
     });
 }
 
-function makeLineChart(lineChartCanvas, data)
+function makeLineChart(lineChartCanvas, data, colstr)
 {
     var labels = []
     for(i = 0; i < data.length; i++)
@@ -395,7 +401,7 @@ function makeLineChart(lineChartCanvas, data)
             labels: labels,
             datasets: [
                 {
-                    backgroundColor: '#0073b7',
+                    backgroundColor: colstr,
                     data: data,
                     fill: true,
                     pointRadius: 0
