@@ -483,6 +483,7 @@ class Event(models.Model):
     location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name="events", null=True, blank=True)
     geo = models.TextField(default='', blank=True)
     elevation = models.TextField(default='', blank=True)
+    speed = models.TextField(default='', blank=True)
     collage = models.ImageField(blank=True, null=True, upload_to=event_collage_upload_location)
     def max_heart_rate(self):
         age = int(((self.start_time - datetime.datetime(settings.USER_DATE_OF_BIRTH.year, settings.USER_DATE_OF_BIRTH.month, settings.USER_DATE_OF_BIRTH.day, 0, 0, 0, tzinfo=self.start_time.tzinfo)).days) / 365.25)

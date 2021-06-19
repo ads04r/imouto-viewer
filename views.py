@@ -106,6 +106,7 @@ def events(request):
             if event.type == 'journey':
                 event.geo = getgeoline(event.start_time, event.end_time, request.META['HTTP_HOST'])
                 event.elevation = getelevation(event.start_time, event.end_time, request.META['HTTP_HOST'])
+                event.speed = getspeed(event.start_time, event.end_time, request.META['HTTP_HOST'])
                 event.save()
 
             return HttpResponseRedirect('./#event_' + str(event.id))
@@ -150,6 +151,7 @@ def event(request, eid):
             if event.type == 'journey':
                 event.geo = getgeoline(event.start_time, event.end_time, request.META['HTTP_HOST'])
                 event.elevation = getelevation(event.start_time, event.end_time, request.META['HTTP_HOST'])
+                event.speed = getspeed(event.start_time, event.end_time, request.META['HTTP_HOST'])
                 event.save()
             cache.set(cache_key, data, 86400)
             return HttpResponseRedirect('../#event_' + str(eid))

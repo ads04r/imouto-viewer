@@ -1,4 +1,4 @@
-import datetime, pytz, json, random, urllib.request
+import datetime, pytz, json, random, urllib.request, re
 from .models import *
 from django.db.models import Sum, Count, F, ExpressionWrapper, fields
 from django.conf import settings
@@ -58,6 +58,28 @@ def getelevation(dts, dte, address='127.0.0.1:8000'):
     with urllib.request.urlopen(url) as h:
         for item in json.loads(h.read().decode()):
             data.append({'x': item[1], 'y': item[2]})
+    if len(data) > 0:
+        return json.dumps(data)
+    return ""
+
+def getspeed(dts, dte, address='127.0.0.1:8000'):
+
+    id = dts.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S") + dte.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S")
+    url = "http://" + address + "/location-manager/elevation/" + id + "?format=json"
+    data = []
+    last_dist = 0
+    last_time = dts
+    with urllib.request.urlopen(url) as h:
+        for item in json.loads(h.read().decode()):
+            dt = datetime.datetime.strptime(re.sub('\.[0-9]+', '', item[0]), "%Y-%m-%dT%H:%M:%S%z")
+            time_diff = (dt - last_time).total_seconds()
+            dist_diff = item[1] - last_dist
+            speed = 0
+            if time_diff > 0:
+                speed = ((dist_diff / 1609.344) / (time_diff / 3600))
+            data.append({'x': item[0], 'y': speed})
+            last_time = dt
+            last_dist = item[1]
     if len(data) > 0:
         return json.dumps(data)
     return ""
