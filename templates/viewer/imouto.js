@@ -1,18 +1,58 @@
 var map;
 
+function errorPage(e)
+{
+    console.log(e);
+
+    var err = e.responseText;
+    err = err.replace(/^.*<table>/, '<table>');
+    err = err.replace(/<\/table>.*$/, '</table>');
+
+    var html = '<section class="content">';
+    html = html + '<div class="container-fluid">';
+    html = html + '<div class="row">';
+    html = html + '<div class="col-xs-12">';
+    html = html + '<div class="box box-primary">';
+    html = html + '<div class="box-body with-border">';
+
+    if(err.length > 0)
+    {
+        html = html + err;
+    } else {
+        html = html + '<h1>Error ' + e.status + '</h1>';
+        html = html + '<p>' + e.statusText + '</p>';
+    }
+
+    html = html + '</div>';
+    html = html + '</div>';
+    html = html + '</div>';
+    html = html + '</div>';
+    html = html + '</div>';
+    html = html + '</section>'
+    $(".content-wrapper").html(html);
+}
+
 function homeScreen()
 {
-    $(".content-wrapper").load("./stats.html", function(){ initialiseGraphics(); });
+    $(".content-wrapper").load("./stats.html", function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
+        initialiseGraphics();
+    });
 }
 
 function anniversaryScreen()
 {
-    $(".content-wrapper").load("./onthisday.html", function(){ initialiseGraphics(); });
+    $(".content-wrapper").load("./onthisday.html", function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
+        initialiseGraphics();
+    });
 }
 
 function uploadScreen()
 {
-    $(".content-wrapper").load("./upload.html", function(){
+    $(".content-wrapper").load("./upload.html", function(response, status, xhr){
+
+        if(status == 'error') { errorPage(xhr); return false; }
 
 	window.setInterval(updateUploadStats, 1000);
 	window.setInterval(updateUploadQueue, 5000);
@@ -88,8 +128,10 @@ function onMapClick(e)
 
 function timelineScreen()
 {
-    $(".content-wrapper").load("./timeline.html", function()
+    $(".content-wrapper").load("./timeline.html", function(response, status, xhr)
     {
+        if(status == 'error') { errorPage(xhr); return false; }
+
         $("#event-delete-button").on('click', function()
         {
             var id="#li_event_" + $("#delete-id").val();
@@ -127,7 +169,8 @@ function updateReportYearSelect()
 
 function reportsScreen()
 {
-    $(".content-wrapper").load("./reports.html", function(){
+    $(".content-wrapper").load("./reports.html", function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
         updateReportYearSelect();
         $("#generate-life-report-year").on('change', function() {
             updateReportYearSelect();
@@ -140,15 +183,18 @@ function reportsScreen()
 
 function reportScreen(id)
 {
-    $(".content-wrapper").load("./reports/" + id + ".html", function(){
+    $(".content-wrapper").load("./reports/" + id + ".html", function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
         makeMap();
     });
 }
 
 function eventsScreen()
 {
-    $(".content-wrapper").load("./events.html", function()
+    $(".content-wrapper").load("./events.html", function(response, status, xhr)
     {
+
+        if(status == 'error') { errorPage(xhr); return false; }
 
         var date = new Date();
         var d = date.getDate(),
@@ -186,8 +232,10 @@ function eventsScreen()
 
 function dayScreen(id)
 {
-    $(".content-wrapper").load("./days/" + id + ".html", function()
+    $(".content-wrapper").load("./days/" + id + ".html", function(response, status, xhr)
     {
+        if(status == 'error') { errorPage(xhr); return false; }
+
         $("a.eventdelete").on('click', function()
         {
             var id = $(this).data('event-id');
@@ -222,18 +270,20 @@ function dayScreen(id)
 
 function peopleScreen()
 {
-    $(".content-wrapper").load("./people.html", function(){ });
+    $(".content-wrapper").load("./people.html", function(response, status, xhr){ if(status == 'error') { errorPage(xhr); return false; } });
 }
 
 function personScreen(id)
 {
-    $(".content-wrapper").load("./people/" + id + ".html", function(){ });
+    $(".content-wrapper").load("./people/" + id + ".html", function(response, status, xhr){ if(status == 'error') { errorPage(xhr); return false; } });
 }
 
 function placesScreen(id)
 {
-    $(".content-wrapper").load("./places.html", function(){
-        
+    $(".content-wrapper").load("./places.html", function(response, status, xhr){
+
+        if(status == 'error') { errorPage(xhr); return false; }
+
         var lat = 50.9;
         var lon = -1.4;
         var map = L.map('mapselect', {center: [lat, lon], zoom: 13});
@@ -261,7 +311,10 @@ function placesScreen(id)
 
 function placeScreen(id)
 {
-    $(".content-wrapper").load("./places/" + id + ".html", function(){ makeMap(); });
+    $(".content-wrapper").load("./places/" + id + ".html", function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
+        makeMap();
+    });
 }
 
 function initialiseGraphics()
@@ -596,9 +649,10 @@ function eventPeopleDeleteName(id)
 
 function eventScreen(id)
 {
-    $(".content-wrapper").load("./events/" + id + ".html", function()
+    $(".content-wrapper").load("./events/" + id + ".html", function(response, status, xhr)
     {
-        
+        if(status == 'error') { errorPage(xhr); return false; }
+
         makeMap();
         initialiseGraphics();
         $("#event-save-form-button").on('click', function()
@@ -727,7 +781,7 @@ function pageRefresh()
     if(page.startsWith('events_'))
     {
         var ds = page.replace('events_', '');
-        $(".content-wrapper").load("./dayevents/" + ds + ".html", function(){ });
+        $(".content-wrapper").load("./dayevents/" + ds + ".html", function(response, status, xhr){ if(status == 'error') { errorPage(xhr); return false; } });
     }
 }
 
