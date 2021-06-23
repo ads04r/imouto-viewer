@@ -292,6 +292,13 @@ function initialiseGraphics()
         makeLineChart($(this)[0].getContext('2d'), data, '#0073b7');
     });
     
+    $(".donut-chart").each(function()
+    {
+        var data = $(this).data('data');
+        var labels = $(this).data('labels');
+        makeDonutChart($(this)[0].getContext('2d'), data, labels);
+    });
+    
 }
 
 function checkTimelineScroll()
@@ -385,6 +392,29 @@ function makeMap()
             }).addTo(map);
             map.fitBounds(bb);
     });
+}
+
+function makeDonutChart(donutChartCanvas, data, labels)
+{
+    var donutChart = new Chart(donutChartCanvas);
+    var colours = ['#ABC1D8', '#3C8DBC', '#0073B7', '#005C92'];
+    var config = {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    data: data,
+                    backgroundColor: colours
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            animation: { animateScale: true, animateRotate: true }
+        }
+    };
+    donutChart = new Chart(donutChartCanvas, config);
 }
 
 function makeLineChart(lineChartCanvas, data, colstr)

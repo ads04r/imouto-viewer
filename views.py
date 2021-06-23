@@ -102,24 +102,32 @@ def events(request):
         cache.delete('dashboard')
         form = EventForm(request.POST)
         if form.is_valid():
-            event = form.save()
+            event = form.save(commit=False)
             if event.type == 'journey':
                 event.geo = getgeoline(event.start_time, event.end_time, request.META['HTTP_HOST'])
                 event.elevation = getelevation(event.start_time, event.end_time, request.META['HTTP_HOST'])
                 event.speed = getspeed(event.start_time, event.end_time, request.META['HTTP_HOST'])
-                event.save()
+                event.cached_health = ''
+            event.save()
+            event.workout_categories.clear()
+            catid = str(request.POST['workout_type'])
+            if len(catid) > 0:
+                for category in EventWorkoutCategory.objects.filter(id=catid):
+                    event.workout_categories.add(category)
+            event.save()
 
             return HttpResponseRedirect('./#event_' + str(event.id))
         else:
             raise Http404(form.errors)
 
     data = {}
-    data['event'] = Event.objects.filter(type='event').order_by('-start_time')[0:10]
-    data['journey'] = Event.objects.filter(type='journey').order_by('-start_time')[0:10]
+    data['event'] = Event.objects.filter(type='event', workout_categories=None).order_by('-start_time')[0:10]
+    data['journey'] = Event.objects.filter(type='journey', workout_categories=None).order_by('-start_time')[0:10]
+    data['workout'] = Event.objects.exclude(workout_categories=None).order_by('-start_time')[0:10]
     data['photo'] = Event.objects.filter(type='photo').exclude(caption='Photos').order_by('-start_time')[0:10]
     data['life'] = Event.objects.filter(type='life_event').order_by('-start_time')
     form = EventForm()
-    context = {'type':'view', 'data':data, 'form':form}
+    context = {'type':'view', 'data':data, 'form':form, 'categories':EventWorkoutCategory.objects.all()}
     return render(request, 'viewer/calendar.html', context)
 
 def day(request, ds):
@@ -147,12 +155,21 @@ def event(request, eid):
 
         form = EventForm(request.POST, instance=data)
         if form.is_valid():
-            event = form.save()
+            event = form.save(commit=False)
             if event.type == 'journey':
                 event.geo = getgeoline(event.start_time, event.end_time, request.META['HTTP_HOST'])
                 event.elevation = getelevation(event.start_time, event.end_time, request.META['HTTP_HOST'])
                 event.speed = getspeed(event.start_time, event.end_time, request.META['HTTP_HOST'])
-                event.save()
+            event.workout_categories.clear()
+            try:
+                catid = str(request.POST['workout_type'])
+            except:
+                catid = ''
+            if len(catid) > 0:
+                for category in EventWorkoutCategory.objects.filter(id=catid):
+                    event.workout_categories.add(category)
+            event.cached_health = ''
+            event.save()
             cache.set(cache_key, data, 86400)
             return HttpResponseRedirect('../#event_' + str(eid))
         else:
@@ -170,7 +187,7 @@ def event(request, eid):
         cache.set(cache_key, data, 86400)
 
     form = EventForm(instance=data)
-    context = {'type':'event', 'data':data, 'form':form, 'people':Person.objects.all()}
+    context = {'type':'event', 'data':data, 'form':form, 'people':Person.objects.all(), 'categories':EventWorkoutCategory.objects.all()}
     template = 'viewer/event.html'
     if data.type=='life_event':
         template = 'viewer/lifeevent.html'

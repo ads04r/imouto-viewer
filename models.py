@@ -482,6 +482,7 @@ class Event(models.Model):
     people = models.ManyToManyField(Person, through='PersonEvent')
     location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name="events", null=True, blank=True)
     geo = models.TextField(default='', blank=True)
+    cached_health = models.TextField(default='', blank=True)
     elevation = models.TextField(default='', blank=True)
     speed = models.TextField(default='', blank=True)
     collage = models.ImageField(blank=True, null=True, upload_to=event_collage_upload_location)
@@ -573,6 +574,7 @@ class Event(models.Model):
         for photo in Photo.objects.filter(time__gte=self.start_time).filter(time__lte=self.end_time):
             for person in photo.people.all():
                 self.people.add(person)
+        self.cached_health = ''
         self.save()
     def subevents(self):
         return Event.objects.filter(start_time__gte=self.start_time).filter(end_time__lte=self.end_time).exclude(id=self.id).order_by('start_time')
@@ -586,8 +588,10 @@ class Event(models.Model):
         return 0
     def length(self):
         return((self.end_time - self.start_time).total_seconds())
-    def length_string(self):
-        s = int((self.end_time - self.start_time).total_seconds())
+    def length_string(self, value=0):
+        s = value
+        if s == 0:
+            s = int((self.end_time - self.start_time).total_seconds())
         m = int(s / 60)
         s = s - (m * 60)
         h = int(m / 60)
@@ -646,15 +650,28 @@ class Event(models.Model):
     def music(self):
         return MediaEvent.objects.filter(time__gte=self.start_time, time__lte=self.end_time).filter(media__type='music').order_by('time')
     def health(self):
+        if len(self.cached_health) > 2:
+            return json.loads(self.cached_health)
         ret = {}
         heart_total = 0.0
         heart_count = 0.0
         heart_max = 0.0
         heart_threshold = self.max_heart_rate() * 0.5
+        heart_threshold_2 = self.max_heart_rate() * 0.7
         heart_csv = []
         heart_json = []
         heart_zone = 0.0
+        heart_zone_2 = 0.0
+        speed_count = 0
+        speed_move_count = 0
+        speed_move_time = 0.0
+        speed_total = 0.0
+        speed_max = 0.0
         step_count = 0
+        elev_gain = 0.0
+        elev_loss = 0.0
+        elev_max = -99999.99
+        elev_min = 99999.99
         sleep = []
         if self.length() > 86400:
             eventsearch = DataReading.objects.filter(end_time__gte=self.start_time, start_time__lte=self.end_time).exclude(type='heart-rate')
@@ -670,21 +687,70 @@ class Event(models.Model):
                     heart_max = item.value
                 if item.value > heart_threshold:
                     zone_secs = (item.end_time - item.start_time).total_seconds()
-                    heart_zone = heart_zone + zone_secs
+                    if item.value > heart_threshold_2:
+                        heart_zone_2 = heart_zone + zone_secs
+                    else:
+                        heart_zone = heart_zone + zone_secs
             if item.type=='step-count':
                 step_count = step_count + item.value
             if (item.type=='pebble-app-activity') & (item.value <= 2):
                 sleep.append(item)
+        if self.speed != '':
+            speed = json.loads(self.speed)
+            last_time = datetime.datetime.strptime(speed[0]['x'], "%Y-%m-%dT%H:%M:%S%z")
+            for item in speed:
+                cur_time = datetime.datetime.strptime(item['x'], "%Y-%m-%dT%H:%M:%S%z")
+                time_diff = (cur_time - last_time).total_seconds()
+                if item['y'] > speed_max:
+                    speed_max = item['y']
+                speed_count = speed_count + 1
+                speed_total = speed_total + item['y']
+                if item['y'] > 1:
+                    speed_move_count = speed_move_count + 1
+                    speed_move_time = speed_move_time + time_diff
+                last_time = cur_time
+        if self.elevation != '':
+            elev = json.loads(self.elevation)
+            last_elev = elev[0]['y']
+            for item in elev:
+                e = item['y'] - last_elev
+                if e > 0:
+                    elev_gain = elev_gain + e
+                else:
+                    elev_loss = elev_loss + (0 - e)
+                last_elev = item['y']
+                if last_elev > elev_max:
+                    elev_max = last_elev
+                if last_elev < elev_min:
+                    elev_min = last_elev
         if heart_count > 0:
             ret['heartavg'] = int(heart_total / heart_count)
             ret['heartmax'] = int(heart_max)
-            ret['heartzonetime'] = int(heart_zone)
+            ret['heartavgprc'] = int(((heart_total / heart_count) / self.max_heart_rate()) * 100)
+            ret['heartmaxprc'] = int((heart_max / self.max_heart_rate()) * 100)
+            ret['heartzonetime'] = [int(self.length() - (heart_zone + heart_zone_2)), int(heart_zone), int(heart_zone_2)]
+            ret['heartoptimaltime'] = self.length_string(ret['heartzonetime'][1])
             ret['heart'] = ','.join(heart_csv)
             ret['heart'] = json.dumps(heart_json)
+        if ((elev_gain > 0) & (elev_loss > 0)):
+            ret['elevgain'] = int(elev_gain)
+            ret['elevloss'] = int(elev_loss)
+        if elev_min < 99999.99:
+            ret['elevmin'] = int(elev_min)
+        if elev_max > -99999.99:
+            ret['elevmax'] = int(elev_max)
         if len(sleep) > 0:
             ret['sleep'] = self.__parse_sleep(sleep)
         if step_count > 0:
             ret['steps'] = step_count
+        if speed_count > 0:
+            ret['speedavg'] = int(speed_total / speed_count)
+            ret['speedavgmoving'] = int(speed_total / speed_move_count)
+            ret['speedmax'] = int(speed_max)
+            ret['speedmoving'] = self.length_string(int(speed_move_time))
+
+        self.cached_health = json.dumps(ret)
+        self.save()
         return ret
     def __str__(self):
         if self.caption == '':

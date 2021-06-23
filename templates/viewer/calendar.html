@@ -63,6 +63,7 @@
                     <ul class="nav nav-tabs">
                         <li class="active"><a href="#tab-event-event" data-toggle="tab"><i class="fa fa-calendar"></i></a></li>
                         <li><a href="#tab-event-photo" data-toggle="tab"><i class="fa fa-camera-retro"></i></a></li>
+                        <li><a href="#tab-event-workout" data-toggle="tab"><i class="fa fa-heartbeat"></i></a></li>
                         <li><a href="#tab-event-journey" data-toggle="tab"><i class="fa fa-road"></i></a></li>
                     </ul>
                     <div class="tab-content">
@@ -81,6 +82,18 @@
                         <div class="tab-pane" id="tab-event-photo">
 
 {% for event in data.photo %}
+
+                            <div class="users-list-name">
+                                <p><a href="#event_{{ event.id }}">{{ event.caption }}</a><br/>
+                                <small>{{ event.start_time }}</small></p>
+                            </div>
+
+{% endfor %}
+
+                        </div>
+                        <div class="tab-pane" id="tab-event-workout">
+
+{% for event in data.workout %}
 
                             <div class="users-list-name">
                                 <p><a href="#event_{{ event.id }}">{{ event.caption }}</a><br/>
@@ -137,6 +150,17 @@
                                 </tr>
 {% endif %}
 {% endfor %}
+
+                                <tr class="form-row">
+                                  <td></td>
+                                  <td><label for="id_workout_type">Workout type:</label></td><td><select id="id_workout_type" class="form-control" name="workout_type">
+                                      <option selected="selected" value="">---------</option>
+{% for category in categories %}
+                                      <option value="{{ category.id }}">{{ category.label }}</option>
+{% endfor %}
+                                  </select></td>
+                                </tr>
+
                               </table>
                         
                         </div>
@@ -166,6 +190,7 @@
                                 </tr>
 {% endif %}
 {% endfor %}
+
                               </table>
 
                         </div>
