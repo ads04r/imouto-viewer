@@ -5,7 +5,7 @@ from django.core.cache import cache
 from django.conf import settings
 from background_task.models import Task
 from haystack.query import SearchQuerySet
-import datetime, pytz, dateutil.parser, json, tzlocal
+import datetime, pytz, dateutil.parser, json, tzlocal, requests
 
 from .tasks import *
 from .models import *
@@ -15,6 +15,16 @@ from .functions import *
 def index(request):
     context = {'type':'index', 'data':[]}
     return render(request, 'viewer/index.html', context)
+
+def upload_file(request):
+    if request.method != 'POST':
+        raise MethodNotAllowed(str(request.method))
+    url = settings.LOCATION_MANAGER_URL + '/import'
+    files = {'uploaded_file': request.FILES['uploadformfile']}
+    data = {'file_source': request.POST['uploadformfilesource']}
+
+    r = requests.post(url, files=files, data=data)
+    return HttpResponseRedirect('./#files')
 
 def script(request):
     context = {'tiles': 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'}
@@ -43,7 +53,9 @@ def onthisday(request, format='html'):
     return render(request, 'viewer/onthisday.html', context)
 
 def importer(request):
-    context = {}
+    url = settings.LOCATION_MANAGER_URL + '/import'
+    r = requests.get(url=url)
+    context = {'progress': r.json()}
     return render(request, 'viewer/import.html', context)
 
 def timeline(request):
