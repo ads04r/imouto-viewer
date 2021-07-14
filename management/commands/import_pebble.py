@@ -51,13 +51,36 @@ class Command(BaseCommand):
 		c = conn.cursor()
 
 		cache.delete('dashboard')
-		sys.stdout.write("Parsing Pebble file...\n")
+
+		# Check for database type; we support official Pebble app and Gadgetbridge
+
+		db_type = ''
+		query = "SELECT COUNT(name) FROM sqlite_master WHERE type='table' and name='activity_sessions';"
+		c.execute(query)
+		if c.fetchone()[0] == 1:
+			sys.stdout.write("Parsing Pebble file...\n")
+			db_type = 'pebble'
+		query = "SELECT COUNT(name) FROM sqlite_master WHERE type='table' and name='PEBBLE_HEALTH_ACTIVITY_OVERLAY';"
+		c.execute(query)
+		if c.fetchone()[0] == 1:
+			sys.stdout.write("Parsing GadgetBridge file...\n")
+			db_type = 'gadgetbridge'
+
+		if db_type == '': # Die if no compatible database found
+			sys.stderr.write(self.style.ERROR("Cannot identify data file type. The file must be the database file from the official Pebble app, or an auto-dump file from GadgetBridge.\n"))
+			os.remove(file)
+			sys.exit(1)
 
 		# This bit looks for activities, specifically 'long walk' and 'sleep' events.
 
-		query = "SELECT start_utc_secs, end_utc_secs, type FROM activity_sessions WHERE start_utc_secs>='" + str(int(last_entry.start_time.timestamp())) + "' ORDER BY start_utc_secs ASC;"
-		if last_event.start_time < last_entry.start_time:
-			query = "SELECT start_utc_secs, end_utc_secs, type FROM activity_sessions WHERE start_utc_secs>='" + str(int(last_event.start_time.timestamp())) + "' ORDER BY start_utc_secs ASC;"
+		if db_type == 'pebble':
+			query = "SELECT start_utc_secs, end_utc_secs, type FROM activity_sessions WHERE start_utc_secs>='" + str(int(last_entry.start_time.timestamp())) + "' ORDER BY start_utc_secs ASC;"
+			if last_event.start_time < last_entry.start_time:
+				query = "SELECT start_utc_secs, end_utc_secs, type FROM activity_sessions WHERE start_utc_secs>='" + str(int(last_event.start_time.timestamp())) + "' ORDER BY start_utc_secs ASC;"
+		if db_type == 'gadgetbridge':
+			query = "SELECT TIMESTAMP_FROM, TIMESTAMP_TO, RAW_KIND FROM PEBBLE_HEALTH_ACTIVITY_OVERLAY WHERE TIMESTAMP_FROM>='" + str(int(last_entry.start_time.timestamp())) + "' ORDER BY TIMESTAMP_FROM ASC;"
+			if last_event.start_time < last_entry.start_time:
+				query = "SELECT TIMESTAMP_FROM, TIMESTAMP_TO, RAW_KIND FROM PEBBLE_HEALTH_ACTIVITY_OVERLAY WHERE TIMESTAMP_FROM>='" + str(int(last_event.start_time.timestamp())) + "' ORDER BY TIMESTAMP_FROM ASC;"
 		try:
 			res = c.execute(query)
 		except sqlite3.DatabaseError:
@@ -78,9 +101,13 @@ class Command(BaseCommand):
 
 		# This bit counts steps and adds them as DataReadings
 
+		if db_type == 'pebble':
+			query = "SELECT date_utc_secs, step_count FROM minute_samples WHERE date_utc_secs>='" + str(int(last_step.start_time.timestamp())) + "';"
+		if db_type == 'gadgetbridge':
+			query = "select TIMESTAMP, STEPS from PEBBLE_HEALTH_ACTIVITY_SAMPLE WHERE TIMESTAMP>='" + str(int(last_step.start_time.timestamp())) + "';"
 		step_count = 0
 		try:
-			res = c.execute("SELECT date_utc_secs, step_count FROM minute_samples WHERE date_utc_secs>='" + str(int(last_step.start_time.timestamp())) + "';")
+			res = c.execute(query)
 		except sqlite3.DatabaseError:
 			sys.stderr.write(self.style.ERROR("File error: '" + uploaded_file + "' is malformed\n"))
 			os.remove(file)
