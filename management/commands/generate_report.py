@@ -7,7 +7,7 @@ import os, sys, datetime, shutil, sqlite3, pytz, json, urllib.request
 
 class Command(BaseCommand):
 	"""
-	Command for importing weather data from OpenWeatherMap. This functionality needs the OPENWEATHERMAP_API_KEY setting to be set.
+	Command for generating life reports from the command line.
 	"""
 	def add_arguments(self, parser):
 
