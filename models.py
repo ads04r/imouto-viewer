@@ -88,6 +88,9 @@ class Location(models.Model):
     wikipedia = models.URLField(blank=True, null=True)
     image = models.ImageField(blank=True, null=True, upload_to=location_thumbnail_upload_location)
     weather_location = models.ForeignKey(WeatherLocation, on_delete=models.CASCADE, null=True, blank=True)
+    def to_dict(self):
+        ret = {}
+        return ret
     def people(self):
         ret = []
         for event in self.events.all():
@@ -189,6 +192,9 @@ class Person(models.Model):
     nickname = models.CharField(null=True, blank=True, max_length=128)
     birthday = models.DateField(null=True, blank=True)
     image = models.ImageField(blank=True, null=True, upload_to=user_thumbnail_upload_location)
+    def to_dict(self):
+        ret = {}
+        return ret
     def name(self):
         label = self.nickname
         if ((label == '') or (label is None)):
@@ -486,6 +492,9 @@ class Event(models.Model):
     elevation = models.TextField(default='', blank=True)
     speed = models.TextField(default='', blank=True)
     collage = models.ImageField(blank=True, null=True, upload_to=event_collage_upload_location)
+    def to_dict(self):
+        ret = {}
+        return ret
     def max_heart_rate(self):
         age = int(((self.start_time - datetime.datetime(settings.USER_DATE_OF_BIRTH.year, settings.USER_DATE_OF_BIRTH.month, settings.USER_DATE_OF_BIRTH.day, 0, 0, 0, tzinfo=self.start_time.tzinfo)).days) / 365.25)
         return (220 - age)
@@ -797,6 +806,9 @@ class LifeReport(models.Model):
     modified_date = models.DateTimeField(default=datetime.datetime.now)
     pdf = models.FileField(blank=True, null=True, upload_to=report_pdf_upload_location)
     cached_wordcloud = models.ImageField(blank=True, null=True, upload_to=report_wordcloud_upload_location)
+    def to_dict(self):
+        ret = {}
+        return ret
     def words(self):
         text = ''
         for event in self.events.all():

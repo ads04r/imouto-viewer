@@ -423,3 +423,23 @@ def search(request):
         ret.append(item)
     response = HttpResponse(json.dumps(ret), content_type='application/json')
     return response
+
+def event_json(request, eid):
+    data = get_object_or_404(Event, id=eid)
+    response = HttpResponse(json.dumps(data.to_dict()), content_type='application/json')
+    return response
+
+def report_json(request, id):
+    data = get_object_or_404(LifeReport, id=id)
+    response = HttpResponse(json.dumps(data.to_dict()), content_type='application/json')
+    return response
+
+def person_json(request, uid):
+    data = get_object_or_404(Person, uid=uid)
+    response = HttpResponse(json.dumps(data.to_dict()), content_type='application/json')
+    return response
+
+def place_json(request, uid):
+    data = get_object_or_404(Location, uid=uid)
+    response = HttpResponse(json.dumps(data.to_dict()), content_type='application/json')
+    return response
