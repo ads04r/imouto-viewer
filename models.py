@@ -89,7 +89,16 @@ class Location(models.Model):
     image = models.ImageField(blank=True, null=True, upload_to=location_thumbnail_upload_location)
     weather_location = models.ForeignKey(WeatherLocation, on_delete=models.CASCADE, null=True, blank=True)
     def to_dict(self):
-        ret = {}
+        ret = {'id': self.uid, 'label': self.label, 'full_label': self.full_label, 'lat': self.lat, 'lon': self.lon}
+        if not(self.description is None):
+            if self.description != '':
+                ret['description'] = self.description
+        if not(self.address is None):
+            if self.address != '':
+                ret['address'] = self.address
+        if not(self.url is None):
+            if self.url != '':
+                ret['url'] = self.url
         return ret
     def people(self):
         ret = []
@@ -193,7 +202,13 @@ class Person(models.Model):
     birthday = models.DateField(null=True, blank=True)
     image = models.ImageField(blank=True, null=True, upload_to=user_thumbnail_upload_location)
     def to_dict(self):
-        ret = {}
+        ret = {'id': self.uid, 'name': self.name(), 'full_name': self.full_name()}
+        if not(self.birthday is None):
+            if self.birthday:
+                ret['birthday'] = self.birthday.strftime("%Y-%m-%d")
+        home = self.home()
+        if not(home is None):
+            ret['home'] = home.to_dict()
         return ret
     def name(self):
         label = self.nickname
@@ -493,7 +508,23 @@ class Event(models.Model):
     speed = models.TextField(default='', blank=True)
     collage = models.ImageField(blank=True, null=True, upload_to=event_collage_upload_location)
     def to_dict(self):
-        ret = {}
+        ret = {'id': self.pk, 'caption': self.caption, 'start_time': self.start_time.strftime("%Y-%m-%d %H:%M:%S %z"), 'end_time': self.end_time.strftime("%Y-%m-%d %H:%M:%S %z"), 'people': [], 'photos': []}
+        if self.description:
+            if self.description != '':
+                ret['description'] = self.description
+        if self.location:
+            ret['place'] = self.location.to_dict()
+        for person in self.people.all():
+            ret['people'].append(person.to_dict())
+        for photo in Photo.objects.filter(time__gte=self.start_time).filter(time__lte=self.end_time):
+            photo_path = str(photo.file.path)
+            if os.path.exists(photo_path):
+                ret['photos'].append(photo_path)
+        if self.cached_health:
+            health = self.health()
+            if 'heart' in health:
+                health['heart'] = json.loads(health['heart'])
+            ret['health'] = health
         return ret
     def max_heart_rate(self):
         age = int(((self.start_time - datetime.datetime(settings.USER_DATE_OF_BIRTH.year, settings.USER_DATE_OF_BIRTH.month, settings.USER_DATE_OF_BIRTH.day, 0, 0, 0, tzinfo=self.start_time.tzinfo)).days) / 365.25)
@@ -807,7 +838,17 @@ class LifeReport(models.Model):
     pdf = models.FileField(blank=True, null=True, upload_to=report_pdf_upload_location)
     cached_wordcloud = models.ImageField(blank=True, null=True, upload_to=report_wordcloud_upload_location)
     def to_dict(self):
-        ret = {}
+        ret = {'id': self.pk, 'label': self.label, 'year': self.year(), 'stats': [], 'created_date': self.created_date.strftime("%Y-%m-%d %H:%M:%S %z"), 'modified_date': self.modified_date.strftime("%Y-%m-%d %H:%M:%S %z"), 'style': self.style, 'type': self.type, 'people': [], 'places': [], 'life_events': [], 'events': []}
+        for person in self.people.all():
+            ret['people'].append(person.to_dict())
+        for place in self.locations.all():
+            ret['places'].append(place.to_dict())
+        for event in self.events.filter(type='life_event').order_by('start_time'):
+            ret['life_events'].append(event.to_dict())
+        for event in self.events.exclude(type='life_event').order_by('start_time'):
+            ret['events'].append(event.to_dict())
+        for prop in LifeReportProperties.objects.filter(report=self).order_by('category'):
+            ret['stats'].append(prop.to_dict())
         return ret
     def words(self):
         text = ''
@@ -912,6 +953,8 @@ class LifeReportProperties(models.Model):
     description = models.TextField(null=True, blank=True)
     def __str__(self):
         return str(self.report) + ' - ' + self.key
+    def to_dict(self):
+        return {'category': self.category, 'key': self.key, 'value': self.value, 'icon': self.icon, 'description': self.description}
     class Meta:
         app_label = 'viewer'
         verbose_name = 'life report property'
