@@ -525,6 +525,15 @@ class Event(models.Model):
             if 'heart' in health:
                 health['heart'] = json.loads(health['heart'])
             ret['health'] = health
+        if self.type == 'life_event':
+            events = []
+            for event in self.subevents():
+                events.append(event.to_dict())
+            if len(events) > 0:
+                ret['events'] = events
+        if self.type == 'journey':
+            if self.geo:
+                ret['geometry'] = json.loads(self.geo)
         return ret
     def max_heart_rate(self):
         age = int(((self.start_time - datetime.datetime(settings.USER_DATE_OF_BIRTH.year, settings.USER_DATE_OF_BIRTH.month, settings.USER_DATE_OF_BIRTH.day, 0, 0, 0, tzinfo=self.start_time.tzinfo)).days) / 365.25)
