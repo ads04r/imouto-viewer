@@ -20,7 +20,7 @@ class Command(BaseCommand):
 		data = json.loads(r.read())
 		dts = Event.objects.filter(type='loc_prox').exclude(caption='Home').order_by('-start_time')[0].start_time.replace(hour=0, minute=0, second=0)
 		dte = datetime.datetime.fromtimestamp(int(data['stats']['last_calculated_positon'])).replace(tzinfo=pytz.UTC)
-		max_duration = kwargs['minlength']
+		max_duration = int(kwargs['minlength'])
 
 		duration = int(((dte - dts).total_seconds()) / (60 * 60 * 24))
 		mils = re.compile(r"\.([0-9]+)")
