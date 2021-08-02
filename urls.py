@@ -38,4 +38,5 @@ urlpatterns = [
     path('search.json', views.search),
     path('add-people-to-event', views.eventpeople),
     path('upload_file', views.upload_file),
+    path('health/<pageid>.html', views.health),
 ]

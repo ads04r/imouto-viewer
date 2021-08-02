@@ -189,6 +189,13 @@ function reportScreen(id)
     });
 }
 
+function healthReportScreen(page)
+{
+    $(".content-wrapper").load("./health/" + page + ".html", function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
+    });
+}
+
 function eventsScreen()
 {
     $(".content-wrapper").load("./events.html", function(response, status, xhr)
@@ -778,6 +785,8 @@ function pageRefresh()
     if(page.startsWith('person_')) { personScreen(page.replace('person_', '')); }
     if(page.startsWith('report_')) { reportScreen(page.replace('report_', '')); }
                             
+    if(page.startsWith('health-')) { healthReportScreen(page.replace('health-', '')); }
+
     if(page.startsWith('events_'))
     {
         var ds = page.replace('events_', '');

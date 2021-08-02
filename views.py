@@ -65,6 +65,10 @@ def timeline(request):
     context = {'type':'view', 'data':{'current': ds}, 'form':form}
     return render(request, 'viewer/timeline.html', context)
 
+def health(request, pageid):
+    context = {'type':'view', 'page': pageid, 'data':{}}
+    return render(request, 'viewer/health.html', context)
+
 def timelineitem(request, ds):
     dsyear = int(ds[0:4])
     dsmonth = int(ds[4:6])
