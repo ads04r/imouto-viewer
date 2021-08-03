@@ -2,6 +2,7 @@ from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
+from django.db.models import Q
 from django.conf import settings
 from background_task.models import Task
 from haystack.query import SearchQuerySet
@@ -66,7 +67,22 @@ def timeline(request):
     return render(request, 'viewer/timeline.html', context)
 
 def health(request, pageid):
-    context = {'type':'view', 'page': pageid, 'data':{}}
+    context = {'type':'view', 'page': pageid, 'data':[]}
+    if pageid == 'weight':
+        item = {'date': ''}
+        for dr in DataReading.objects.filter(Q(type='weight') | Q(type='fat') | Q(type='muscle') | Q(type='water')).order_by('-start_time'):
+            type = str(dr.type)
+            value = int(dr.value)
+            if dr.start_time != item['date']:
+                if item['date'] != '':
+                    context['data'].append(item)
+                item = {'date': dr.start_time}
+            item[type] = value
+        context['data'].append(item)
+        return render(request, 'viewer/health_weight.html', context)
+    if pageid == 'mental':
+        context['data'] = DataReading.objects.filter(Q(type='hads-a') | Q(type='hads-d')).order_by('start_time')
+        return render(request, 'viewer/health_mentalhealth.html', context)
     return render(request, 'viewer/health.html', context)
 
 def timelineitem(request, ds):

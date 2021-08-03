@@ -1,0 +1,49 @@
+{% load static %}
+
+<section class="content-header">
+    <h1>
+        Weight
+        <small>Report</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="#events">Health</a></li>
+        <li>Weight</li>
+    </ol>
+</section>
+
+<section class="content">
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12">
+
+                <div class="box box-primary">
+                    <div class="box-header"><h3 class="box-title">Weigh-ins</h3></div>
+                    <div class="box-body table-responsive no-padding">
+
+			<table class="table table-hover">
+				<tr>
+					<th>Date</th>
+					<th>Weight</th>
+					<th>Fat</th>
+					<th>Muscle</th>
+					<th>Water</th>
+				</tr>
+{% for item in data %}
+				<tr>
+					<td>{{ item.date|date:"l jS F Y, g:ia" }}</td>
+					<td>{% if item.weight %}{{ item.weight }}kg{% endif %}</td>
+					<td>{% if item.fat %}{{ item.fat }}%{% endif %}</td>
+					<td>{% if item.muscle %}{{ item.muscle }}%{% endif %}</td>
+					<td>{% if item.water %}{{ item.water }}%{% endif %}</td>
+				</tr>
+{% endfor %}
+
+			</table>
+
+                    </div>
+                </div>
+
+            </div>
+     </div>
+</section>
