@@ -1,4 +1,7 @@
 var map;
+var quiz;
+var quiz_score_a;
+var quiz_score_d;
 
 function errorPage(e)
 {
@@ -189,10 +192,81 @@ function reportScreen(id)
     });
 }
 
+function array_shuffle(array)
+{
+	for (var i = array.length - 1; i > 0; i--)
+	{
+		var j = Math.floor(Math.random() * (i + 1));
+		var temp = array[i];
+		array[i] = array[j];
+		array[j] = temp;
+	}
+}
+
+function popQuestion()
+{
+	if(quiz.length == 0)
+	{
+                var data = {'anxiety': quiz_score_a, 'depression': quiz_score_d}
+                $.ajax({
+                    url: "health/mentalhealth.html",
+                    dataType: 'json',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    method: 'POST',
+                    success: function() { pageRefresh(); }
+                });
+		return false;
+	}
+
+	var item = quiz.pop();
+
+	$("#quiz-question").html(item[0]);
+        $("#hads-question-type").val(item[1]);
+	for (var i = 0; i < 4; i++)
+	{
+		$("#quiz-answer-" + i).html(item[2][i]);
+		$("#hads-radio-" + i).val(item[3][i]);
+		$("#hads-radio-" + i).removeAttr('checked');
+	}
+
+}
+
 function healthReportScreen(page)
 {
     $(".content-wrapper").load("./health/" + page + ".html", function(response, status, xhr){
         if(status == 'error') { errorPage(xhr); return false; }
+        if(page == 'mental')
+        {
+            quiz = [
+                ["I feel tense or 'wound up'", "A", ["most of the time", "a lot of the time", "from time to time, occasionally", "not at all"], [3, 2, 1, 0]],
+                ["I feel as if I am slowed down", "D", ["nearly all the time", "very often", "sometimes", "not at all"], [3, 2, 1, 0]],
+                ["I still enjoy the things I used to enjoy", "D", ["definitely as much", "not quite so much", "only a little", "hardly at all"], [0, 1, 2, 3]],
+                ["I get a sort of frightened feeling like 'butterflies' in the stomach", "A", ["not at all", "occasionally", "quite often", "very often"], [0, 1, 2, 3]],
+                ["I get a sort of frightened feeling as if something awful is about to happen", "A", ["very definitely and quite badly", "yes, but not too badly", "a little, but it doesn't worry me", "not at all"], [3, 2, 1, 0]],
+                ["I have lost interest in my appearance", "D", ["definitely", "I don't take as much care as I should", "I may not take quite as much care", "I take just as much care as ever"], [3, 2, 1, 0]],
+                ["I can laugh and see the funny side of things", "D", ["as much as I always could", "not quite so much now", "definitely not so much now", "not at all"], [0, 1, 2, 3]],
+                ["I feel restless as if I have to be on the move", "A", ["very much indeed", "quite a lot", "not very much", "not at all"], [3, 2, 1, 0]],
+                ["Worrying thoughts go through my mind", "A", ["a great deal of the time", "a lot of the time", "from time to time, but not too often", "only occasionally"], [3, 2, 1, 0]],
+                ["I look forward with enjoyment to things", "D", ["as much as I ever did", "rather less than I used to", "definitely less than I used to", "hardly at all"], [0, 1, 2, 3]],
+                ["I feel cheerful", "D", ["not at all", "not often", "sometimes", "most of the time"], [3, 2, 1, 0]],
+                ["I get sudden feelings of panic", "A", ["very often indeed", "quite often", "not very often", "not at all"], [3, 2, 1, 0]],
+                ["I can sit at ease and feel relaxed", "A", ["definitely", "usually", "not often", "not at all"], [0, 1, 2, 3]],
+                ["I can enjoy a good book or radio or TV program", "D", ["often", "sometimes", "not often", "very seldom"], [0, 1, 2, 3]]
+            ];
+            array_shuffle(quiz);
+            quiz_score_a = 0;
+            quiz_score_d = 0;
+            $("#data-next-button").on('click', function() {
+                var value = $('input[name=hads-radio]:checked', 'form').val();
+                var type = $("#hads-question-type").val();
+                if(value === undefined) { alert("Select an answer before continuing."); return false; }
+                if(type == 'A') { quiz_score_a = quiz_score_a + parseInt(value); }
+                if(type == 'D') { quiz_score_d = quiz_score_d + parseInt(value); }
+                popQuestion();
+            });
+            popQuestion();
+        }
     });
 }
 

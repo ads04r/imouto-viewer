@@ -66,7 +66,17 @@ def timeline(request):
     context = {'type':'view', 'data':{'current': ds}, 'form':form}
     return render(request, 'viewer/timeline.html', context)
 
+@csrf_exempt
 def health(request, pageid):
+    if request.method == 'POST':
+        ret = json.loads(request.body)
+        dt = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=pytz.UTC)
+        datapoint = DataReading(type='hads-a', start_time=dt, end_time=dt, value=ret['anxiety'])
+        datapoint.save()
+        datapoint = DataReading(type='hads-d', start_time=dt, end_time=dt, value=ret['depression'])
+        datapoint.save()
+        response = HttpResponse(json.dumps(ret), content_type='application/json')
+        return response
     context = {'type':'view', 'page': pageid, 'data':[]}
     if pageid == 'weight':
         item = {'date': ''}
@@ -81,7 +91,19 @@ def health(request, pageid):
         context['data'].append(item)
         return render(request, 'viewer/health_weight.html', context)
     if pageid == 'mental':
-        context['data'] = DataReading.objects.filter(Q(type='hads-a') | Q(type='hads-d')).order_by('start_time')
+        item = {'date': ''}
+        for dr in DataReading.objects.filter(Q(type='hads-a') | Q(type='hads-d')).order_by('-start_time'):
+            type = str(dr.type)
+            value = int(dr.value)
+            if dr.start_time != item['date']:
+                if item['date'] != '':
+                    context['data'].append(item)
+                item = {'date': dr.start_time}
+            if type == 'hads-a':
+                item['anxiety'] = value
+            if type == 'hads-d':
+                item['depression'] = value
+        context['data'].append(item)
         return render(request, 'viewer/health_mentalhealth.html', context)
     return render(request, 'viewer/health.html', context)
 

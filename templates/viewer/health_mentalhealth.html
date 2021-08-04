@@ -19,9 +19,9 @@
 
                 <div class="box box-primary">
                     <div class="box-header">
-			<h3 class="box-title">Previous HADS Scores</h3>
+			<h3 class="box-title">Previous HADS Results</h3>
 			<div class="box-tools">
-				<a class="btn btn-xs"><i class="fa fa-plus"></i></a>
+				<a class="btn btn-primary btn-xs" data-toggle="modal" data-target="#data_hads_add" aria-hidden="true" href="#"><i class="fa fa-plus"></i></a>
 			</div>
                     </div>
                     <div class="box-body table-responsive no-padding">
@@ -32,11 +32,14 @@
 					<th>Anxiety</th>
 					<th>Depression</th>
 				</tr>
+{% for item in data %}
 				<tr>
-					<td>3rd August 2020</td>
-					<td><span class="label label-warning">9</label></td>
-					<td><span class="label label-success">6</label></td>
+					<td>{{ item.date|date:"l jS F Y, g:ia" }}</td>
+					<td>{{ item.anxiety }}</td>
+					<td>{{ item.depression }}</td>
 				</tr>
+{% endfor %}
+
 			</table>
 
                     </div>
@@ -45,3 +48,55 @@
             </div>
      </div>
 </section>
+
+<div class="modal fade nav-tabs-custom" id="data_hads_add" tabindex="-1" role="dialog">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-body">
+
+				<p>In the last seven days...</p>
+
+				<p><strong id="quiz-question"></strong></p>
+
+				<form>
+					<input type="hidden" name="question-type" id="hads-question-type" value="">
+					<div class="form-group">
+						<div class="radio">
+							<label>
+								<input type="radio" name="hads-radio" id="hads-radio-0" value="1">
+								<span id="quiz-answer-0"></span>
+							</label>
+						</div>
+						<div class="radio">
+							<label>
+								<input type="radio" name="hads-radio" id="hads-radio-1" value="1">
+								<span id="quiz-answer-1"></span>
+							</label>
+						</div>
+						<div class="radio">
+							<label>
+								<input type="radio" name="hads-radio" id="hads-radio-2" value="1">
+								<span id="quiz-answer-2"></span>
+							</label>
+						</div>
+						<div class="radio">
+							<label>
+								<input type="radio" name="hads-radio" id="hads-radio-3" value="1">
+								<span id="quiz-answer-3"></span>
+							</label>
+						</div>
+					</div>
+				</form>
+
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-primary" id="data-next-button">Continue</button>
+				<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+
+
