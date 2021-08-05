@@ -66,44 +66,60 @@ def timeline(request):
     context = {'type':'view', 'data':{'current': ds}, 'form':form}
     return render(request, 'viewer/timeline.html', context)
 
+def health_data(datatypes):
+    item = {'date': ''}
+    filter = None
+    ret = []
+    for type in datatypes:
+        if filter is None:
+            filter = Q(type=type)
+        else:
+            filter = filter | Q(type=type)
+    for dr in DataReading.objects.filter(filter).order_by('-start_time'):
+        type = str(dr.type)
+        value = int(dr.value)
+        if dr.start_time != item['date']:
+            if item['date'] != '':
+                ret.append(item)
+            item = {'date': dr.start_time}
+        item[type] = value
+    ret.append(item)
+    return ret
+
 @csrf_exempt
 def health(request, pageid):
-    if request.method == 'POST':
-        ret = json.loads(request.body)
-        dt = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=pytz.UTC)
-        datapoint = DataReading(type='hads-a', start_time=dt, end_time=dt, value=ret['anxiety'])
-        datapoint.save()
-        datapoint = DataReading(type='hads-d', start_time=dt, end_time=dt, value=ret['depression'])
-        datapoint.save()
-        response = HttpResponse(json.dumps(ret), content_type='application/json')
-        return response
     context = {'type':'view', 'page': pageid, 'data':[]}
     if pageid == 'weight':
-        item = {'date': ''}
-        for dr in DataReading.objects.filter(Q(type='weight') | Q(type='fat') | Q(type='muscle') | Q(type='water')).order_by('-start_time'):
-            type = str(dr.type)
-            value = int(dr.value)
-            if dr.start_time != item['date']:
-                if item['date'] != '':
-                    context['data'].append(item)
-                item = {'date': dr.start_time}
-            item[type] = value
-        context['data'].append(item)
+        context['data'] = health_data(['weight', 'fat', 'muscle', 'water'])
+        context['graphs'] = {}
+        dt = datetime.datetime.now().replace(hour=0, minute=0, second=0, tzinfo=pytz.UTC)
+        for i in [{'label': 'week', 'dt': (dt - datetime.timedelta(days=7))}, {'label': 'month', 'dt': (dt - datetime.timedelta(days=28))}, {'label': 'year', 'dt': (dt - datetime.timedelta(days=365))}]:
+            item = []
+            min_dt = i['dt'].timestamp()
+            for point in DataReading.objects.filter(type='weight', end_time__gte=i['dt']).order_by('start_time'):
+                pdt = point.start_time.timestamp()
+                if pdt < min_dt:
+                    continue
+                item.append({'x': pdt, 'y': point.value})
+            context['graphs'][i['label']] = json.dumps(item)
         return render(request, 'viewer/health_weight.html', context)
     if pageid == 'mental':
-        item = {'date': ''}
-        for dr in DataReading.objects.filter(Q(type='hads-a') | Q(type='hads-d')).order_by('-start_time'):
-            type = str(dr.type)
-            value = int(dr.value)
-            if dr.start_time != item['date']:
-                if item['date'] != '':
-                    context['data'].append(item)
-                item = {'date': dr.start_time}
-            if type == 'hads-a':
-                item['anxiety'] = value
-            if type == 'hads-d':
-                item['depression'] = value
-        context['data'].append(item)
+        if request.method == 'POST':
+            ret = json.loads(request.body)
+            dt = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=pytz.UTC)
+            datapoint = DataReading(type='hads-a', start_time=dt, end_time=dt, value=ret['anxiety'])
+            datapoint.save()
+            datapoint = DataReading(type='hads-d', start_time=dt, end_time=dt, value=ret['depression'])
+            datapoint.save()
+            response = HttpResponse(json.dumps(ret), content_type='application/json')
+            return response
+        for entry in health_data(['hads-a', 'hads-d']):
+            item = {'date': entry['date']}
+            if 'hads-a' in entry:
+              item['anxiety'] = entry['hads-a']
+            if 'hads-d' in entry:
+              item['depression'] = entry['hads-d']
+            context['data'].append(item)
         return render(request, 'viewer/health_mentalhealth.html', context)
     return render(request, 'viewer/health.html', context)
 
