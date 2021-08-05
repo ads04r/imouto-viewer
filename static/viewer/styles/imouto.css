@@ -115,3 +115,5 @@
 
 .time-label a { color: #FFFFFF; }
 .info-box-content a { color: #000000; text-decoration: underline; }
+
+.scatter-chart { max-height: 160px; }

@@ -267,6 +267,7 @@ function healthReportScreen(page)
             });
             popQuestion();
         }
+        initialiseGraphics();
     });
 }
 
@@ -424,6 +425,12 @@ function initialiseGraphics()
     {
         var data = $(this).data('data');
         makeLineChart($(this)[0].getContext('2d'), data, '#0073b7');
+    });
+    
+    $(".scatter-chart").each(function()
+    {
+        var data = $(this).data('data');
+        makeScatterChart($(this)[0].getContext('2d'), data, '#0073b7');
     });
     
     $(".donut-chart").each(function()
@@ -594,6 +601,56 @@ function makeLineChart(lineChartCanvas, data, colstr)
         }
     }
     lineChart = new Chart(lineChartCanvas, config);
+}
+
+function makeScatterChart(lineChartCanvas, data, colstr)
+{
+    var labels = []
+    for(i = 0; i < data.length; i++)
+    {
+        labels.push(i);
+    }
+    var lineChart = new Chart(lineChartCanvas);
+    var config = {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    borderColor: colstr,
+                    data: data,
+                    fill: false,
+                    pointRadius: 4,
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            tooltips: { enabled: false },
+            legend: {
+                display: false
+            },
+            scales: {
+                xAxes: [
+                    { 
+                        type: 'time',
+                        display: false,
+                        ticks: { source: 'data' },
+                        time: { min: data[0]['x'], unit: 'month', displayFormats: { month: 'MMM' } }
+                    }
+                ],
+                yAxes: [
+                    { 
+                        ticks: { precision: 0, z: 50 },
+                        display: true
+                    }
+                ]
+            }
+        }
+    }
+    lineChart = new Chart(lineChartCanvas, config);
+    lineChart.update();
 }
 
 function makeBarChart(barChartCanvas, data, legend)

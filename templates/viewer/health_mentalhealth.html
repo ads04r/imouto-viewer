@@ -34,7 +34,10 @@
 				</tr>
 {% for item in data %}
 				<tr>
-					<td>{{ item.date|date:"l jS F Y, g:ia" }}</td>
+					<td>
+						<span class="hidden-lg">{{ item.date|date:"Y-m-d H:i" }}</span>
+						<span class="hidden-xs visible-lg">{{ item.date|date:"l jS F Y, g:ia" }}</span>
+                                        </td>
 					<td>{{ item.anxiety }}</td>
 					<td>{{ item.depression }}</td>
 				</tr>
