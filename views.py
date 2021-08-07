@@ -89,6 +89,18 @@ def health_data(datatypes):
 @csrf_exempt
 def health(request, pageid):
     context = {'type':'view', 'page': pageid, 'data':[]}
+    if pageid == 'blood':
+        if request.method == 'POST':
+            ret = json.loads(request.body)
+            dt = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=pytz.UTC)
+            datapoint = DataReading(type='bp_sys', start_time=dt, end_time=dt, value=ret['bp_sys_val'])
+            datapoint.save()
+            datapoint = DataReading(type='bp_dia', start_time=dt, end_time=dt, value=ret['bp_dia_val'])
+            datapoint.save()
+            response = HttpResponse(json.dumps(ret), content_type='application/json')
+            return response
+        context['data'] = health_data(['bp_sys', 'bp_dia'])
+        return render(request, 'viewer/health_bp.html', context)
     if pageid == 'weight':
         context['data'] = health_data(['weight', 'fat', 'muscle', 'water'])
         context['graphs'] = {}

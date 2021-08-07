@@ -269,6 +269,27 @@ function healthReportScreen(page)
             });
             popQuestion();
         }
+        $("#data-submit-button").on('click', function()
+        {
+            var url = $("form").attr('action');
+            var data = {}
+            $("form input").each(function() {
+                k = $(this).attr('name');
+                v = $(this).val();
+                if(!(k === undefined)) { data[k] = v; }
+            });
+            $.ajax({
+                url: url,
+                dataType: 'json',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                method: 'POST',
+                success: function() {
+                    window.location.reload(false);
+                }
+            });
+            return false;
+        });
         initialiseGraphics();
     });
 }
