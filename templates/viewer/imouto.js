@@ -214,7 +214,9 @@ function popQuestion()
                     contentType: 'application/json',
                     data: JSON.stringify(data),
                     method: 'POST',
-                    success: function() { pageRefresh(); }
+                    success: function() {
+			window.location.reload(false);
+		    }
                 });
 		return false;
 	}
@@ -236,7 +238,7 @@ function healthReportScreen(page)
 {
     $(".content-wrapper").load("./health/" + page + ".html", function(response, status, xhr){
         if(status == 'error') { errorPage(xhr); return false; }
-        if(page == 'mental')
+        if(page == 'mentalhealth')
         {
             quiz = [
                 ["I feel tense or 'wound up'", "A", ["most of the time", "a lot of the time", "from time to time, occasionally", "not at all"], [3, 2, 1, 0]],

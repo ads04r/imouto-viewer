@@ -103,7 +103,7 @@ def health(request, pageid):
                 item.append({'x': pdt, 'y': point.value})
             context['graphs'][i['label']] = json.dumps(item)
         return render(request, 'viewer/health_weight.html', context)
-    if pageid == 'mental':
+    if pageid == 'mentalhealth':
         if request.method == 'POST':
             ret = json.loads(request.body)
             dt = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=pytz.UTC)
