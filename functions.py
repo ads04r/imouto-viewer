@@ -288,10 +288,10 @@ def generate_dashboard():
         dt = datetime.datetime(dtbase.year, dtbase.month, dtbase.day, 16, 0, 0, tzinfo=dtbase.tzinfo)
         total_sleep = 0
         deep_sleep = 0
-        obj = DataReading.objects.filter(type='pebble-app-activity').filter(value=1).filter(start_time__gte=(dt - datetime.timedelta(days=1))).filter(end_time__lt=dt)
+        obj = DataReading.objects.filter(type='sleep').filter(value=1).filter(start_time__gte=(dt - datetime.timedelta(days=1))).filter(end_time__lt=dt)
         for item in obj:
             total_sleep = total_sleep + ((item.end_time) - (item.start_time)).total_seconds()
-        obj = DataReading.objects.filter(type='pebble-app-activity').filter(value=2).filter(start_time__gte=(dt - datetime.timedelta(days=1))).filter(end_time__lt=dt)
+        obj = DataReading.objects.filter(type='sleep').filter(value=2).filter(start_time__gte=(dt - datetime.timedelta(days=1))).filter(end_time__lt=dt)
         for item in obj:
             deep_sleep = deep_sleep + ((item.end_time) - (item.start_time)).total_seconds()
         light_sleep = total_sleep - deep_sleep

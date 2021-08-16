@@ -93,6 +93,8 @@ class Command(BaseCommand):
 			dte = datetime.datetime.fromtimestamp(int(row[1]), tz=pytz.UTC)
 			type = 'pebble-app-activity'
 			value = int(row[2])
+			if ((value == 1) or (value == 2)):
+				type = 'sleep'
 			try:
 				dp = DataReading.objects.get(type=type, start_time=dts, end_time=dte)
 			except:
