@@ -779,6 +779,7 @@ class Event(models.Model):
             ret['heartmaxprc'] = int((heart_max / self.max_heart_rate()) * 100)
             ret['heartzonetime'] = [int(self.length() - (heart_zone + heart_zone_2)), int(heart_zone), int(heart_zone_2)]
             ret['heartoptimaltime'] = self.length_string(ret['heartzonetime'][1])
+            ret['efficiency'] = int((float(ret['heartzonetime'][1]) / float(ret['heartzonetime'][0] + ret['heartzonetime'][1] + ret['heartzonetime'][2])) * 100.0)
             ret['heart'] = ','.join(heart_csv)
             ret['heart'] = json.dumps(heart_json)
         if ((elev_gain > 0) & (elev_loss > 0)):
