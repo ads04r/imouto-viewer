@@ -16,12 +16,58 @@
                 <div class="box box-primary">
                     <div class="box-body">
 
-			&nbsp;
 
                     </div>
                 </div>
 
             </div>
      </div>
+
+            <div class="nav-tabs-custom">
+                <ul class="nav nav-tabs">
+                    <li class="active"><a href="#health-tab-week" data-toggle="tab">Week</a></li>
+                    <li><a href="#health-tab-month" data-toggle="tab">Month</a></li>
+                    <li><a href="#health-tab-year" data-toggle="tab">Year</a></li>
+                </ul>
+                <div class="tab-content">
+                    <div class="active tab-pane" id="health-tab-week">
+
+			<div class="pull-right">{{ data.stats.0.best_sleep|date:"l jS F" }}</div>
+
+			<table>
+				<tr><td>Earliest bed time:&nbsp;</td><td>{{ data.stats.0.earliest_bedtime|date:"g:ia" }}</td></tr>
+				<tr><td>Earliest wake time:&nbsp;</td><td>{{ data.stats.0.earliest_waketime|date:"g:ia" }}</td></tr>
+				<tr><td>Latest bed time:&nbsp;</td><td>{{ data.stats.0.latest_bedtime|date:"g:ia" }}</td></tr>
+				<tr><td>Latest wake time:&nbsp;</td><td>{{ data.stats.0.latest_waketime|date:"g:ia" }}</td></tr>
+			</table>
+
+                    </div>
+                    <div class="tab-pane" id="health-tab-month">
+
+			<div class="pull-right">{{ data.stats.1.best_sleep|date:"l jS F" }}</div>
+
+			<table>
+				<tr><td>Earliest bed time:&nbsp;</td><td>{{ data.stats.1.earliest_bedtime|date:"g:ia" }}</td></tr>
+				<tr><td>Earliest wake time:&nbsp;</td><td>{{ data.stats.1.earliest_waketime|date:"g:ia" }}</td></tr>
+				<tr><td>Latest bed time:&nbsp;</td><td>{{ data.stats.1.latest_bedtime|date:"g:ia" }}</td></tr>
+				<tr><td>Latest wake time:&nbsp;</td><td>{{ data.stats.1.latest_waketime|date:"g:ia" }}</td></tr>
+			</table>
+
+                    </div>
+                    <div class="tab-pane" id="health-tab-year">
+
+			<div class="pull-right">{{ data.stats.2.best_sleep|date:"l jS F" }}</div>
+
+			<table>
+				<tr><td>Earliest bed time:&nbsp;</td><td>{{ data.stats.2.earliest_bedtime|date:"g:ia" }}</td></tr>
+				<tr><td>Earliest wake time:&nbsp;</td><td>{{ data.stats.2.earliest_waketime|date:"g:ia" }}</td></tr>
+				<tr><td>Latest bed time:&nbsp;</td><td>{{ data.stats.2.latest_bedtime|date:"g:ia" }}</td></tr>
+				<tr><td>Latest wake time:&nbsp;</td><td>{{ data.stats.2.latest_waketime|date:"g:ia" }}</td></tr>
+			</table>
+
+                    </div>
+                </div>
+            </div>
+
 </section>
 

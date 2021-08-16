@@ -2,7 +2,7 @@ from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
-from django.db.models import Q
+from django.db.models import Q, F, DurationField, ExpressionWrapper
 from django.conf import settings
 from background_task.models import Task
 from haystack.query import SearchQuerySet
@@ -92,6 +92,12 @@ def health(request, pageid):
     if pageid == 'heart':
         return render(request, 'viewer/health_heart.html', context)
     if pageid == 'sleep':
+        dt = datetime.datetime.now().replace(hour=0, minute=0, second=0, tzinfo=pytz.UTC)
+        expression = F('end_time') - F('start_time')
+        wrapped_expression = ExpressionWrapper(expression, DurationField())
+        context['data'] = {'stats': [], 'sleeps': []}
+        for days in [7, 28, 365]:
+            context['data']['stats'].append({'label': 'week', 'best_sleep': DataReading.objects.filter(type='sleep', value='2', start_time__gte=(dt - datetime.timedelta(days=days))).annotate(length=wrapped_expression).order_by('-length')[0].start_time, 'earliest_waketime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(start_time)'}).order_by('time')[0].start_time, 'latest_waketime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(start_time)'}).order_by('-time')[0].start_time, 'earliest_bedtime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(end_time)'}).order_by('time')[0].end_time, 'latest_bedtime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(end_time)'}).order_by('-time')[0].end_time})
         return render(request, 'viewer/health_sleep.html', context)
     if pageid == 'distance':
         return render(request, 'viewer/health_distance.html', context)
