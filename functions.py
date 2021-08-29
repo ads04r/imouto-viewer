@@ -1,6 +1,6 @@
 import datetime, pytz, json, random, urllib.request, re
 from .models import *
-from django.db.models import Sum, Count, F, ExpressionWrapper, fields
+from django.db.models import Sum, Count, F, ExpressionWrapper, DurationField, fields
 from django.conf import settings
 from geopy import distance
 from tzlocal import get_localzone
@@ -365,3 +365,30 @@ def nearest_location(lat, lon):
             dist = newdist
             ret = loc
     return ret
+
+def get_sleep_information(dt):
+
+    dts = datetime.datetime(dt.year, dt.month, dt.day, 4, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
+    dte = datetime.datetime(dt.year, dt.month, dt.day, 23, 59, 59, tzinfo=pytz.timezone(settings.TIME_ZONE))
+    dts_now = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+    dts_prev = dts - datetime.timedelta(days=1)
+    dts_next = dts + datetime.timedelta(days=1)
+
+    expression = F('end_time') - F('start_time')
+    wrapped_expression = ExpressionWrapper(expression, DurationField())
+
+    data = {'date': dts.strftime("%a %-d %b %Y")}
+    awake_set = DataReading.objects.filter(type='awake', start_time__gte=dts, start_time__lte=dte).annotate(length=wrapped_expression).filter(length__gte=datetime.timedelta(minutes=60)).order_by('start_time')
+    if awake_set.count() > 0:
+        awake = awake_set[0]
+        data['wake_up'] = awake.start_time.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%Y-%m-%d %H:%M:%S %z")
+        data['bedtime'] = awake.end_time.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%Y-%m-%d %H:%M:%S %z")
+        data['wake_up_local'] = awake.start_time.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%I:%M").lstrip("0")
+        data['bedtime_local'] = awake.end_time.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%I:%M").lstrip("0")
+        data['length'] = awake.length.total_seconds()
+    data['prev'] = dts_prev.strftime("%Y%m%d")
+    if dts_next < dts_now:
+        data['next'] = dts_next.strftime("%Y%m%d")
+
+    return data
+

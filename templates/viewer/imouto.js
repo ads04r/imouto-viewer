@@ -234,10 +234,59 @@ function popQuestion()
 
 }
 
+function daySleepReport(date)
+{
+	$("#daysleepsummary").html('<i class="fa fa-refresh fa-spin"></i>');
+
+	var url = './days/' + date + '/sleep.json';
+        $.ajax({
+            url: url,
+            method: 'GET',
+            success: function(data) {
+
+		var html = "";
+		html = html + "<div class=\"btn-group pull-right\">";
+		html = html + "<button data-date=\"" + data.prev + "\" class=\"btn btn-default sleepdaylink\">Previous</button>";
+		if(data.next) { html = html + "<button data-date=\"" + data.next + "\" class=\"btn btn-default sleepdaylink\">Next</button>"; }
+		else { html = html + "<button class=\"btn btn-default disabled\">Next</button>"; }
+		html = html + "</div>";
+
+		html = html + "<h4>" + data.date + "</h4>";
+		if(data.wake_up){
+			html = html + "<div class=\"table-responsive\">";
+			html = html + "<table class=\"table no-margin\">";
+			html = html + "<tr><td>Wake up:</td><td>" + data.wake_up_local + "</td></tr>";
+			html = html + "<tr><td>Bed time:</td><td>" + data.bedtime_local + "</td></tr>";
+			html = html + "";
+			html = html + "<tr><td>Wake time:</td><td>" + Math.floor(data.length / (60 * 60)) + " hours</td></tr>";
+			html = html + "";
+			html = html + "";
+			html = html + "</table>";
+			html = html + "</div>";
+		} else {
+			html = html + "<p>No sleep information exists about this day.</p>";
+		}
+
+		$("#daysleepsummary").html(html);
+		$("button.sleepdaylink").on('click', function() { var ds = $(this).data('date'); daySleepReport(ds); return false; });
+            }
+        });
+
+}
+
 function healthReportScreen(page)
 {
     $(".content-wrapper").load("./health/" + page + ".html", function(response, status, xhr){
         if(status == 'error') { errorPage(xhr); return false; }
+        if(page == 'sleep')
+        {
+            var dt = new Date();
+            var dsy = String(dt.getFullYear());
+            var dsm = String(dt.getMonth() + 1);
+            var dsd = String(dt.getDate());
+            var ds = dsy + dsm.padStart(2, '0') + dsd.padStart(2, '0');
+            daySleepReport(ds);
+        }
         if(page == 'mentalhealth')
         {
             quiz = [

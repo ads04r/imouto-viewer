@@ -240,8 +240,26 @@ def day(request, ds):
     dte = dts + datetime.timedelta(seconds=86400)
     events = Event.objects.filter(end_time__gte=dts, start_time__lte=dte).exclude(type='life_event').order_by('start_time')
     dss = dts.strftime('%A, %-d %B %Y')
-    context = {'type':'view', 'caption': dss, 'events':events}
+    context = {'type':'view', 'caption': dss, 'events':events, 'stats': {}}
+    wakes = DataReading.objects.filter(type='awake', start_time__lt=dte, end_time__gt=dts).order_by('start_time')
+    wakecount = wakes.count()
+    if wakecount > 0:
+        context['stats']['wake_time'] = wakes[0].start_time
+        context['stats']['sleep_time'] = wakes[(wakecount - 1)].end_time
     return render(request, 'viewer/day.html', context)
+
+def day_sleep(request, ds):
+
+    if len(ds) != 8:
+        raise Http404()
+    y = int(ds[0:4])
+    m = int(ds[4:6])
+    d = int(ds[6:])
+    dt = datetime.date(y, m, d)
+    data = get_sleep_information(dt)
+
+    response = HttpResponse(json.dumps(data), content_type='application/json')
+    return response
 
 def event(request, eid):
 

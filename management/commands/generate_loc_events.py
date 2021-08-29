@@ -47,6 +47,7 @@ class Command(BaseCommand):
 				lon1 = data['geo']['bbox'][2]
 				lon2 = data['geo']['bbox'][0]
 			for location in Location.objects.filter(lon__gte=lon1, lon__lte=lon2, lat__gte=lat1, lat__lte=lat2):
+				sys.stderr.write(url + "\n")
 				url = settings.LOCATION_MANAGER_URL + "/event/" + dt.strftime("%Y-%m-%d") + "/" + str(location.lat) + "/" + str(location.lon) + "?format=json"
 				data = []
 				try:
