@@ -383,8 +383,8 @@ def get_sleep_information(dt):
         awake = awake_set[0]
         data['wake_up'] = awake.start_time.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%Y-%m-%d %H:%M:%S %z")
         data['bedtime'] = awake.end_time.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%Y-%m-%d %H:%M:%S %z")
-        data['wake_up_local'] = awake.start_time.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%I:%M").lstrip("0")
-        data['bedtime_local'] = awake.end_time.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%I:%M").lstrip("0")
+        data['wake_up_local'] = awake.start_time.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%I:%M%p").lstrip("0")
+        data['bedtime_local'] = awake.end_time.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%I:%M%p").lstrip("0")
         data['length'] = awake.length.total_seconds()
     data['prev'] = dts_prev.strftime("%Y%m%d")
     if dts_next < dts_now:

@@ -617,7 +617,7 @@ class Event(models.Model):
             item.append(int((float(item[1]) / float(total)) * 100.0))
             ret.append(item)
         
-        return {'start': time_from, 'end': time_to, 'data': ret}
+        return {'start': time_from.strftime("%Y-%m-%dT%H:%M:%S%z"), 'end': time_to.strftime("%Y-%m-%dT%H:%M:%S%z"), 'start_friendly': time_from.strftime("%I:%M%p").lower().lstrip('0'), 'end_friendly': time_to.strftime("%I:%M%p").lower().lstrip('0'), 'data': ret}
 
     def refresh(self):
         for photo in Photo.objects.filter(time__gte=self.start_time).filter(time__lte=self.end_time):
@@ -742,7 +742,7 @@ class Event(models.Model):
                         heart_zone = heart_zone + zone_secs
             if item.type=='step-count':
                 step_count = step_count + item.value
-            if (item.type=='pebble-app-activity') & (item.value <= 2):
+            if (item.type=='sleep') & (item.value <= 2):
                 sleep.append(item)
         if self.speed != '':
             speed = json.loads(self.speed)
