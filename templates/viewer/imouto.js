@@ -251,7 +251,7 @@ function daySleepReport(date)
 		else { html = html + "<button class=\"btn btn-default disabled\">Next</button>"; }
 		html = html + "</div>";
 
-		html = html + "<h4>" + data.date + "</h4>";
+		html = html + "<h4><a href=\"#day_" + date + "\">" + data.date + "</a></h4>";
 		if(data.wake_up){
 			html = html + "<div class=\"table-responsive\">";
 			html = html + "<table class=\"table no-margin\">";
