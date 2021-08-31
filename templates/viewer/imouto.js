@@ -252,6 +252,59 @@ function daySleepReport(date)
 		html = html + "</div>";
 
 		html = html + "<h4><a href=\"#day_" + date + "\">" + data.date + "</a></h4>";
+
+		html = html + "<div class=\"container-fluid\">";
+		html = html + "<div class=\"row\">";
+		html = html + "<div class=\"col-xs-12 col-sm-6 col-md-9\">";
+
+		if(data.sleep){
+
+			html = html + "<p>Sleep pattern</p>";
+
+			html = html + "<div class=\"progress-group\">";
+			html = html + "<div class=\"progress sleep-bar\">";
+			for(var i = 0; i < data.sleep.data.length; i++)
+			{
+				var item = data.sleep.data[i];
+				html = html + "<div class=\"progress-bar\" role=\"progressbar\" aria-valuenow=\"" + item[2] + "\" aria-valuemin=\"0\" aria-valuemax=\"100\" style=\"width: " + item[2] + "%; background-color:";
+				if(item[0] == 0)
+				{
+					html = html + "rgba(0, 0, 0, 0)";
+				}
+				if(item[0] == 1)
+				{
+					html = html + "#ABC1D8";
+				}
+				if(item[0] == 2)
+				{
+					html = html + "#3C8DBC";
+				}
+				html = html + "\"></div>";
+			}
+			html = html + "</div>";
+			html = html + "</div>";
+
+			html = html + "<div style=\"width: 100%;\">";
+			html = html + "<div class=\"pull-right\">" + data.sleep.end_friendly + "</div>";
+			html = html + "<div class=\"pull-left\">" + data.sleep.start_friendly + "</div>";
+			html = html + "</div>";
+
+			html = html + "<br/>";
+			html = html + "<div class=\"pull-right\">";
+			html = html + "<span style=\"margin-left: 2em;\"><i class=\"fa fa-square-o\"></i>&nbsp;Awake</span>";
+			html = html + "<span style=\"margin-left: 2em;\"><i style=\"color: #ABC1D8;\" class=\"fa fa-square\"></i>&nbsp;Light&nbsp;sleep</span>";
+			html = html + "<span style=\"margin-left: 2em;\"><i style=\"color: #3C8DBC;\" class=\"fa fa-square\"></i>&nbsp;Deep&nbsp;sleep</span>";
+			html = html + "</div>";
+
+		} else {
+
+			html = html + "<p>No sleep information exists about this day.</p>";
+
+		}
+
+		html = html + "</div>";
+		html = html + "<div class=\"col-xs-12 col-sm-6 col-md-3\">";
+
 		if(data.wake_up){
 			html = html + "<div class=\"table-responsive\">";
 			html = html + "<table class=\"table no-margin\">";
@@ -263,9 +316,12 @@ function daySleepReport(date)
 			html = html + "";
 			html = html + "</table>";
 			html = html + "</div>";
-		} else {
-			html = html + "<p>No sleep information exists about this day.</p>";
 		}
+
+		html = html + "</div>";
+		html = html + "</div>";
+		html = html + "</div>";
+
 
 		$("#daysleepsummary").html(html);
 		$("button.sleepdaylink").on('click', function() { var ds = $(this).data('date'); daySleepReport(ds); return false; });

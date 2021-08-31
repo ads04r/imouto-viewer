@@ -7,6 +7,7 @@ from io import BytesIO
 from wordcloud import WordCloud, STOPWORDS
 from configparser import ConfigParser
 from viewer.eventcollage import make_collage
+from viewer.health import parse_sleep
 from tempfile import NamedTemporaryFile
 import datetime, pytz, json, markdown, re, os
 
@@ -575,49 +576,6 @@ class Event(models.Model):
         for photo in tempphotos:
             os.remove(photo)
         return im
-    def __parse_sleep(self, sleep):
-        time_from = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
-        time_to = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.UTC)
-        ret = []
-        for item in sleep:
-            if item.start_time < time_from:
-                time_from = item.start_time
-            if item.end_time > time_to:
-                time_to = item.end_time
-        dts = int(time_from.timestamp())
-        dte = int(time_to.timestamp())
-        mins = int((dte - dts) / 60)
-        lastval = -1
-        ct = 0
-        total = 0
-        for i in range(0, mins):
-            time_i = time_from + datetime.timedelta(minutes=i)
-            v = 0
-            for item in sleep:
-                if item.value > v:
-                    if ((item.start_time <= time_i) & (time_i <= item.end_time)):
-                        v = item.value
-            if lastval == v:
-                ct = ct + 1
-            else:
-                if lastval > -1:
-                    block = [lastval, ct]
-                    total = total + ct
-                    ret.append(block)
-                ct = 0
-                lastval = v
-        if ct > 0:
-            block = [lastval, ct]
-            total = total + ct
-            ret.append(block)
-        
-        preproc = ret
-        ret = []
-        for item in preproc:
-            item.append(int((float(item[1]) / float(total)) * 100.0))
-            ret.append(item)
-        
-        return {'start': time_from.strftime("%Y-%m-%dT%H:%M:%S%z"), 'end': time_to.strftime("%Y-%m-%dT%H:%M:%S%z"), 'start_friendly': time_from.strftime("%I:%M%p").lower().lstrip('0'), 'end_friendly': time_to.strftime("%I:%M%p").lower().lstrip('0'), 'data': ret}
 
     def refresh(self):
         for photo in Photo.objects.filter(time__gte=self.start_time).filter(time__lte=self.end_time):
@@ -790,7 +748,7 @@ class Event(models.Model):
         if elev_max > -99999.99:
             ret['elevmax'] = int(elev_max)
         if len(sleep) > 0:
-            ret['sleep'] = self.__parse_sleep(sleep)
+            ret['sleep'] = parse_sleep(sleep)
         if step_count > 0:
             ret['steps'] = step_count
         if speed_count > 0:
@@ -1053,3 +1011,4 @@ class EventTag(models.Model):
         app_label = 'viewer'
         verbose_name = 'event tag'
         verbose_name_plural = 'event tags'
+
