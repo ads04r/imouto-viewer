@@ -43,8 +43,10 @@ def get_sleep_history(days):
     data = DataReading.objects.filter(start_time__gte=dts, type='awake').order_by('start_time')
     ret = [[], []]
     for item in data:
-        wake_secs = (item.start_time - item.start_time.replace(hour=0, minute=0, second=0)).total_seconds()
-        sleep_secs = (item.end_time - item.start_time).total_seconds() + wake_secs
+        tts = item.start_time.astimezone(pytz.timezone(settings.TIME_ZONE))
+        tte = item.end_time.astimezone(pytz.timezone(settings.TIME_ZONE))
+        wake_secs = (tts - tts.replace(hour=0, minute=0, second=0)).total_seconds()
+        sleep_secs = (tte - tts).total_seconds() + wake_secs
         ret[0].append(wake_secs)
         ret[1].append(sleep_secs)
     return ret
