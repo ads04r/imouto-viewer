@@ -720,6 +720,22 @@ function makeSleepAreaChart(canvas, datasets)
 		options: {
 			legend: { display: false },
 			responsive: true,
+			tooltips: {
+				callbacks: {
+					title: function(item, data) {
+						ds = ['Wake up', 'Bedtime'];
+						i = item[0].datasetIndex;
+						return ds[i];
+					},
+					label: function(item, data) {
+						i = item.yLabel;
+						while(i > 12) { i = i - 12; }
+						h = String(Math.floor(i));
+						m = String(Math.floor((i - h) * 60));
+						return h + ':' + (m.padStart(2, '0'));
+					}
+				}
+			},
 			scales: {
 				yAxes: [{
 					ticks: {
@@ -743,8 +759,6 @@ function makeSleepAreaChart(canvas, datasets)
 			}
 		}
 	};
-
-	console.log(config);
 
 	var chart = new Chart(canvas, config);
 	chart.update();
