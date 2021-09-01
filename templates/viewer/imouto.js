@@ -342,6 +342,10 @@ function healthReportScreen(page)
             var dsd = String(dt.getDate());
             var ds = dsy + dsm.padStart(2, '0') + dsd.padStart(2, '0');
             daySleepReport(ds);
+            $(".sleep-area-chart").each(function() {
+                var data = $(this).data('data');
+                makeSleepAreaChart($(this), data);
+            });
         }
         if(page == 'mentalhealth')
         {
@@ -684,6 +688,66 @@ function makeDonutChart(donutChartCanvas, data, labels)
         }
     };
     donutChart = new Chart(donutChartCanvas, config);
+}
+
+function makeSleepAreaChart(canvas, datasets)
+{
+	var colours = ['#FFFFFF', '#ABC1D8', '#3C8DBC'];
+	var labels = ['', ''];
+	var fills = [false, 0]
+	var data = {
+		labels: [],
+		datasets: []
+	};
+
+	for(var i = 0; i < datasets.length; i++)
+	{
+		data.labels = Array.apply(null, Array(datasets[i].length)).map(function(x, i) { return i; }),
+		data.datasets.push({
+			label: labels[i],
+			data: datasets[i].map(function(x, i) { return (parseFloat(x) / (60 * 60)); }),
+			backgroundColor: colours[i],
+			borderColor: colours[2],
+			fill: fills[i],
+			tension: 0
+		});
+
+	}
+
+	var config = {
+		type: 'line',
+		data: data,
+		options: {
+			legend: { display: false },
+			responsive: true,
+			scales: {
+				yAxes: [{
+					ticks: {
+						callback: function(value, index, values) {
+							ret = value;
+							while(ret > 12)
+							{
+								ret = ret - 12;
+							}
+							return ret + ':00';
+						}
+					}
+				}],
+				xAxes: [{
+					ticks: {
+						callback: function(value, index, values) {
+							return null;
+						}
+					}
+				}]
+			}
+		}
+	};
+
+	console.log(config);
+
+	var chart = new Chart(canvas, config);
+	chart.update();
 }
 
 function makeLineChart(lineChartCanvas, data, colstr)

@@ -31,32 +31,23 @@
                 <div class="tab-content">
                     <div class="active tab-pane" id="health-tab-week">
 
-			<div class="pull-right"><a href="#day_{{ data.stats.0.best_sleep|date:"Ymd" }}">{{ data.stats.0.best_sleep|date:"l jS F" }}</a></div>
-
-			<table>
-				<tr><td>Earliest wake time:&nbsp;</td><td>{{ data.stats.0.earliest_waketime|date:"g:ia" }}</td></tr>
-				<tr><td>Latest wake time:&nbsp;</td><td>{{ data.stats.0.latest_waketime|date:"g:ia" }}</td></tr>
-			</table>
+                        <div class="chart">
+                            <canvas class="sleep-area-chart" style="height: 230px" data-data="{{ data.stats.0.graph }}"></canvas>
+                        </div>
 
                     </div>
                     <div class="tab-pane" id="health-tab-month">
 
-			<div class="pull-right"><a href="#day_{{ data.stats.1.best_sleep|date:"Ymd" }}">{{ data.stats.1.best_sleep|date:"l jS F" }}</a></div>
-
-			<table>
-				<tr><td>Earliest wake time:&nbsp;</td><td>{{ data.stats.1.earliest_waketime|date:"g:ia" }}</td></tr>
-				<tr><td>Latest wake time:&nbsp;</td><td>{{ data.stats.1.latest_waketime|date:"g:ia" }}</td></tr>
-			</table>
+                        <div class="chart">
+                            <canvas class="sleep-area-chart" style="height: 230px" data-data="{{ data.stats.1.graph }}"></canvas>
+                        </div>
 
                     </div>
                     <div class="tab-pane" id="health-tab-year">
 
-			<div class="pull-right"><a href="#day_{{ data.stats.2.best_sleep|date:"Ymd" }}">{{ data.stats.2.best_sleep|date:"l jS F" }}</a></div>
-
-			<table>
-				<tr><td>Earliest wake time:&nbsp;</td><td>{{ data.stats.2.earliest_waketime|date:"g:ia" }}</td></tr>
-				<tr><td>Latest wake time:&nbsp;</td><td>{{ data.stats.2.latest_waketime|date:"g:ia" }}</td></tr>
-			</table>
+                        <div class="chart">
+                            <canvas class="sleep-area-chart" style="height: 230px" data-data="{{ data.stats.2.graph }}"></canvas>
+                        </div>
 
                     </div>
                 </div>

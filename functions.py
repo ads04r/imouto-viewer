@@ -36,6 +36,19 @@ def get_timeline_events(dt):
         dtq = dtq - datetime.timedelta(hours=24)
     return events
 
+def get_sleep_history(days):
+
+    dte = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC).astimezone(pytz.timezone(settings.TIME_ZONE)).replace(hour=0, minute=0, second=0)
+    dts = dte - datetime.timedelta(days=days)
+    data = DataReading.objects.filter(start_time__gte=dts, type='awake').order_by('start_time')
+    ret = [[], []]
+    for item in data:
+        wake_secs = (item.start_time - item.start_time.replace(hour=0, minute=0, second=0)).total_seconds()
+        sleep_secs = (item.end_time - item.start_time).total_seconds() + wake_secs
+        ret[0].append(wake_secs)
+        ret[1].append(sleep_secs)
+    return ret
+
 def get_sleep_information(dt):
 
     dts = datetime.datetime(dt.year, dt.month, dt.day, 4, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
