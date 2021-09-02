@@ -337,6 +337,7 @@ function healthReportScreen(page)
         if(page == 'sleep')
         {
             var dt = new Date();
+            dt.setDate(dt.getDate() - 1);
             var dsy = String(dt.getFullYear());
             var dsm = String(dt.getMonth() + 1);
             var dsd = String(dt.getDate());
