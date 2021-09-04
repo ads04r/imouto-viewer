@@ -291,9 +291,9 @@ function daySleepReport(date)
 
 			html = html + "<br/>";
 			html = html + "<div class=\"pull-right\">";
-			html = html + "<span style=\"margin-left: 2em;\"><i class=\"fa fa-square-o\"></i>&nbsp;Awake</span>";
-			html = html + "<span style=\"margin-left: 2em;\"><i style=\"color: #ABC1D8;\" class=\"fa fa-square\"></i>&nbsp;Light&nbsp;sleep</span>";
-			html = html + "<span style=\"margin-left: 2em;\"><i style=\"color: #3C8DBC;\" class=\"fa fa-square\"></i>&nbsp;Deep&nbsp;sleep</span>";
+			html = html + "<span style=\"margin-left: 1em; white-space: nowrap;\"><i class=\"fa fa-square-o\"></i>&nbsp;Awake</span>";
+			html = html + "<span style=\"margin-left: 1em; white-space: nowrap;\"><i style=\"color: #ABC1D8;\" class=\"fa fa-square\"></i>&nbsp;Light&nbsp;sleep</span>";
+			html = html + "<span style=\"margin-left: 1em; white-space: nowrap;\"><i style=\"color: #3C8DBC;\" class=\"fa fa-square\"></i>&nbsp;Deep&nbsp;sleep</span>";
 			html = html + "</div>";
 
 		} else {
