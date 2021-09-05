@@ -248,6 +248,19 @@ def day(request, ds):
         context['stats']['sleep_time'] = wakes[(wakecount - 1)].end_time
     return render(request, 'viewer/day.html', context)
 
+def day_heart(request, ds):
+
+    if len(ds) != 8:
+        raise Http404()
+    y = int(ds[0:4])
+    m = int(ds[4:6])
+    d = int(ds[6:])
+    dt = datetime.date(y, m, d)
+    data = []
+
+    response = HttpResponse(json.dumps(data), content_type='application/json')
+    return response
+
 def day_sleep(request, ds):
 
     if len(ds) != 8:
