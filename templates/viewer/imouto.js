@@ -234,6 +234,72 @@ function popQuestion()
 
 }
 
+function dayHeartReport(date)
+{
+	$("#dayheartsummary").html('<i class="fa fa-refresh fa-spin"></i>');
+
+	var url = './days/' + date + '/heart.json';
+        $.ajax({
+            url: url,
+            method: 'GET',
+            success: function(data) {
+
+		var html = "";
+		html = html + "<div class=\"btn-group pull-right\">";
+		html = html + "<button data-date=\"" + data.prev + "\" class=\"btn btn-default heartdaylink\">Previous</button>";
+		if(data.next) { html = html + "<button data-date=\"" + data.next + "\" class=\"btn btn-default heartdaylink\">Next</button>"; }
+		else { html = html + "<button class=\"btn btn-default disabled\">Next</button>"; }
+		html = html + "</div>";
+
+		html = html + "<h4><a href=\"#day_" + date + "\">" + data.date + "</a></h4>";
+
+		html = html + "<div class=\"container-fluid\">";
+		html = html + "<div class=\"row\">";
+		html = html + "<div class=\"col-xs-12 col-sm-6 col-md-9\">";
+
+		if(data.heart){
+
+			html = html + "<p>Daily Heart Activity</p>";
+
+			var hsecs = data.heart.heartzonetime[1];
+			var hmins = parseInt(parseFloat(hsecs) / 60.0);
+
+			hsecs = hsecs - (hmins * 60);
+			var hlabel = String(hmins) + " minutes, " + String(hsecs) + " seconds";
+			if(hsecs == 0)
+			{ hlabel = String(hmins) + " minutes"; }
+
+			html = html + "<div class=\"table-responsive\">";
+			html = html + "<table class=\"table no-margin\">";
+			html = html + "<tr><td>Highest heart rate:</td><td>" + data.heart.day_max_rate + "</td></tr>";
+			html = html + "<tr><td>Time in optimal zone:</td><td>" + hlabel + "</td></tr>";
+			html = html + "</table>";
+			html = html + "</div>";
+
+		} else {
+
+			html = html + "<p>No heart information exists about this day.</p>";
+
+		}
+
+		html = html + "</div>";
+		html = html + "<div class=\"col-xs-12 col-sm-6 col-md-3\">";
+
+		html = html + '<canvas id="heartdonut" style="height: 160px;">';
+
+		html = html + "</div>";
+		html = html + "</div>";
+		html = html + "</div>";
+
+		$("#dayheartsummary").html(html);
+		var context = $("#heartdonut");
+		makeDonutChart(context[0].getContext('2d'), data.heart.heartzonetime, ['no zone', 'above 50% of max', 'above 70% of max']);
+		$("button.heartdaylink").on('click', function() { var ds = $(this).data('date'); dayHeartReport(ds); return false; });
+            }
+        });
+
+}
+
 function daySleepReport(date)
 {
 	$("#daysleepsummary").html('<i class="fa fa-refresh fa-spin"></i>');
@@ -310,10 +376,7 @@ function daySleepReport(date)
 			html = html + "<table class=\"table no-margin\">";
 			html = html + "<tr><td>Wake up:</td><td>" + data.wake_up_local + "</td></tr>";
 			html = html + "<tr><td>Bed time:</td><td>" + data.bedtime_local + "</td></tr>";
-			html = html + "";
 			html = html + "<tr><td>Wake time:</td><td>" + Math.floor(data.length / (60 * 60)) + " hours</td></tr>";
-			html = html + "";
-			html = html + "";
 			html = html + "</table>";
 			html = html + "</div>";
 		}
@@ -334,6 +397,16 @@ function healthReportScreen(page)
 {
     $(".content-wrapper").load("./health/" + page + ".html", function(response, status, xhr){
         if(status == 'error') { errorPage(xhr); return false; }
+        if(page == 'heart')
+        {
+            var dt = new Date();
+            dt.setDate(dt.getDate() - 1);
+            var dsy = String(dt.getFullYear());
+            var dsm = String(dt.getMonth() + 1);
+            var dsd = String(dt.getDate());
+            var ds = dsy + dsm.padStart(2, '0') + dsd.padStart(2, '0');
+            dayHeartReport(ds);
+        }
         if(page == 'sleep')
         {
             var dt = new Date();
@@ -685,7 +758,21 @@ function makeDonutChart(donutChartCanvas, data, labels)
         },
         options: {
             responsive: true,
-            animation: { animateScale: true, animateRotate: true }
+            animation: { animateScale: true, animateRotate: true },
+            legend: { display: false },
+            tooltips: {
+		callbacks: {
+			label: function(item, data){
+				var ix = item.index;
+				var label = data.labels[ix];
+				var value = data.datasets[0].data[ix];
+				var total = 0;
+				for (var i = 0; i < data.datasets[0].data.length; i++) { total = total + data.datasets[0].data[i]; }
+				var prc = parseInt((value / total) * 100.0);
+				return String(prc) + '% - ' + label;
+			}
+		}
+            }
         }
     };
     donutChart = new Chart(donutChartCanvas, config);

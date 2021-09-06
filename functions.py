@@ -1,4 +1,4 @@
-import datetime, pytz, json, random, urllib.request, re, sys
+import datetime, time, pytz, json, random, urllib.request, re, sys
 from viewer.models import *
 from django.db.models import Sum, Count, F, ExpressionWrapper, DurationField, fields
 from django.conf import settings
@@ -35,6 +35,58 @@ def get_timeline_events(dt):
                 events.append(event)
         dtq = dtq - datetime.timedelta(hours=24)
     return events
+
+def get_heart_history(days):
+
+    dte = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC).astimezone(pytz.timezone(settings.TIME_ZONE)).replace(hour=0, minute=0, second=0)
+    dts = dte - datetime.timedelta(days=days)
+    data = DataReading.objects.filter(start_time__gte=dts, type='heart-rate').order_by('start_time')
+    ret = []
+    last = 0
+    if data.count() > 0:
+        last = int(time.mktime(data[0].start_time.timetuple()))
+    for item in data:
+        dt = int(time.mktime(item.start_time.timetuple()))
+        ret.append([(dt - last), item.value])
+    return ret
+
+def get_heart_information(dt):
+
+    dts = datetime.datetime(dt.year, dt.month, dt.day, 4, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
+    dte = dts + datetime.timedelta(days=1)
+    dts_now = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+    dts_prev = dts - datetime.timedelta(days=1)
+    dts_next = dts + datetime.timedelta(days=1)
+
+    data = {'date': dts.strftime("%a %-d %b %Y"), 'heart': {}}
+
+    data['prev'] = dts_prev.strftime("%Y%m%d")
+    if dts_next < dts_now:
+        data['next'] = dts_next.strftime("%Y%m%d")
+
+    max_rate = 220 - int(((dts_now.date() - settings.USER_DATE_OF_BIRTH).days) / 365.25)
+    zone_1 = int(float(max_rate) * 0.5)
+    zone_2 = int(float(max_rate) * 0.7)
+
+    data['heart']['abs_max_rate'] = max_rate
+
+    max = 0
+    zone = [0, 0, 0]
+    for event in Event.objects.filter(end_time__gte=dts, start_time__lte=dte):
+        if event.cached_health:
+            health = event.health()
+            if 'heartmax' in health:
+                if health['heartmax'] > max:
+                    max = health['heartmax']
+            if 'heartzonetime' in health:
+                zone[0] = zone[0] + health['heartzonetime'][0]
+                zone[1] = zone[1] + health['heartzonetime'][1]
+                zone[2] = zone[2] + health['heartzonetime'][2]
+    if max > 0:
+        data['heart']['day_max_rate'] = max
+    data['heart']['heartzonetime'] = zone
+
+    return data
 
 def get_sleep_history(days):
 

@@ -256,7 +256,7 @@ def day_heart(request, ds):
     m = int(ds[4:6])
     d = int(ds[6:])
     dt = datetime.date(y, m, d)
-    data = []
+    data = get_heart_information(dt)
 
     response = HttpResponse(json.dumps(data), content_type='application/json')
     return response
