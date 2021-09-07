@@ -285,15 +285,20 @@ function dayHeartReport(date)
 		html = html + "</div>";
 		html = html + "<div class=\"col-xs-12 col-sm-6 col-md-3\">";
 
-		html = html + '<canvas id="heartdonut" style="height: 160px;">';
+		if(data.heart){
+			html = html + '<canvas id="heartdonut" style="height: 160px;">';
+		}
 
 		html = html + "</div>";
 		html = html + "</div>";
 		html = html + "</div>";
 
 		$("#dayheartsummary").html(html);
-		var context = $("#heartdonut");
-		makeDonutChart(context[0].getContext('2d'), data.heart.heartzonetime, ['no zone', 'above 50% of max', 'above 70% of max']);
+
+		if(data.heart){
+			var context = $("#heartdonut");
+			makeDonutChart(context[0].getContext('2d'), data.heart.heartzonetime, ['no zone', 'above 50% of max', 'above 70% of max']);
+		}
 		$("button.heartdaylink").on('click', function() { var ds = $(this).data('date'); dayHeartReport(ds); return false; });
             }
         });

@@ -84,7 +84,9 @@ def get_heart_information(dt):
                 zone[2] = zone[2] + health['heartzonetime'][2]
     if max > 0:
         data['heart']['day_max_rate'] = max
-    data['heart']['heartzonetime'] = zone
+        data['heart']['heartzonetime'] = zone
+    else:
+        del data['heart']
 
     return data
 
