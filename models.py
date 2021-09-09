@@ -8,7 +8,7 @@ from wordcloud import WordCloud, STOPWORDS
 from configparser import ConfigParser
 from viewer.eventcollage import make_collage
 from tempfile import NamedTemporaryFile
-import datetime, pytz, json, markdown, re, os
+import datetime, pytz, json, markdown, re, os, urllib.request
 
 def user_thumbnail_upload_location(instance, filename):
     return 'people/' + str(instance.pk) + '/' + filename
@@ -627,6 +627,22 @@ class Event(models.Model):
         self.save()
     def subevents(self):
         return Event.objects.filter(start_time__gte=self.start_time).filter(end_time__lte=self.end_time).exclude(id=self.id).order_by('start_time')
+    def refresh_geo(self):
+        id = self.start_time.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S") + self.end_time.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S")
+        url = settings.LOCATION_MANAGER_URL + "/route/" + id + "?format=json"
+        ret = ""
+        data = {}
+        with urllib.request.urlopen(url) as h:
+            data = json.loads(h.read().decode())
+        if 'geo' in data:
+            if 'geometry' in data['geo']:
+                if 'coordinates' in data['geo']['geometry']:
+                    if len(data['geo']['geometry']['coordinates']) > 0:
+                        ret = json.dumps(data['geo'])
+        self.geo = ret
+        self.save()
+        return ret
+
     def distance(self):
         if not(self.geo):
             return 0
