@@ -238,6 +238,7 @@ def day(request, ds):
     d = int(ds[6:])
     dts = datetime.datetime(y, m, d, 4, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
     dte = dts + datetime.timedelta(seconds=86400)
+    dt = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
     events = Event.objects.filter(end_time__gte=dts, start_time__lte=dte).exclude(type='life_event').order_by('start_time')
     dss = dts.strftime('%A, %-d %B %Y')
     context = {'type':'view', 'caption': dss, 'events':events, 'stats': {}}
@@ -246,6 +247,9 @@ def day(request, ds):
     if wakecount > 0:
         context['stats']['wake_time'] = wakes[0].start_time
         context['stats']['sleep_time'] = wakes[(wakecount - 1)].end_time
+    context['stats']['prev'] = (dts - datetime.timedelta(days=1)).strftime("%Y%m%d")
+    if dte < dt:
+        context['stats']['next'] = (dts + datetime.timedelta(days=1)).strftime("%Y%m%d")
     return render(request, 'viewer/day.html', context)
 
 def day_heart(request, ds):
