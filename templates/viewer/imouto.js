@@ -556,10 +556,6 @@ function dayScreen(id)
 
         });
 
-        var dsy = parseInt(id.substring(0, 4));
-        var dsm = parseInt(id.substring(4, 6));
-        var dsd = parseInt(id.substring(6, 8));
-        dt = new Date(dsy, (dsm - 1), dsd);
         daySummary(id);
         makeMap();
 
