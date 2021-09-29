@@ -429,6 +429,13 @@ def event_json(request, eid):
     response = HttpResponse(json.dumps(data.to_dict()), content_type='application/json')
     return response
 
+def reports_json(request):
+    data = []
+    for report in LifeReport.objects.all():
+        data.append({'id': report.id, 'label': report.label})
+    response = HttpResponse(json.dumps(data), content_type='application/json')
+    return response
+
 def report_json(request, id):
     data = get_object_or_404(LifeReport, id=id)
     response = HttpResponse(json.dumps(data.to_dict()), content_type='application/json')
