@@ -118,3 +118,6 @@
 .info-box-content a { color: #000000; text-decoration: underline; }
 
 .scatter-chart { max-height: 160px; }
+
+.info-box-content { overflow-x: hidden; }
+.info-box-number { white-space: nowrap; }
