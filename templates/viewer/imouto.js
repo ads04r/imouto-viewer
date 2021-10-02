@@ -1020,11 +1020,12 @@ function makeLineChart(lineChartCanvas, data, colstr, timeline=false)
                     {
                         display: timeline,
 			type: 'time',
-                        distribution: 'series',
+                        distribution: 'linear',
                         bounds: 'data',
                         time: {
                             unit: 'minute'
-                        }
+                        },
+                        ticks: {}
                     }
                 ],
                 yAxes: [
@@ -1036,6 +1037,8 @@ function makeLineChart(lineChartCanvas, data, colstr, timeline=false)
             maintainAspectRatio: true
         }
     }
+    if(data.length > 0) { config.options.scales.xAxes[0].ticks.min = data[0].x; }
+    console.log(config.options.scales);
     lineChart = new Chart(lineChartCanvas, config);
 }
 
