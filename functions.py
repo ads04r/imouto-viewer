@@ -1,6 +1,7 @@
 import datetime, time, pytz, json, random, urllib.request, re, sys
 from viewer.models import *
 from django.db.models import Sum, Count, F, ExpressionWrapper, DurationField, fields
+from django.core.cache import cache
 from django.conf import settings
 from geopy import distance
 from tzlocal import get_localzone
@@ -50,6 +51,30 @@ def get_heart_history(days):
         ret.append([(dt - last), item.value])
     return ret
 
+def get_heart_graph(dt):
+
+    key = 'heartgraph_' + dt.strftime("%Y%m%d")
+    ret = cache.get(key)
+    if not(ret is None):
+        return ret
+
+    dts = datetime.datetime(dt.year, dt.month, dt.day, 4, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
+    ret = []
+    for x in range(0, 1440):
+        dtx = dts + datetime.timedelta(minutes=x)
+        try:
+            yi = DataReading.objects.get(start_time__lte=dtx, end_time__gte=dtx, type='heart-rate')
+            y = yi.value
+        except:
+            y = 0
+        if y > 0:
+            item = {'x': dtx.strftime("%Y-%m-%dT%H:%M:%S"), 'y': y}
+            ret.append(item)
+
+    cache.set(key, ret, timeout=86400)
+
+    return(ret)
+
 def get_heart_information(dt):
 
     dts = datetime.datetime(dt.year, dt.month, dt.day, 4, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
@@ -83,8 +108,12 @@ def get_heart_information(dt):
                 zone[1] = zone[1] + health['heartzonetime'][1]
                 zone[2] = zone[2] + health['heartzonetime'][2]
     if max > 0:
+        total_heart_time = zone[0] + zone[1] + zone[2]
+        if ((total_heart_time > 0) & (total_heart_time < 86400)):
+            zone[0] = zone[0] + (86400 - total_heart_time)
         data['heart']['day_max_rate'] = max
         data['heart']['heartzonetime'] = zone
+        data['heart']['graph'] = get_heart_graph(dt)
     else:
         del data['heart']
 
@@ -499,7 +528,6 @@ def generate_location_events(minlength):
 
     for i in range(0, duration + 1):
         dt = dts + datetime.timedelta(days=i)
-        #print(dt)
         dtt = dt + datetime.timedelta(days=1)
         url = settings.LOCATION_MANAGER_URL + "/route/" + dt.strftime("%Y%m%d") + '040000' + dtt.strftime("%Y%m%d") + "040000?format=json"
         data = []
@@ -521,6 +549,11 @@ def generate_location_events(minlength):
             lon1 = data['geo']['bbox'][2]
             lon2 = data['geo']['bbox'][0]
         for location in Location.objects.filter(lon__gte=lon1, lon__lte=lon2, lat__gte=lat1, lat__lte=lat2):
+
+            if not(location.destruction_time is None):
+                if location.destruction_time < dt:
+                    continue
+
             url = settings.LOCATION_MANAGER_URL + "/event/" + dt.strftime("%Y-%m-%d") + "/" + str(location.lat) + "/" + str(location.lon) + "?format=json"
             #print("  " + str(location))
             data = []

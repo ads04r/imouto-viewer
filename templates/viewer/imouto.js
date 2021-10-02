@@ -291,6 +291,17 @@ function dayHeartReport(date)
 
 		html = html + "</div>";
 		html = html + "</div>";
+		html = html + "<div class=\"row\">";
+		html = html + "<div class=\"col-xs-12 col-sm-12 col-md-12\">";
+
+		if(data.heart){
+			if(data.heart.graph){
+				html = html + '<canvas id="hearthistory" style="height: 250px;">';
+			}
+		}
+
+		html = html + "</div>";
+		html = html + "</div>";
 		html = html + "</div>";
 
 		$("#dayheartsummary").html(html);
@@ -298,6 +309,10 @@ function dayHeartReport(date)
 		if(data.heart){
 			var context = $("#heartdonut");
 			makeDonutChart(context[0].getContext('2d'), data.heart.heartzonetime, ['no zone', 'above 50% of max', 'above 70% of max']);
+			if(data.heart.graph){
+				var morecontext = $("#hearthistory");
+				makeLineChart(morecontext[0].getContext('2d'), data.heart.graph, '#3C8DBC', true);
+			}
 		}
 		$("button.heartdaylink").on('click', function() { var ds = $(this).data('date'); dayHeartReport(ds); return false; });
             }
@@ -972,7 +987,7 @@ function makeSleepAreaChart(canvas, datasets)
 	chart.update();
 }
 
-function makeLineChart(lineChartCanvas, data, colstr)
+function makeLineChart(lineChartCanvas, data, colstr, timeline=false)
 {
     var labels = []
     for(i = 0; i < data.length; i++)
@@ -989,7 +1004,8 @@ function makeLineChart(lineChartCanvas, data, colstr)
                     backgroundColor: colstr,
                     data: data,
                     fill: true,
-                    pointRadius: 0
+                    pointRadius: 0,
+                    lineTension: 0
                 }
             ]
         },
@@ -1001,12 +1017,18 @@ function makeLineChart(lineChartCanvas, data, colstr)
             },
             scales: {
                 xAxes: [
-                    { 
-                        display: false
+                    {
+                        display: timeline,
+			type: 'time',
+                        distribution: 'series',
+                        bounds: 'data',
+                        time: {
+                            unit: 'minute'
+                        }
                     }
                 ],
                 yAxes: [
-                    { 
+                    {
                         display: true
                     }
                 ]
