@@ -77,7 +77,10 @@ def health_data(datatypes):
             filter = filter | Q(type=type)
     for dr in DataReading.objects.filter(filter).order_by('-start_time'):
         type = str(dr.type)
-        value = int(dr.value)
+        if type == 'weight':
+            value = float(dr.value) / 1000
+        else:
+            value = int(dr.value)
         if dr.start_time != item['date']:
             if item['date'] != '':
                 ret.append(item)
@@ -129,7 +132,7 @@ def health(request, pageid):
                 pdt = point.start_time.timestamp()
                 if pdt < min_dt:
                     continue
-                item.append({'x': pdt, 'y': point.value})
+                item.append({'x': pdt, 'y': (float(point.value) / 1000)})
             context['graphs'][i['label']] = json.dumps(item)
         return render(request, 'viewer/health_weight.html', context)
     if pageid == 'mentalhealth':
