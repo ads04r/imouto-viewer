@@ -93,11 +93,28 @@ class Command(BaseCommand):
 			dte = datetime.datetime.fromtimestamp(int(row[1]), tz=pytz.UTC)
 			type = 'pebble-app-activity'
 			value = int(row[2])
+			if ((value == 1) or (value == 2)):
+				type = 'sleep'
 			try:
 				dp = DataReading.objects.get(type=type, start_time=dts, end_time=dte)
 			except:
 				dp = DataReading(start_time=dts, end_time=dte, type=type, value=value)
 				dp.save()
+
+		# Add 'awake' events between the 'sleep' events, for easier parsing later
+
+		if DataReading.objects.filter(type='sleep').count() > 0:
+			if DataReading.objects.filter(type='awake').count() == 0:
+				dtmin = DataReading.objects.filter(type='sleep').order_by('start_time')[0].start_time
+			else:
+				dtmin = DataReading.objects.filter(type='awake').order_by('-end_time')[0].end_time
+			sleeps = DataReading.objects.filter(type='sleep', value='1', start_time__gte=dtmin).order_by('start_time')
+			sleep_ct = sleeps.count()
+			for i in range(1, sleep_ct):
+				delta = sleeps[i].start_time - sleeps[i - 1].end_time
+				if delta.total_seconds() > 3600:
+					data = DataReading(type='awake', value='0', start_time=sleeps[i - 1].end_time, end_time=sleeps[i].start_time)
+					data.save()
 
 		# This bit counts steps and adds them as DataReadings
 

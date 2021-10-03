@@ -2,6 +2,7 @@ from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
+from django.db.models import Q, F, DurationField, ExpressionWrapper
 from django.conf import settings
 from background_task.models import Task
 from haystack.query import SearchQuerySet
@@ -64,6 +65,92 @@ def timeline(request):
     form = QuickEventForm()
     context = {'type':'view', 'data':{'current': ds}, 'form':form}
     return render(request, 'viewer/timeline.html', context)
+
+def health_data(datatypes):
+    item = {'date': ''}
+    filter = None
+    ret = []
+    for type in datatypes:
+        if filter is None:
+            filter = Q(type=type)
+        else:
+            filter = filter | Q(type=type)
+    for dr in DataReading.objects.filter(filter).order_by('-start_time'):
+        type = str(dr.type)
+        value = int(dr.value)
+        if dr.start_time != item['date']:
+            if item['date'] != '':
+                ret.append(item)
+            item = {'date': dr.start_time}
+        item[type] = value
+    ret.append(item)
+    return ret
+
+@csrf_exempt
+def health(request, pageid):
+    context = {'type':'view', 'page': pageid, 'data':[]}
+    if pageid == 'heart':
+        return render(request, 'viewer/health_heart.html', context)
+    if pageid == 'sleep':
+        dt = datetime.datetime.now().replace(hour=0, minute=0, second=0, tzinfo=pytz.UTC)
+        expression = F('end_time') - F('start_time')
+        wrapped_expression = ExpressionWrapper(expression, DurationField())
+        context['data'] = {'stats': [], 'sleeps': []}
+        for days in [7, 28, 365]:
+            context['data']['stats'].append({'label': 'week', 'graph': get_sleep_history(days), 'best_sleep': DataReading.objects.filter(type='sleep', value='2', start_time__gte=(dt - datetime.timedelta(days=days))).annotate(length=wrapped_expression).order_by('-length')[0].start_time, 'earliest_waketime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(start_time)'}).order_by('time')[0].start_time, 'latest_waketime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(start_time)'}).order_by('-time')[0].start_time, 'earliest_bedtime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(end_time)'}).order_by('time')[0].end_time, 'latest_bedtime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(end_time)'}).order_by('-time')[0].end_time})
+        context['data']['midpoint'] = context['data']['stats'][2]['latest_waketime']
+        return render(request, 'viewer/health_sleep.html', context)
+    if pageid == 'distance':
+        return render(request, 'viewer/health_distance.html', context)
+    if pageid == 'schedule':
+        dt = datetime.datetime.now().replace(hour=0, minute=0, second=0, tzinfo=pytz.UTC)
+        context['events'] = Event.objects.filter(start_time__gte=(dt - datetime.timedelta(days=28))).exclude(workout_categories=None).order_by('-start_time')[0:10]
+        return render(request, 'viewer/health_schedule.html', context)
+    if pageid == 'blood':
+        if request.method == 'POST':
+            ret = json.loads(request.body)
+            dt = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=pytz.UTC)
+            datapoint = DataReading(type='bp_sys', start_time=dt, end_time=dt, value=ret['bp_sys_val'])
+            datapoint.save()
+            datapoint = DataReading(type='bp_dia', start_time=dt, end_time=dt, value=ret['bp_dia_val'])
+            datapoint.save()
+            response = HttpResponse(json.dumps(ret), content_type='application/json')
+            return response
+        context['data'] = health_data(['bp_sys', 'bp_dia'])
+        return render(request, 'viewer/health_bp.html', context)
+    if pageid == 'weight':
+        context['data'] = health_data(['weight', 'fat', 'muscle', 'water'])
+        context['graphs'] = {}
+        dt = datetime.datetime.now().replace(hour=0, minute=0, second=0, tzinfo=pytz.UTC)
+        for i in [{'label': 'week', 'dt': (dt - datetime.timedelta(days=7))}, {'label': 'month', 'dt': (dt - datetime.timedelta(days=28))}, {'label': 'year', 'dt': (dt - datetime.timedelta(days=365))}]:
+            item = []
+            min_dt = i['dt'].timestamp()
+            for point in DataReading.objects.filter(type='weight', end_time__gte=i['dt']).order_by('start_time'):
+                pdt = point.start_time.timestamp()
+                if pdt < min_dt:
+                    continue
+                item.append({'x': pdt, 'y': point.value})
+            context['graphs'][i['label']] = json.dumps(item)
+        return render(request, 'viewer/health_weight.html', context)
+    if pageid == 'mentalhealth':
+        if request.method == 'POST':
+            ret = json.loads(request.body)
+            dt = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=pytz.UTC)
+            datapoint = DataReading(type='hads-a', start_time=dt, end_time=dt, value=ret['anxiety'])
+            datapoint.save()
+            datapoint = DataReading(type='hads-d', start_time=dt, end_time=dt, value=ret['depression'])
+            datapoint.save()
+            response = HttpResponse(json.dumps(ret), content_type='application/json')
+            return response
+        for entry in health_data(['hads-a', 'hads-d']):
+            item = {'date': entry['date']}
+            if 'hads-a' in entry:
+              item['anxiety'] = entry['hads-a']
+            if 'hads-d' in entry:
+              item['depression'] = entry['hads-d']
+            context['data'].append(item)
+        return render(request, 'viewer/health_mentalhealth.html', context)
+    return render(request, 'viewer/health.html', context)
 
 def timelineitem(request, ds):
     dsyear = int(ds[0:4])
@@ -151,10 +238,45 @@ def day(request, ds):
     d = int(ds[6:])
     dts = datetime.datetime(y, m, d, 4, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
     dte = dts + datetime.timedelta(seconds=86400)
+    dt = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
     events = Event.objects.filter(end_time__gte=dts, start_time__lte=dte).exclude(type='life_event').order_by('start_time')
     dss = dts.strftime('%A, %-d %B %Y')
-    context = {'type':'view', 'caption': dss, 'events':events}
+    context = {'type':'view', 'caption': dss, 'events':events, 'stats': {}}
+    wakes = DataReading.objects.filter(type='awake', start_time__lt=dte, end_time__gt=dts).order_by('start_time')
+    wakecount = wakes.count()
+    if wakecount > 0:
+        context['stats']['wake_time'] = wakes[0].start_time
+        context['stats']['sleep_time'] = wakes[(wakecount - 1)].end_time
+    context['stats']['prev'] = (dts - datetime.timedelta(days=1)).strftime("%Y%m%d")
+    if dte < dt:
+        context['stats']['next'] = (dts + datetime.timedelta(days=1)).strftime("%Y%m%d")
     return render(request, 'viewer/day.html', context)
+
+def day_heart(request, ds):
+
+    if len(ds) != 8:
+        raise Http404()
+    y = int(ds[0:4])
+    m = int(ds[4:6])
+    d = int(ds[6:])
+    dt = datetime.date(y, m, d)
+    data = get_heart_information(dt)
+
+    response = HttpResponse(json.dumps(data), content_type='application/json')
+    return response
+
+def day_sleep(request, ds):
+
+    if len(ds) != 8:
+        raise Http404()
+    y = int(ds[0:4])
+    m = int(ds[4:6])
+    d = int(ds[6:])
+    dt = datetime.date(y, m, d)
+    data = get_sleep_information(dt)
+
+    response = HttpResponse(json.dumps(data), content_type='application/json')
+    return response
 
 def event(request, eid):
 

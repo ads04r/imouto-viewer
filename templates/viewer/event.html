@@ -137,8 +137,8 @@
                     <div class="box-body">
 
                         <div>
-                            <span>{{ data.health.sleep.start|date:"g:i a" }}</span>
-                            <span class="pull-right">{{ data.health.sleep.end|date:"g:i a" }}</span>
+                            <span>{{ data.health.sleep.start_friendly }}</span>
+                            <span class="pull-right">{{ data.health.sleep.end_friendly }}</span>
                         </div>
                         <div class="progress-group">
                             <div class="progress sleep-bar">
@@ -373,7 +373,7 @@
                             </ul>
 {% if data.health.heartzonetime != None %}
                             <div class="chart">
-                                <canvas class="donut-chart" style="height: 160px" data-data="{{ data.health.heartzonetime|escape }}" data-labels="[&quot;No zone&quot;, &quot;>50%&quot;, &quot;>70%&quot;]"></canvas>
+                                <canvas class="donut-chart" style="height: 160px" data-data="{{ data.health.heartzonetime|escape }}" data-labels="[&quot;No zone&quot;, &quot;above 50% of max&quot;, &quot;above 70% of max&quot;]"></canvas>
                             </div>
 {% endif %}
 
