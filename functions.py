@@ -564,7 +564,7 @@ def generate_location_events(minlength):
                     continue
 
             url = settings.LOCATION_MANAGER_URL + "/event/" + dt.strftime("%Y-%m-%d") + "/" + str(location.lat) + "/" + str(location.lon) + "?format=json"
-            #print("  " + str(location))
+
             data = []
             try:
                 with urllib.request.urlopen(url) as h:

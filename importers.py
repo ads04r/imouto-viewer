@@ -17,7 +17,7 @@ def import_fit(parseable_fit_input):
         item = {}
         for recitem in record:
             k = recitem.name
-            if ((k != 'heart_rate') & (k != 'timestamp')):
+            if ((k != 'heart_rate') & (k != 'timestamp') & (k != 'cadence')):
                 continue
             v = {}
             v['value'] = recitem.value
@@ -31,7 +31,10 @@ def import_fit(parseable_fit_input):
             item['timestamp']['value'] = item['timestamp']['value'].replace(tzinfo=pytz.utc) - item['timestamp']['value'].utcoffset() # I like everything in UTC. Bite me.
         newitem = {}
         newitem['date'] = item['timestamp']['value']
-        newitem['heart'] = item['heart_rate']['value']
+        if 'heart_rate' in item:
+            newitem['heart'] = item['heart_rate']['value']
+        if 'cadence' in item:
+            newitem['cadence'] = item['cadence']['value']
         newitem['length'] = 1
         if len(data) > 0:
             lastitem = data[-1]
@@ -40,15 +43,23 @@ def import_fit(parseable_fit_input):
         data.append(newitem)
 
     for item in data:
-        
-        if item['heart'] is None:
-            continue
+
         dts = item['date']
         dte = item['date'] + datetime.timedelta(seconds=item['length'])
-        
-        try:
-            event = DataReading.objects.get(start_time=dts, end_time=dte, type='heart-rate')
-        except:
-            event = DataReading(start_time=dts, end_time=dte, type='heart-rate', value=item['heart'])
-            event.save()
+
+        if 'heart' in item:
+            if not(item['heart'] is None):
+                try:
+                    event = DataReading.objects.get(start_time=dts, end_time=dte, type='heart-rate')
+                except:
+                    event = DataReading(start_time=dts, end_time=dte, type='heart-rate', value=item['heart'])
+                    event.save()
+
+        if 'cadence' in item:
+            if not(item['cadence'] is None):
+                try:
+                    event = DataReading.objects.get(start_time=dts, end_time=dte, type='cadence')
+                except:
+                    event = DataReading(start_time=dts, end_time=dte, type='cadence', value=item['cadence'])
+                    event.save()
 

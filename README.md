@@ -7,9 +7,12 @@ A web app for visualising life annotations and other 'quantified self' data.
 
 Imouto
 ------
-Imouto is a life annotation system first introduced in my PhD thesis, and
+Imouto is a life annotation system first introduced in 
+[my PhD thesis](https://eprints.soton.ac.uk/266554/1/thesis.pdf), and
 later improved upon and referenced in several academic papers published by
-myself and colleagues. Since I left the field of computer science research,
+[myself](https://eprints.soton.ac.uk/272324/1/websci11final.pdf) and
+[colleagues](https://eprints.soton.ac.uk/346890/1/memorybook.pdf).
+Since I left the field of computer science research,
 Imouto has evolved as technology has changed. Now, rather than rely on
 a companion app on a PDA for quantifiable life data, it gets the data from
 a variety of different off-the-shelf tracking devices such as fitness
