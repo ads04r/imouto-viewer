@@ -1,4 +1,7 @@
 var map;
+var quiz;
+var quiz_score_a;
+var quiz_score_d;
 
 function errorPage(e)
 {
@@ -189,6 +192,311 @@ function reportScreen(id)
     });
 }
 
+function array_shuffle(array)
+{
+	for (var i = array.length - 1; i > 0; i--)
+	{
+		var j = Math.floor(Math.random() * (i + 1));
+		var temp = array[i];
+		array[i] = array[j];
+		array[j] = temp;
+	}
+}
+
+function popQuestion()
+{
+	if(quiz.length == 0)
+	{
+                var data = {'anxiety': quiz_score_a, 'depression': quiz_score_d}
+                $.ajax({
+                    url: "health/mentalhealth.html",
+                    dataType: 'json',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    method: 'POST',
+                    success: function() {
+			window.location.reload(false);
+		    }
+                });
+		return false;
+	}
+
+	var item = quiz.pop();
+
+	$("#quiz-question").html(item[0]);
+        $("#hads-question-type").val(item[1]);
+	for (var i = 0; i < 4; i++)
+	{
+		$("#quiz-answer-" + i).html(item[2][i]);
+		$("#hads-radio-" + i).val(item[3][i]);
+		$("#hads-radio-" + i).removeAttr('checked');
+	}
+
+}
+
+function dayHeartReport(date)
+{
+	$("#dayheartsummary").html('<i class="fa fa-refresh fa-spin"></i>');
+
+	var url = './days/' + date + '/heart.json';
+        $.ajax({
+            url: url,
+            method: 'GET',
+            success: function(data) {
+
+		var html = "";
+		html = html + "<div class=\"btn-group pull-right\">";
+		html = html + "<button data-date=\"" + data.prev + "\" class=\"btn btn-default heartdaylink\">Previous</button>";
+		if(data.next) { html = html + "<button data-date=\"" + data.next + "\" class=\"btn btn-default heartdaylink\">Next</button>"; }
+		else { html = html + "<button class=\"btn btn-default disabled\">Next</button>"; }
+		html = html + "</div>";
+
+		html = html + "<h4><a href=\"#day_" + date + "\">" + data.date + "</a></h4>";
+
+		html = html + "<div class=\"container-fluid\">";
+		html = html + "<div class=\"row\">";
+		html = html + "<div class=\"col-xs-12 col-sm-6 col-md-9\">";
+
+		if(data.heart){
+
+			html = html + "<p>Daily Heart Activity</p>";
+
+			var hsecs = data.heart.heartzonetime[1];
+			var hmins = parseInt(parseFloat(hsecs) / 60.0);
+
+			hsecs = hsecs - (hmins * 60);
+			var hlabel = String(hmins) + " minutes, " + String(hsecs) + " seconds";
+			if(hsecs == 0)
+			{ hlabel = String(hmins) + " minutes"; }
+
+			html = html + "<div class=\"table-responsive\">";
+			html = html + "<table class=\"table no-margin\">";
+			html = html + "<tr><td>Highest heart rate:</td><td>" + data.heart.day_max_rate + "</td></tr>";
+			html = html + "<tr><td>Time in optimal zone:</td><td>" + hlabel + "</td></tr>";
+			html = html + "</table>";
+			html = html + "</div>";
+
+		} else {
+
+			html = html + "<p>No heart information exists about this day.</p>";
+
+		}
+
+		html = html + "</div>";
+		html = html + "<div class=\"col-xs-12 col-sm-6 col-md-3\">";
+
+		if(data.heart){
+			html = html + '<canvas id="heartdonut" style="height: 160px;">';
+		}
+
+		html = html + "</div>";
+		html = html + "</div>";
+		html = html + "<div class=\"row\">";
+		html = html + "<div class=\"col-xs-12 col-sm-12 col-md-12\">";
+
+		if(data.heart){
+			if(data.heart.graph){
+				html = html + '<canvas id="hearthistory"/>';
+			}
+		}
+
+		html = html + "</div>";
+		html = html + "</div>";
+		html = html + "</div>";
+
+		$("#dayheartsummary").html(html);
+
+		if(data.heart){
+			var context = $("#heartdonut");
+			makeDonutChart(context[0].getContext('2d'), data.heart.heartzonetime, ['no zone', 'above 50% of max', 'above 70% of max']);
+			if(data.heart.graph){
+				var morecontext = $("#hearthistory");
+				makeLineChart(morecontext[0].getContext('2d'), data.heart.graph, '#3C8DBC', true);
+			}
+		}
+		$("button.heartdaylink").on('click', function() { var ds = $(this).data('date'); dayHeartReport(ds); return false; });
+            }
+        });
+
+}
+
+function daySleepReport(date)
+{
+	$("#daysleepsummary").html('<i class="fa fa-refresh fa-spin"></i>');
+
+	var url = './days/' + date + '/sleep.json';
+        $.ajax({
+            url: url,
+            method: 'GET',
+            success: function(data) {
+
+		var html = "";
+		html = html + "<div class=\"btn-group pull-right\">";
+		html = html + "<button data-date=\"" + data.prev + "\" class=\"btn btn-default sleepdaylink\">Previous</button>";
+		if(data.next) { html = html + "<button data-date=\"" + data.next + "\" class=\"btn btn-default sleepdaylink\">Next</button>"; }
+		else { html = html + "<button class=\"btn btn-default disabled\">Next</button>"; }
+		html = html + "</div>";
+
+		html = html + "<h4><a href=\"#day_" + date + "\">" + data.date + "</a></h4>";
+
+		html = html + "<div class=\"container-fluid\">";
+		html = html + "<div class=\"row\">";
+		html = html + "<div class=\"col-xs-12 col-sm-6 col-md-9\">";
+
+		if(data.sleep){
+
+			html = html + "<p>Sleep pattern</p>";
+
+			html = html + "<div class=\"progress-group\">";
+			html = html + "<div class=\"progress sleep-bar\">";
+			for(var i = 0; i < data.sleep.data.length; i++)
+			{
+				var item = data.sleep.data[i];
+				html = html + "<div class=\"progress-bar\" role=\"progressbar\" aria-valuenow=\"" + item[2] + "\" aria-valuemin=\"0\" aria-valuemax=\"100\" style=\"width: " + item[2] + "%; background-color:";
+				if(item[0] == 0)
+				{
+					html = html + "rgba(0, 0, 0, 0)";
+				}
+				if(item[0] == 1)
+				{
+					html = html + "#ABC1D8";
+				}
+				if(item[0] == 2)
+				{
+					html = html + "#3C8DBC";
+				}
+				html = html + "\"></div>";
+			}
+			html = html + "</div>";
+			html = html + "</div>";
+
+			html = html + "<div style=\"width: 100%;\">";
+			html = html + "<div class=\"pull-right\">" + data.sleep.end_friendly + "</div>";
+			html = html + "<div class=\"pull-left\">" + data.sleep.start_friendly + "</div>";
+			html = html + "</div>";
+
+			html = html + "<br/>";
+			html = html + "<div class=\"pull-right\">";
+			html = html + "<span style=\"margin-left: 1em; white-space: nowrap;\"><i class=\"fa fa-square-o\"></i>&nbsp;Awake</span>";
+			html = html + "<span style=\"margin-left: 1em; white-space: nowrap;\"><i style=\"color: #ABC1D8;\" class=\"fa fa-square\"></i>&nbsp;Light&nbsp;sleep</span>";
+			html = html + "<span style=\"margin-left: 1em; white-space: nowrap;\"><i style=\"color: #3C8DBC;\" class=\"fa fa-square\"></i>&nbsp;Deep&nbsp;sleep</span>";
+			html = html + "</div>";
+
+		} else {
+
+			html = html + "<p>No sleep information exists about this day.</p>";
+
+		}
+
+		html = html + "</div>";
+		html = html + "<div class=\"col-xs-12 col-sm-6 col-md-3\">";
+
+		if(data.wake_up){
+			html = html + "<div class=\"table-responsive\">";
+			html = html + "<table class=\"table no-margin\">";
+			html = html + "<tr><td>Wake up:</td><td>" + data.wake_up_local + "</td></tr>";
+			html = html + "<tr><td>Bed time:</td><td>" + data.bedtime_local + "</td></tr>";
+			html = html + "<tr><td>Wake time:</td><td>" + Math.floor(data.length / (60 * 60)) + " hours</td></tr>";
+			html = html + "</table>";
+			html = html + "</div>";
+		}
+
+		html = html + "</div>";
+		html = html + "</div>";
+		html = html + "</div>";
+
+
+		$("#daysleepsummary").html(html);
+		$("button.sleepdaylink").on('click', function() { var ds = $(this).data('date'); daySleepReport(ds); return false; });
+            }
+        });
+
+}
+
+function healthReportScreen(page)
+{
+    $(".content-wrapper").load("./health/" + page + ".html", function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
+        if(page == 'heart')
+        {
+            var dt = new Date();
+            dt.setDate(dt.getDate() - 1);
+            var dsy = String(dt.getFullYear());
+            var dsm = String(dt.getMonth() + 1);
+            var dsd = String(dt.getDate());
+            var ds = dsy + dsm.padStart(2, '0') + dsd.padStart(2, '0');
+            dayHeartReport(ds);
+        }
+        if(page == 'sleep')
+        {
+            var dt = new Date();
+            dt.setDate(dt.getDate() - 1);
+            var dsy = String(dt.getFullYear());
+            var dsm = String(dt.getMonth() + 1);
+            var dsd = String(dt.getDate());
+            var ds = dsy + dsm.padStart(2, '0') + dsd.padStart(2, '0');
+            daySleepReport(ds);
+            $(".sleep-area-chart").each(function() {
+                var data = $(this).data('data');
+                makeSleepAreaChart($(this), data);
+            });
+        }
+        if(page == 'mentalhealth')
+        {
+            quiz = [
+                ["I feel tense or 'wound up'", "A", ["most of the time", "a lot of the time", "from time to time, occasionally", "not at all"], [3, 2, 1, 0]],
+                ["I feel as if I am slowed down", "D", ["nearly all the time", "very often", "sometimes", "not at all"], [3, 2, 1, 0]],
+                ["I still enjoy the things I used to enjoy", "D", ["definitely as much", "not quite so much", "only a little", "hardly at all"], [0, 1, 2, 3]],
+                ["I get a sort of frightened feeling like 'butterflies' in the stomach", "A", ["not at all", "occasionally", "quite often", "very often"], [0, 1, 2, 3]],
+                ["I get a sort of frightened feeling as if something awful is about to happen", "A", ["very definitely and quite badly", "yes, but not too badly", "a little, but it doesn't worry me", "not at all"], [3, 2, 1, 0]],
+                ["I have lost interest in my appearance", "D", ["definitely", "I don't take as much care as I should", "I may not take quite as much care", "I take just as much care as ever"], [3, 2, 1, 0]],
+                ["I can laugh and see the funny side of things", "D", ["as much as I always could", "not quite so much now", "definitely not so much now", "not at all"], [0, 1, 2, 3]],
+                ["I feel restless as if I have to be on the move", "A", ["very much indeed", "quite a lot", "not very much", "not at all"], [3, 2, 1, 0]],
+                ["Worrying thoughts go through my mind", "A", ["a great deal of the time", "a lot of the time", "from time to time, but not too often", "only occasionally"], [3, 2, 1, 0]],
+                ["I look forward with enjoyment to things", "D", ["as much as I ever did", "rather less than I used to", "definitely less than I used to", "hardly at all"], [0, 1, 2, 3]],
+                ["I feel cheerful", "D", ["not at all", "not often", "sometimes", "most of the time"], [3, 2, 1, 0]],
+                ["I get sudden feelings of panic", "A", ["very often indeed", "quite often", "not very often", "not at all"], [3, 2, 1, 0]],
+                ["I can sit at ease and feel relaxed", "A", ["definitely", "usually", "not often", "not at all"], [0, 1, 2, 3]],
+                ["I can enjoy a good book or radio or TV program", "D", ["often", "sometimes", "not often", "very seldom"], [0, 1, 2, 3]]
+            ];
+            array_shuffle(quiz);
+            quiz_score_a = 0;
+            quiz_score_d = 0;
+            $("#data-next-button").on('click', function() {
+                var value = $('input[name=hads-radio]:checked', 'form').val();
+                var type = $("#hads-question-type").val();
+                if(value === undefined) { alert("Select an answer before continuing."); return false; }
+                if(type == 'A') { quiz_score_a = quiz_score_a + parseInt(value); }
+                if(type == 'D') { quiz_score_d = quiz_score_d + parseInt(value); }
+                popQuestion();
+            });
+            popQuestion();
+        }
+        $("#data-submit-button").on('click', function()
+        {
+            var url = $("form").attr('action');
+            var data = {}
+            $("form input").each(function() {
+                k = $(this).attr('name');
+                v = $(this).val();
+                if(!(k === undefined)) { data[k] = v; }
+            });
+            $.ajax({
+                url: url,
+                dataType: 'json',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                method: 'POST',
+                success: function() {
+                    window.location.reload(false);
+                }
+            });
+            return false;
+        });
+        initialiseGraphics();
+    });
+}
+
 function eventsScreen()
 {
     $(".content-wrapper").load("./events.html", function(response, status, xhr)
@@ -263,9 +571,124 @@ function dayScreen(id)
 
         });
 
+        daySummary(id);
         makeMap();
 
     });
+}
+
+function daySummary(date)
+{
+        $.ajax({
+            url: './days/' + date + '/heart.json',
+            method: 'GET',
+            success: function(data) {
+
+		var html = "";
+
+		if(data.heart){
+
+			html = html + "<div class=\"box box-primary\">";
+			html = html + "<div class=\"box-body\">";
+
+			html = html + "<p>Daily Heart Activity</p>";
+
+			var hsecs = data.heart.heartzonetime[1];
+			var hmins = parseInt(parseFloat(hsecs) / 60.0);
+
+			hsecs = hsecs - (hmins * 60);
+			var hlabel = String(hmins) + " minutes, " + String(hsecs) + " seconds";
+			if(hsecs == 0)
+			{ hlabel = String(hmins) + " minutes"; }
+
+			html = html + "<div class=\"table-responsive\">";
+			html = html + "<table class=\"table no-margin\">";
+			html = html + "<tr><td>Highest heart rate:</td><td>" + data.heart.day_max_rate + "</td></tr>";
+			html = html + "<tr><td>Time in optimal zone:</td><td>" + hlabel + "</td></tr>";
+			html = html + "</table>";
+			html = html + "</div>";
+
+			html = html + "</div>";
+			html = html + "</div>";
+
+		}
+
+		if(html != '') { $(".day-heart-summary").html(html); }
+            }
+        });
+        $.ajax({
+            url: './days/' + date + '/sleep.json',
+            method: 'GET',
+            success: function(data) {
+		var html = "";
+
+		if(data.wake_up_local){
+			html = html + '<table class="table no-margin">';
+			html = html + "<tr>";
+			html = html + "<td>Wake up:</td>";
+			html = html + "<td>" + data.wake_up_local + "</td>";
+			html = html + "</tr>";
+			if(data.bedtime_local){
+				html = html + "<tr>";
+				html = html + "<td>Bedtime:</td>";
+				html = html + "<td>" + data.bedtime_local + "</td>";
+				html = html + "</tr>";
+			}
+			html = html + "</table>";
+			$(".day-stats").html(html);
+		}
+
+		html = "";
+
+		if(data.sleep){
+
+			html = html + "<div class=\"box box-primary\">";
+			html = html + "<div class=\"box-body\">";
+
+			html = html + "<p>Sleep pattern</p>";
+
+			html = html + "<div class=\"progress-group\">";
+			html = html + "<div class=\"progress sleep-bar\">";
+			for(var i = 0; i < data.sleep.data.length; i++)
+			{
+				var item = data.sleep.data[i];
+				html = html + "<div class=\"progress-bar\" role=\"progressbar\" aria-valuenow=\"" + item[2] + "\" aria-valuemin=\"0\" aria-valuemax=\"100\" style=\"width: " + item[2] + "%; background-color:";
+				if(item[0] == 0)
+				{
+					html = html + "rgba(0, 0, 0, 0)";
+				}
+				if(item[0] == 1)
+				{
+					html = html + "#ABC1D8";
+				}
+				if(item[0] == 2)
+				{
+					html = html + "#3C8DBC";
+				}
+				html = html + "\"></div>";
+			}
+			html = html + "</div>";
+			html = html + "</div>";
+
+			html = html + "<div style=\"width: 100%;\">";
+			html = html + "<div class=\"pull-right\">" + data.sleep.end_friendly + "</div>";
+			html = html + "<div class=\"pull-left\">" + data.sleep.start_friendly + "</div>";
+			html = html + "</div>";
+
+			html = html + "<br/>";
+			html = html + "<div class=\"pull-right\">";
+			html = html + "<span style=\"margin-left: 1em; white-space: nowrap;\"><i class=\"fa fa-square-o\"></i>&nbsp;Awake</span>";
+			html = html + "<span style=\"margin-left: 1em; white-space: nowrap;\"><i style=\"color: #ABC1D8;\" class=\"fa fa-square\"></i>&nbsp;Light&nbsp;sleep</span>";
+			html = html + "<span style=\"margin-left: 1em; white-space: nowrap;\"><i style=\"color: #3C8DBC;\" class=\"fa fa-square\"></i>&nbsp;Deep&nbsp;sleep</span>";
+			html = html + "</div>";
+
+			html = html + "</div>";
+			html = html + "</div>";
+		}
+
+		if(html != '') { $(".day-sleep-summary").html(html); }
+            }
+        });
 }
 
 function peopleScreen()
@@ -343,6 +766,12 @@ function initialiseGraphics()
     {
         var data = $(this).data('data');
         makeLineChart($(this)[0].getContext('2d'), data, '#0073b7');
+    });
+    
+    $(".scatter-chart").each(function()
+    {
+        var data = $(this).data('data');
+        makeScatterChart($(this)[0].getContext('2d'), data, '#0073b7');
     });
     
     $(".donut-chart").each(function()
@@ -464,13 +893,101 @@ function makeDonutChart(donutChartCanvas, data, labels)
         },
         options: {
             responsive: true,
-            animation: { animateScale: true, animateRotate: true }
+            animation: { animateScale: true, animateRotate: true },
+            legend: { display: false },
+            tooltips: {
+		callbacks: {
+			label: function(item, data){
+				var ix = item.index;
+				var label = data.labels[ix];
+				var value = data.datasets[0].data[ix];
+				var total = 0;
+				for (var i = 0; i < data.datasets[0].data.length; i++) { total = total + data.datasets[0].data[i]; }
+				var prc = parseInt((value / total) * 100.0);
+				return String(prc) + '% - ' + label;
+			}
+		}
+            }
         }
     };
     donutChart = new Chart(donutChartCanvas, config);
 }
 
-function makeLineChart(lineChartCanvas, data, colstr)
+function makeSleepAreaChart(canvas, datasets)
+{
+	var colours = ['#FFFFFF', '#ABC1D8', '#3C8DBC'];
+	var labels = ['', ''];
+	var fills = [false, 0]
+	var data = {
+		labels: [],
+		datasets: []
+	};
+
+	for(var i = 0; i < datasets.length; i++)
+	{
+		data.labels = Array.apply(null, Array(datasets[i].length)).map(function(x, i) { return i; }),
+		data.datasets.push({
+			label: labels[i],
+			data: datasets[i].map(function(x, i) { return (parseFloat(x) / (60 * 60)); }),
+			backgroundColor: colours[i],
+			borderColor: colours[2],
+			fill: fills[i],
+			tension: 0
+		});
+
+	}
+
+	var config = {
+		type: 'line',
+		data: data,
+		options: {
+			legend: { display: false },
+			responsive: true,
+			tooltips: {
+				callbacks: {
+					title: function(item, data) {
+						ds = ['Wake up', 'Bedtime'];
+						i = item[0].datasetIndex;
+						return ds[i];
+					},
+					label: function(item, data) {
+						i = item.yLabel;
+						while(i > 12) { i = i - 12; }
+						h = String(Math.floor(i));
+						m = String(Math.floor((i - h) * 60));
+						return h + ':' + (m.padStart(2, '0'));
+					}
+				}
+			},
+			scales: {
+				yAxes: [{
+					ticks: {
+						callback: function(value, index, values) {
+							ret = value;
+							while(ret > 12)
+							{
+								ret = ret - 12;
+							}
+							return ret + ':00';
+						}
+					}
+				}],
+				xAxes: [{
+					ticks: {
+						callback: function(value, index, values) {
+							return null;
+						}
+					}
+				}]
+			}
+		}
+	};
+
+	var chart = new Chart(canvas, config);
+	chart.update();
+}
+
+function makeLineChart(lineChartCanvas, data, colstr, timeline=false)
 {
     var labels = []
     for(i = 0; i < data.length; i++)
@@ -487,7 +1004,64 @@ function makeLineChart(lineChartCanvas, data, colstr)
                     backgroundColor: colstr,
                     data: data,
                     fill: true,
-                    pointRadius: 0
+                    pointRadius: 0,
+                    lineTension: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            tooltips: { enabled: false },
+            legend: {
+                display: false
+            },
+            scales: {
+                xAxes: [
+                    {
+                        display: timeline,
+			type: 'time',
+                        distribution: 'linear',
+                        bounds: 'data',
+                        time: {
+                            unit: 'minute',
+                            stepSize: 10
+                        },
+                        ticks: { }
+                    }
+                ],
+                yAxes: [
+                    {
+                        display: true
+                    }
+                ]
+            },
+            maintainAspectRatio: true
+        }
+    }
+    if(data.length > 0) { config.options.scales.xAxes[0].ticks.min = data[0].x; }
+    console.log(config.options.scales);
+    lineChart = new Chart(lineChartCanvas, config);
+}
+
+function makeScatterChart(lineChartCanvas, data, colstr)
+{
+    var labels = []
+    for(i = 0; i < data.length; i++)
+    {
+        labels.push(i);
+    }
+    var lineChart = new Chart(lineChartCanvas);
+    var config = {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    borderColor: colstr,
+                    data: data,
+                    fill: false,
+                    pointRadius: 4,
+                    tension: 0.4
                 }
             ]
         },
@@ -500,19 +1074,23 @@ function makeLineChart(lineChartCanvas, data, colstr)
             scales: {
                 xAxes: [
                     { 
-                        display: false
+                        type: 'time',
+                        display: false,
+                        ticks: { source: 'data' },
+                        time: { min: data[0]['x'], unit: 'month', displayFormats: { month: 'MMM' } }
                     }
                 ],
                 yAxes: [
                     { 
+                        ticks: { precision: 0, z: 50 },
                         display: true
                     }
                 ]
-            },
-            maintainAspectRatio: true
+            }
         }
     }
     lineChart = new Chart(lineChartCanvas, config);
+    lineChart.update();
 }
 
 function makeBarChart(barChartCanvas, data, legend)
@@ -778,6 +1356,8 @@ function pageRefresh()
     if(page.startsWith('person_')) { personScreen(page.replace('person_', '')); }
     if(page.startsWith('report_')) { reportScreen(page.replace('report_', '')); }
                             
+    if(page.startsWith('health-')) { healthReportScreen(page.replace('health-', '')); }
+
     if(page.startsWith('events_'))
     {
         var ds = page.replace('events_', '');

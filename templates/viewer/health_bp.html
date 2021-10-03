@@ -1,0 +1,79 @@
+{% load static %}
+
+<section class="content-header">
+    <h1>
+        Blood Pressure
+        <small>Report</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="#events">Health</a></li>
+        <li>Blood Pressure</li>
+    </ol>
+</section>
+
+<section class="content">
+
+                <div class="box box-primary">
+                    <div class="box-header">
+			<h3 class="box-title">Stored Readings</h3>
+			<div class="box-tools"><a class="btn btn-primary btn-xs" data-toggle="modal" data-target="#data_bp_add" aria-hidden="true" href="#"><i class="fa fa-plus"></i></a></div>
+                    </div>
+                    <div class="box-body table-responsive no-padding">
+
+			<table class="table table-hover">
+				<tr>
+					<th>Date</th>
+					<th>Systolic</th>
+					<th>Diastolic</th>
+				</tr>
+{% for item in data %}
+				<tr>
+					<td>
+						<span class="hidden-lg">{{ item.date|date:"Y-m-d H:i" }}</span>
+						<span class="hidden-xs visible-lg">{{ item.date|date:"l jS F Y, g:ia" }}</span>
+					</td>
+					<td>{% if item.bp_sys %}{{ item.bp_sys }}{% endif %}</td>
+					<td>{% if item.bp_dia %}{{ item.bp_dia }}{% endif %}</td>
+				</tr>
+{% endfor %}
+
+			</table>
+
+                    </div>
+                </div>
+
+            </div>
+     </div>
+</section>
+
+<div class="modal fade nav-tabs-custom" id="data_bp_add" tabindex="-1" role="dialog">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-body">
+
+				<p>Add a new reading...</p>
+
+				<form id="data-form" class="form" method="POST" action="health/blood.html">
+					<table class="table table-hover" action="" method="POST">
+						<tr class="form-row">
+							<td><label for="#bp_sys_val">Systolic:</label></td>
+							<td><input class="form-control" type="text" id="bp_sys_val" name="bp_sys_val"/>
+						</tr>
+						<tr class="form-row">
+							<td><label for="#bp_dia_val">Diastolic:</label></td>
+							<td><input class="form-control" type="text" id="bp_dia_val" name="bp_dia_val"/>
+						</tr>
+					</table>
+				</form>
+
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-primary" id="data-submit-button">Save</button>
+				<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+

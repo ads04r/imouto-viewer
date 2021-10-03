@@ -18,6 +18,8 @@ urlpatterns = [
     path('reports/<id>.txt', views.report_words),
     path('reports/<id>.png', views.report_wordcloud),
     path('days/<ds>.html', views.day),
+    path('days/<ds>/heart.json', views.day_heart),
+    path('days/<ds>/sleep.json', views.day_sleep),
     path('events.html', views.events),
     path('events.json', views.eventjson),
     path('events/<eid>.html', views.event),
@@ -39,4 +41,5 @@ urlpatterns = [
     path('search.json', views.search),
     path('add-people-to-event', views.eventpeople),
     path('upload_file', views.upload_file),
+    path('health/<pageid>.html', views.health),
 ]
