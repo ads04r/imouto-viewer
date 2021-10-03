@@ -60,6 +60,7 @@ def get_heart_graph(dt):
 
     dts = datetime.datetime(dt.year, dt.month, dt.day, 4, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
     ret = []
+    last = None
     for x in range(0, 1440):
         dtx = dts + datetime.timedelta(minutes=x)
         try:
@@ -68,7 +69,15 @@ def get_heart_graph(dt):
         except:
             y = 0
         if y > 0:
+            if not(last is None):
+                td = (dtx - last).total_seconds()
+                if td > 600:
+                    item = {'x': (last + datetime.timedelta(minutes=1)).strftime("%Y-%m-%dT%H:%M:%S"), 'y': 0}
+                    ret.append(item)
+                    item = {'x': (dtx - datetime.timedelta(minutes=1)).strftime("%Y-%m-%dT%H:%M:%S"), 'y': 0}
+                    ret.append(item)
             item = {'x': dtx.strftime("%Y-%m-%dT%H:%M:%S"), 'y': y}
+            last = dtx
             ret.append(item)
 
     cache.set(key, ret, timeout=86400)

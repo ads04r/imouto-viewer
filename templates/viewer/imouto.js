@@ -296,7 +296,7 @@ function dayHeartReport(date)
 
 		if(data.heart){
 			if(data.heart.graph){
-				html = html + '<canvas id="hearthistory" style="height: 250px;">';
+				html = html + '<canvas id="hearthistory"/>';
 			}
 		}
 
@@ -1023,9 +1023,10 @@ function makeLineChart(lineChartCanvas, data, colstr, timeline=false)
                         distribution: 'linear',
                         bounds: 'data',
                         time: {
-                            unit: 'minute'
+                            unit: 'minute',
+                            stepSize: 10
                         },
-                        ticks: {}
+                        ticks: { }
                     }
                 ],
                 yAxes: [
