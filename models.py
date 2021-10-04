@@ -821,7 +821,10 @@ class LifeReport(models.Model):
     modified_date = models.DateTimeField(default=datetime.datetime.now)
     pdf = models.FileField(blank=True, null=True, upload_to=report_pdf_upload_location)
     cached_wordcloud = models.ImageField(blank=True, null=True, upload_to=report_wordcloud_upload_location)
+    cached_dict = models.TextField(blank=True, null=True)
     def to_dict(self):
+        if self.cached_dict:
+            return json.loads(self.cached_dict)
         ret = {'id': self.pk, 'label': self.label, 'year': self.year(), 'stats': [], 'created_date': self.created_date.strftime("%Y-%m-%d %H:%M:%S %z"), 'modified_date': self.modified_date.strftime("%Y-%m-%d %H:%M:%S %z"), 'style': self.style, 'type': self.type, 'people': [], 'places': [], 'life_events': [], 'events': []}
         for person in self.people.all():
             ret['people'].append(person.to_dict())
@@ -833,6 +836,8 @@ class LifeReport(models.Model):
             ret['events'].append(event.to_dict())
         for prop in LifeReportProperties.objects.filter(report=self).order_by('category'):
             ret['stats'].append(prop.to_dict())
+        self.cached_dict = json.dumps(ret)
+        self.save()
         return ret
     def words(self):
         text = ''
