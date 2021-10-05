@@ -67,7 +67,7 @@ function uploadScreen()
 
 function updateUploadQueue()
 {
-    var url = "/location-manager/import";
+    var url = "import";
 
     $.ajax({
         url: url,
@@ -101,7 +101,7 @@ function updateUploadQueue()
 
 function updateUploadStats()
 {
-    var url = "/location-manager/process";
+    var url = "process";
 
     $.ajax({
         url: url,

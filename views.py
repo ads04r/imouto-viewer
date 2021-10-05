@@ -575,3 +575,18 @@ def place_json(request, uid):
     data = get_object_or_404(Location, uid=uid)
     response = HttpResponse(json.dumps(data.to_dict()), content_type='application/json')
     return response
+
+def locman_import(request):
+    url = settings.LOCATION_MANAGER_URL + '/import'
+    r = requests.get(url)
+    r.raise_for_status()
+    response = HttpResponse(r.text, content_type='application/json')
+    return response
+
+def locman_process(request):
+    url = settings.LOCATION_MANAGER_URL + '/process'
+    r = requests.get(url)
+    r.raise_for_status()
+    response = HttpResponse(r.text, content_type='application/json')
+    return response
+

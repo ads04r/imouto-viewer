@@ -42,4 +42,6 @@ urlpatterns = [
     path('add-people-to-event', views.eventpeople),
     path('upload_file', views.upload_file),
     path('health/<pageid>.html', views.health),
+    path('import', views.locman_import),
+    path('process', views.locman_process),
 ]
