@@ -56,6 +56,31 @@
 
 {% endif %}
 
+{% if data.graphs.count > 0 %}
+
+        <div class="row">
+
+{% for graph in data.graphs.all %}
+
+            <div class="col-xs-12 col-sm-6 col-md-4">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">{{ graph.key }}</h3>
+                    </div>
+                    <div class="box-body">
+
+			<canvas class="report-graph" data-type="{{ graph.type }}" data-data="{{ graph.data }}"/>
+
+                    </div>
+                </div>
+            </div>
+
+{% endfor %}
+
+        </div>
+
+{% endif %}
+
         <div class="row">
             <div class="col-xs-12 col-sm-12 col-md-12">
 

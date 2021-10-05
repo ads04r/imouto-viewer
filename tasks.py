@@ -65,6 +65,7 @@ def generate_report(title, dss, dse, type='year', style='default', moonshine_url
 
 	phone_calls_made = RemoteInteraction.objects.filter(type='phone-call', time__gte=dts, time__lte=dte, incoming=False).count()
 	phone_calls_recv = RemoteInteraction.objects.filter(type='phone-call', time__gte=dts, time__lte=dte, incoming=True).exclude(message__icontains='(missed call)').count()
+	phone_calls_miss = RemoteInteraction.objects.filter(type='phone-call', time__gte=dts, time__lte=dte, incoming=True, message__icontains='(missed call)').count()
 	if (phone_calls_made + phone_calls_recv) > 1:
 		prop = report.addproperty(key='Phone Calls', value=(phone_calls_made + phone_calls_recv), category='communication')
 		prop.icon = 'phone'
@@ -78,6 +79,11 @@ def generate_report(title, dss, dse, type='year', style='default', moonshine_url
 		prop.icon = 'comment-o'
 		prop.description = str(sms_sent) + ' sent / ' + str(sms_recv) + ' received'
 		prop.save()
+
+	callg1 = LifeReportGraph(key='Calls Received vs Calls Made', type='donut', description='', icon='', report=report, category='communication', data=json.dumps([phone_calls_recv, phone_calls_made]))
+	callg1.save()
+	callg2 = LifeReportGraph(key='Calls Taken vs Calls Missed', type='donut', description='', icon='', report=report, category='communication', data=json.dumps([phone_calls_recv, phone_calls_miss]))
+	callg2.save()
 
 	if len(moonshine_url) > 0:
 		report_url = moonshine_url.rstrip('/') + '/report/' + str(dts.year)
