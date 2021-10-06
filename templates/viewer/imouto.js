@@ -181,6 +181,21 @@ function reportsScreen()
         $("#report-save-form-button").on('click', function(){
             $("#report-edit").submit();
         });
+        $(".report-delete-form-button").on('click', function(){
+
+            var id = $(this).data('report-id');
+            var url = "reports/" + id + "/delete";
+
+            $("#report_box_" + id).remove();
+            $("#admin_report_delete_" + id).modal('hide');
+
+            $.ajax({
+                url: url,
+                dataType: 'json',
+                method: 'POST',
+                success: function(data) { }
+            });
+        });
     });
 }
 
@@ -628,7 +643,7 @@ function daySummary(date)
             success: function(data) {
 		var html = "";
 
-		if(data.wake_up_local){
+		if((data.wake_up_local) && (data.sleep)){
 			html = html + '<table class="table no-margin">';
 			html = html + "<tr>";
 			html = html + "<td>Wake up:</td>";

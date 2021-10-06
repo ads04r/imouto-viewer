@@ -348,6 +348,15 @@ def eventdelete(request, eid):
     return response
 
 @csrf_exempt
+def reportdelete(request, rid):
+    if request.method != 'POST':
+        raise Http404()
+    data = get_object_or_404(LifeReport, pk=rid)
+    ret = data.delete()
+    response = HttpResponse(json.dumps(ret), content_type='application/json')
+    return response
+
+@csrf_exempt
 def eventpeople(request):
     cache.delete('dashboard')
     if request.method != 'POST':

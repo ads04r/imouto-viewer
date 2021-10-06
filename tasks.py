@@ -71,6 +71,10 @@ def generate_report(title, dss, dse, type='year', style='default', moonshine_url
 		prop.icon = 'phone'
 		prop.description = str(phone_calls_made) + ' made / ' + str(phone_calls_recv) + ' received'
 		prop.save()
+		callg1 = LifeReportGraph(key='Calls Received vs Calls Made', type='donut', description='', icon='', report=report, category='communication', data=json.dumps([["Made", "Received"],[phone_calls_made, phone_calls_recv]]))
+		callg1.save()
+		callg2 = LifeReportGraph(key='Calls Taken vs Calls Missed', type='donut', description='', icon='', report=report, category='communication', data=json.dumps([["Answered", "Missed"],[phone_calls_recv, phone_calls_miss]]))
+		callg2.save()
 
 	sms_sent = RemoteInteraction.objects.filter(type='sms', time__gte=dts, time__lte=dte, incoming=False).count()
 	sms_recv = RemoteInteraction.objects.filter(type='sms', time__gte=dts, time__lte=dte, incoming=True).count()
@@ -79,11 +83,8 @@ def generate_report(title, dss, dse, type='year', style='default', moonshine_url
 		prop.icon = 'comment-o'
 		prop.description = str(sms_sent) + ' sent / ' + str(sms_recv) + ' received'
 		prop.save()
-
-	callg1 = LifeReportGraph(key='Calls Received vs Calls Made', type='donut', description='', icon='', report=report, category='communication', data=json.dumps([phone_calls_recv, phone_calls_made]))
-	callg1.save()
-	callg2 = LifeReportGraph(key='Calls Taken vs Calls Missed', type='donut', description='', icon='', report=report, category='communication', data=json.dumps([phone_calls_recv, phone_calls_miss]))
-	callg2.save()
+		smsg1 = LifeReportGraph(key='SMS Send vs SMS Received', type='donut', description='', icon='', report=report, category='communication', data=json.dumps([["Sent", "Received"],[sms_sent, sms_recv]]))
+		smsg1.save()
 
 	if len(moonshine_url) > 0:
 		report_url = moonshine_url.rstrip('/') + '/report/' + str(dts.year)
