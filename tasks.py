@@ -1,10 +1,52 @@
 from background_task import background
-from .models import *
+from .models import LifeReport, Event
 from .functions import *
 from .report_styles import *
 from xml.dom import minidom
 from tzlocal import get_localzone
+from viewer.eventcollage import make_collage
+from tempfile import NamedTemporaryFile
 import datetime, pytz, os
+
+def photo_collage_upload_location(instance, filename):
+	return 'reports/photo_collage_' + str(instance.pk) + '.jpg'
+
+@background(schedule=0, queue='reports')
+def generate_photo_collages(event_id):
+	""" A background task for generating photo collages"""
+
+	event = Event.objects.get(pk=event_id)
+	event.photo_collages.all().delete()
+	photos = []
+	tempphotos = []
+	for photo in Photo.objects.filter(time__gte=event.start_time, time__lte=event.end_time):
+		photo_path = str(photo.file.path)
+		if photo_path in photos:
+			continue
+		if len(photo.picasa_info()) == 0:
+			photos.append(photo_path)
+		else:
+			tf = NamedTemporaryFile(delete=False)
+			im = photo.image()
+			try:
+				im.save(tf, format='JPEG')
+				photos.append(tf.name)
+				tempphotos.append(tf.name)
+			except:
+				photos.append(photo_path)
+	im = Image.new(mode='RGB', size=(10, 10))
+	blob = BytesIO()
+	im.save(blob, 'JPEG')
+
+	collage = PhotoCollage(event=event)
+	collage.save()
+	collage.image.save(photo_collage_upload_location(collage, 'collage.jpg'), File(blob), save=False)
+	collage.save()
+	filename = make_collage(collage.image.path, photos, 2400, 3543)
+	for photo in tempphotos:
+		os.remove(photo)
+
+	return filename
 
 @background(schedule=0, queue='reports')
 def generate_report(title, dss, dse, type='year', style='default', moonshine_url='', pdf=True):
@@ -127,7 +169,10 @@ def generate_report(title, dss, dse, type='year', style='default', moonshine_url
 def generate_report_pdf(reportid, style):
 	""" A background task for creating a PDF report based on a LifeReport object """
 
-	report = LifeReport.objects.get(id=reportid)
+	try:
+		report = LifeReport.objects.get(id=reportid)
+	except:
+		return None # Entirely possible that the report has been deleted before this function gets triggered
 	year = report.events.order_by('start_time').first().end_time.year
 	im = report.wordcloud()
 	filename = os.path.join(settings.MEDIA_ROOT, 'reports', 'report_' + str(report.id) + '.pdf')

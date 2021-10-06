@@ -6,9 +6,7 @@ from PIL import Image
 from io import BytesIO
 from wordcloud import WordCloud, STOPWORDS
 from configparser import ConfigParser
-from viewer.eventcollage import make_collage
 from viewer.health import parse_sleep
-from tempfile import NamedTemporaryFile
 import datetime, pytz, json, markdown, re, os, urllib.request
 
 def user_thumbnail_upload_location(instance, filename):
@@ -507,7 +505,6 @@ class Event(models.Model):
     cached_health = models.TextField(default='', blank=True)
     elevation = models.TextField(default='', blank=True)
     speed = models.TextField(default='', blank=True)
-    collage = models.ImageField(blank=True, null=True, upload_to=event_collage_upload_location)
     def to_dict(self):
         ret = {'id': self.pk, 'caption': self.caption, 'start_time': self.start_time.strftime("%Y-%m-%d %H:%M:%S %z"), 'end_time': self.end_time.strftime("%Y-%m-%d %H:%M:%S %z"), 'people': [], 'photos': []}
         if self.description:
@@ -544,39 +541,6 @@ class Event(models.Model):
             return ''
         md = markdown.Markdown()
         return md.convert(self.description)
-    def photo_collage(self):
-        if self.collage:
-            if os.path.exists(self.collage.path):
-                im = Image.open(self.collage.path)
-                return im
-        photos = []
-        tempphotos = []
-        for photo in Photo.objects.filter(time__gte=self.start_time).filter(time__lte=self.end_time):
-            photo_path = str(photo.file.path)
-            if photo_path in photos:
-                continue
-            if len(photo.picasa_info()) == 0:
-                photos.append(photo_path)
-            else:
-                tf = NamedTemporaryFile(delete=False)
-                im = photo.image()
-                try:
-                    im.save(tf, format='JPEG')
-                    photos.append(tf.name)
-                    tempphotos.append(tf.name)
-                except:
-                    photos.append(photo_path)
-        im = Image.new(mode='RGB', size=(10, 10))
-        blob = BytesIO()
-        im.save(blob, 'JPEG')
-        self.collage.save(event_collage_upload_location, File(blob), save=False)
-        self.save()
-        filename = make_collage(self.collage.path, photos, 2480, 3543)
-        im = Image.open(self.collage.path)
-        for photo in tempphotos:
-            os.remove(photo)
-        return im
-
     def refresh(self):
         for photo in Photo.objects.filter(time__gte=self.start_time).filter(time__lte=self.end_time):
             for person in photo.people.all():
@@ -790,6 +754,17 @@ class Event(models.Model):
             models.Index(fields=['end_time']),
             models.Index(fields=['type'])
         ]
+
+class PhotoCollage(models.Model):
+    image = models.ImageField(blank=True, null=True) # , upload_to=photo_collage_upload_location)
+    event = models.ForeignKey(Event, null=True, blank=True, on_delete=models.SET_NULL, related_name='photo_collages')
+    photos = models.ManyToManyField(Photo, related_name='photo_collages')
+    def __str__(self):
+        return 'Photo collage ' + str(self.file.path)
+    class Meta:
+        app_label = 'viewer'
+        verbose_name = 'photo collage'
+        verbose_name_plural = 'photo collages'
 
 class PersonEvent(models.Model):
     person = models.ForeignKey(Person, on_delete=models.CASCADE)

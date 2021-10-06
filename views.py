@@ -6,6 +6,7 @@ from django.db.models import Q, F, DurationField, ExpressionWrapper
 from django.conf import settings
 from background_task.models import Task
 from haystack.query import SearchQuerySet
+from viewer.tasks import generate_photo_collages
 import datetime, pytz, dateutil.parser, json, tzlocal, requests
 
 from .tasks import *
@@ -332,10 +333,13 @@ def event(request, eid):
 
 def event_collage(request, eid):
     data = get_object_or_404(Event, id=eid)
-    im = data.photo_collage()
-    response = HttpResponse(content_type='image/jpeg')
-    im.save(response, "JPEG")
-    return response
+    imc = data.photo_collages.count()
+    if imc == 0:
+        generate_photo_collages(eid)
+        raise Http404()
+    else:
+        im = data.photo_collages.first().image
+        return HttpResponse(im, content_type='image/jpeg')
 
 @csrf_exempt
 def eventdelete(request, eid):
