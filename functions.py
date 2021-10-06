@@ -173,7 +173,8 @@ def get_sleep_information(dt):
             sleep_data = []
             for sleep_info in DataReading.objects.filter(type='sleep', start_time__gt=awake.start_time, end_time__lte=tomorrow).order_by('start_time'):
                 sleep_data.append(sleep_info)
-            data['sleep'] = parse_sleep(sleep_data)
+            if len(sleep_data) > 0:
+                data['sleep'] = parse_sleep(sleep_data)
         else:
             sleep_data = []
             for sleep_info in DataReading.objects.filter(type='sleep', start_time__gt=awake.start_time).order_by('start_time'):

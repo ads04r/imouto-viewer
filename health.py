@@ -53,5 +53,8 @@ def parse_sleep(sleep):
             inc_total = inc_total + new_value
         ret.append(item)
 
+    if time_from > time_to:
+        return {'data': ret}
+
     return {'start': time_from.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%Y-%m-%dT%H:%M:%S%z"), 'end': time_to.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%Y-%m-%dT%H:%M:%S%z"), 'start_friendly': time_from.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%I:%M%p").lower().lstrip('0'), 'end_friendly': time_to.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%I:%M%p").lower().lstrip('0'), 'data': ret}
 
