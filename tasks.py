@@ -6,7 +6,7 @@ from xml.dom import minidom
 from tzlocal import get_localzone
 from viewer.eventcollage import make_collage
 from tempfile import NamedTemporaryFile
-import datetime, pytz, os
+import datetime, pytz, os, random
 
 def photo_collage_upload_location(instance, filename):
 	return 'reports/photo_collage_' + str(instance.pk) + '.jpg'
@@ -16,6 +16,8 @@ def generate_photo_collages(event_id):
 	""" A background task for generating photo collages"""
 
 	event = Event.objects.get(pk=event_id)
+	if event.type == 'life_event':
+		return []
 	event.photo_collages.all().delete()
 	photos = []
 	tempphotos = []
@@ -34,19 +36,33 @@ def generate_photo_collages(event_id):
 				tempphotos.append(tf.name)
 			except:
 				photos.append(photo_path)
-	im = Image.new(mode='RGB', size=(10, 10))
-	blob = BytesIO()
-	im.save(blob, 'JPEG')
 
-	collage = PhotoCollage(event=event)
-	collage.save()
-	collage.image.save(photo_collage_upload_location(collage, 'collage.jpg'), File(blob), save=False)
-	collage.save()
-	filename = make_collage(collage.image.path, photos, 2400, 3543)
+	random.shuffle(photos)
+	max_photos = 30
+	ret = []
+
+	while len(photos) > 0:
+
+		im = Image.new(mode='RGB', size=(10, 10))
+		blob = BytesIO()
+		im.save(blob, 'JPEG')
+
+		collage = PhotoCollage(event=event)
+		collage.save()
+		collage.image.save(photo_collage_upload_location(collage, 'collage.jpg'), File(blob), save=False)
+		for photo in Photo.objects.filter(time__gte=event.start_time, time__lte=event.end_time):
+			collage.photos.add(photo)
+		collage.save()
+		thisphotos = photos[0:max_photos]
+		filename = make_collage(collage.image.path, thisphotos, 2400, 3543)
+		ret.append(filename)
+
+		photos = photos[max_photos:]
+
 	for photo in tempphotos:
 		os.remove(photo)
 
-	return filename
+	return ret
 
 @background(schedule=0, queue='reports')
 def generate_report(title, dss, dse, type='year', style='default', moonshine_url='', pdf=True):
@@ -70,6 +86,8 @@ def generate_report(title, dss, dse, type='year', style='default', moonshine_url
 			if e in subevents:
 				continue
 			subevents.append(e)
+			if e.photo_collages.count() == 0:
+				generate_photo_collages(e.pk)
 
 	for event in Event.objects.filter(start_time__lte=dte, end_time__gte=dts).order_by('start_time').exclude(type='life_event'):
 		if event.location:

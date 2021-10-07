@@ -124,9 +124,10 @@ class DefaultReport(FPDF):
 		for e in events:
 			if e.type == 'life_event':
 				continue
-			if e.collage:
-				if os.path.exists(e.collage.path):
-					collage_buffer.append(e.collage.path)
+			if e.photo_collages.count() > 0:
+				for collage in e.photo_collages.all():
+					if os.path.exists(collage.image.path):
+						collage_buffer.append(e.collage.image.path)
 			if ((e.type != 'event') & (e.description == '')):
 				continue
 			self.render_event(e)
