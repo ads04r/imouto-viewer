@@ -505,6 +505,7 @@ class Event(models.Model):
     cached_health = models.TextField(default='', blank=True)
     elevation = models.TextField(default='', blank=True)
     speed = models.TextField(default='', blank=True)
+    cover_photo = models.ForeignKey(Photo, null=True,  blank=True, on_delete=models.SET_NULL)
     def to_dict(self):
         ret = {'id': self.pk, 'caption': self.caption, 'start_time': self.start_time.strftime("%Y-%m-%d %H:%M:%S %z"), 'end_time': self.end_time.strftime("%Y-%m-%d %H:%M:%S %z"), 'people': [], 'photos': []}
         if self.description:

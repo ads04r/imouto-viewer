@@ -17,7 +17,20 @@
         <div class="row">
             <div class="col-xs-12 col-sm-6 col-md-8">
 
-{% if data.location.image %}
+{% if data.cover_photo %}
+
+                <div class="box box-primary box-event-banner" style="background-image: url(photo/{{ data.cover_photo.id }}.jpg);">
+                    <div class="box-body">
+                        <div class="bottom-cling">
+                            <h2>{{ data.location }}</h2>
+    {% if data.description != '' %}
+                            <p>{{ data.description_html|safe }}</p>
+    {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+{% elif data.location.image %}
 
                 <div class="box box-primary box-event-banner" style="background-image: url(places/{{ data.location.uid }}.jpg);">
                     <div class="box-body">
