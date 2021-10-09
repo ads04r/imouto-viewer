@@ -9,11 +9,36 @@ from tempfile import NamedTemporaryFile
 import datetime, pytz, os, random
 
 def photo_collage_upload_location(instance, filename):
-	return 'reports/photo_collage_' + str(instance.pk) + '.jpg'
+	return 'collages/photo_collage_' + str(instance.pk) + '.jpg'
+
+@background(schedule=0, queue='reports')
+def generate_life_event_photo_collages(event_id):
+	""" A task for ensuring all sub-events within a life event have photo collages generated. """
+
+	max_photos = 30
+	min_photos = 2
+
+	ret = []
+	event = Event.objects.get(pk=event_id)
+	if event.type != 'life_event':
+		return ret
+
+	for e in event.subevents():
+		photos = e.photos()
+		if len(photos) <= min_photos:
+			continue
+		if e.photo_collages.count() == 0:
+			generate_photo_collages(e.pk)
+			ret.append(e.pk)
+
+	return ret
 
 @background(schedule=0, queue='reports')
 def generate_photo_collages(event_id):
 	""" A background task for generating photo collages"""
+
+	max_photos = 30
+	min_photos = 2
 
 	event = Event.objects.get(pk=event_id)
 	if event.type == 'life_event':
@@ -21,7 +46,7 @@ def generate_photo_collages(event_id):
 	event.photo_collages.all().delete()
 	photos = []
 	tempphotos = []
-	for photo in Photo.objects.filter(time__gte=event.start_time, time__lte=event.end_time):
+	for photo in Photo.objects.filter(time__gte=event.start_time, time__lte=event.end_time).order_by("?")[0:(max_photos * 5)]:
 		photo_path = str(photo.file.path)
 		if photo_path in photos:
 			continue
@@ -37,8 +62,10 @@ def generate_photo_collages(event_id):
 			except:
 				photos.append(photo_path)
 
+	if len(photos) < min_photos:
+		return []
+
 	random.shuffle(photos)
-	max_photos = 30
 	ret = []
 
 	while len(photos) > 0:

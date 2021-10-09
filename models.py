@@ -22,7 +22,7 @@ def report_pdf_upload_location(instance, filename):
     return 'reports/report_' + str(instance.id) + '.pdf'
 
 def report_wordcloud_upload_location(instance, filename):
-    return 'reports/report_wc_' + str(instance.id) + '.png'
+    return 'wordclouds/report_wc_' + str(instance.id) + '.png'
 
 def event_collage_upload_location(instance, filename):
     return 'events/event_collage_' + str(instance.id) + '.jpg'

@@ -126,8 +126,10 @@ class DefaultReport(FPDF):
 				continue
 			if e.photo_collages.count() > 0:
 				for collage in e.photo_collages.all():
-					if os.path.exists(collage.image.path):
-						collage_buffer.append(e.collage.image.path)
+					if collage.image:
+						if collage.image.path:
+							if os.path.exists(collage.image.path):
+								collage_buffer.append(collage.image.path)
 			if ((e.type != 'event') & (e.description == '')):
 				continue
 			self.render_event(e)
@@ -163,12 +165,12 @@ class DefaultReport(FPDF):
 			self.set_xy(15.0, y + 20)
 
 		for e in event.subevents():
-			if not(e.collage):
-				if e.photos().count() >= 3:
-					e.photo_collage()
-			if e.collage:
-				if os.path.exists(e.collage.path):
-					collage_buffer.append(e.collage.path)
+			if e.photo_collages.count() > 0:
+				for collage in e.photo_collages.all():
+					if collage.image:
+						if collage.image.path:
+							if os.path.exists(collage.image.path):
+								collage_buffer.append(collage.image.path)
 			if ((e.type != 'event') & (e.description == '')):
 				continue
 			self.render_event(e)
