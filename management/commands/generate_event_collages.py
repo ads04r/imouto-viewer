@@ -31,5 +31,12 @@ class Command(BaseCommand):
 
 		shuffle(events)
 
-		for event in events[0:5]:
-			generate_photo_collages(event)
+		for eid in events[0:5]:
+			try:
+				event = Event.objects.get(id=eid)
+			except:
+				event = None
+			if event is None:
+				continue
+			print(event)
+			generate_photo_collages(event.id)
