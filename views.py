@@ -282,6 +282,49 @@ def day_sleep(request, ds):
     response = HttpResponse(json.dumps(data), content_type='application/json')
     return response
 
+def day_people(request, ds):
+
+    if len(ds) != 8:
+        raise Http404()
+    y = int(ds[0:4])
+    m = int(ds[4:6])
+    d = int(ds[6:])
+    dts = datetime.datetime(y, m, d, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
+    dte = datetime.datetime(y, m, d, 23, 59, 59, tzinfo=pytz.timezone(settings.TIME_ZONE))
+    data = []
+    people = []
+    for event in Event.objects.filter(end_time__gte=dts, start_time__lte=dte).exclude(type='life_event').order_by('start_time'):
+        for person in event.people.all():
+            if person.uid in people:
+                continue
+            people.append(person.uid)
+    for uid in people:
+        person = Person.objects.get(uid=uid)
+        info = person.to_dict()
+        info['image'] = False
+        if person.image:
+            info['image'] = True
+        data.append(info)
+
+    response = HttpResponse(json.dumps(data), content_type='application/json')
+    return response
+
+def day_events(request, ds):
+
+    if len(ds) != 8:
+        raise Http404()
+    y = int(ds[0:4])
+    m = int(ds[4:6])
+    d = int(ds[6:])
+    dts = datetime.datetime(y, m, d, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
+    dte = datetime.datetime(y, m, d, 23, 59, 59, tzinfo=pytz.timezone(settings.TIME_ZONE))
+    data = []
+    for event in Event.objects.filter(end_time__gte=dts, start_time__lte=dte).exclude(type='life_event').order_by('start_time'):
+        data.append(event.to_dict())
+
+    response = HttpResponse(json.dumps(data), content_type='application/json')
+    return response
+
 def event(request, eid):
 
     cache_key = 'event_' + str(eid)

@@ -622,10 +622,14 @@ function daySummary(date)
 			if(hsecs == 0)
 			{ hlabel = String(hmins) + " minutes"; }
 
+			hslabel = '' + String(hsecs);
+			if(hslabel.length < 2) { hslabel = '0' + hslabel; }
+			hslabel = String(hmins) + ':' + hslabel;
+
 			html = html + "<div class=\"table-responsive\">";
 			html = html + "<table class=\"table no-margin\">";
 			html = html + "<tr><td>Highest heart rate:</td><td>" + data.heart.day_max_rate + "</td></tr>";
-			html = html + "<tr><td>Time in optimal zone:</td><td>" + hlabel + "</td></tr>";
+			html = html + "<tr><td>Time in optimal zone:</td><td><span class=\"hidden-xs hidden-sm hidden-md\">" + hlabel + "</span><span class=\"hidden-lg hidden-xl\">" + hslabel + "</span></td></tr>";
 			html = html + "</table>";
 			html = html + "</div>";
 
@@ -708,6 +712,21 @@ function daySummary(date)
 		}
 
 		if(html != '') { $(".day-sleep-summary").html(html); }
+            }
+        });
+        $.ajax({
+            url: './days/' + date + '/people.json',
+            method: 'GET',
+            success: function(data) {
+
+		var html = "";
+		var i;
+
+		for(i = 0; i < data.length; i++){
+			if(data[i].image) { html = html + '<a href="#person_' + data[i].id + '"><img class="img-circle img-bordered-sm" width="50" height="50" src="people/' + data[i].id + '_thumb.jpg"></a>'; }
+		}
+
+		if(html != '') { $(".day-people-summary").html(html); }
             }
         });
 }
