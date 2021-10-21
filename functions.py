@@ -84,7 +84,7 @@ def get_heart_graph(dt):
 
     return(ret)
 
-def get_heart_information(dt):
+def get_heart_information(dt, graph=True):
 
     dts = datetime.datetime(dt.year, dt.month, dt.day, 4, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
     dte = dts + datetime.timedelta(days=1)
@@ -122,7 +122,8 @@ def get_heart_information(dt):
             zone[0] = zone[0] + (86400 - total_heart_time)
         data['heart']['day_max_rate'] = max
         data['heart']['heartzonetime'] = zone
-        data['heart']['graph'] = get_heart_graph(dt)
+        if graph:
+            data['heart']['graph'] = get_heart_graph(dt)
     else:
         del data['heart']
 
@@ -413,24 +414,22 @@ def generate_dashboard():
         stats['walk_distance'] = float(int(walk_dist * 100)) / 100
 
     heartdata = []
+
     if DataReading.objects.filter(type='heart-rate', start_time__gte=(last_record - datetime.timedelta(days=7))).count() > 0:
         duration = ExpressionWrapper(F('end_time') - F('start_time'), output_field=fields.BigIntegerField())
 
         for i in range(0, 7):
             dtbase = last_record - datetime.timedelta(days=(7 - i))
-            dt = datetime.datetime(dtbase.year, dtbase.month, dtbase.day, 0, 0, 0, tzinfo=dtbase.tzinfo)
-            hrl = 0
-            hrm = 0
-            obj = DataReading.objects.filter(type='heart-rate').filter(value__gte=user_heart_low).filter(start_time__gte=dt, end_time__lt=(dt + datetime.timedelta(days=1)))
-            for item in obj:
-                if item.value >= user_heart_high:
-                    hrm = hrm + ((item.end_time) - (item.start_time)).total_seconds()
-                else:
-                    hrl = hrl + ((item.end_time) - (item.start_time)).total_seconds()
+            info = get_heart_information(dtbase, False)
+            try:
+                zone = info['heart']['heartzonetime']
+            except:
+                zone = [0, 0, 0]
 
             item = {}
-            item['label'] = dt.strftime("%a")
-            item['value'] = [hrl, hrm]
+            item['label'] = dtbase.strftime("%a")
+            item['value'] = [zone[1], zone[2]]
+            item['link'] = "#day_" + dtbase.strftime("%Y%m%d")
             heartdata.append(item)
 
     sleepdata = []
