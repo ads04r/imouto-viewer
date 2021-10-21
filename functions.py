@@ -59,16 +59,20 @@ def get_heart_graph(dt):
         return ret
 
     dts = datetime.datetime(dt.year, dt.month, dt.day, 4, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
-    ret = []
+    dte = dts + datetime.timedelta(days=1)
     last = None
+    values = {}
+    for item in DataReading.objects.filter(start_time__lt=dte, end_time__gte=dts, type='heart-rate').order_by('start_time'):
+        dtx = int((item.start_time - dts).total_seconds() / 60)
+        if dtx in values:
+            if item.value < values[dtx]:
+                continue
+        values[dtx] = item.value
+    ret = []
     for x in range(0, 1440):
         dtx = dts + datetime.timedelta(minutes=x)
-        try:
-            yi = DataReading.objects.get(start_time__lte=dtx, end_time__gte=dtx, type='heart-rate')
-            y = yi.value
-        except:
-            y = 0
-        if y > 0:
+        if x in values:
+            y = values[x]
             if not(last is None):
                 td = (dtx - last).total_seconds()
                 if td > 600:
