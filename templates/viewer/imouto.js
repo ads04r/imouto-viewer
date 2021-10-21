@@ -1141,6 +1141,7 @@ function makeBarChart(barChartCanvas, data, legend)
     };
     var colours = ['#ABC1D8', '#3C8DBC', '#0073B7', '#005C92'];
     var sleep = 0; // bit of a bodge, we want to generate a custom tooltip if this is a sleep graph.
+    var links = [];
 
     for(j = 0; j < data[0].value.length; j++)
     {
@@ -1148,11 +1149,22 @@ function makeBarChart(barChartCanvas, data, legend)
             backgroundColor: colours[j],
             data: []
         })
-        
+
         for(i = 0; i < data.length; i++)
         {
             item = data[i];
-            if(j == 0) { barChartData.labels.push(item.label); }
+            if(j == 0)
+            {
+                barChartData.labels.push(item.label);
+                if(item.link)
+                {
+                    links.push(item.link);
+                }
+                else
+                {
+                    links.push('');
+                }
+            }
             barChartData.datasets[j].data.push(item.value[j]);
         }
     }
@@ -1174,7 +1186,27 @@ function makeBarChart(barChartCanvas, data, legend)
         },
         tooltips: {},
         responsive: true,
-        maintainAspectRatio: true
+        maintainAspectRatio: true,
+        onHover: function(e) {
+            var activeElement = barChart.getElementAtEvent(e);
+            var cursor = 'default';
+            if(activeElement.length >= 1)
+            {
+                var ix = activeElement[0]._index;
+                var link = links[ix];
+                if(link.length > 0) { cursor = 'pointer'; }
+            }
+            document.body.style.cursor = cursor;
+        },
+        onClick: function(e) {
+            var activeElement = barChart.getElementAtEvent(e);
+            if(activeElement.length >= 1)
+            {
+                var ix = activeElement[0]._index;
+                var link = links[ix];
+                if(link.length > 0) { window.location = link; }
+            }
+        }
     };
 
     if(legend.length == barChartData.datasets.length)
