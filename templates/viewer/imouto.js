@@ -1199,6 +1199,7 @@ function makeBarChart(barChartCanvas, data, legend)
             document.body.style.cursor = cursor;
         },
         onClick: function(e) {
+            document.body.style.cursor = 'default';
             var activeElement = barChart.getElementAtEvent(e);
             if(activeElement.length >= 1)
             {
