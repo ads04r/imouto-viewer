@@ -483,7 +483,7 @@ def generate_dashboard():
             dtp = person.birthday.replace(year=(dtd.year + 1))
         ttb = (dtp - dtd).days
         if ttb <= 14:
-            birthdays.append(person)
+            birthdays.append([person, dtp, (dtp.year - person.birthday.year)])
 
     ret = {'stats': stats, 'birthdays': birthdays, 'steps': json.dumps(stepdata), 'sleep': json.dumps(sleepdata), 'contact': contactdata, 'people': peopledata, 'places': locationdata, 'walks': walkdata}
     if len(heartdata) > 0:

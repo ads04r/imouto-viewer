@@ -122,13 +122,13 @@
                                 
                                 <li class="item">
                                     <div class="product-img">
-                                        {% if item.image %}<img src="people/{{ item.uid }}_thumb.jpg"/>{% endif %}
+                                        {% if item.0.image %}<img src="people/{{ item.0.uid }}_thumb.jpg"/>{% endif %}
                                     </div>
                                     <div class="product-info">
-                                        <a class="product-title personlink" href="#person_{{ item.uid }}">
-                                            {{ item.full_name }}</a>
+                                        <a class="product-title personlink" href="#person_{{ item.0.uid }}">
+                                            {{ item.0.full_name }}</a> <i>({{ item.2 }})</i>
                                         <span class="product-description">
-                                            {{ item.birthday|date:"l jS F" }}</span>
+                                            {{ item.1|date:"l jS F" }}</span>
                                     </div>
                                 </li>
                                 
