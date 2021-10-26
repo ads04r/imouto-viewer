@@ -601,7 +601,10 @@ class Event(models.Model):
             if h == 1:
                 return str(d) + ' days, 1 hour'
             return str(d) + ' days, ' + str(h) + ' hours'
-        return str(h) + ' hour, ' + str(m) + ' min'
+        if m > 0:
+            return str(h) + ' hour, ' + str(m) + ' min'
+        else:
+            return str(h) + ' hour'
     def photos(self):
         ret = Photo.objects.filter(time__gte=self.start_time).filter(time__lte=self.end_time)
         return ret.annotate(num_people=Count('people')).order_by('-num_people')
@@ -1011,4 +1014,3 @@ class EventTag(models.Model):
         app_label = 'viewer'
         verbose_name = 'event tag'
         verbose_name_plural = 'event tags'
-
