@@ -22,7 +22,11 @@
                 <div class="box box-primary box-event-banner" style="background-position: 50% 30%; background-image: url(photo/{{ data.cover_photo.id }}.jpg);">
                     <div class="box-body">
                         <div class="bottom-cling">
+    {% if data.location %}
                             <h2>{{ data.location }}</h2>
+    {% else %}
+                            <h2>{{ data.caption }}</h2>
+    {% endif %}
     {% if data.description != '' %}
                             <p>{{ data.description_html|safe }}</p>
     {% endif %}
