@@ -329,6 +329,18 @@
 
 {% endif %}
 
+{% if data.tags.count > 0 %}
+
+                <div style="margin-bottom: 20px;">
+
+                        {% for tag in data.tags.all %}<a href="#tag_{{ tag.id|safe }}"><span style="background-color: {{ tag.colour }};" class="badge">{{ tag.id }}</span></a> {% endfor %}
+
+                        <br>
+
+                </div>
+
+{% endif %}
+
 {% if data.subevents.count > 0 %}
 
                 <div class="box box-primary">
@@ -484,8 +496,16 @@
                                   <td>{{ field.errors }}</td>
                                   <td>{{ field.label_tag }}</td><td>{{ field }}</td>
                                 </tr>
+
 {% endif %}
 {% endfor %}
+
+                                <tr class="form-row">
+                                  <td></td>
+                                  <td><label for="id_workout_type">Tags:</label></td>
+                                  <td><input type="text" id="id_event_tags" class="form-control" name="event_tags" value="{{ data.tags_field|safe }}"/></td>
+                                </tr>
+
                               </table>
 
                         </div>

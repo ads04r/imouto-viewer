@@ -2,12 +2,13 @@ from django.db import models
 from django.core.files import File
 from django.db.models import Count
 from django.conf import settings
+from colorfield.fields import ColorField
 from PIL import Image
 from io import BytesIO
 from wordcloud import WordCloud, STOPWORDS
 from configparser import ConfigParser
 from viewer.health import parse_sleep
-import datetime, pytz, json, markdown, re, os, urllib.request
+import random, datetime, pytz, json, markdown, re, os, urllib.request
 
 def user_thumbnail_upload_location(instance, filename):
     return 'people/' + str(instance.pk) + '/' + filename
@@ -534,6 +535,19 @@ class Event(models.Model):
             if self.geo:
                 ret['geometry'] = json.loads(self.geo)
         return ret
+    def tag(self, tagname):
+        tagid = tagname.lower()
+        try:
+            tag = EventTag.objects.get(id=tagid)
+        except:
+            tag = EventTag(id=tagid, colour=('#' + str("%06x" % random.randint(0, 0xFFFFFF)).upper()))
+            tag.save()
+        self.tags.add(tag)
+    def tags_field(self):
+        ret = []
+        for tag in self.tags.all():
+            ret.append(tag.id)
+        return ', '.join(ret)
     def max_heart_rate(self):
         age = int(((self.start_time - datetime.datetime(settings.USER_DATE_OF_BIRTH.year, settings.USER_DATE_OF_BIRTH.month, settings.USER_DATE_OF_BIRTH.day, 0, 0, 0, tzinfo=self.start_time.tzinfo)).days) / 365.25)
         return (220 - age)
@@ -1008,6 +1022,7 @@ class EventTag(models.Model):
     events = models.ManyToManyField(Event, related_name='tags')
     id = models.SlugField(max_length=32, primary_key=True)
     comment = models.TextField(null=True, blank=True)
+    colour = ColorField(default='#777777')
     def __str__(self):
         return(self.id)
     class Meta:

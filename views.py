@@ -212,6 +212,13 @@ def events(request):
                 event.speed = getspeed(event.start_time, event.end_time, request.META['HTTP_HOST'])
                 event.cached_health = ''
             event.save()
+            event.tags.clear()
+            try:
+                tags = str(request.POST['event_tags']).split(',')
+            except:
+                tags = []
+            for tag in tags:
+                event.tag(tag.strip())
             event.workout_categories.clear()
             catid = str(request.POST['workout_type'])
             if len(catid) > 0:
@@ -232,6 +239,12 @@ def events(request):
     form = EventForm()
     context = {'type':'view', 'data':data, 'form':form, 'categories':EventWorkoutCategory.objects.all()}
     return render(request, 'viewer/calendar.html', context)
+
+def tag(request, id):
+
+    data = get_object_or_404(EventTag, id=id)
+    context = {'type':'tag', 'data':data}
+    return render(request, 'viewer/tag.html', context)
 
 def day(request, ds):
 
@@ -341,6 +354,13 @@ def event(request, eid):
                 event.geo = getgeoline(event.start_time, event.end_time, request.META['HTTP_HOST'])
                 event.elevation = getelevation(event.start_time, event.end_time, request.META['HTTP_HOST'])
                 event.speed = getspeed(event.start_time, event.end_time, request.META['HTTP_HOST'])
+            event.tags.clear()
+            try:
+                tags = str(request.POST['event_tags']).split(',')
+            except:
+                tags = []
+            for tag in tags:
+                event.tag(tag.strip())
             event.workout_categories.clear()
             try:
                 catid = str(request.POST['workout_type'])

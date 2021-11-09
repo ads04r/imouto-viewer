@@ -23,6 +23,7 @@ urlpatterns = [
     path('days/<ds>/sleep.json', views.day_sleep),
     path('days/<ds>/people.json', views.day_people),
     path('days/<ds>/events.json', views.day_events),
+    path('tags/<id>.html', views.tag),
     path('events.html', views.events),
     path('events.json', views.eventjson),
     path('events/<eid>.html', views.event),

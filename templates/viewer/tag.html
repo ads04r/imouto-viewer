@@ -1,0 +1,61 @@
+{% load static %}
+
+<section class="content-header">
+    <h1>
+        {{ data.id }}
+        <small>Tag</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="#tags">Tags</a></li>
+        <li>{{ data.id }}</li>
+    </ol>
+</section>
+
+<section class="content">
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-12 col-sm-6 col-md-8">
+
+
+                <div class="box box-primary" id="day_event_{{ event.pk }}">
+                    <div class="box-body">
+
+{% for event in data.events.all|dictsortreversed:"start_time" %}
+
+                        <div class="post">
+                            <div class="user-block">
+                                <span class="username no-image">{{ event }}<a class="pull-right btn btn-primary btn-xs eventlink" href="#event_{{ event.id }}">View Event</a></span>
+                                <span class="description no-image">{{ event.start_time }}{% if event.location %} | {{ event.location }}{% endif %}</span>
+                            </div>
+                            <div style="margin-bottom: 1em;">
+                            {% if event.description %}<p>{{ event.description }}</p>{% endif %}
+
+                            {% if event.tags.count > 0 %}
+
+                              {% for tag in event.tags.all %}
+                                <a href="#tag_{{ tag.id|safe }}"><span class="badge" style="background-color: {{ tag.colour }};">{{ tag.id }}</span></a>
+                              {% endfor %}
+                            {% endif %}
+                            </div>
+
+{% for person in event.people.all %}
+
+                            {% if person.image %}<a href="#person_{{ person.uid }}"><img class="img-circle img-bordered-sm" src="people/{{ person.uid }}_thumb.jpg" alt="{{ person }}" height="50" width="50"></a>{% endif %}
+
+{% endfor %}
+
+
+                        </div>
+
+{% endfor %}                        
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</section>
+

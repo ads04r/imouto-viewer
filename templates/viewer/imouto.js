@@ -1298,6 +1298,14 @@ function eventPeopleDeleteName(id)
 	return false;
 }
 
+function tagScreen(id)
+{
+    $(".content-wrapper").load("./tags/" + id + ".html", function(response, status, xhr)
+    {
+        if(status == 'error') { errorPage(xhr); return false; }
+    });
+}
+
 function eventScreen(id)
 {
     $(".content-wrapper").load("./events/" + id + ".html", function(response, status, xhr)
@@ -1424,6 +1432,7 @@ function pageRefresh()
     if(page == 'places') { placesScreen(); return true; }
                                         
     if(page.startsWith('day_')) { dayScreen(page.replace('day_', '')); }
+    if(page.startsWith('tag_')) { tagScreen(page.replace('tag_', '')); }
     if(page.startsWith('event_')) { eventScreen(page.replace('event_', '')); }
     if(page.startsWith('place_')) { placeScreen(page.replace('place_', '')); }
     if(page.startsWith('person_')) { personScreen(page.replace('person_', '')); }
