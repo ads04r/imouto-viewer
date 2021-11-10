@@ -7,4 +7,5 @@ admin.site.register(Location)
 admin.site.register(Photo)
 admin.site.register(DataReading)
 admin.site.register(RemoteInteraction)
+admin.site.register(EventTag)
 

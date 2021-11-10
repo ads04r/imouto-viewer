@@ -75,6 +75,17 @@
         </div>
         <div class="row">
             <div class="col-xs-12 col-sm-6">
+{% if data.tags %}
+                <div class="box box-primary">
+                    <div class="box-body">
+
+{% for tag in data.tags %}
+                        <a href="#tag_{{ tag.id|safe }}"><span class="badge" style="background-color: {{ tag.colour }};">{{ tag.id|safe }}</span></a>
+{% endfor %}
+
+                    </div>
+                </div>
+{% endif %}
                 <div class="box box-primary">
                     <div class="box-header with-border">
                         <h3 class="box-title">Steps</h3>

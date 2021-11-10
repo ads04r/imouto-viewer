@@ -338,6 +338,13 @@ def generate_dashboard():
 
     last_event = Event.objects.all().order_by('-start_time')[0].start_time
 
+    tags = []
+    for tag in EventTag.objects.filter(events__end_time__gte=(last_event - datetime.timedelta(days=7)), events__start_time__lte=last_event).distinct():
+        id = str(tag.id)
+        if id == '':
+            continue
+        tags.append({'id': id, 'colour': str(tag.colour)})
+
     locationdata = []
     for event in Event.objects.filter(start_time__gte=(last_event - datetime.timedelta(days=7))):
         location = event.location
@@ -486,6 +493,8 @@ def generate_dashboard():
             birthdays.append([person, dtp, (dtp.year - person.birthday.year)])
 
     ret = {'stats': stats, 'birthdays': birthdays, 'steps': json.dumps(stepdata), 'sleep': json.dumps(sleepdata), 'contact': contactdata, 'people': peopledata, 'places': locationdata, 'walks': walkdata}
+    if len(tags) > 0:
+        ret['tags'] = tags
     if len(heartdata) > 0:
         ret['heart'] = json.dumps(heartdata)
     return ret
