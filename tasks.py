@@ -34,6 +34,21 @@ def generate_life_event_photo_collages(event_id):
 	return ret
 
 @background(schedule=0, queue='reports')
+def generate_staticmap(event_id):
+	""" A background task for generating a static map for an event"""
+	event = Event.objects.get(pk=event_id)
+	if event.cached_staticmap:
+		return False # There's already a map.
+	if not(event.geo):
+		return False # There's no geometry, so we can't generate a map.
+
+	try:
+		im = event.staticmap()
+	except:
+		return False # It threw an exception. Ignore it.
+	return True
+
+@background(schedule=0, queue='reports')
 def generate_photo_collages(event_id):
 	""" A background task for generating photo collages"""
 
@@ -108,25 +123,68 @@ def generate_report(title, dss, dse, type='year', style='default', moonshine_url
 		if event.location:
 			report.locations.add(event.location)
 		for person in event.people.all():
-			report.people.add(person)
+                        try:
+                            rp = ReportPeople.objects.get(report=report, person=person)
+                        except:
+                            rp = ReportPeople(report=report, person=person, first_encounter=event.start_time, day_list='[]')
+                            rp.save()
+                        day_list = json.loads(rp.day_list)
+                        ds = event.start_time.strftime('%Y-%m-%d')
+                        changed = False
+                        if not(ds in day_list):
+                            day_list.append(ds)
+                            rp.day_list = json.dumps(day_list)
+                            changed = True
+                        if event.start_time < rp.first_encounter:
+                            rp.first_encounter = event.start_time
+                            changed = True
+                        if changed:
+                            rp.save()
 		for e in event.subevents():
 			if e in subevents:
 				continue
 			subevents.append(e)
 			if e.photo_collages.count() == 0:
 				generate_photo_collages(e.pk)
+			if not(e.cached_staticmap):
+				if e.geo:
+					generate_staticmap(e.pk)
 
 	for event in Event.objects.filter(start_time__lte=dte, end_time__gte=dts).order_by('start_time').exclude(type='life_event'):
 		if event.location:
 			report.locations.add(event.location)
 		for person in event.people.all():
-			report.people.add(person)
+                        try:
+                            rp = ReportPeople.objects.get(report=report, person=person)
+                        except:
+                            rp = ReportPeople(report=report, person=person, first_encounter=event.start_time, day_list='[]')
+                            rp.save()
+                        day_list = json.loads(rp.day_list)
+                        ds = event.start_time.strftime('%Y-%m-%d')
+                        changed = False
+                        if not(ds in day_list):
+                            day_list.append(ds)
+                            rp.day_list = json.dumps(day_list)
+                            changed = True
+                        if event.start_time < rp.first_encounter:
+                            rp.first_encounter = event.start_time
+                            changed = True
+                        if changed:
+                            rp.save()
 		if event in subevents:
 			continue
-		if event.description != '':
-			report.events.add(event)
 		if event.photos().count() > 5:
 			report.events.add(event)
+			if event.photo_collages.count() == 0:
+				generate_photo_collages(event.pk)
+		if not(event.cached_staticmap):
+			if event.geo:
+				generate_staticmap(event.pk)
+		if event.description is None:
+			continue
+		if event.description == '':
+			continue
+		report.events.add(event)
 
 	photos = Photo.objects.filter(time__gte=dts, time__lte=dte).count()
 	photos_gps = Photo.objects.filter(time__gte=dts, time__lte=dte).exclude(lat=None).exclude(lon=None).count()
@@ -218,38 +276,99 @@ def generate_report_pdf(reportid, style):
 		report = LifeReport.objects.get(id=reportid)
 	except:
 		return None # Entirely possible that the report has been deleted before this function gets triggered
-	year = report.events.order_by('start_time').first().end_time.year
-	im = report.wordcloud()
+
+	if report is None:
+		return None
+
 	filename = os.path.join(settings.MEDIA_ROOT, 'reports', 'report_' + str(report.id) + '.pdf')
+	pages = report.pages()
+
 	pdf = DefaultReport()
-	pdf.add_title_page(str(report.year()), report.label)
-	if(report.cached_wordcloud):
-		pdf.add_image_page(str(report.cached_wordcloud.file))
-	categories = []
-	for prop in report.properties.all():
-		if prop.category in categories:
-			continue
-		categories.append(prop.category)
-	if report.people.count() > 0:
-		pdf.add_people_page(report.people, report.properties.filter(category='people'))
-	for category in categories:
-		if category == 'people':
-			continue
-		pdf.add_stats_category(category.capitalize(), report.properties.filter(category=category))
-	for event in report.events.filter(type='life_event').order_by('start_time'):
-		pdf.add_life_event_page(event)
-	for i in range(1, 13):
-		mts = datetime.datetime(year, i, 1, 0, 0, 0, tzinfo=pytz.UTC)
-		if i == 12:
-			mte = datetime.datetime(year + 1, 1, 1, 0, 0, 0, tzinfo=pytz.UTC)
-		else:
-			mte = datetime.datetime(year, i + 1, 1, 0, 0, 0, tzinfo=pytz.UTC)
-		mte = mte - datetime.timedelta(seconds=1)
-		events = report.events.filter(end_time__gte=mts, start_time__lte=mte).order_by('start_time')
-		pdf.add_month_page(i, events)
+	for page in pages:
+		if page['type'] == 'title':
+			title = ''
+			subtitle = ''
+			if 'title' in page:
+				title = page['title']
+			if 'subtitle' in page:
+				subtitle = page['subtitle']
+			pdf.add_title_page(title, subtitle)
+		if page['type'] == 'image':
+			file = page['image']
+			ext = file.split('.')[-1]
+			if os.path.exists(file):
+				pdf.add_image_page(page['image'], format=ext)
+		if page['type'] == 'items':
+			pdf.add_row_items_page(page['data'])
+		if page['type'] == 'feature':
+			image = ''
+			if 'image' in page:
+				image = page['image']
+			pdf.add_feature_page(page['title'], page['description'], image)
+		if page['type'] == 'stats':
+			pdf.add_stats_page(page['title'], page['data'])
+
 	pdf.output(filename, 'F')
 	report.pdf = filename
 	report.save()
 
 	return report
 
+def generate_test_pdf():
+
+	filename = os.path.join(settings.MEDIA_ROOT, 'reports', 'test_report.pdf')
+	pages = []
+
+	data = []
+	data.append({"category": "photos", "key": "Photos Taken", "value": "2893", "icon": "camera", "description": "Some photos"})
+	data.append({"category": "photos", "key": "Photos With GPS", "value": "1522", "icon": "map-marker", "description": "Some photos"})
+	data.append({"category": "photos", "key": "Photos of People", "value": "426", "icon": "user", "description": "Some photos"})
+	pages.append({"type": "stats", "title": "Photos", "data": data})
+
+	data = []
+	data.append({"category": "photos", "key": "Photos Taken", "value": "2893", "icon": "camera", "description": "Some photos"})
+	data.append({"category": "photos", "key": "Photos With GPS", "value": "1522", "icon": "map-marker", "description": "Some photos"})
+	data.append({"category": "photos", "key": "Photos of People", "value": "426", "icon": "user", "description": "Some photos"})
+	data.append({"category": "photos", "key": "Photos Taken", "value": "2893", "icon": "camera", "description": "Some photos"})
+	data.append({"category": "photos", "key": "Photos With GPS", "value": "1522", "icon": "map-marker", "description": "Some photos"})
+	data.append({"category": "photos", "key": "Photos of People", "value": "426", "icon": "user", "description": "Some photos"})
+	data.append({"category": "photos", "key": "Photos Taken", "value": "2893", "icon": "camera", "description": "Some photos"})
+	data.append({"category": "photos", "key": "Photos With GPS", "value": "1522", "icon": "map-marker", "description": "Some photos"})
+	pages.append({"type": "stats", "title": "Photos", "data": data})
+
+	pages.append({"type": "feature", "title": "Some Ham", "description": "This is a test of a great big bushy beard. Ma ma ma na na ha hoo hee.", "image": "/home/pi/imouto/media/collages/photo_collage_269.jpg"})
+
+	data = []
+	data.append({"description": "The pre-journey waste-of-time known as an airport. During this time, we had a very expensive meal, and I fixed my watch strap with superglue, getting the glue all over my fingers. Which would set the stage for what was to come.", "title": "Heathrow Airport, Terminal 5", "date": "Wed 26 Feb 11:01AM"})
+	data.append({"date": "Wed 26 Feb 01:45PM", "title": "Flight to Japan", "image": "/home/pi/imouto/media/events/event_staticmap_37037.png", "description": ""})
+	data.append({"description": "We got to Narita Airport. The security was really strict, everyone was wearing a mask, and there were many heat sensors around, trying to detect people with a high temperature in case they were carrying the coronavirus that had been making headlines around the world.\r\n\r\nAs I approached the security check, I was asked to put my fingers into the fingerprint scanner. But because they were covered in superglue, thanks to my watch strap fixing earlier, the scanner wouldn't read my fingers. A confused-looking security official asked that I try again, and then again on a different machine. After several unsuccessful tries they scrutinised my passport, made completely sure I'd not been anywhere near China, took my temperature, and then just let me through anyway.", "date": "Thu 27 Feb 01:35AM", "title": "Narita Airport"})
+	pages.append({"type": "items", "data": data})
+
+	pdf = DefaultReport()
+	for page in pages:
+		if page['type'] == 'title':
+			title = ''
+			subtitle = ''
+			if 'title' in page:
+				title = page['title']
+			if 'subtitle' in page:
+				subtitle = page['subtitle']
+			pdf.add_title_page(title, subtitle)
+		if page['type'] == 'image':
+			file = page['image']
+			ext = file.split('.')[-1]
+			if os.path.exists(file):
+				pdf.add_image_page(page['image'], format=ext)
+		if page['type'] == 'items':
+			pdf.add_row_items_page(page['data'])
+		if page['type'] == 'feature':
+			image = ''
+			if 'image' in page:
+				image = page['image']
+			pdf.add_feature_page(page['title'], page['description'], image)
+		if page['type'] == 'stats':
+			pdf.add_stats_page(page['title'], page['data'])
+
+	pdf.output(filename, 'F')
+
+	return filename

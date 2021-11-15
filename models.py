@@ -8,6 +8,7 @@ from io import BytesIO
 from wordcloud import WordCloud, STOPWORDS
 from configparser import ConfigParser
 from viewer.health import parse_sleep
+from staticmap import StaticMap, Line
 import random, datetime, pytz, json, markdown, re, os, urllib.request
 
 def user_thumbnail_upload_location(instance, filename):
@@ -27,6 +28,9 @@ def report_wordcloud_upload_location(instance, filename):
 
 def event_collage_upload_location(instance, filename):
     return 'events/event_collage_' + str(instance.id) + '.jpg'
+
+def event_staticmap_upload_location(instance, filename):
+    return 'events/event_staticmap_' + str(instance.id) + '.png'
 
 class WeatherLocation(models.Model):
     id = models.SlugField(max_length=32, primary_key=True)
@@ -200,6 +204,7 @@ class Person(models.Model):
     family_name = models.CharField(null=True, blank=True, max_length=128)
     nickname = models.CharField(null=True, blank=True, max_length=128)
     birthday = models.DateField(null=True, blank=True)
+    wikipedia = models.URLField(blank=True, null=True)
     image = models.ImageField(blank=True, null=True, upload_to=user_thumbnail_upload_location)
     def to_dict(self):
         ret = {'id': self.uid, 'name': self.name(), 'full_name': self.full_name()}
@@ -504,6 +509,7 @@ class Event(models.Model):
     location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name="events", null=True, blank=True)
     geo = models.TextField(default='', blank=True)
     cached_health = models.TextField(default='', blank=True)
+    cached_staticmap = models.ImageField(blank=True, null=True, upload_to=event_staticmap_upload_location)
     elevation = models.TextField(default='', blank=True)
     speed = models.TextField(default='', blank=True)
     cover_photo = models.ForeignKey(Photo, null=True,  blank=True, on_delete=models.SET_NULL)
@@ -535,6 +541,36 @@ class Event(models.Model):
             if self.geo:
                 ret['geometry'] = json.loads(self.geo)
         return ret
+    def staticmap(self):
+        if self.cached_staticmap:
+            im = Image.open(self.cached_staticmap.path)
+            return im
+        if self.geo:
+            geo = json.loads(self.geo)['geometry']
+        else:
+            geo = {'type': 'None'}
+        if geo['type'] != 'MultiLineString':
+            im = Image.new('RGB', (1024, 1024))
+            blob = BytesIO()
+            im.save(blob, format='png')
+            return blob.getvalue()
+        m = StaticMap(1024, 1024, url_template=settings.MAP_TILES)
+        for polyline in geo['coordinates']:
+            c = len(polyline)
+            for i in range(1, c):
+                coordinates = [polyline[i - 1], polyline[i]]
+                line_shadow = Line(coordinates, '#FFFFFF', 10)
+                m.add_line(line_shadow)
+            for i in range(1, c):
+                coordinates = [polyline[i - 1], polyline[i]]
+                line = Line(coordinates, '#0000FF', 7)
+                m.add_line(line)
+        im = m.render()
+        blob = BytesIO()
+        im.save(blob, 'PNG')
+        self.cached_staticmap.save(event_staticmap_upload_location, File(blob), save=False)
+        self.save()
+        return im
     def tag(self, tagname):
         tagid = tagname.lower()
         try:
@@ -822,8 +858,13 @@ class LifeReport(models.Model):
         if self.cached_dict:
             return json.loads(self.cached_dict)
         ret = {'id': self.pk, 'label': self.label, 'year': self.year(), 'stats': [], 'created_date': self.created_date.strftime("%Y-%m-%d %H:%M:%S %z"), 'modified_date': self.modified_date.strftime("%Y-%m-%d %H:%M:%S %z"), 'style': self.style, 'type': self.type, 'people': [], 'places': [], 'life_events': [], 'events': []}
-        for person in self.people.all():
-            ret['people'].append(person.to_dict())
+        for personlink in ReportPeople.objects.filter(report=self):
+            person = personlink.person
+            persondata = person.to_dict()
+            if personlink.first_encounter:
+                persondata['first_encounter'] = personlink.first_encounter.strftime("%Y-%m-%d %H:%M:%S %z")
+            persondata['encounter_days'] = json.loads(personlink.day_list)
+            ret['people'].append(persondata)
         for place in self.locations.all():
             ret['places'].append(place.to_dict())
         for event in self.events.filter(type='life_event').order_by('start_time'):
@@ -834,6 +875,98 @@ class LifeReport(models.Model):
             ret['stats'].append(prop.to_dict())
         self.cached_dict = json.dumps(ret)
         self.save()
+        return ret
+    def pages(self):
+        ret = []
+        done = []
+        year = self.year()
+        months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+        title = str(year)
+        subtitle = str(self.label)
+        if title == subtitle:
+            subtitle = ''
+        ret.append({'type': 'title', 'image': None, 'title': title, 'subtitle': subtitle})
+        if self.cached_wordcloud:
+            ret.append({'type': 'image', 'image': self.cached_wordcloud.path})
+        for category in list(LifeReportProperties.objects.filter(report=self).values_list('category', flat=True).distinct()):
+            item = {'type': 'stats', 'title': category, 'data': []}
+            for prop in LifeReportProperties.objects.filter(report=self, category=category):
+                item['data'].append(prop.to_dict())
+            ret.append(item)
+        for i in range(0, 12):
+            ret.append({'type': 'title', 'image': None, 'title': months[i]})
+            page_count = len(ret)
+            dts = datetime.datetime(year, (i + 1), 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
+            if i < 11:
+	            dte = datetime.datetime(year, (i + 2), 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE)) - datetime.timedelta(seconds=1)
+            else:
+	            dte = datetime.datetime((year + 1), 1, 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE)) - datetime.timedelta(seconds=1)
+            events = self.events.filter(end_time__gte=dts, start_time__lte=dte)
+            for event in events.filter(type='life_event'):
+                if event.id in done:
+                    continue
+                done.append(event.id)
+                item = {'type': 'feature', 'title': event.caption, 'description': event.description}
+                if event.cover_photo:
+                    item['image'] = event.cover_photo.file.path
+                ret.append(item)
+                for pc in event.photo_collages.all():
+                    ret.append({'type': 'image', 'image': pc.image.path})
+                subevents = []
+                collages = []
+                for subevent in event.subevents():
+                    if subevent.id in done:
+                        continue
+                    done.append(subevent.id)
+                    for pc in subevent.photo_collages.all():
+                        collages.append(pc.image.path)
+                    if ((subevent.description) or (subevent.cover_photo) or (subevent.cached_staticmap)):
+                        item = {'title': subevent.caption, 'description': subevent.description, 'date': subevent.start_time.strftime("%a %-d %b %I:%M%p")}
+                        if subevent.cover_photo:
+                            item['image'] = subevent.cover_photo.file.path
+                        elif subevent.cached_staticmap:
+                            item['image'] = subevent.cached_staticmap.path
+                        subevents.append(item)
+                    if len(subevents) >= 3:
+                        ret.append({'type': 'items', 'data': subevents})
+                        subevents = []
+                        for pc in collages:
+                            ret.append({'type': 'image', 'image': pc})
+                        collages = []
+                if len(subevents) > 0:
+                    ret.append({'type': 'items', 'data': subevents})
+                for pc in collages:
+                    ret.append({'type': 'image', 'image': pc})
+            subevents = []
+            collages = []
+            for subevent in events.exclude(type='life_event'):
+                if subevent.id in done:
+                    continue
+                done.append(subevent.id)
+                for pc in subevent.photo_collages.all():
+                    collages.append(pc.image.path)
+                if ((subevent.description) or (subevent.cover_photo) or (subevent.cached_staticmap)):
+                    item = {'title': subevent.caption, 'description': subevent.description, 'date': subevent.start_time.strftime("%a %-d %b %I:%M%p")}
+                    if subevent.cover_photo:
+                        item['image'] = subevent.cover_photo.file.path
+                    elif subevent.cached_staticmap:
+                        item['image'] = subevent.cached_staticmap.path
+                    subevents.append(item)
+                if len(subevents) >= 3:
+                    ret.append({'type': 'items', 'data': subevents})
+                    subevents = []
+                    for pc in collages:
+                        ret.append({'type': 'image', 'image': pc})
+                    collages = []
+            if len(subevents) > 0:
+                ret.append({'type': 'items', 'data': subevents})
+            for pc in collages:
+                ret.append({'type': 'image', 'image': pc})
+            if len(ret) == page_count:
+                # No new pages were added this month, we may as well get rid of the month title page
+                if page_count >= 1:
+                    page_count = page_count - 1
+                    ret = ret[0:page_count]
         return ret
     def words(self):
         text = ''
@@ -972,6 +1105,8 @@ class LifeReportGraph(models.Model):
 class ReportPeople(models.Model):
     report = models.ForeignKey(LifeReport, on_delete=models.CASCADE)
     person = models.ForeignKey(Person, on_delete=models.CASCADE, related_name="reports")
+    first_encounter = models.DateTimeField(null=True)
+    day_list = models.TextField(default='[]')
     comment = models.TextField(null=True, blank=True)
     def __str__(self):
         return str(self.person) + ' in ' + str(self.report)

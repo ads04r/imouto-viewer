@@ -82,7 +82,7 @@
                 <form id="report-edit" action="reports.html" method="POST" enctype="multipart/form-data">{% csrf_token %}
                               <input type="hidden" id="new-report-generate-year" name="year" value=""/>
 {% if settings.moonshine_url %}
-                              <input type="hidden" id="new-report-moonshine-url" name="moonshine-url" value="{{ settings.moonshine_url }}"/>
+                              <input type="hidden" id="new-report-moonshine-url" name="moonshine_url" value="{{ settings.moonshine_url }}"/>
 {% endif %}
 
                               <table class="table table-hover">
