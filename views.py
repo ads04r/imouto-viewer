@@ -394,6 +394,16 @@ def event(request, eid):
         template = 'viewer/lifeevent.html'
     return render(request, template, context)
 
+def event_staticmap(request, eid):
+    data = get_object_or_404(Event, id=eid)
+    if data.geo:
+        im = data.staticmap()
+        blob = BytesIO()
+        im.save(blob, 'PNG')
+        return HttpResponse(blob.getvalue(), content_type='image/png')
+    else:
+        raise Http404()
+
 def event_collage(request, eid):
     data = get_object_or_404(Event, id=eid)
     imc = data.photo_collages.count()
@@ -639,7 +649,9 @@ def reports_json(request):
 
 def report_json(request, id):
     data = get_object_or_404(LifeReport, id=id)
-    response = HttpResponse(json.dumps(data.to_dict()), content_type='application/json')
+    ret = data.to_dict()
+    ret['pages'] = data.pages()
+    response = HttpResponse(json.dumps(ret), content_type='application/json')
     return response
 
 def person_json(request, uid):
