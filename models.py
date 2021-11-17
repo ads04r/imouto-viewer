@@ -879,6 +879,7 @@ class LifeReport(models.Model):
     def pages(self):
         ret = []
         done = []
+        photos_done = []
         year = self.year()
         months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
         title = str(year)
@@ -911,7 +912,14 @@ class LifeReport(models.Model):
                     item['image'] = event.cover_photo.file.path
                 ret.append(item)
                 for pc in event.photo_collages.all():
-                    ret.append({'type': 'image', 'image': pc.image.path})
+                    new_photos = False
+                    for photo in pc.photos.all():
+                        if photo.id in photos_done:
+                            continue
+                        photos_done.append(photo.id)
+                        new_photos = True
+                    if new_photos:
+                        ret.append({'type': 'image', 'image': pc.image.path})
                 subevents = []
                 collages = []
                 for subevent in event.subevents():
@@ -919,7 +927,14 @@ class LifeReport(models.Model):
                         continue
                     done.append(subevent.id)
                     for pc in subevent.photo_collages.all():
-                        collages.append(pc.image.path)
+                        new_photos = False
+                        for photo in pc.photos.all():
+                            if photo.id in photos_done:
+                                continue
+                            photos_done.append(photo.id)
+                            new_photos = True
+                        if new_photos:
+                            collages.append(pc.image.path)
                     if ((subevent.description) or (subevent.cover_photo) or (subevent.cached_staticmap)):
                         item = {'title': subevent.caption, 'description': subevent.description, 'date': subevent.start_time.strftime("%a %-d %b %I:%M%p")}
                         if subevent.cover_photo:
@@ -944,7 +959,14 @@ class LifeReport(models.Model):
                     continue
                 done.append(subevent.id)
                 for pc in subevent.photo_collages.all():
-                    collages.append(pc.image.path)
+                    new_photos = False
+                    for photo in pc.photos.all():
+                        if photo.id in photos_done:
+                            continue
+                        photos_done.append(photo.id)
+                        new_photos = True
+                    if new_photos:
+                        collages.append(pc.image.path)
                 if ((subevent.description) or (subevent.cover_photo) or (subevent.cached_staticmap)):
                     item = {'title': subevent.caption, 'description': subevent.description, 'date': subevent.start_time.strftime("%a %-d %b %I:%M%p")}
                     if subevent.cover_photo:
