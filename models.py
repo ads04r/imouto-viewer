@@ -599,7 +599,7 @@ class Event(models.Model):
         self.cached_health = ''
         self.save()
     def subevents(self):
-        return Event.objects.filter(start_time__gte=self.start_time).filter(end_time__lte=self.end_time).exclude(id=self.id).order_by('start_time')
+        return Event.objects.filter(start_time__gte=self.start_time, end_time__lte=self.end_time).exclude(id=self.id).order_by('start_time')
     def refresh_geo(self):
         id = self.start_time.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S") + self.end_time.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S")
         url = settings.LOCATION_MANAGER_URL + "/route/" + id + "?format=json"

@@ -26,6 +26,13 @@ def __display_timeline_event(event):
                             return False
     return True
 
+def bubble_event_people():
+
+    for event in Event.objects.filter(type='life_event'):
+        for e in event.subevents():
+            for person in e.people.all():
+                event.people.add(person)
+
 def get_timeline_events(dt):
 
     dtq = dt
