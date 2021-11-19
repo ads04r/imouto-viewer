@@ -151,8 +151,15 @@ def get_sleep_history(days):
         tte = item.end_time.astimezone(pytz.timezone(settings.TIME_ZONE))
         wake_secs = (tts - tts.replace(hour=0, minute=0, second=0)).total_seconds()
         sleep_secs = (tte - tts).total_seconds() + wake_secs
-        ret[0].append(wake_secs)
-        ret[1].append(sleep_secs)
+        if len(ret[0]) == 0:
+            ret[0].append(wake_secs)
+            ret[1].append(sleep_secs)
+            continue
+        if (ret[1][-1] + 3600) < wake_secs:
+            ret[1][-1] = sleep_secs
+        else:
+            ret[0].append(wake_secs)
+            ret[1].append(sleep_secs)
     return ret
 
 def get_sleep_information(dt):
