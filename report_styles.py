@@ -1,5 +1,7 @@
 from fpdf import FPDF
-import os
+from tempfile import NamedTemporaryFile
+from .models import Photo
+import os, urllib.request
 
 class DefaultReport(FPDF):
 
@@ -8,6 +10,7 @@ class DefaultReport(FPDF):
 		self.set_author('Imouto')
 		self.set_creator('Imouto')
 		self.set_font('Times', '', 14)
+		self.__temp = []
 
 	def __new_page(self):
 		try:
@@ -16,6 +19,33 @@ class DefaultReport(FPDF):
 			y = 200
 		if y >= 11:
 			self.add_page()
+
+	def __cache_image(self, image):
+		if os.path.exists(image):
+			return image
+		if '://' in str(image): # ie it's a URL
+			parse = str(image).split('.')
+			ext = '.' + parse[-1:]
+			if len(ext) == 1:
+				ext = None
+			if len(ext) > 5:
+				ext = None
+			tf = NamedTemporaryFile(mode='wb', suffix=ext)
+			with urllib.request.urlopen(image) as rc:
+				tf.write(rc.read())
+			self.__temp.append(tf)
+			return tf.name
+		try:
+			photo = Photo.objects.get(id=image)
+		except:
+			photo = None
+		if photo is None:
+			return ''
+		tf = NamedTemporaryFile(mode='wb', suffix='.jpg')
+		im = photo.image()
+		im.save(tf.name, "JPEG")
+		self.__temp.append(tf)
+		return tf.name
 
 	def add_title_page(self, title, subtitle=''):
 		self.set_title(title)
@@ -62,12 +92,12 @@ class DefaultReport(FPDF):
 			if i < (len(rows) - 1):
 				self.cell(actual_width, 10, '', 0, 2, 'L')
 			if 'image' in rows[i]:
-				self.image(rows[i]['image'], image_left, image_top, (actual_width / 2) - 10)
+				self.image(self.__cache_image(rows[i]['image']), image_left, image_top, (actual_width / 2) - 10)
 		self.set_font('Times', '', 14)
 
 	def add_image_page(self, image, format='PNG'):
 		self.__new_page()
-		self.image(image, 5.0, 5.0, 200.0, 287.0, type=format)
+		self.image(self.__cache_image(image), 5.0, 5.0, 200.0, 287.0, type=format)
 		self.set_xy(200.0, 150.0)
 		self.set_font('Arial', '', 14)
 
@@ -75,7 +105,7 @@ class DefaultReport(FPDF):
 		self.__new_page()
 		self.set_auto_page_break(False, 0)
 		if image != '':
-			self.image(image, 0.0, 0.0, 210.0, type=format)
+			self.image(self.__cache_image(image), 0.0, 0.0, 210.0, type=format)
 		self.set_xy(0, 150)
 		self.set_fill_color(255, 255, 255)
 		self.cell(210.0, 150, '', 0, 0, '', True)
@@ -85,6 +115,9 @@ class DefaultReport(FPDF):
 		self.set_font('Times', '', 12)
 		self.multi_cell(190, 6, description, 0, 2, 'L')
 		self.set_auto_page_break(True, 2)
+
+	def add_grid_page(self, title, data):
+		pass
 
 	def add_stats_page(self, title, data):
 		self.__new_page()

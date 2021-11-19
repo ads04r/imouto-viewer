@@ -307,6 +307,8 @@ def generate_report_pdf(reportid, style):
 			pdf.add_feature_page(page['title'], page['description'], image)
 		if page['type'] == 'stats':
 			pdf.add_stats_page(page['title'], page['data'])
+		if page['type'] == 'grid':
+			pdf.add_grid_page(page['title'], page['data'])
 
 	pdf.output(filename, 'F')
 	report.pdf = filename

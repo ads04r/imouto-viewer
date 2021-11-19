@@ -902,6 +902,21 @@ class LifeReport(models.Model):
 	            dte = datetime.datetime(year, (i + 2), 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE)) - datetime.timedelta(seconds=1)
             else:
 	            dte = datetime.datetime((year + 1), 1, 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE)) - datetime.timedelta(seconds=1)
+            people = []
+            for person in Person.objects.filter(reports__report=self, reports__first_encounter__gte=dts, reports__first_encounter__lte=dte):
+                item = {'name': person.full_name()}
+                if person.image:
+                    item['image'] = person.image.path
+                if not('image' in item):
+                    continue # For now, just don't show anyone with no photo
+                people.append(item)
+            if len(people) > 0:
+                grid_max = len(people)
+                while grid_max > 16:
+                    grid_max = int(grid_max / 2)
+                while len(people) > 0:
+                    ret.append({'type': 'grid', 'title': 'People', 'data': people[0:grid_max]})
+                    people = people[grid_max:]
             events = self.events.filter(end_time__gte=dts, start_time__lte=dte)
             for event in events.filter(type='life_event'):
                 if event.id in done:
@@ -909,7 +924,7 @@ class LifeReport(models.Model):
                 done.append(event.id)
                 item = {'type': 'feature', 'title': event.caption, 'description': event.description}
                 if event.cover_photo:
-                    item['image'] = event.cover_photo.file.path
+                    item['image'] = event.cover_photo.id
                 ret.append(item)
                 for pc in event.photo_collages.all():
                     new_photos = False
@@ -938,7 +953,7 @@ class LifeReport(models.Model):
                     if ((subevent.description) or (subevent.cover_photo) or (subevent.cached_staticmap)):
                         item = {'title': subevent.caption, 'description': subevent.description, 'date': subevent.start_time.strftime("%a %-d %b %I:%M%p")}
                         if subevent.cover_photo:
-                            item['image'] = subevent.cover_photo.file.path
+                            item['image'] = subevent.cover_photo.id
                         elif subevent.cached_staticmap:
                             item['image'] = subevent.cached_staticmap.path
                         subevents.append(item)
@@ -970,7 +985,7 @@ class LifeReport(models.Model):
                 if ((subevent.description) or (subevent.cover_photo) or (subevent.cached_staticmap)):
                     item = {'title': subevent.caption, 'description': subevent.description, 'date': subevent.start_time.strftime("%a %-d %b %I:%M%p")}
                     if subevent.cover_photo:
-                        item['image'] = subevent.cover_photo.file.path
+                        item['image'] = subevent.cover_photo.id
                     elif subevent.cached_staticmap:
                         item['image'] = subevent.cached_staticmap.path
                     subevents.append(item)
