@@ -956,7 +956,10 @@ class LifeReport(models.Model):
                             item['image'] = subevent.cover_photo.id
                         elif subevent.cached_staticmap:
                             item['image'] = subevent.cached_staticmap.path
-                        subevents.append(item)
+                        if len(subevent.description) < 1000:
+                            subevents.append(item)
+                        else:
+                            ret.append({'type': 'items', 'data': [item]})
                     if len(subevents) >= 3:
                         ret.append({'type': 'items', 'data': subevents})
                         subevents = []
@@ -988,7 +991,10 @@ class LifeReport(models.Model):
                         item['image'] = subevent.cover_photo.id
                     elif subevent.cached_staticmap:
                         item['image'] = subevent.cached_staticmap.path
-                    subevents.append(item)
+                    if len(subevent.description) < 1000:
+                        subevents.append(item)
+                    else:
+                        ret.append({'type': 'items', 'data': [item]})
                 if len(subevents) >= 3:
                     ret.append({'type': 'items', 'data': subevents})
                     subevents = []
