@@ -106,6 +106,36 @@ def generate_photo_collages(event_id):
 
 	return ret
 
+def generate_report_people(id, dts, dte):
+
+	report = LifeReport.objects.get(id=id)
+
+	ReportPeople.objects.filter(report=report).delete()
+
+	for event in Event.objects.filter(end_time__gte=dts, start_time__lte=dte).exclude(type='life_event'):
+		for person in event.people.all():
+                        try:
+                            rp = ReportPeople.objects.get(report=report, person=person)
+                        except:
+                            rp = ReportPeople(report=report, person=person, first_encounter=event.start_time, day_list='[]')
+                            rp.save()
+                        day_list = json.loads(rp.day_list)
+                        ds = event.start_time.strftime('%Y-%m-%d')
+                        changed = False
+                        if not(ds in day_list):
+                            day_list.append(ds)
+                            rp.day_list = json.dumps(day_list)
+                            changed = True
+                        if event.start_time < rp.first_encounter:
+                            rp.first_encounter = event.start_time
+                            changed = True
+                        if changed:
+                            rp.save()
+
+	tz = get_localzone()
+	now = pytz.UTC.localize(datetime.datetime.utcnow())
+	report.modified_date=now
+
 @background(schedule=0, queue='reports')
 def generate_report(title, dss, dse, type='year', style='default', moonshine_url='', pdf=True):
 	""" A background task for generating LifeReport objects"""
@@ -122,24 +152,6 @@ def generate_report(title, dss, dse, type='year', style='default', moonshine_url
 		report.events.add(event)
 		if event.location:
 			report.locations.add(event.location)
-		for person in event.people.all():
-                        try:
-                            rp = ReportPeople.objects.get(report=report, person=person)
-                        except:
-                            rp = ReportPeople(report=report, person=person, first_encounter=event.start_time, day_list='[]')
-                            rp.save()
-                        day_list = json.loads(rp.day_list)
-                        ds = event.start_time.strftime('%Y-%m-%d')
-                        changed = False
-                        if not(ds in day_list):
-                            day_list.append(ds)
-                            rp.day_list = json.dumps(day_list)
-                            changed = True
-                        if event.start_time < rp.first_encounter:
-                            rp.first_encounter = event.start_time
-                            changed = True
-                        if changed:
-                            rp.save()
 		for e in event.subevents():
 			if e in subevents:
 				continue
@@ -153,24 +165,6 @@ def generate_report(title, dss, dse, type='year', style='default', moonshine_url
 	for event in Event.objects.filter(start_time__lte=dte, end_time__gte=dts).order_by('start_time').exclude(type='life_event'):
 		if event.location:
 			report.locations.add(event.location)
-		for person in event.people.all():
-                        try:
-                            rp = ReportPeople.objects.get(report=report, person=person)
-                        except:
-                            rp = ReportPeople(report=report, person=person, first_encounter=event.start_time, day_list='[]')
-                            rp.save()
-                        day_list = json.loads(rp.day_list)
-                        ds = event.start_time.strftime('%Y-%m-%d')
-                        changed = False
-                        if not(ds in day_list):
-                            day_list.append(ds)
-                            rp.day_list = json.dumps(day_list)
-                            changed = True
-                        if event.start_time < rp.first_encounter:
-                            rp.first_encounter = event.start_time
-                            changed = True
-                        if changed:
-                            rp.save()
 		if event in subevents:
 			continue
 		if event.photos().count() > 5:
@@ -185,6 +179,8 @@ def generate_report(title, dss, dse, type='year', style='default', moonshine_url
 		if event.description == '':
 			continue
 		report.events.add(event)
+
+	generate_report_people(report.id, dts, dte)
 
 	photos = Photo.objects.filter(time__gte=dts, time__lte=dte).count()
 	photos_gps = Photo.objects.filter(time__gte=dts, time__lte=dte).exclude(lat=None).exclude(lon=None).count()

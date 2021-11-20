@@ -1,6 +1,6 @@
 from fpdf import FPDF
 from tempfile import NamedTemporaryFile
-from .models import Photo
+from .models import Photo, Person
 import os, urllib.request
 
 class DefaultReport(FPDF):
@@ -19,6 +19,23 @@ class DefaultReport(FPDF):
 			y = 200
 		if y >= 11:
 			self.add_page()
+
+	def __person_thumbnail(self, image):
+		person = None
+		for p in Person.objects.all():
+			if not(p.image):
+				continue
+			if not(p.image.path in image):
+				continue
+			person = p
+			break
+		if person is None:
+			return image
+		tf = NamedTemporaryFile(mode='wb', suffix='.jpg')
+		im = person.thumbnail(480)
+		im.save(tf.name, "JPEG")
+		self.__temp.append(tf)
+		return tf.name
 
 	def __cache_image(self, image):
 		if os.path.exists(image):
@@ -110,14 +127,50 @@ class DefaultReport(FPDF):
 		self.set_fill_color(255, 255, 255)
 		self.cell(210.0, 150, '', 0, 0, '', True)
 		self.set_xy(10, 155)
+		self.set_auto_page_break(True, 2)
 		self.set_font('Arial', 'B', 18)
 		self.cell(190, 11, title, 0, 1, 'C', False)
 		self.set_font('Times', '', 12)
 		self.multi_cell(190, 6, description, 0, 2, 'L')
-		self.set_auto_page_break(True, 2)
 
 	def add_grid_page(self, title, data):
-		pass
+		self.__new_page()
+		self.set_auto_page_break(False, 0)
+		self.set_font('Arial', 'B', 18)
+		self.set_xy(10, 10)
+		self.cell(190, 11, title, 1, 2, 'C', False)
+		self.set_font('Times', '', 12)
+		cols = 4
+		if len(data) < 10:
+			cols = 3
+			if len(data) < 7:
+				cols = 2
+		cell_width = int(190 / cols)
+		row = 0
+		col = 0
+		for item in data:
+			text = ''
+			if 'name' in item:
+				text = item['name']
+			if 'title' in item:
+				text = item['title']
+			if 'text' in item:
+				text = item['text']
+			cell_x = (10 + (col * cell_width))
+			cell_y = (26 + (row * cell_width))
+			self.set_font('Times', '', 12)
+			self.set_xy(cell_x, cell_y)
+			self.cell(cell_width, cell_width, '', 0)
+			self.set_xy(cell_x, cell_y + (cell_width * 0.1) + (cell_width / 2))
+			self.cell(cell_width, (cell_width * 0.25), text, 0, 2, 'C', False)
+			if 'image' in item:
+				self.image(self.__person_thumbnail(item['image']), cell_x + ((cell_width / 2) - ((cell_width * 0.5) / 2)), cell_y + (cell_width * 0.1), (cell_width / 2), (cell_width / 2))
+			col = col + 1
+			if col > (cols - 1):
+				col = 0
+				row = row + 1
+		self.set_font('Times', '', 12)
+		self.set_auto_page_break(True, 2)
 
 	def add_stats_page(self, title, data):
 		self.__new_page()
@@ -148,4 +201,3 @@ class DefaultReport(FPDF):
 				row = row + 1
 		self.set_font('Times', '', 12)
 
-# data.append({"category": "photos", "key": "Photos Taken", "value": "2893", "icon": "camera", "description": "Some photos"})
