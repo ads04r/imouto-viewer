@@ -894,6 +894,23 @@ class LifeReport(models.Model):
             for prop in LifeReportProperties.objects.filter(report=self, category=category):
                 item['data'].append(prop.to_dict())
             ret.append(item)
+        for chart in LifeReportChart.objects.filter(report=self):
+            item = {'type': 'chart', 'title': chart.text}
+            if chart.description:
+                if len(chart.description) > 0:
+                    item['description'] = chart.description
+            item['data'] = json.loads(chart.data)
+            ret.append(item)
+        item = {'type': 'chart', 'title': "People", 'description': "Top 10 people encountered, ranked by the number of times met over the course of the year."}
+        item_data = []
+        for pl in ReportPeople.objects.filter(report=self):
+            value = {"text": pl.person.full_name(), "value": len(json.loads(pl.day_list))}
+            if pl.person.image:
+                value['image'] = pl.person.image.path
+            item_data.append(value)
+        item['data'] = sorted(item_data, reverse=True, key=lambda d: d['value'])
+        item['data'] = item['data'][0:10]
+        ret.append(item)
         for i in range(0, 12):
             ret.append({'type': 'title', 'image': None, 'title': months[i]})
             page_count = len(ret)
@@ -913,7 +930,7 @@ class LifeReport(models.Model):
             if len(people) > 0:
                 grid_max = len(people)
                 while grid_max > 16:
-                    grid_max = int(grid_max / 2)
+                    grid_max = int((float(grid_max) / 2) + 0.5)
                 while len(people) > 0:
                     ret.append({'type': 'grid', 'title': 'People', 'data': people[0:grid_max]})
                     people = people[grid_max:]
@@ -1143,6 +1160,22 @@ class LifeReportGraph(models.Model):
             models.Index(fields=['report']),
             models.Index(fields=['type']),
             models.Index(fields=['key']),
+        ]
+
+class LifeReportChart(models.Model):
+    report = models.ForeignKey(LifeReport, on_delete=models.CASCADE, related_name='charts')
+    text = models.CharField(max_length=128)
+    data = models.TextField(default='[]')
+    description = models.TextField(null=True, blank=True)
+    def __str__(self):
+        return str(self.report) + ' - ' + self.text
+    class Meta:
+        app_label = 'viewer'
+        verbose_name = 'life report chart'
+        verbose_name_plural = 'life report charts'
+        indexes = [
+            models.Index(fields=['report']),
+            models.Index(fields=['text']),
         ]
 
 class ReportPeople(models.Model):

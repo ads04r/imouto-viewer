@@ -237,6 +237,15 @@ def generate_report(title, dss, dse, type='year', style='default', moonshine_url
 		except:
 			music_data = {}
 		if len(music_data) > 0:
+			if 'charts' in music_data:
+				if 'artists' in music_data['charts']:
+					chart_data = []
+					for artist in music_data['charts']['artists']:
+						item = {'text': artist['name'], 'value': artist['plays']}
+						chart_data.append(item)
+					if len(chart_data) > 0:
+						chart = LifeReportChart(text='Most Played Artists', data=json.dumps(chart_data), report=report)
+						chart.save()
 			if 'play_count' in music_data:
 				prop = report.addproperty(key='Tracks played', value=str(music_data['play_count']), category='music')
 				prop.icon = 'music'
@@ -305,6 +314,11 @@ def generate_report_pdf(reportid, style):
 			pdf.add_stats_page(page['title'], page['data'])
 		if page['type'] == 'grid':
 			pdf.add_grid_page(page['title'], page['data'])
+		if page['type'] == 'chart':
+			if 'description' in page:
+				pdf.add_chart_page(page['title'], page['description'], page['data'])
+			else:
+				pdf.add_chart_page(page['title'], '', page['data'])
 
 	pdf.output(filename, 'F')
 	report.pdf = filename

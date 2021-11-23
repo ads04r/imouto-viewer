@@ -133,6 +133,25 @@ class DefaultReport(FPDF):
 		self.set_font('Times', '', 12)
 		self.multi_cell(190, 6, description, 0, 2, 'L')
 
+	def add_chart_page(self, title, description, data):
+		self.__new_page()
+		self.set_auto_page_break(False, 0)
+		self.set_font('Arial', 'B', 18)
+		self.set_xy(10, 10)
+		self.cell(190, 11, title, 1, 1, 'C', False)
+		self.set_font('Times', '', 12)
+		self.multi_cell(190, 6, description, 0, 2, 'L')
+		y = self.get_y()
+		row_top = y + 5
+		for item in data:
+			self.set_xy(60, row_top)
+			self.set_font('Times', '', 16)
+			self.cell(160, 18, item['text'], 0, 1, 'L', False)
+			if 'image' in item:
+				self.image(self.__person_thumbnail(item['image']), 30, row_top, 18, 18)
+			row_top = self.get_y() + 5
+		self.set_font('Times', '', 12)
+
 	def add_grid_page(self, title, data):
 		self.__new_page()
 		self.set_auto_page_break(False, 0)
