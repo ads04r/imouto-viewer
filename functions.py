@@ -1,5 +1,6 @@
 import datetime, time, pytz, json, random, urllib.request, re, sys
 from viewer.models import *
+from background_task.models import Task
 from django.db.models import Sum, Count, F, ExpressionWrapper, DurationField, fields
 from django.core.cache import cache
 from django.conf import settings
@@ -25,6 +26,31 @@ def __display_timeline_event(event):
                         if (float(event.distance()) < 1):
                             return False
     return True
+
+def get_report_queue():
+
+    ret = []
+    for task in Task.objects.filter(queue='reports').order_by('run_at'):
+        item = {'id': task.task_hash, 'name': task.task_name}
+        params = json.loads(task.task_params)
+        if ((item['name'] == 'viewer.tasks.generate_photo_collages') or (item['name'] == 'viewer.tasks.generate_staticmap')):
+            try:
+                event = Event.objects.get(id=params[0][0])
+            except:
+                event = None
+            if not(event is None):
+                item['event'] = {"id": event.id, "caption": event.caption, "date": event.start_time.strftime("%Y-%m-%d %H:%I:%S %z")}
+        if item['name'] == 'viewer.tasks.generate_report_pdf':
+            try:
+                report = LifeReport.objects.get(id=params[0][0])
+            except:
+                report = None
+            if not(report is None):
+                item['report'] = {"id": report.id, "year": report.year(), "label": report.label}
+
+        ret.append(item)
+
+    return ret
 
 def bubble_event_people():
 

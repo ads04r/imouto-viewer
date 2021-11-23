@@ -60,6 +60,11 @@ def importer(request):
     context = {'progress': r.json()}
     return render(request, 'viewer/import.html', context)
 
+def report_queue(request):
+    data = get_report_queue()
+    response = HttpResponse(json.dumps(data), content_type='application/json')
+    return response
+
 def timeline(request):
     dt = Event.objects.order_by('-start_time')[0].start_time
     ds = dt.strftime("%Y%m%d")
