@@ -31,7 +31,9 @@ def get_report_queue():
 
     ret = []
     for task in Task.objects.filter(queue='reports').order_by('run_at'):
-        item = {'id': task.task_hash, 'name': task.task_name}
+        item = {'id': task.task_hash, 'name': task.task_name, 'error': task.has_error(), 'running': False}
+        if task.locked_by_pid_running():
+            item['running'] = True
         params = json.loads(task.task_params)
         if ((item['name'] == 'viewer.tasks.generate_photo_collages') or (item['name'] == 'viewer.tasks.generate_staticmap')):
             try:
@@ -39,7 +41,7 @@ def get_report_queue():
             except:
                 event = None
             if not(event is None):
-                item['event'] = {"id": event.id, "caption": event.caption, "date": event.start_time.strftime("%Y-%m-%d %H:%I:%S %z")}
+                item['event'] = {"id": event.id, "type": event.type, "caption": event.caption, "date": event.start_time.strftime("%Y-%m-%d %H:%I:%S %z")}
         if item['name'] == 'viewer.tasks.generate_report_pdf':
             try:
                 report = LifeReport.objects.get(id=params[0][0])
@@ -47,6 +49,8 @@ def get_report_queue():
                 report = None
             if not(report is None):
                 item['report'] = {"id": report.id, "year": report.year(), "label": report.label}
+        if item['name'] == 'viewer.tasks.generate_report':
+            item['report'] = {"id": 0, "year": params[0][1][0:4], "label": params[0][0]}
 
         ret.append(item)
 

@@ -65,6 +65,55 @@ function uploadScreen()
     });
 }
 
+function updateReportQueue()
+{
+	var url = "report_queue.json";
+
+	$.ajax({
+		url: url,
+		dataType: 'json',
+		method: 'GET',
+		success: function(data) {
+
+			var html = '';
+
+			for(i = 0; i < data.length; i++)
+			{
+				var item = data[i];
+				var title = '';
+				var type = '';
+				var task = item.name;
+				var icon = '';
+				var url = '';
+
+				if(item.error) { icon = '<i class="fa fa-warning text-danger"></i>'; }
+				if(item.running) { icon = '<i class="fa fa-play-circle text-success"></i>'; }
+				if(item.event)
+				{
+					title = item.event.caption;
+					type = item.event.type;
+					url = '#event_' + item.event.id;
+				}
+				if(item.report)
+				{
+					title = item.report.label;
+					type = item.report.year;
+					if(item.report.id > 0) { url = '#report_' + item.report.id; }
+				}
+
+				html = html + '<tr><td>' + icon + '</td><td>' + title + '<br><small>' + type + '</small></td><td>';
+				if(url.length > 0) { html = html + '<a class="btn btn-primary btn-xs eventlink" href="' + url + '">Read&nbsp;more</a>'; }
+				html = html + '</td></tr>';
+			}
+
+			if(html.length > 0) { html = '<div class="box"><div class="box-header"><h3 class="box-title">In progress</h3></div><div class="box-body no-padding"><table class="table table-condensed">' + html + '</table></div></div>'; }
+
+			$("#report-queue").html(html);
+
+		}
+	});
+}
+
 function updateUploadQueue()
 {
     var url = "import";
@@ -163,20 +212,22 @@ function timelineScreen()
     });
 }
 
-function updateReportYearSelect()
+function updateReportYearSelect(year)
 {
-	var year = $('#generate-life-report-year').val();
 	$('#id_label').val(year);
 	$('#new-report-generate-year').val(year);
+	console.log(year);
 }
 
 function reportsScreen()
 {
     $(".content-wrapper").load("./reports.html", function(response, status, xhr){
         if(status == 'error') { errorPage(xhr); return false; }
-        updateReportYearSelect();
-        $("#generate-life-report-year").on('change', function() {
-            updateReportYearSelect();
+        var year = $("#generate-life-report-year").val();
+        updateReportYearSelect(year);
+        $(document).on('change', "#generate-life-report-year", function() {
+            var year = $(this).val();
+            updateReportYearSelect(year);
         });
         $("#report-save-form-button").on('click', function(){
             $("#report-edit").submit();
@@ -196,6 +247,8 @@ function reportsScreen()
                 success: function(data) { }
             });
         });
+	window.setInterval(updateReportQueue, 5000);
+	updateReportQueue();
     });
 }
 

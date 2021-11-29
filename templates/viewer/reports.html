@@ -10,9 +10,9 @@
 <section class="content">
 
     <div class="container-fluid">
-        <div class="row">
+        <div class="row visible-xs visible-sm hidden-md hidden-lg hidden-xl">
 
-            <div class="col-xs-12 col-sm-6 col-md-4 col-sm-push-6 col-md-push-8">
+            <div class="col-xs-12 col-sm-12">
 
                 <div class="box box-primary">
                     <div class="box-body with-border">
@@ -44,7 +44,10 @@
 
             </div>
 
-            <div class="col-xs-12 col-sm-6 col-md-8 col-sm-pull-6 col-md-pull-4">
+        </div>
+        <div class="row">
+
+            <div class="col-xs-12 col-sm-12 col-md-8">
 
 {% for item in data %}
 
@@ -70,6 +73,41 @@
 {% endfor %}
 
             </div>
+
+            <div class="col-xs-12 col-sm-12 col-md-4">
+
+                <div class="box box-primary hidden-xs hidden-sm visible-md visible-lg visible-xl">
+                    <div class="box-body with-border">
+
+                        <h4>Report Generation</h4>
+
+			<form id="generate-life-report" action="/report.html" method="POST">
+
+                              <table class="table table-hover">
+                                <tr class="form-row">
+                                  <td>Year:</td><td><select id="generate-life-report-year">
+{% for year in years %}
+                                      <option value="{{ year }}">{{ year }}</option>
+{% endfor %}
+                                  </select></td>
+                                </tr>
+                              </table>
+				
+
+			</form>
+
+                    </div>
+                    <div class="box-footer clearfix">
+                        <span class="pull-right">
+                            <a class="btn btn-success" data-toggle="modal" data-target="#admin_report_add" aria-hidden="true" href="#">Generate</a>
+                        </span>
+                    </div>
+                </div>
+
+                <div id="report-queue"></div>
+
+            </div>
+
         </div>
     </div>
 
