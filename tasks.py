@@ -160,7 +160,8 @@ def generate_report(title, dss, dse, type='year', style='default', moonshine_url
 				generate_photo_collages(e.pk)
 			if not(e.cached_staticmap):
 				if e.geo:
-					generate_staticmap(e.pk)
+					if e.description != '':
+						generate_staticmap(e.pk)
 
 	for event in Event.objects.filter(start_time__lte=dte, end_time__gte=dts).order_by('start_time').exclude(type='life_event'):
 		if event.location:

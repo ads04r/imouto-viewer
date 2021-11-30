@@ -1080,7 +1080,11 @@ class LifeReport(models.Model):
             ret = ret | LocationCountry.objects.filter(a2=str(data['country']))
         return ret
     def addproperty(self, key, value, category=""):
-        ret = LifeReportProperties(key=key, value=str(value), category=str(category), report=self)
+        try:
+            ret = LifeReportProperties.objects.get(key=key, category=str(category), report=self)
+        except:
+            ret = LifeReportProperties(key=key, value='', category=str(category), report=self)
+        ret.value = str(value)
         ret.save()
         return ret
     def geo(self):
