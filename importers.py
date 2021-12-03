@@ -14,7 +14,7 @@ from django.core.files import File
 from tempfile import NamedTemporaryFile
 from dateutil import tz
 
-from viewer.functions import find_person_by_picasaid as find_person
+from viewer.functions import find_person_by_picasaid as find_person, convert_to_degrees
 from viewer.models import *
 
 def import_fit(parseable_fit_input):
@@ -427,10 +427,10 @@ def import_photo_file(filepath, tzinfo=pytz.UTC):
 		londms = exif['GPS GPSLongitude']
 		latr = str(exif['GPS GPSLatitudeRef']).lower()
 		lonr = str(exif['GPS GPSLongitudeRef']).lower()
-		lat = convert_to_degress(latdms)
+		lat = convert_to_degrees(latdms)
 		if latr == 's':
 			lat = 0 - lat
-		lon = convert_to_degress(londms)
+		lon = convert_to_degrees(londms)
 		if lonr == 'w':
 			lon = 0 - lon
 		if((lat != 0.0) or (lon != 0.0)):
@@ -464,7 +464,7 @@ def import_photo_directory(path, tzinfo=pytz.UTC):
 
 	photos = []
 	for f in os.listdir(full_path):
-		if not(f.endswith('.jpg')):
+		if not(f.lower().endswith('.jpg')):
 			continue
 		photo_file = os.path.join(full_path, f)
 		try:
@@ -525,14 +525,19 @@ def import_photo_directory(path, tzinfo=pytz.UTC):
 				event.people.add(person)
 
 	gps_data = []
-	for photo in ret:
-		if photo.time:
-			if photo.lat:
-				if photo.lon:
-					ds = photo.time.astimezone(pytz.UTC).strftime("%Y-%m-%d %H:%M:%S")
-					lat = str(photo.lat)
-					lon = str(photo.lon)
-					gps_data.append([ds, lat, lon])
+	for photo_path in ret:
+		try:
+			photo = Photo.objects.get(file=photo_path)
+		except:
+			photo is None
+		if not(photo is None):
+			if photo.time:
+				if photo.lat:
+					if photo.lon:
+						ds = photo.time.astimezone(pytz.UTC).strftime("%Y-%m-%d %H:%M:%S")
+						lat = str(photo.lat)
+						lon = str(photo.lon)
+						gps_data.append([ds, lat, lon])
 	if len(gps_data) > 0:
 		op = ''
 		for row in gps_data:

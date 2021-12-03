@@ -27,6 +27,23 @@ def __display_timeline_event(event):
                             return False
     return True
 
+def convert_to_degrees(value):
+
+    try:
+        d = float(value.values[0].num) / float(value.values[0].den)
+    except:
+        d = 0.0
+    try:
+        m = float(value.values[1].num) / float(value.values[1].den)
+    except:
+        m = 0.0
+    try:
+        s = float(value.values[2].num) / float(value.values[2].den)
+    except:
+        s = 0.0
+
+    return d + (m / 60.0) + (s / 3600.0)
+
 def find_person_by_picasaid(picasaid, name=''):
     # TODO: Name lookup
     try:
