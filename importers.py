@@ -1,4 +1,4 @@
-import django, os, csv, socket, json, urllib, urllib.request, re, random, glob, sys, exifread, vobject, io, base64, imaplib, email, email.header, email.parser, email.message
+import django, os, csv, socket, json, urllib, urllib.request, re, random, glob, sys, exifread, vobject, io, base64, imaplib, email, email.header, email.parser, email.message, requests
 import datetime, pytz, pymysql, math
 from django.conf import settings
 from xml.dom import minidom
@@ -14,6 +14,7 @@ from django.core.files import File
 from tempfile import NamedTemporaryFile
 from dateutil import tz
 
+from viewer.functions import find_person_by_picasaid as find_person
 from viewer.models import *
 
 def import_fit(parseable_fit_input):
@@ -389,4 +390,159 @@ def import_openscale(filepath):
 				water = DataReading(start_time=dt, end_time=dt, type='water', value=int(value))
 				ret.append([str(dt), 'water', str(water.value) + "%"])
 				water.save()
+	return ret
+
+def import_photo_file(filepath, tzinfo=pytz.UTC):
+
+	path = os.path.abspath(filepath)
+
+	try:
+		photo = Photo.objects.get(file=path)
+	except:
+		photo = Photo(file=path)
+		photo.save()
+
+	exif = exifread.process_file(open(path, 'rb'))
+
+	if 'Image DateTime' in exif:
+		dsa = str(exif['Image DateTime']).replace(' ', ':').split(':')
+		try:
+			dt = tzinfo.localize(datetime.datetime(int(dsa[0]), int(dsa[1]), int(dsa[2]), int(dsa[3]), int(dsa[4]), int(dsa[5])))
+		except:
+			dt = tzinfo.localize(datetime.datetime.utcfromtimestamp(os.path.getmtime(path)))
+		photo.time = dt.astimezone(pytz.UTC)
+		photo.save()
+
+	if 'EXIF DateTimeOriginal' in exif:
+		dsa = str(exif['EXIF DateTimeOriginal']).replace(' ', ':').split(':')
+		try:
+			dt = tzinfo.localize(datetime.datetime(int(dsa[0]), int(dsa[1]), int(dsa[2]), int(dsa[3]), int(dsa[4]), int(dsa[5])))
+		except:
+			dt = tzinfo.localize(datetime.datetime.utcfromtimestamp(os.path.getmtime(path)))
+		photo.time = dt.astimezone(pytz.UTC)
+		photo.save()
+
+	if (('GPS GPSLatitude' in exif) & ('GPS GPSLongitude' in exif)):
+		latdms = exif['GPS GPSLatitude']
+		londms = exif['GPS GPSLongitude']
+		latr = str(exif['GPS GPSLatitudeRef']).lower()
+		lonr = str(exif['GPS GPSLongitudeRef']).lower()
+		lat = convert_to_degress(latdms)
+		if latr == 's':
+			lat = 0 - lat
+		lon = convert_to_degress(londms)
+		if lonr == 'w':
+			lon = 0 - lon
+		if((lat != 0.0) or (lon != 0.0)):
+			photo.lat = lat
+			photo.lon = lon
+			photo.save()
+	else:
+		if photo:
+			if photo.time:
+				ds = photo.time.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S")
+				url = settings.LOCATION_MANAGER_URL + '/position/' + ds
+				r = urllib.request.urlopen(url)
+				data = json.loads(r.read())
+				if data['explicit'] == True:
+					photo.lat = data['lat']
+					photo.lon = data['lon']
+					photo.save()
+
+	return photo
+
+def import_photo_directory(path, tzinfo=pytz.UTC):
+
+	full_path = os.path.abspath(path)
+	ret = []
+
+	picasafile = os.path.join(full_path, '.picasa.ini')
+	if(not(os.path.exists(picasafile))):
+		picasafile = os.path.join(full_path, 'picasa.ini')
+	if(not(os.path.exists(picasafile))):
+		picasafile = os.path.join(full_path, 'Picasa.ini')
+
+	photos = []
+	for f in os.listdir(full_path):
+		if not(f.endswith('.jpg')):
+			continue
+		photo_file = os.path.join(full_path, f)
+		try:
+			photo = Photo.objects.get(file=photo_file)
+		except:
+			photo = None
+			photos.append(photo_file)
+
+	for photo in photos:
+		if import_photo_file(photo, tzinfo) is None:
+			continue
+		ret.append(photo)
+
+	contacts = {}
+	faces = {}
+	if os.path.exists(picasafile):
+		lf = ''
+		with open(picasafile) as f:
+			lines = f.readlines()
+		for liner in lines:
+			line = liner.strip()
+			if line == '':
+				continue
+			if ((line[0] == '[') & (line[-1:] == ']')):
+				lf = line.lstrip('[').rstrip(']')
+			if lf == 'Contacts2':
+				parse = line.replace(';', '').split('=')
+				if len(parse) == 2:
+					contacts[parse[0]] = find_person(parse[0], parse[1])
+			if ((line[0:6] == 'faces=') & (lf != '')):
+				item = []
+				for segment in line[6:].split(';'):
+					structure = segment.split(',')
+					if not(lf in faces):
+						faces[lf] = []
+					faces[lf].append(structure[1])
+
+	for filename in faces.keys():
+		if len(filename) == 0:
+			continue
+		full_filename = os.path.join(full_path, filename)
+		if not(os.path.isfile(full_filename)):
+			continue
+		try:
+			photo = Photo.objects.get(file=full_filename)
+		except:
+			photo = None
+		if photo is None:
+			continue
+		for file_face in faces[filename]:
+			if not(file_face in contacts):
+				contacts[file_face] = find_person(file_face)
+			person = contacts[file_face]
+			if person is None:
+				continue
+			photo.people.add(person)
+			for event in photo.events().all():
+				event.people.add(person)
+
+	gps_data = []
+	for photo in ret:
+		if photo.time:
+			if photo.lat:
+				if photo.lon:
+					ds = photo.time.astimezone(pytz.UTC).strftime("%Y-%m-%d %H:%M:%S")
+					lat = str(photo.lat)
+					lon = str(photo.lon)
+					gps_data.append([ds, lat, lon])
+	if len(gps_data) > 0:
+		op = ''
+		for row in gps_data:
+			op = op + '\t'.join(row) + '\n'
+
+		url = settings.LOCATION_MANAGER_URL + '/import'
+		files = {'uploaded_file': op}
+		data = {'file_source': 'photo', 'file_format': 'csv'}
+
+		r = requests.post(url, files=files, data=data)
+		print(r.status_code)
+
 	return ret

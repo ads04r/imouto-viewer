@@ -27,6 +27,15 @@ def __display_timeline_event(event):
                             return False
     return True
 
+def find_person_by_picasaid(picasaid, name=''):
+    # TODO: Name lookup
+    try:
+        prop = PersonProperty.objects.get(key='hasface', value=picasaid)
+        ret = prop.person
+    except:
+        ret = None
+    return ret
+
 def get_report_queue():
 
     ret = []
