@@ -140,7 +140,6 @@ def import_carddav(url, auth, countrycode='44'):
 
 			if 'email' in person.contents:
 				for email in person.contents['email']:
-					print(" email " + email.value)
 					pp = PersonProperty(person=pobj, key='email', value=email.value)
 					pp.save()
 			if 'tel' in person.contents:
@@ -151,7 +150,6 @@ def import_carddav(url, auth, countrycode='44'):
 					phonestyle = 'phone'
 					if num.startswith('+447'):
 						phonestyle='mobile' # Very UK-centric.
-					print(" " + phonestyle + " " + num)
 					pp = PersonProperty(person=pobj, key=phonestyle, value=num)
 					pp.save()
 
@@ -171,7 +169,6 @@ def import_carddav(url, auth, countrycode='44'):
 					try:
 						pp = PersonProperty.objects.get(person=pobj, key='email', value=email.value)
 					except:
-						print(" email " + email.value)
 						pp = PersonProperty(person=pobj, key='email', value=email.value)
 						pp.save()
 			if 'tel' in person.contents:
@@ -185,7 +182,6 @@ def import_carddav(url, auth, countrycode='44'):
 					try:
 						pp = PersonProperty.objects.get(person=pobj, key=phonestyle, value=num)
 					except:
-						print(" " + phonestyle + " " + num)
 						pp = PersonProperty(person=pobj, key=phonestyle, value=num)
 						pp.save()
 
@@ -548,6 +544,6 @@ def import_photo_directory(path, tzinfo=pytz.UTC):
 		data = {'file_source': 'photo', 'file_format': 'csv'}
 
 		r = requests.post(url, files=files, data=data)
-		print(r.status_code)
+		st = r.status_code
 
 	return ret
