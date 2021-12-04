@@ -45,12 +45,28 @@ def convert_to_degrees(value):
     return d + (m / 60.0) + (s / 3600.0)
 
 def find_person_by_picasaid(picasaid, name=''):
-    # TODO: Name lookup
+
     try:
         prop = PersonProperty.objects.get(key='hasface', value=picasaid)
         ret = prop.person
     except:
         ret = None
+
+    if not(ret is None):
+        return ret
+
+    if name != '':
+
+        for person in Person.objects.all():
+            fn = person.full_name()
+            if fn == name:
+                ret = person
+                break
+
+    if not(ret is None):
+        prop = PersonProperty(person=ret, key='hasface', value=picasaid)
+        prop.save()
+
     return ret
 
 def get_report_queue():
