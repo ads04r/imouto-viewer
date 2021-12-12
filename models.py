@@ -703,6 +703,11 @@ class Event(models.Model):
         heart_json = []
         heart_zone = 0.0
         heart_zone_2 = 0.0
+        cadence_csv = []
+        cadence_json = []
+        cadence_max = 0.0
+        cadence_total = 0.0
+        cadence_count = 0.0
         speed_count = 0
         speed_move_count = 0
         speed_move_time = 0.0
@@ -715,10 +720,17 @@ class Event(models.Model):
         elev_min = 99999.99
         sleep = []
         if self.length() > 86400:
-            eventsearch = DataReading.objects.filter(end_time__gte=self.start_time, start_time__lte=self.end_time).exclude(type='heart-rate')
+            eventsearch = DataReading.objects.filter(end_time__gte=self.start_time, start_time__lte=self.end_time).exclude(type='heart-rate').exclude(type='cadence')
         else:
             eventsearch = DataReading.objects.filter(end_time__gte=self.start_time, start_time__lte=self.end_time)
         for item in eventsearch:
+            if item.type=='cadence':
+                cadence_csv.append(str(item.value))
+                cadence_json.append({"x": item.start_time.strftime("%Y-%m-%d %H:%M:%S"), "y": item.value})
+                cadence_total = cadence_total + float(item.value)
+                cadence_count = cadence_count + 1.0
+                if item.value > cadence_max:
+                    cadence_max = item.value
             if item.type=='heart-rate':
                 heart_csv.append(str(item.value))
                 heart_json.append({"x": item.start_time.strftime("%Y-%m-%d %H:%M:%S"), "y": item.value})
@@ -764,6 +776,10 @@ class Event(models.Model):
                     elev_max = last_elev
                 if last_elev < elev_min:
                     elev_min = last_elev
+        if cadence_count > 0:
+            ret['cadenceavg'] = int(cadence_total / cadence_count)
+            ret['cadencemax'] = int(cadence_max)
+            ret['cadence'] = json.dumps(cadence_json)
         if heart_count > 0:
             ret['heartavg'] = int(heart_total / heart_count)
             ret['heartmax'] = int(heart_max)
