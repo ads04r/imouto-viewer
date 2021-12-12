@@ -245,6 +245,12 @@ def events(request):
     context = {'type':'view', 'data':data, 'form':form, 'categories':EventWorkoutCategory.objects.all()}
     return render(request, 'viewer/calendar.html', context)
 
+def tags(request):
+
+    data = EventTag.objects.annotate(num_events=Count('events')).order_by('-num_events')
+    context = {'type':'tag', 'data':data}
+    return render(request, 'viewer/tags.html', context)
+
 def tag(request, id):
 
     data = get_object_or_404(EventTag, id=id)

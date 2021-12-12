@@ -1,0 +1,44 @@
+{% load static %}
+
+<section class="content-header">
+    <h1>
+        Tags
+    </h1>
+    <ol class="breadcrumb">
+        <li>Tags</li>
+    </ol>
+</section>
+
+<section class="content">
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12">
+
+
+                <div class="box box-primary" id="day_event_{{ event.pk }}">
+                    <div class="box-body">
+
+{% for tag in data.all %}
+{% if tag.id != '' %}
+
+                        <div class="post">
+                            <div class="user-block">
+                                <span class="username no-image"><i class="fa fa-tag" style="color: {{ tag.colour }};"></i>&nbsp;{{ tag.id }}<a class="pull-right btn btn-primary btn-xs eventlink" href="#tag_{{ tag.id }}">View Events</a></span>
+                                <span class="description no-image">{{ tag.num_events }} events</span>
+                            </div>
+
+                        </div>
+
+{% endif %}
+{% endfor %}                        
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</section>
+
