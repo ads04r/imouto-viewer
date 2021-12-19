@@ -691,3 +691,29 @@ def generate_location_events(minlength):
 				ev.save()
 
 	return ret
+
+def join_location_events(event1, event2):
+
+	try:
+		ev1 = Event.objects.get(id=event1)
+		ev2 = Event.objects.get(id=event2)
+	except:
+		return None
+
+	if ev2.end_time < ev1.start_time:
+		evt = ev1
+		ev1 = ev2
+		ev2 = evt
+
+	caption = 'Journey'
+	if ev2.location:
+		caption = 'Journey to ' + str(ev2.location)
+		if ev1.location:
+			caption = 'Journey from ' + str(ev1.location) + ' to ' + str(ev2.location)
+
+	event = Event(caption=caption, type='journey', start_time=(ev1.end_time - datetime.timedelta(minutes=1)), end_time=(ev2.start_time + datetime.timedelta(minutes=1)))
+	event.save()
+	geo = event.refresh_geo()
+	health = event.health()
+
+	return event
