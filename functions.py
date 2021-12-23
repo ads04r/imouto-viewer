@@ -6,6 +6,7 @@ from django.core.cache import cache
 from django.conf import settings
 from geopy import distance
 from tzlocal import get_localzone
+from dateutil import parser
 
 def __display_timeline_event(event):
 
@@ -717,3 +718,18 @@ def join_location_events(event1, event2):
 	health = event.health()
 
 	return event
+
+def get_possible_location_events(date, lat, lon):
+
+	ds = date.strftime("%Y-%m-%d")
+	url = settings.LOCATION_MANAGER_URL + '/event/' + ds + '/' + str(lat) + '/' + str(lon)
+	r = urllib.request.urlopen(url)
+	data = json.loads(r.read())
+	ret = []
+
+	for item in data:
+		if item['timestart'] == item['timeend']:
+			continue
+		ret.append({'start_time': parser.parse(item['timestart']), 'end_time': parser.parse(item['timeend'])})
+
+	return ret

@@ -33,6 +33,19 @@
                       </div>
                     </div>
                 </div>
+
+                <div class="box box-primary" id="day_event_{{ event.pk }}">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Create New Event</h3>
+                    </div>
+                    <div class="box-body">
+                      <div>
+
+                              <a class="btn btn-app" data-toggle="modal" data-target="#day_locevent_add" aria-hidden="true" href="#loc"><i class="fa fa-map-marker"></i>Location Event</a>
+
+                      </div>
+                    </div>
+                </div>
 		
 		<div class="day-heart-summary"></div>
 		<div class="hidden-xs hidden-sm hidden-md day-sleep-summary"></div>
@@ -104,6 +117,25 @@
                 </form>
             
                 <button type="button" id="event-delete-button" class="btn btn-danger timeline-event-delete-form-button">Delete</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade nav-tabs-custom" id="day_locevent_add" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+
+                              
+			<div id="mapselect" class="mapselect"></div>
+{% csrf_token %}
+			<div id="location_event_select" data-date="{{ stats.cur }}"></div>
+                
+            </div>
+            <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
             </div>
         </div>

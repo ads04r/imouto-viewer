@@ -168,6 +168,71 @@ function updateUploadStats()
     });
 }
 
+function onLocEventMapClick(e)
+{
+    var RES = 100000;
+    var lat = Math.round(e.latlng.lat * RES) / RES;
+    var lon = Math.round(e.latlng.lng * RES) / RES;
+    var canvas = $('#location_event_select');
+    var url = 'days/' + canvas.data('date') + '/locevents.json';
+    var data = {}
+    var csrf = $('input[name="csrfmiddlewaretoken"]').val();
+
+    canvas.html('<i class="fa fa-refresh fa-spin"></i>');
+    data['lat'] = lat
+    data['lon'] = lon
+
+    $.ajax({
+        url: url,
+        dataType: 'json',
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        method: 'POST',
+        success: function(data) {
+            var html = '';
+            for(i = 0; i < data.length; i++) {
+                item = data[i];
+                html = html + '<tr class="loceventadd">'
+                html = html + '<td data-start="' + item.start_time + '" data-end="' + item.end_time + '">' + item.text + '</td>';
+                html = html + '<td class="pull-right"><a data-start="' + item.start_time + '" data-end="' + item.end_time + '" class="btn btn-success btn-xs addlocationevent" href="#">Add Event</a></td>';
+                html = html + '</tr>';
+            }
+            if(html == '')
+            {
+                html = '<p>No events found in this location.</p>';
+            } else {
+                html = '<div class="table-responsive"><table class="table no-margin">' + html + '</table></div>'
+            }
+            canvas.html(html);
+            $('.addlocationevent').on('click', function() {
+                var url = 'events.html';
+                var form = new FormData();
+                var dss = $(this).data('start');
+                var dse = $(this).data('end');
+                var caption = $(this).parent().parent().find('td:not(.pull-right)').text()
+                form.append('type', 'loc_prox');
+                form.append('csrfmiddlewaretoken', csrf);
+                form.append('start_time', dss);
+                form.append('end_time', dse);
+                form.append('workout_type', '');
+                form.append('caption', caption);
+                form.append('location', '');
+                form.append('description', '');
+                $.ajax({
+                    url: url,
+                    processData: false,
+                    contentType: false,
+                    data: form,
+                    method: 'POST',
+                    success: function() { window.location.reload(false); }
+                });
+                return false;
+            });
+        }
+    });
+
+}
+
 function onMapClick(e)
 {
     var RES = 100000;
@@ -647,6 +712,23 @@ function dayScreen(id)
 
         daySummary(id);
         makeMap();
+
+        var lat = 50.9;
+        var lon = -1.4;
+        var map = L.map('mapselect', {center: [lat, lon], zoom: 13});
+        L.tileLayer('{{ tiles }}', {
+            attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
+            maxZoom: 16
+        }).addTo(map);
+        //$('#id_lat').val(lat);
+        //$('#id_lon').val(lon);
+        map.on('click', onLocEventMapClick);
+        
+        // The following block is required because we've foolishly put a leaflet map in a tab in a modal.
+        $("#day_locevent_add").on('shown.bs.modal', function() 
+        {
+            map.invalidateSize();
+        });
 
     });
 }

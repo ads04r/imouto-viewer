@@ -4,6 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
 from django.db.models import Q, F, DurationField, ExpressionWrapper
 from django.conf import settings
+from rest_framework.exceptions import MethodNotAllowed
 from background_task.models import Task
 from haystack.query import SearchQuerySet
 from viewer.tasks import generate_photo_collages
@@ -276,6 +277,7 @@ def day(request, ds):
 		context['stats']['wake_time'] = wakes[0].start_time
 		context['stats']['sleep_time'] = wakes[(wakecount - 1)].end_time
 	context['stats']['prev'] = (dts - datetime.timedelta(days=1)).strftime("%Y%m%d")
+	context['stats']['cur'] = dts.strftime("%Y%m%d")
 	if dte < dt:
 		context['stats']['next'] = (dts + datetime.timedelta(days=1)).strftime("%Y%m%d")
 	return render(request, 'viewer/day.html', context)
@@ -347,6 +349,36 @@ def day_events(request, ds):
 		data.append(event.to_dict())
 
 	response = HttpResponse(json.dumps(data), content_type='application/json')
+	return response
+
+@csrf_exempt
+def day_locevents(request, ds):
+
+	if request.method != 'POST':
+		raise MethodNotAllowed(str(request.method))
+	if len(ds) != 8:
+		raise Http404()
+	y = int(ds[0:4])
+	m = int(ds[4:6])
+	d = int(ds[6:])
+	dt = datetime.date(y, m, d)
+	data = json.loads(request.body)
+	if not('lat' in data):
+		raise Http404()
+	if not('lon' in data):
+		raise Http404()
+	ret = []
+	epoch = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.UTC)
+	loc = nearest_location(data['lat'], data['lon'])
+	for item in get_possible_location_events(dt, data['lat'], data['lon']):
+		result = {"start_time": item['start_time'].strftime("%Y-%m-%d %H:%M:%S"), "end_time": item['end_time'].strftime("%Y-%m-%d %H:%M:%S")}
+		result['text'] = (item['start_time'].strftime("%-I:%M%p") + ' to ' + item['end_time'].strftime("%-I:%M%p")).lower()
+		if not(loc is None):
+			result['text'] = str(loc.label) + ', ' + result['text']
+			result['location'] = loc.id
+		ret.append(result)
+
+	response = HttpResponse(json.dumps(ret), content_type='application/json')
 	return response
 
 def event(request, eid):
