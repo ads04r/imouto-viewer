@@ -1187,6 +1187,8 @@ class LifeReportChart(models.Model):
 	text = models.CharField(max_length=128)
 	data = models.TextField(default='[]')
 	description = models.TextField(null=True, blank=True)
+	def to_dict(self):
+		return json.loads(self.data)
 	def __str__(self):
 		return str(self.report) + ' - ' + self.text
 	class Meta:
