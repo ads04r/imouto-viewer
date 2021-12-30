@@ -225,7 +225,7 @@ def generate_report(title, dss, dse, type='year', style='default', moonshine_url
 		prop.icon = 'comment-o'
 		prop.description = str(sms_sent) + ' sent / ' + str(sms_recv) + ' received'
 		prop.save()
-		smsg1 = LifeReportGraph(key='SMS Send vs SMS Received', type='donut', description='', icon='', report=report, category='communication', data=json.dumps([["Sent", "Received"],[sms_sent, sms_recv]]))
+		smsg1 = LifeReportGraph(key='SMS Sent vs SMS Received', type='donut', description='', icon='', report=report, category='communication', data=json.dumps([["Sent", "Received"],[sms_sent, sms_recv]]))
 		smsg1.save()
 
 	if len(moonshine_url) > 0:
