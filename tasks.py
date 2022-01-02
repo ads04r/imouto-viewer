@@ -137,6 +137,14 @@ def generate_report_people(id, dts, dte):
 	report.modified_date=now
 
 @background(schedule=0, queue='reports')
+def generate_report_wordcloud(reportid):
+	""" A background task for generating word clouds for LifeReport objects"""
+	report = LifeReport.objects.get(id=reportid)
+	if report.cached_wordcloud:
+		report.cached_wordcloud.delete()
+	im = report.wordcloud()
+
+@background(schedule=0, queue='reports')
 def generate_report(title, dss, dse, type='year', style='default', moonshine_url='', pdf=True):
 	""" A background task for generating LifeReport objects"""
 
@@ -185,7 +193,8 @@ def generate_report(title, dss, dse, type='year', style='default', moonshine_url
 
 	photos = Photo.objects.filter(time__gte=dts, time__lte=dte).count()
 	photos_gps = Photo.objects.filter(time__gte=dts, time__lte=dte).exclude(lat=None).exclude(lon=None).count()
-	photos_people = Photo.objects.filter(time__gte=dts, time__lte=dte).annotate(Count('people')).exclude(people__count=0).count()
+	photos_of_people = Photo.objects.filter(time__gte=dts, time__lte=dte).annotate(Count('people')).exclude(people__count=0)
+	photos_people = photos_of_people.count()
 
 	prop = report.addproperty(key='Photos Taken', value=photos, category='photos')
 	prop.icon = 'camera'
@@ -268,6 +277,7 @@ def generate_report(title, dss, dse, type='year', style='default', moonshine_url
 						prop.description = str(len(music_data['discovery']['albums'])) + ' albums discovered'
 				prop.save()
 
+	generate_report_wordcloud(report.id)
 
 	if pdf:
 		generate_report_pdf(report.id, style)

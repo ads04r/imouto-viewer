@@ -85,7 +85,7 @@ def get_report_queue():
 				event = None
 			if not(event is None):
 				item['event'] = {"id": event.id, "type": event.type, "caption": event.caption, "date": event.start_time.strftime("%Y-%m-%d %H:%I:%S %z")}
-		if item['name'] == 'viewer.tasks.generate_report_pdf':
+		if ((item['name'] == 'viewer.tasks.generate_report_pdf') or (item['name'] == 'viewer.tasks.generate_report_wordcloud')):
 			try:
 				report = LifeReport.objects.get(id=params[0][0])
 			except:

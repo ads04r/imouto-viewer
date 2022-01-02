@@ -82,6 +82,7 @@ class DefaultReport(FPDF):
 
 	def add_row_items_page(self, rows):
 		self.__new_page()
+		self.set_fill_color(0, 0, 0)
 		margin_height = self.get_y()
 		margin_width = self.get_x()
 		page_height = 300
@@ -101,7 +102,9 @@ class DefaultReport(FPDF):
 				image_top = expected_y
 			image_left = actual_width + 20
 			self.set_font('Arial', 'B', 18)
-			self.cell(actual_width, 11, rows[i]['title'], 1, 2, 'L', False)
+			self.set_text_color(255, 255, 255)
+			self.cell(actual_width, 11, rows[i]['title'], 1, 2, 'L', True)
+			self.set_text_color(0, 0, 0)
 			self.set_font('Arial', '', 14)
 			self.cell(actual_width, 10, rows[i]['date'], 0, 2, 'L')
 			self.set_font('Times', '', 12)
@@ -110,6 +113,7 @@ class DefaultReport(FPDF):
 				self.cell(actual_width, 10, '', 0, 2, 'L')
 			if 'image' in rows[i]:
 				self.image(self.__cache_image(rows[i]['image']), image_left, image_top, (actual_width / 2) - 10)
+		self.set_fill_color(255, 255, 255)
 		self.set_font('Times', '', 14)
 
 	def add_image_page(self, image, format='PNG'):
@@ -164,7 +168,7 @@ class DefaultReport(FPDF):
 			cols = 3
 			if len(data) < 7:
 				cols = 2
-		cell_width = int(190 / cols)
+		cell_width = int(170 / cols)
 		row = 0
 		col = 0
 		for item in data:
@@ -175,7 +179,7 @@ class DefaultReport(FPDF):
 				text = item['title']
 			if 'text' in item:
 				text = item['text']
-			cell_x = (10 + (col * cell_width))
+			cell_x = (20 + (col * cell_width))
 			cell_y = (26 + (row * cell_width))
 			self.set_font('Times', '', 12)
 			self.set_xy(cell_x, cell_y)
@@ -193,6 +197,7 @@ class DefaultReport(FPDF):
 
 	def add_stats_page(self, title, data):
 		self.__new_page()
+		self.set_auto_page_break(False, 0)
 		self.set_font('Arial', 'B', 18)
 		self.set_xy(10, 10)
 		self.cell(190, 11, title, 1, 2, 'C', False)
@@ -219,4 +224,5 @@ class DefaultReport(FPDF):
 				col = 0
 				row = row + 1
 		self.set_font('Times', '', 12)
+		self.set_auto_page_break(True, 2)
 

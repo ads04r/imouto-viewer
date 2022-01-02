@@ -2,6 +2,7 @@ from django.db import models
 from django.core.files import File
 from django.db.models import Count
 from django.conf import settings
+from django.utils.html import strip_tags
 from colorfield.fields import ColorField
 from PIL import Image
 from io import BytesIO
@@ -1055,6 +1056,7 @@ class LifeReport(models.Model):
 					continue
 				text = text + msg.message + ' '
 		text = re.sub('=[0-9A-F][0-9A-F]', '', text)
+		text = strip_tags(text)
 		text = text.strip()
 		ret = []
 		for word in text.split(' '):
