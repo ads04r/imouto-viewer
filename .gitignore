@@ -3,3 +3,5 @@ __pycache__
 __init__.py
 migrations
 static/viewer/cycling.json
+
+!report_styles/__init__.py

@@ -1,6 +1,6 @@
 from fpdf import FPDF
 from tempfile import NamedTemporaryFile
-from .models import Photo, Person
+from viewer.models import Photo, Person
 import os, urllib.request
 
 class DefaultReport(FPDF):
@@ -65,7 +65,6 @@ class DefaultReport(FPDF):
 		return tf.name
 
 	def add_title_page(self, title, subtitle=''):
-		self.set_title(title)
 		self.__new_page()
 		self.set_line_width(0.0)
 		self.line(5.0, 5.0, 205.0, 5.0)
@@ -116,7 +115,7 @@ class DefaultReport(FPDF):
 		self.set_fill_color(255, 255, 255)
 		self.set_font('Times', '', 14)
 
-	def add_image_page(self, image, format='PNG'):
+	def add_image_page(self, image, format='PNG', caption=''):
 		self.__new_page()
 		self.image(self.__cache_image(image), 5.0, 5.0, 200.0, 287.0, type=format)
 		self.set_xy(200.0, 150.0)

@@ -1,7 +1,7 @@
 from background_task import background
 from .models import LifeReport, Event
 from .functions import *
-from .report_styles import *
+from .report_styles import DefaultReport, ModernReport
 from xml.dom import minidom
 from tzlocal import get_localzone
 from viewer.eventcollage import make_collage
@@ -285,7 +285,7 @@ def generate_report(title, dss, dse, type='year', style='default', moonshine_url
 	return report
 
 @background(schedule=0, queue='reports')
-def generate_report_pdf(reportid, style):
+def generate_report_pdf(reportid, style='default'):
 	""" A background task for creating a PDF report based on a LifeReport object """
 
 	try:
@@ -299,7 +299,10 @@ def generate_report_pdf(reportid, style):
 	filename = os.path.join(settings.MEDIA_ROOT, 'reports', 'report_' + str(report.id) + '.pdf')
 	pages = report.pages()
 
-	pdf = DefaultReport()
+	if style == 'modern':
+		pdf = ModernReport()
+	else:
+		pdf = DefaultReport()
 	for page in pages:
 		if page['type'] == 'title':
 			title = ''
