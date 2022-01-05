@@ -171,7 +171,9 @@ class ModernReport(FPDF):
 		self.set_font('Hatten', '', 22)
 		self.cell(175, 12, title, 0, 1, 'C', False)
 		self.set_font('Arial', '', 12)
-		self.multi_cell(175, 6, description, 0, 2, 'L')
+		y = self.get_y()
+		self.set_xy(x + 5, y)
+		self.multi_cell(165, 6, description, 0, 2, 'L')
 		self.set_text_color(0, 0, 0)
 
 	def add_chart_page(self, title, description, data):
@@ -239,42 +241,6 @@ class ModernReport(FPDF):
 		self.set_font('Arial', '', 12)
 		self.set_auto_page_break(True, 2)
 
-	def add_row_items_page(self, rows):
-		self.__new_page()
-		self.set_fill_color(0, 0, 0)
-		margin_height = self.get_y()
-		margin_width = self.get_x()
-		page_height = 300
-		page_width = 210
-		row_spacing = (int((float(page_height - (4 * margin_height))) / (float(len(rows)))))
-		row_height = row_spacing - (margin_height / 2)
-		row_width = page_width - (2 * margin_width)
-		for i in range(0, len(rows)):
-			actual_width = row_width
-			actual_y = self.get_y()
-			if 'image' in rows[i]:
-				actual_width = ((row_width / 3) * 2)
-			expected_y = (margin_height * 2) + (i * row_spacing)
-			image_top = actual_y
-			if expected_y > actual_y:
-				self.set_xy(margin_width, expected_y)
-				image_top = expected_y
-			image_left = actual_width + 20
-			self.set_font('Hatten', '', 18)
-			self.set_text_color(255, 255, 255)
-			self.cell(actual_width, 11, rows[i]['title'], 1, 2, 'L', True)
-			self.set_text_color(0, 0, 0)
-			self.set_font('Hatten', '', 14)
-			self.cell(actual_width, 10, rows[i]['date'], 0, 2, 'L')
-			self.set_font('Arial', '', 12)
-			self.multi_cell(actual_width, 6, rows[i]['description'], 0, 2, 'L')
-			if i < (len(rows) - 1):
-				self.cell(actual_width, 10, '', 0, 2, 'L')
-			if 'image' in rows[i]:
-				self.image(self.__cache_image(rows[i]['image']), image_left, image_top, (actual_width / 2) - 10)
-		self.set_fill_color(255, 255, 255)
-		self.set_font('Arial', '', 14)
-
 	def add_grid_page(self, title, data):
 		self.__new_page()
 		pn = int(self.page_no())
@@ -320,4 +286,49 @@ class ModernReport(FPDF):
 				row = row + 1
 		self.set_font('Arial', '', 12)
 		self.set_auto_page_break(True, 2)
+
+	def add_row_items_page(self, rows):
+		self.__new_page()
+		pn = int(self.page_no())
+		if pn % 2 == 0:
+			x = 0
+		else:
+			x = 35
+		self.set_fill_color(0, 0, 0)
+		margin_height = 5
+		margin_width = 5
+		page_height = 240.0
+		page_width = 175.0
+		row_height = int(page_height / len(rows))
+		self.set_fill_color(0, 0, 0)
+		self.set_xy(0, 0)
+		for i in range(0, len(rows)):
+			row_top = 35 + (row_height * i) + margin_height
+			actual_y = self.get_y()
+			if actual_y > row_top:
+				row_top = actual_y
+			text_width = page_width - (2 * margin_width)
+			if 'image' in rows[i]:
+				text_width = ((page_width / 3) * 2) - (2 * margin_width)
+			image_left = x + text_width + (margin_width * 2)
+
+			self.set_xy(x + margin_width, row_top)
+			self.set_font('Hatten', '', 18)
+			self.set_text_color(255, 255, 255)
+			self.cell(text_width, 11, rows[i]['title'], 1, 2, 'L', True)
+
+			self.set_xy(x + margin_width, row_top + 11)
+			self.set_font('Hatten', '', 14)
+			self.set_text_color(0, 0, 0)
+			self.cell(text_width, 10, rows[i]['date'], 0, 2, 'L')
+
+			self.set_xy(x + margin_width, row_top + 21)
+			self.set_font('Arial', '', 12)
+			self.multi_cell(text_width, 6, rows[i]['description'], 0, 2, 'L')
+
+			if 'image' in rows[i]:
+				self.image(self.__cache_image(rows[i]['image']), image_left, row_top, (text_width / 2) - margin_width)
+
+		self.set_fill_color(255, 255, 255)
+		self.set_font('Arial', '', 14)
 
