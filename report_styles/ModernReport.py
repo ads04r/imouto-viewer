@@ -137,13 +137,16 @@ class ModernReport(FPDF):
 		self.__new_page()
 		pn = int(self.page_no())
 		if pn % 2 == 0:
-			odd = False
+			x = 0
 		else:
-			odd = True
-		if odd:
-			self.image(self.__cache_image(image), 35, 35, 175, 247, type=format)
-		else:
-			self.image(self.__cache_image(image), 0, 35, 175, 247, type=format)
+			x = 35
+		if len(caption) > 0:
+			self.set_text_color(255, 255, 255)
+			self.set_font('Hatten', '', 28)
+			self.set_xy(x, 10)
+			self.cell(175, 15, caption, 0, 1, 'C', False)
+			self.set_text_color(0, 0, 0)
+		self.image(self.__cache_image(image), x, 35, 175, 247, type=format)
 		self.set_xy(200.0, 150.0)
 		self.set_font('Hatten', '', 14)
 
@@ -302,6 +305,7 @@ class ModernReport(FPDF):
 		row_height = int(page_height / len(rows))
 		self.set_fill_color(0, 0, 0)
 		self.set_xy(0, 0)
+		self.set_auto_page_break(False, 0)
 		for i in range(0, len(rows)):
 			row_top = 35 + (row_height * i) + margin_height
 			actual_y = self.get_y()
@@ -323,12 +327,13 @@ class ModernReport(FPDF):
 			self.cell(text_width, 10, rows[i]['date'], 0, 2, 'L')
 
 			self.set_xy(x + margin_width, row_top + 21)
-			self.set_font('Arial', '', 12)
-			self.multi_cell(text_width, 6, rows[i]['description'], 0, 2, 'L')
+			self.set_font('Arial', '', 10)
+			self.multi_cell(text_width, 5, rows[i]['description'], 0, 2, 'L')
 
 			if 'image' in rows[i]:
 				self.image(self.__cache_image(rows[i]['image']), image_left, row_top, (text_width / 2) - margin_width)
 
+		self.set_auto_page_break(True, 2)
 		self.set_fill_color(255, 255, 255)
 		self.set_font('Arial', '', 14)
 

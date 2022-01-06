@@ -316,7 +316,10 @@ def generate_report_pdf(reportid, style='default'):
 			file = page['image']
 			ext = file.split('.')[-1]
 			if os.path.exists(file):
-				pdf.add_image_page(page['image'], format=ext)
+				caption = ''
+				if 'text' in page:
+					caption = page['text']
+				pdf.add_image_page(page['image'], format=ext, caption=caption)
 		if page['type'] == 'items':
 			pdf.add_row_items_page(page['data'])
 		if page['type'] == 'feature':

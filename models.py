@@ -871,6 +871,8 @@ class LifeReport(models.Model):
 	pdf = models.FileField(blank=True, null=True, upload_to=report_pdf_upload_location)
 	cached_wordcloud = models.ImageField(blank=True, null=True, upload_to=report_wordcloud_upload_location)
 	cached_dict = models.TextField(blank=True, null=True)
+	def __format_date(self, dt):
+		return dt.strftime("%a %-d %b") + ' ' + (dt.strftime("%I:%M%p").lower().lstrip('0'))
 	def to_dict(self):
 		if self.cached_dict:
 			return json.loads(self.cached_dict)
@@ -968,7 +970,7 @@ class LifeReport(models.Model):
 						photos_done.append(photo.id)
 						new_photos = True
 					if new_photos:
-						ret.append({'type': 'image', 'image': pc.image.path})
+						ret.append({'type': 'image', 'text': event.caption, 'image': pc.image.path})
 				subevents = []
 				collages = []
 				for subevent in event.subevents():
@@ -983,9 +985,9 @@ class LifeReport(models.Model):
 							photos_done.append(photo.id)
 							new_photos = True
 						if new_photos:
-							collages.append(pc.image.path)
+							collages.append([pc.event.caption, pc.image.path])
 					if ((subevent.description) or (subevent.cover_photo) or (subevent.cached_staticmap)):
-						item = {'title': subevent.caption, 'description': subevent.description, 'date': subevent.start_time.strftime("%a %-d %b %I:%M%p")}
+						item = {'title': subevent.caption, 'description': subevent.description, 'date': self.__format_date(subevent.start_time)}
 						if subevent.cover_photo:
 							item['image'] = subevent.cover_photo.id
 						elif subevent.cached_staticmap:
@@ -998,12 +1000,12 @@ class LifeReport(models.Model):
 						ret.append({'type': 'items', 'data': subevents})
 						subevents = []
 						for pc in collages:
-							ret.append({'type': 'image', 'image': pc})
+							ret.append({'type': 'image', 'text': pc[0], 'image': pc[1]})
 						collages = []
 				if len(subevents) > 0:
 					ret.append({'type': 'items', 'data': subevents})
 				for pc in collages:
-					ret.append({'type': 'image', 'image': pc})
+					ret.append({'type': 'image', 'text': pc[0], 'image': pc[1]})
 			subevents = []
 			collages = []
 			for subevent in events.exclude(type='life_event'):
@@ -1018,9 +1020,9 @@ class LifeReport(models.Model):
 						photos_done.append(photo.id)
 						new_photos = True
 					if new_photos:
-						collages.append(pc.image.path)
+						collages.append([pc.event.caption, pc.image.path])
 				if ((subevent.description) or (subevent.cover_photo) or (subevent.cached_staticmap)):
-					item = {'title': subevent.caption, 'description': subevent.description, 'date': subevent.start_time.strftime("%a %-d %b %I:%M%p")}
+					item = {'title': subevent.caption, 'description': subevent.description, 'date': self.__format_date(subevent.start_time)}
 					if subevent.cover_photo:
 						item['image'] = subevent.cover_photo.id
 					elif subevent.cached_staticmap:
@@ -1033,12 +1035,12 @@ class LifeReport(models.Model):
 					ret.append({'type': 'items', 'data': subevents})
 					subevents = []
 					for pc in collages:
-						ret.append({'type': 'image', 'image': pc})
+						ret.append({'type': 'image', 'text': pc[0], 'image': pc[1]})
 					collages = []
 			if len(subevents) > 0:
 				ret.append({'type': 'items', 'data': subevents})
 			for pc in collages:
-				ret.append({'type': 'image', 'image': pc})
+				ret.append({'type': 'image', 'text': pc[0], 'image': pc[1]})
 			if len(ret) == page_count:
 				# No new pages were added this month, we may as well get rid of the month title page
 				if page_count >= 1:
