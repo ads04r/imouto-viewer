@@ -217,7 +217,7 @@ class ModernReport(FPDF):
 		self.set_text_color(255, 255, 255)
 		self.set_font('Hatten', '', 28)
 		self.set_xy(x, 10)
-		self.cell(175, 15, title, 0, 1, 'C', False)
+		self.cell(175, 15, title.title(), 0, 1, 'C', False)
 		self.set_text_color(0, 0, 0)
 		self.set_font('Arial', '', 12)
 		cols = 3
@@ -233,7 +233,13 @@ class ModernReport(FPDF):
 			#self.cell(cell_width, cell_width, '', 1)
 			self.set_font('Hatten', '', big_font)
 			self.set_xy((x + (col * cell_width)) + 5, (35 + (row * cell_width)) + 5)
-			self.cell(cell_width - 10, cell_width - 10, item['value'], 0, 0, 'C')
+			fv = float(item['value'])
+			iv = int(fv)
+			if (fv - float(iv)) > 0.0:
+				sv = f'{fv:,}'
+			else:
+				sv = f'{iv:,}'
+			self.cell(cell_width - 10, cell_width - 10, sv, 0, 0, 'C')
 			self.set_font('Hatten', '', 14)
 			self.set_xy((x + (col * cell_width)) + 5, (35 + (row * cell_width)) + 5)
 			self.cell(cell_width - 10, 10, item['key'], 0, 0, 'C')
