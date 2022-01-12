@@ -186,10 +186,24 @@ def reports(request):
 			dse = datetime.datetime(year, 12, 31, 23, 59, 59, tzinfo=pytz.UTC).strftime("%Y-%m-%d %H:%M:%S %z")
 			title = str(request.POST['label'])
 			style = str(request.POST['style'])
+			options = {}
+			options['reportdetail'] = request.POST['reportdetail']
+			options['peoplestats'] = False
+			options['wordcloud'] = False
+			options['maps'] = False
+			if 'peoplestats' in request.POST:
+				if request.POST['peoplestats'] == 'on':
+					options['peoplestats'] = True
+			if 'wordcloud' in request.POST:
+				if request.POST['wordcloud'] == 'on':
+					options['wordcloud'] = True
+			if 'maps' in request.POST:
+				if request.POST['maps'] == 'on':
+					options['maps'] = True
 			if 'moonshine_url' in request.POST:
-				generate_report(title, dss, dse, 'year', style, str(request.POST['moonshine_url']))
+				generate_report(title, dss, dse, options, 'year', style, str(request.POST['moonshine_url']))
 			else:
-				generate_report(title, dss, dse, 'year', style)
+				generate_report(title, dss, dse, options, 'year', style)
 			return HttpResponseRedirect('./#reports')
 		else:
 			raise Http404(form.errors)
@@ -686,7 +700,11 @@ def event_json(request, eid):
 def reports_json(request):
 	data = []
 	for report in LifeReport.objects.all():
-		data.append({'id': report.id, 'label': report.label})
+		item = {'id': report.id, 'label': report.label, 'pdf': False, 'style': report.style, 'options': json.loads(report.options)}
+		if report.pdf:
+			if os.path.exists(report.pdf.path):
+				item['pdf'] = True
+		data.append(item)
 	response = HttpResponse(json.dumps(data), content_type='application/json')
 	return response
 

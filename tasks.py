@@ -145,7 +145,7 @@ def generate_report_wordcloud(reportid):
 	im = report.wordcloud()
 
 @background(schedule=0, queue='reports')
-def generate_report(title, dss, dse, type='year', style='default', moonshine_url='', pdf=True):
+def generate_report(title, dss, dse, options, type='year', style='default', moonshine_url='', pdf=True):
 	""" A background task for generating LifeReport objects"""
 
 	dts = datetime.datetime.strptime(dss, "%Y-%m-%d %H:%M:%S %z")
@@ -154,8 +154,10 @@ def generate_report(title, dss, dse, type='year', style='default', moonshine_url
 	tz = get_localzone()
 	now = pytz.UTC.localize(datetime.datetime.utcnow())
 	report = LifeReport(label=title, type=type, style=style, modified_date=now)
+	report.options = json.dumps(options)
 	report.save()
 	subevents = []
+
 	for event in Event.objects.filter(type='life_event', start_time__lte=dte, end_time__gte=dts).order_by('start_time'):
 		report.events.add(event)
 		if event.location:
@@ -277,15 +279,16 @@ def generate_report(title, dss, dse, type='year', style='default', moonshine_url
 						prop.description = str(len(music_data['discovery']['albums'])) + ' albums discovered'
 				prop.save()
 
-	generate_report_wordcloud(report.id)
+	if options['wordcloud']:
+		generate_report_wordcloud(report.id)
 
 	if pdf:
-		generate_report_pdf(report.id, style)
+		generate_report_pdf(report.id)
 
 	return report
 
 @background(schedule=0, queue='reports')
-def generate_report_pdf(reportid, style='default'):
+def generate_report_pdf(reportid, override_style=''):
 	""" A background task for creating a PDF report based on a LifeReport object """
 
 	try:
@@ -296,6 +299,10 @@ def generate_report_pdf(reportid, style='default'):
 	if report is None:
 		return None
 
+	style = override_style
+	if style == '':
+		style = report.style
+	options = json.loads(report.options)
 	filename = os.path.join(settings.MEDIA_ROOT, 'reports', 'report_' + str(report.id) + '.pdf')
 	pages = report.pages()
 

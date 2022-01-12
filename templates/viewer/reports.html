@@ -129,7 +129,19 @@
 {% for field in form %}
                                 <tr class="form-row">
                                   <td>{{ field.errors }}</td>
+{% if field.label == 'Label' %}
+                                  <td>{{ field.label_tag }}</td>
+                                  <td><input id="id_label" class="form-control" type="text" name="label" maxlength="128" required=""/></td>
+{% elif field.label == 'Style' %}
+                                  <td>{{ field.label_tag }}</td><td>
+                                      <select class="form-control" id="id_style" name="style">
+                                          <option value="default" selected="selected">Default</option>
+                                          <option value="modern">Modern</option>
+                                      </select>
+                                  </td>
+{% else %}
                                   <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+{% endif %}
                                 </tr>
 {% endfor %}
 {% if settings.moonshine_url %}
@@ -137,6 +149,31 @@
                                   <td></td><td><label for="id_moonshine">Moonshine URL:</label></td><td>{{ settings.moonshine_url }}</td>
                                 </tr>
 {% endif %}
+                                <tr class="form-row">
+                                  <td></td><td><label for="id_reportdetail">Report detail:</label></td><td>
+                                    <div class="form-group">
+                                      <div class="radio">
+                                          <label><input id="id_reportdetail1" type="radio" name="reportdetail" value="full"/> Full monthly breakdown</label>
+                                      </div>
+                                      <div class="radio">
+                                          <label><input id="id_reportdetail2" type="radio" name="reportdetail" value="standard" checked="checked"/> Just life events</label>
+                                      </div>
+                                      <div class="radio">
+                                          <label><input id="id_reportdetail3" type="radio" name="reportdetail" value="minimal"/> No events</label>
+                                      </div>
+                                    </div>
+                                  </td>
+                                </tr>
+                                <tr class="form-row">
+                                  <td></td><td><label for="id_maps">Route maps:</label></td><td><input type="checkbox" id="id_maps" checked="checked" name="maps"/></td>
+                                </tr>
+                                <tr class="form-row">
+                                  <td></td><td><label for="id_peoplestats">People stats:</label></td><td><input type="checkbox" id="id_peoplestats" checked="checked" name="peoplestats"/></td>
+                                </tr>
+                                <tr class="form-row">
+                                  <td></td><td><label for="id_wordcloud">Word cloud:</label></td><td><input type="checkbox" id="id_wordcloud" checked="checked" name="wordcloud"/></td>
+                                </tr>
+
                               </table>
 
 

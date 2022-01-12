@@ -871,6 +871,7 @@ class LifeReport(models.Model):
 	pdf = models.FileField(blank=True, null=True, upload_to=report_pdf_upload_location)
 	cached_wordcloud = models.ImageField(blank=True, null=True, upload_to=report_wordcloud_upload_location)
 	cached_dict = models.TextField(blank=True, null=True)
+	options = models.TextField(default='{}')
 	def __format_date(self, dt):
 		return dt.strftime("%a %-d %b") + ' ' + (dt.strftime("%I:%M%p").lower().lstrip('0'))
 	def to_dict(self):
@@ -899,6 +900,15 @@ class LifeReport(models.Model):
 		ret = []
 		done = []
 		photos_done = []
+		options = json.loads(self.options)
+		if not('reportdetail' in options):
+			options['reportdetail'] = 'minimal'
+		if not('peoplestats' in options):
+			options['peoplestats'] = False
+		if not('wordcloud' in options):
+			options['wordcloud'] = False
+		if not('maps' in options):
+			options['maps'] = False
 		year = self.year()
 		months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 		title = str(year)
@@ -906,55 +916,40 @@ class LifeReport(models.Model):
 		if title == subtitle:
 			subtitle = ''
 		ret.append({'type': 'title', 'image': None, 'title': title, 'subtitle': subtitle})
-		if self.cached_wordcloud:
-			ret.append({'type': 'image', 'image': self.cached_wordcloud.path})
+		if options['wordcloud'] == True:
+			if self.cached_wordcloud:
+				ret.append({'type': 'image', 'image': self.cached_wordcloud.path})
 		for category in list(LifeReportProperties.objects.filter(report=self).values_list('category', flat=True).distinct()):
 			item = {'type': 'stats', 'title': category, 'data': []}
 			for prop in LifeReportProperties.objects.filter(report=self, category=category):
 				item['data'].append(prop.to_dict())
 			ret.append(item)
 		for chart in LifeReportChart.objects.filter(report=self):
+			if options['peoplestats'] == False:
+				if chart.text.lower() == 'people':
+					continue
 			item = {'type': 'chart', 'title': chart.text}
 			if chart.description:
 				if len(chart.description) > 0:
 					item['description'] = chart.description
 			item['data'] = json.loads(chart.data)
 			ret.append(item)
-		item = {'type': 'chart', 'title': "People", 'description': "Top 10 people encountered, ranked by the number of times met over the course of the year."}
-		item_data = []
-		for pl in ReportPeople.objects.filter(report=self):
-			value = {"text": pl.person.full_name(), "value": len(json.loads(pl.day_list))}
-			if pl.person.image:
-				value['image'] = pl.person.image.path
-			item_data.append(value)
-		item['data'] = sorted(item_data, reverse=True, key=lambda d: d['value'])
-		item['data'] = item['data'][0:10]
-		ret.append(item)
-		for i in range(0, 12):
-			ret.append({'type': 'title', 'image': None, 'title': months[i]})
+
+		if options['peoplestats'] == True:
+			item = {'type': 'chart', 'title': "People", 'description': "Top 10 people encountered, ranked by the number of times met over the course of the year."}
+			item_data = []
+			for pl in ReportPeople.objects.filter(report=self):
+				value = {"text": pl.person.full_name(), "value": len(json.loads(pl.day_list))}
+				if pl.person.image:
+					value['image'] = pl.person.image.path
+				item_data.append(value)
+			item['data'] = sorted(item_data, reverse=True, key=lambda d: d['value'])
+			item['data'] = item['data'][0:10]
+			ret.append(item)
+
+		if options['reportdetail'] == 'standard':
 			page_count = len(ret)
-			dts = datetime.datetime(year, (i + 1), 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
-			if i < 11:
-				dte = datetime.datetime(year, (i + 2), 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE)) - datetime.timedelta(seconds=1)
-			else:
-				dte = datetime.datetime((year + 1), 1, 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE)) - datetime.timedelta(seconds=1)
-			people = []
-			for person in Person.objects.filter(reports__report=self, reports__first_encounter__gte=dts, reports__first_encounter__lte=dte):
-				item = {'name': person.full_name()}
-				if person.image:
-					item['image'] = person.image.path
-				if not('image' in item):
-					continue # For now, just don't show anyone with no photo
-				people.append(item)
-			if len(people) > 0:
-				grid_max = len(people)
-				while grid_max > 16:
-					grid_max = int((float(grid_max) / 2) + 0.5)
-				while len(people) > 0:
-					ret.append({'type': 'grid', 'title': 'People', 'data': people[0:grid_max]})
-					people = people[grid_max:]
-			events = self.events.filter(end_time__gte=dts, start_time__lte=dte)
-			for event in events.filter(type='life_event'):
+			for event in self.events.filter(type='life_event').order_by('start_time'):
 				if event.id in done:
 					continue
 				done.append(event.id)
@@ -973,7 +968,7 @@ class LifeReport(models.Model):
 						ret.append({'type': 'image', 'text': event.caption, 'image': pc.image.path})
 				subevents = []
 				collages = []
-				for subevent in event.subevents():
+				for subevent in event.subevents().order_by('start_time'):
 					if subevent.id in done:
 						continue
 					done.append(subevent.id)
@@ -991,7 +986,8 @@ class LifeReport(models.Model):
 						if subevent.cover_photo:
 							item['image'] = subevent.cover_photo.id
 						elif subevent.cached_staticmap:
-							item['image'] = subevent.cached_staticmap.path
+							if options['maps'] == True:
+								item['image'] = subevent.cached_staticmap.path
 						if len(subevent.description) < 1000:
 							subevents.append(item)
 						else:
@@ -1006,46 +1002,127 @@ class LifeReport(models.Model):
 					ret.append({'type': 'items', 'data': subevents})
 				for pc in collages:
 					ret.append({'type': 'image', 'text': pc[0], 'image': pc[1]})
-			subevents = []
-			collages = []
-			for subevent in events.exclude(type='life_event'):
-				if subevent.id in done:
-					continue
-				done.append(subevent.id)
-				for pc in subevent.photo_collages.all():
-					new_photos = False
-					for photo in pc.photos.all():
-						if photo.id in photos_done:
-							continue
-						photos_done.append(photo.id)
-						new_photos = True
-					if new_photos:
-						collages.append([pc.event.caption, pc.image.path])
-				if ((subevent.description) or (subevent.cover_photo) or (subevent.cached_staticmap)):
-					item = {'title': subevent.caption, 'description': subevent.description, 'date': self.__format_date(subevent.start_time)}
-					if subevent.cover_photo:
-						item['image'] = subevent.cover_photo.id
-					elif subevent.cached_staticmap:
-						item['image'] = subevent.cached_staticmap.path
-					if len(subevent.description) < 1000:
-						subevents.append(item)
-					else:
-						ret.append({'type': 'items', 'data': [item]})
-				if len(subevents) >= 3:
-					ret.append({'type': 'items', 'data': subevents})
+
+		if options['reportdetail'] == 'full':
+			for i in range(0, 12):
+				ret.append({'type': 'title', 'image': None, 'title': months[i]})
+				page_count = len(ret)
+				dts = datetime.datetime(year, (i + 1), 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
+				if i < 11:
+					dte = datetime.datetime(year, (i + 2), 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE)) - datetime.timedelta(seconds=1)
+				else:
+					dte = datetime.datetime((year + 1), 1, 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE)) - datetime.timedelta(seconds=1)
+				people = []
+				for person in Person.objects.filter(reports__report=self, reports__first_encounter__gte=dts, reports__first_encounter__lte=dte):
+					item = {'name': person.full_name()}
+					if person.image:
+						item['image'] = person.image.path
+					if not('image' in item):
+						continue # For now, just don't show anyone with no photo
+					people.append(item)
+				if len(people) > 0:
+					grid_max = len(people)
+					while grid_max > 16:
+						grid_max = int((float(grid_max) / 2) + 0.5)
+					while len(people) > 0:
+						if options['peoplestats'] == True:
+							ret.append({'type': 'grid', 'title': 'People', 'data': people[0:grid_max]})
+						people = people[grid_max:]
+				events = self.events.filter(end_time__gte=dts, start_time__lte=dte)
+				for event in events.filter(type='life_event').order_by('start_time'):
+					if event.id in done:
+						continue
+					done.append(event.id)
+					item = {'type': 'feature', 'title': event.caption, 'description': event.description}
+					if event.cover_photo:
+						item['image'] = event.cover_photo.id
+					ret.append(item)
+					for pc in event.photo_collages.all():
+						new_photos = False
+						for photo in pc.photos.all():
+							if photo.id in photos_done:
+								continue
+							photos_done.append(photo.id)
+							new_photos = True
+						if new_photos:
+							ret.append({'type': 'image', 'text': event.caption, 'image': pc.image.path})
 					subevents = []
+					collages = []
+					for subevent in event.subevents().order_by('start_time'):
+						if subevent.id in done:
+							continue
+						done.append(subevent.id)
+						for pc in subevent.photo_collages.all():
+							new_photos = False
+							for photo in pc.photos.all():
+								if photo.id in photos_done:
+									continue
+								photos_done.append(photo.id)
+								new_photos = True
+							if new_photos:
+								collages.append([pc.event.caption, pc.image.path])
+						if ((subevent.description) or (subevent.cover_photo) or (subevent.cached_staticmap)):
+							item = {'title': subevent.caption, 'description': subevent.description, 'date': self.__format_date(subevent.start_time)}
+							if subevent.cover_photo:
+								item['image'] = subevent.cover_photo.id
+							elif subevent.cached_staticmap:
+								if options['maps'] == True:
+									item['image'] = subevent.cached_staticmap.path
+							if len(subevent.description) < 1000:
+								subevents.append(item)
+							else:
+								ret.append({'type': 'items', 'data': [item]})
+						if len(subevents) >= 3:
+							ret.append({'type': 'items', 'data': subevents})
+							subevents = []
+							for pc in collages:
+								ret.append({'type': 'image', 'text': pc[0], 'image': pc[1]})
+							collages = []
+					if len(subevents) > 0:
+						ret.append({'type': 'items', 'data': subevents})
 					for pc in collages:
 						ret.append({'type': 'image', 'text': pc[0], 'image': pc[1]})
-					collages = []
-			if len(subevents) > 0:
-				ret.append({'type': 'items', 'data': subevents})
-			for pc in collages:
-				ret.append({'type': 'image', 'text': pc[0], 'image': pc[1]})
-			if len(ret) == page_count:
-				# No new pages were added this month, we may as well get rid of the month title page
-				if page_count >= 1:
-					page_count = page_count - 1
-					ret = ret[0:page_count]
+				subevents = []
+				collages = []
+				for subevent in events.exclude(type='life_event').order_by('start_time'):
+					if subevent.id in done:
+						continue
+					done.append(subevent.id)
+					for pc in subevent.photo_collages.all():
+						new_photos = False
+						for photo in pc.photos.all():
+							if photo.id in photos_done:
+								continue
+							photos_done.append(photo.id)
+							new_photos = True
+						if new_photos:
+							collages.append([pc.event.caption, pc.image.path])
+					if ((subevent.description) or (subevent.cover_photo) or (subevent.cached_staticmap)):
+						item = {'title': subevent.caption, 'description': subevent.description, 'date': self.__format_date(subevent.start_time)}
+						if subevent.cover_photo:
+							item['image'] = subevent.cover_photo.id
+						elif subevent.cached_staticmap:
+							if options['maps'] == True:
+								item['image'] = subevent.cached_staticmap.path
+						if len(subevent.description) < 1000:
+							subevents.append(item)
+						else:
+							ret.append({'type': 'items', 'data': [item]})
+					if len(subevents) >= 3:
+						ret.append({'type': 'items', 'data': subevents})
+						subevents = []
+						for pc in collages:
+							ret.append({'type': 'image', 'text': pc[0], 'image': pc[1]})
+						collages = []
+				if len(subevents) > 0:
+					ret.append({'type': 'items', 'data': subevents})
+				for pc in collages:
+					ret.append({'type': 'image', 'text': pc[0], 'image': pc[1]})
+				if len(ret) == page_count:
+					# No new pages were added this month, we may as well get rid of the month title page
+					if page_count >= 1:
+						page_count = page_count - 1
+						ret = ret[0:page_count]
 		return ret
 	def words(self):
 		text = ''
