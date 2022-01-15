@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand
 from django.core.cache import cache
 from django.conf import settings
 from viewer.importers import import_photo_directory
+from viewer.functions import bubble_photo_locations, locate_photos_by_exif
 import os, sys, pytz
 
 class Command(BaseCommand):
@@ -32,4 +33,6 @@ class Command(BaseCommand):
 			sys.exit(1)
 
 		ret = import_photo_directory(path, tz)
-		sys.stderr.write(self.style.SUCCESS(str(len(ret)) + " new photo(s) found.\n"))
+		sys.stderr.write(self.style.SUCCESS(str(len(ret)) + " new photo(s) added.\n"))
+		ret = bubble_photo_locations() + locate_photos_by_exif()
+		sys.stderr.write(self.style.SUCCESS(str(ret) + " photo(s) tagged with locations.\n"))
