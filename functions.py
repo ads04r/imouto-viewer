@@ -332,10 +332,16 @@ def get_sleep_information(dt):
 
 	return data
 
-def getgeoline(dts, dte, address='127.0.0.1:8000'):
+def getgeoline(dts, dte, loc_manager=None):
+
+	address = settings.LOCATION_MANAGER_URL
+	if not(loc_manager is None):
+		address = loc_manager
+	if not('://' in address):
+		address = 'http://' + address
 
 	id = dts.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S") + dte.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S")
-	url = "http://" + address + "/location-manager/route/" + id + "?format=json"
+	url = address + "/route/" + id + "?format=json"
 	data = {}
 	with urllib.request.urlopen(url) as h:
 		data = json.loads(h.read().decode())
@@ -346,10 +352,16 @@ def getgeoline(dts, dte, address='127.0.0.1:8000'):
 					return json.dumps(data['geo'])
 	return ""
 
-def getelevation(dts, dte, address='127.0.0.1:8000'):
+def getelevation(dts, dte, loc_manager=None):
+
+	address = settings.LOCATION_MANAGER_URL
+	if not(loc_manager is None):
+		address = loc_manager
+	if not('://' in address):
+		address = 'http://' + address
 
 	id = dts.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S") + dte.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S")
-	url = "http://" + address + "/location-manager/elevation/" + id + "?format=json"
+	url = address + "/elevation/" + id + "?format=json"
 	data = []
 	with urllib.request.urlopen(url) as h:
 		for item in json.loads(h.read().decode()):
@@ -358,10 +370,16 @@ def getelevation(dts, dte, address='127.0.0.1:8000'):
 		return json.dumps(data)
 	return ""
 
-def getspeed(dts, dte, address='127.0.0.1:8000'):
+def getspeed(dts, dte, loc_manager=None):
+
+	address = settings.LOCATION_MANAGER_URL
+	if not(loc_manager is None):
+		address = loc_manager
+	if not('://' in address):
+		address = 'http://' + address
 
 	id = dts.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S") + dte.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S")
-	url = "http://" + address + "/location-manager/elevation/" + id + "?format=json"
+	url = address + "/elevation/" + id + "?format=json"
 	data = []
 	last_dist = 0
 	last_time = dts

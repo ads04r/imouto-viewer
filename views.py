@@ -227,9 +227,9 @@ def events(request):
 		if form.is_valid():
 			event = form.save(commit=False)
 			if event.type == 'journey':
-				event.geo = getgeoline(event.start_time, event.end_time, request.META['HTTP_HOST'])
-				event.elevation = getelevation(event.start_time, event.end_time, request.META['HTTP_HOST'])
-				event.speed = getspeed(event.start_time, event.end_time, request.META['HTTP_HOST'])
+				event.geo = getgeoline(event.start_time, event.end_time)
+				event.elevation = getelevation(event.start_time, event.end_time)
+				event.speed = getspeed(event.start_time, event.end_time)
 				event.cached_health = ''
 			event.save()
 			event.tags.clear()
@@ -408,9 +408,9 @@ def event(request, eid):
 		if form.is_valid():
 			event = form.save(commit=False)
 			if event.type == 'journey':
-				event.geo = getgeoline(event.start_time, event.end_time, request.META['HTTP_HOST'])
-				event.elevation = getelevation(event.start_time, event.end_time, request.META['HTTP_HOST'])
-				event.speed = getspeed(event.start_time, event.end_time, request.META['HTTP_HOST'])
+				event.geo = getgeoline(event.start_time, event.end_time)
+				event.elevation = getelevation(event.start_time, event.end_time)
+				event.speed = getspeed(event.start_time, event.end_time)
 			event.tags.clear()
 			try:
 				tags = str(request.POST['event_tags']).split(',')
