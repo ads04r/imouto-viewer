@@ -700,7 +700,7 @@ def event_json(request, eid):
 def reports_json(request):
 	data = []
 	for report in LifeReport.objects.all():
-		item = {'id': report.id, 'label': report.label, 'pdf': False, 'style': report.style, 'options': json.loads(report.options)}
+		item = {'id': report.id, 'label': report.label, 'year': report.year(), 'pdf': False, 'style': report.style, 'options': json.loads(report.options)}
 		if report.pdf:
 			if os.path.exists(report.pdf.path):
 				item['pdf'] = True
