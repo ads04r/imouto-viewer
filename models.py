@@ -4,12 +4,13 @@ from django.db.models import Count
 from django.conf import settings
 from django.utils.html import strip_tags
 from colorfield.fields import ColorField
-from PIL import Image
+from PIL import Image, ImageDraw
 from io import BytesIO
 from wordcloud import WordCloud, STOPWORDS
 from configparser import ConfigParser
 from viewer.health import parse_sleep
 from staticmap import StaticMap, Line
+from viewer.staticcharts import generate_pie_chart, generate_donut_chart
 import random, datetime, pytz, json, markdown, re, os, urllib.request
 
 def user_thumbnail_upload_location(instance, filename):
@@ -1156,7 +1157,7 @@ class LifeReport(models.Model):
 		for word in set(STOPWORDS):
 			stopwords.add(word)
 			stopwords.add(word.capitalize())
-		wc = WordCloud(width=2598, height=3543, background_color=None, mode='RGBA', max_words=500, stopwords=stopwords, font_path=settings.WORDCLOUD_FONT).generate(text)
+		wc = WordCloud(width=2598, height=3543, background_color=None, mode='RGBA', max_words=500, stopwords=stopwords, font_path=settings.DEFAULT_FONT).generate(text)
 		im = wc.to_image()
 		blob = BytesIO()
 		im.save(blob, 'PNG')
@@ -1251,6 +1252,12 @@ class LifeReportGraph(models.Model):
 	type = models.SlugField(max_length=16, default='bar')
 	icon = models.SlugField(max_length=64, default='bar-chart')
 	description = models.TextField(null=True, blank=True)
+	def image(self, w=640, h=640):
+		data = json.loads(self.data)
+		if self.type == 'pie':
+			return generate_pie_chart(data, w, h)
+		if self.type == 'donut':
+			return generate_donut_chart(data, w, h)
 	def __str__(self):
 		return str(self.report) + ' - ' + self.key
 	class Meta:
