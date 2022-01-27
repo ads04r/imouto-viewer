@@ -12,6 +12,12 @@ def generate_report_travel(report, dts, dte):
 		prop.icon = 'globe'
 		prop.save()
 
+	tz = get_localzone()
+	now = pytz.UTC.localize(datetime.datetime.utcnow())
+	report.cached_dict = ''
+	report.modified_date=now
+	report.save()
+
 def generate_report_photos(report, dts, dte):
 
 	options = json.loads(report.options)
@@ -67,6 +73,12 @@ def generate_report_photos(report, dts, dte):
 			chart = LifeReportChart(text='Most Photographed People', data=json.dumps(chart_data), report=report)
 			chart.save()
 
+	tz = get_localzone()
+	now = pytz.UTC.localize(datetime.datetime.utcnow())
+	report.cached_dict = ''
+	report.modified_date=now
+	report.save()
+
 def generate_report_people(report, dts, dte):
 
 	ReportPeople.objects.filter(report=report).delete()
@@ -93,6 +105,7 @@ def generate_report_people(report, dts, dte):
 
 	tz = get_localzone()
 	now = pytz.UTC.localize(datetime.datetime.utcnow())
+	report.cached_dict = ''
 	report.modified_date=now
 	report.save()
 
@@ -120,6 +133,12 @@ def generate_report_comms(report, dts, dte):
 		prop.save()
 		smsg1 = LifeReportGraph(key='SMS Sent vs SMS Received', type='donut', description='', icon='', report=report, category='communication', data=json.dumps([["Sent", "Received"],[sms_sent, sms_recv]]))
 		smsg1.save()
+
+	tz = get_localzone()
+	now = pytz.UTC.localize(datetime.datetime.utcnow())
+	report.cached_dict = ''
+	report.modified_date=now
+	report.save()
 
 def generate_report_music(report, dts, dte, moonshine_url=''):
 
@@ -162,4 +181,10 @@ def generate_report_music(report, dts, dte, moonshine_url=''):
 					if 'albums' in music_data['discovery']:
 						prop.description = str(len(music_data['discovery']['albums'])) + ' albums discovered'
 				prop.save()
+
+	tz = get_localzone()
+	now = pytz.UTC.localize(datetime.datetime.utcnow())
+	report.cached_dict = ''
+	report.modified_date=now
+	report.save()
 
