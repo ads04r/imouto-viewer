@@ -3,6 +3,8 @@ from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
 from django.db.models import Q, F, DurationField, ExpressionWrapper
+from django.db.models.functions import Cast
+from django.db.models.fields import DateField
 from django.conf import settings
 from rest_framework.exceptions import MethodNotAllowed
 from background_task.models import Task
@@ -580,8 +582,9 @@ def place(request, uid):
 def people(request):
 	data = {}
 	datecutoff = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC) - datetime.timedelta(days=365)
-	data['recent'] = Person.objects.filter(event__start_time__gte=datecutoff).annotate(num_events=Count('event')).order_by('-num_events')
-	data['all'] = Person.objects.annotate(num_events=Count('event')).order_by('given_name', 'family_name')
+	data['recent_by_events'] = Person.objects.filter(event__start_time__gte=datecutoff).annotate(num_events=Count('event', distinct=True)).order_by('-num_events')
+	data['recent_by_days'] = Person.objects.filter(event__start_time__gte=datecutoff).annotate(days=Count(Cast('event__start_time', DateField()), distinct=True)).order_by('-days')
+	data['all'] = Person.objects.annotate(days=Count(Cast('event__start_time', DateField()), distinct=True)).order_by('given_name', 'family_name')
 	context = {'type':'person', 'data':data}
 	ret = render(request, 'viewer/people.html', context)
 	return ret
