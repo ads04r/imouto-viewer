@@ -585,6 +585,7 @@ def people(request):
 	data['recent_by_events'] = Person.objects.filter(event__start_time__gte=datecutoff).annotate(num_events=Count('event', distinct=True)).order_by('-num_events')[0:10]
 	data['recent_by_days'] = Person.objects.filter(event__start_time__gte=datecutoff).annotate(days=Count(Cast('event__start_time', DateField()), distinct=True)).order_by('-days')[0:10]
 	data['recent_by_last_seen'] = Person.objects.annotate(last_seen=Max('event__start_time')).order_by('-last_seen')[0:10]
+	data['photos'] = Person.objects.filter(photo__time__gte=datecutoff).annotate(photo_count=Count('photo')).order_by('-photo_count')[0:10]
 	data['messages'] = []
 	data['calls'] = []
 	for number in RemoteInteraction.objects.filter(time__gte=datecutoff, type='sms').values('address').annotate(messages=Count('address')).order_by('-messages'):
