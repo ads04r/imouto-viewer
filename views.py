@@ -2,7 +2,7 @@ from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
-from django.db.models import Q, F, DurationField, ExpressionWrapper
+from django.db.models import Q, F, DurationField, ExpressionWrapper, Max
 from django.db.models.functions import Cast
 from django.db.models.fields import DateField
 from django.conf import settings
@@ -582,9 +582,32 @@ def place(request, uid):
 def people(request):
 	data = {}
 	datecutoff = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC) - datetime.timedelta(days=365)
-	data['recent_by_events'] = Person.objects.filter(event__start_time__gte=datecutoff).annotate(num_events=Count('event', distinct=True)).order_by('-num_events')
-	data['recent_by_days'] = Person.objects.filter(event__start_time__gte=datecutoff).annotate(days=Count(Cast('event__start_time', DateField()), distinct=True)).order_by('-days')
-	data['all'] = Person.objects.annotate(days=Count(Cast('event__start_time', DateField()), distinct=True)).order_by('given_name', 'family_name')
+	data['recent_by_events'] = Person.objects.filter(event__start_time__gte=datecutoff).annotate(num_events=Count('event', distinct=True)).order_by('-num_events')[0:10]
+	data['recent_by_days'] = Person.objects.filter(event__start_time__gte=datecutoff).annotate(days=Count(Cast('event__start_time', DateField()), distinct=True)).order_by('-days')[0:10]
+	data['recent_by_last_seen'] = Person.objects.annotate(last_seen=Max('event__start_time')).order_by('-last_seen')[0:10]
+	data['messages'] = []
+	data['calls'] = []
+	for number in RemoteInteraction.objects.filter(time__gte=datecutoff, type='sms').values('address').annotate(messages=Count('address')).order_by('-messages'):
+		try:
+			person = Person.objects.get(properties__key='mobile', properties__value=number['address'])
+		except:
+			person = None
+		if not(person is None):
+			data['messages'].append([person, number['messages']])
+	for number in RemoteInteraction.objects.filter(time__gte=datecutoff, type='phone-call').values('address').annotate(messages=Count('address')).order_by('-messages'):
+		try:
+			person = Person.objects.get(properties__key='mobile', properties__value=number['address'])
+		except:
+			person = None
+		if not(person is None):
+			data['calls'].append([person, number['messages']])
+		try:
+			person = Person.objects.get(properties__key='phone', properties__value=number['address'])
+		except:
+			person = None
+		if not(person is None):
+			data['calls'].append([person, number['messages']])
+	data['all'] = Person.objects.annotate(days=Count(Cast('event__start_time', DateField()), distinct=True)).annotate(last_seen=Max('event__start_time')).order_by('given_name', 'family_name')
 	context = {'type':'person', 'data':data}
 	ret = render(request, 'viewer/people.html', context)
 	return ret
