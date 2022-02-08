@@ -17,6 +17,33 @@ from dateutil import tz
 from viewer.functions import find_person_by_picasaid as find_person, convert_to_degrees
 from viewer.models import *
 
+def import_home_assistant_presence(uid, entity_id, days=7):
+
+	dte = datetime.datetime.utcnow()
+	dts = dte - datetime.timedelta(days=days)
+	url = settings.HOME_ASSISTANT_URL.lstrip('/') + '/history/period/' + dts.strftime("%Y-%m-%d") + 'T' + dts.strftime("%H:%M:%S")
+	token = settings.HOME_ASSISTANT_TOKEN
+	home = Location.objects.get(id=settings.USER_HOME_LOCATION)
+	person = Person.objects.get(uid=uid)
+	data = []
+	ret = []
+
+	last_item = {'state': ''}
+	r = requests.get(url, headers={'Authorization': 'Bearer ' + token}, params={'filter_entity_id': entity_id, 'minimal_response': True, 'end_time': dte.strftime("%Y-%m-%d") + 'T' + dte.strftime("%H:%M:%S")})
+	for item in json.loads(r.text):
+		for subitem in item:
+			if not(isinstance(subitem, (dict))):
+				continue
+			if((last_item['state'] == 'home') & (subitem['state'] == 'not_home')):
+				data.append({'from': dateparse(last_item['last_changed']), 'to': dateparse(subitem['last_changed'])})
+			last_item = subitem
+	for item in data:
+		for event in Event.objects.filter(start_time__gte=item['from'], end_time__lte=item['to'], location=home):
+			event.people.add(person)
+			ret.append(event)
+
+	return ret
+
 def import_fit(parseable_fit_input):
 
 	data = []
