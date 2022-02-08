@@ -21,12 +21,28 @@ def import_home_assistant_presence(uid, entity_id, days=7):
 
 	dte = datetime.datetime.utcnow()
 	dts = dte - datetime.timedelta(days=days)
-	url = settings.HOME_ASSISTANT_URL.lstrip('/') + '/history/period/' + dts.strftime("%Y-%m-%d") + 'T' + dts.strftime("%H:%M:%S")
-	token = settings.HOME_ASSISTANT_TOKEN
-	home = Location.objects.get(id=settings.USER_HOME_LOCATION)
+	try:
+		url = settings.HOME_ASSISTANT_URL.lstrip('/') + '/history/period/' + dts.strftime("%Y-%m-%d") + 'T' + dts.strftime("%H:%M:%S")
+	except AttributeError:
+		url = ''
+	try:
+		token = settings.HOME_ASSISTANT_TOKEN
+	except AttributeError:
+		token = ''
+	try:
+		home = Location.objects.get(id=settings.USER_HOME_LOCATION)
+	except AttributeError:
+		home = None
 	person = Person.objects.get(uid=uid)
 	data = []
 	ret = []
+
+	if url == '':
+		return ret
+	if token == '':
+		return ret
+	if home is None:
+		return ret
 
 	last_item = {'state': ''}
 	r = requests.get(url, headers={'Authorization': 'Bearer ' + token}, params={'filter_entity_id': entity_id, 'minimal_response': True, 'end_time': dte.strftime("%Y-%m-%d") + 'T' + dte.strftime("%H:%M:%S")})
