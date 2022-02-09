@@ -17,6 +17,88 @@ from dateutil import tz
 from viewer.functions import find_person_by_picasaid as find_person, convert_to_degrees
 from viewer.models import *
 
+def import_home_assistant_readings(entity_id, reading_type, days=7):
+
+	dte = datetime.datetime.utcnow()
+	dts = dte - datetime.timedelta(days=days)
+	try:
+		url = settings.HOME_ASSISTANT_URL.lstrip('/') + '/history/period/' + dts.strftime("%Y-%m-%d") + 'T' + dts.strftime("%H:%M:%S")
+	except AttributeError:
+		url = ''
+	try:
+		token = settings.HOME_ASSISTANT_TOKEN
+	except AttributeError:
+		token = ''
+	data = []
+	ret = []
+	if url == '':
+		return ret
+	if token == '':
+		return ret
+	if reading_type == '':
+		return ret
+	r = requests.get(url, headers={'Authorization': 'Bearer ' + token}, params={'filter_entity_id': entity_id, 'minimal_response': True, 'end_time': dte.strftime("%Y-%m-%d") + 'T' + dte.strftime("%H:%M:%S")})
+	for item in json.loads(r.text):
+		for subitem in item:
+			try:
+				state = int(subitem['state'])
+			except:
+				state = 0
+			dt = dateparse(subitem['last_changed'])
+			try:
+				reading = DataReading.objects.get(start_time=dt, end_time=dt, type=reading_type)
+			except:
+				reading = DataReading(start_time=dt, end_time=dt, type=reading_type)
+			reading.value = state
+			reading.save()
+			ret.append(reading)
+	return ret
+
+def import_home_assistant_events(entity_id, event_type, days=1):
+
+	dte = datetime.datetime.utcnow()
+	dts = dte - datetime.timedelta(days=days)
+	name = ''
+	try:
+		url = settings.HOME_ASSISTANT_URL.lstrip('/') + '/history/period/' + dts.strftime("%Y-%m-%d") + 'T' + dts.strftime("%H:%M:%S")
+	except AttributeError:
+		url = ''
+	try:
+		token = settings.HOME_ASSISTANT_TOKEN
+	except AttributeError:
+		token = ''
+	data = []
+	ret = []
+	if url == '':
+		return ret
+	if token == '':
+		return ret
+	if event_type == '':
+		return ret
+	last_item = {'state': ''}
+	r = requests.get(url, headers={'Authorization': 'Bearer ' + token}, params={'filter_entity_id': entity_id, 'minimal_response': True, 'end_time': dte.strftime("%Y-%m-%d") + 'T' + dte.strftime("%H:%M:%S")})
+	for item in json.loads(r.text):
+		for subitem in item:
+			if not(isinstance(subitem, (dict))):
+				continue
+			if 'attributes' in subitem:
+				if 'friendly_name' in subitem['attributes']:
+					name = subitem['attributes']['friendly_name']
+			if((last_item['state'] == 'on') & (subitem['state'] == 'off')):
+				data.append({'from': dateparse(last_item['last_changed']), 'to': dateparse(subitem['last_changed'])})
+
+			last_item = subitem
+	if name == '':
+		name = entity_id + ' event'
+	for item in data:
+		try:
+			event = Event.objects.get(start_time=item['from'], end_time=item['to'], type=event_type)
+		except:
+			event = Event(start_time=item['from'], end_time=item['to'], type=event_type, caption=name)
+			event.save()
+		ret.append(event)
+	return ret
+
 def import_home_assistant_presence(uid, entity_id, days=7):
 
 	dte = datetime.datetime.utcnow()
