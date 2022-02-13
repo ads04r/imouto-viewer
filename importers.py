@@ -15,8 +15,21 @@ from django.core.cache import cache
 from tempfile import NamedTemporaryFile
 from dateutil import tz
 
-from viewer.functions import get_monica_contact_data, get_last_monica_activity, find_person_by_picasaid as find_person, convert_to_degrees
+from viewer.functions import get_monica_contact_data, get_last_monica_activity, assign_monica_avatar, find_person_by_picasaid as find_person, convert_to_degrees
 from viewer.models import *
+
+def export_monica_thumbnails():
+
+	ret = []
+	for prop in PersonProperty.objects.filter(key='monicahash'):
+		person = prop.person
+		hash = str(prop.value)
+		with NamedTemporaryFile() as tempfile:
+			img = person.thumbnail(size=300)
+			img.save(tempfile.name, format='JPEG')
+			if assign_monica_avatar(hash, tempfile.name, force=False):
+				ret.append(person)
+	return ret
 
 def import_monica_contact_mappings():
 

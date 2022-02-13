@@ -28,6 +28,92 @@ def __display_timeline_event(event):
 							return False
 	return True
 
+def create_monica_activity_from_event(event):
+
+	return create_monica_activity(event.caption, event.start_time, event.people.all())
+
+def create_monica_activity(summary, date, people):
+
+	contacts = []
+	for person in people:
+		hashes = person.get_property('monicahash')
+		if len(hashes) == 0:
+			continue
+		item = find_person_by_monica_hash(hashes[0])
+		if not('id' in item):
+			continue
+		id = item['id']
+		contacts.append(id)
+	if len(contacts) == 0:
+		return []
+	try:
+		url = settings.MONICA_URL.lstrip('/') + '/activities'
+	except AttributeError:
+		url = ''
+	try:
+		token = settings.MONICA_PERSONAL_TOKEN
+	except AttributeError:
+		token = ''
+	if url == '':
+		return []
+	if token == '':
+		return []
+
+	data = {'summary': summary, 'happened_at': date.strftime("%Y-%m-%d"), 'contacts': contacts}
+	r = requests.request("POST", url, headers={'Authorization': 'Bearer ' + token}, json=data)
+	ret = json.loads(r.text)
+	if not('data' in ret):
+		return False
+	if not('id' in ret['data']):
+		return False
+
+	return True
+
+def assign_monica_avatar(hash, file, force=True):
+
+	try:
+		url = settings.MONICA_URL.lstrip('/') + '/photos'
+	except AttributeError:
+		url = ''
+	try:
+		token = settings.MONICA_PERSONAL_TOKEN
+	except AttributeError:
+		token = ''
+	item = find_person_by_monica_hash(hash)
+	if not('id' in item):
+		return False
+	id = item['id']
+	current_avatar = item['information']['avatar']['source']
+	if current_avatar == 'photo':
+		if not(force):
+			return False
+	if url == '':
+		return False
+	if token == '':
+		return False
+	files = [('photo', (file, open(file, 'rb'), 'image/jpeg'))]
+	data = {'contact_id': id}
+	r = requests.request("POST", url, headers={'Authorization': 'Bearer ' + token}, data=data, files=files)
+	ret = json.loads(r.text)
+	if not('data' in ret):
+		return False
+	if not('id' in ret['data']):
+		return False
+	photo_id = ret['data']['id']
+	url = settings.MONICA_URL.lstrip('/') + '/contacts/' + str(id) + '/avatar'
+	data = {'source': 'photo', 'photo_id': photo_id}
+	r = requests.request("PUT", url, headers={'Authorization': 'Bearer ' + token}, data=data)
+	ret = json.loads(r.text)
+	if not('data' in ret):
+		return False
+	if not('hash_id' in ret['data']):
+		return False
+
+	if ret['data']['hash_id'] == hash:
+		return True
+
+	return False
+
 def get_last_monica_activity():
 
 	dt = datetime.date(1970, 1, 1)
@@ -132,6 +218,15 @@ def convert_to_degrees(value):
 		s = 0.0
 
 	return d + (m / 60.0) + (s / 3600.0)
+
+def find_person_by_monica_hash(hash):
+
+	for item in get_monica_contact_data():
+		if not('hash_id' in item):
+			continue
+		if item['hash_id'] == hash:
+			return item
+	return []
 
 def find_person_by_picasaid(picasaid, name=''):
 
