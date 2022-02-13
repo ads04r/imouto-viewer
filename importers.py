@@ -31,7 +31,7 @@ def export_monica_thumbnails():
 				ret.append(person)
 	return ret
 
-def import_monica_contact_mappings():
+def import_monica_contact_mappings(countrycode='44'):
 
 	items = []
 	ret = []
@@ -47,6 +47,28 @@ def import_monica_contact_mappings():
 			prop = PersonProperty.objects.get(key=item[1], value=item[2])
 		except:
 			prop = None
+		if prop is None:
+			continue
+		if PersonProperty.objects.filter(person=prop.person, key='monicahash').count() > 0:
+			continue
+		newprop = PersonProperty(person=prop.person, key='monicahash', value=item[0])
+		newprop.save()
+		ret.append(newprop.person)
+	for item in items:
+		if item[1] != 'phone':
+			continue
+		num = item[2]
+		if num.startswith('0'):
+			num = '+' + countrycode + num[1:]
+		try:
+			prop = PersonProperty.objects.get(key=item[1], value=num)
+		except:
+			prop = None
+		if prop is None:
+			try:
+				prop = PersonProperty.objects.get('mobile', value=num)
+			except:
+				prop = None
 		if prop is None:
 			continue
 		if PersonProperty.objects.filter(person=prop.person, key='monicahash').count() > 0:
@@ -312,7 +334,7 @@ def import_carddav(url, auth, countrycode='44'):
 					if num.startswith('0'):
 						num = '+' + countrycode + num[1:]
 					phonestyle = 'phone'
-					if num.startswith('+447'):
+					if ((countrycode == '44') & (num.startswith('+447'))):
 						phonestyle='mobile' # Very UK-centric.
 					pp = PersonProperty(person=pobj, key=phonestyle, value=num)
 					pp.save()
