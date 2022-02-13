@@ -1,4 +1,4 @@
-import datetime, time, pytz, json, random, urllib.request, re, sys
+import datetime, time, pytz, json, random, urllib.request, re, sys, requests
 from viewer.models import *
 from background_task.models import Task
 from django.db.models import Sum, Count, F, ExpressionWrapper, DurationField, fields
@@ -27,6 +27,94 @@ def __display_timeline_event(event):
 						if (float(event.distance()) < 1):
 							return False
 	return True
+
+def get_last_monica_activity():
+
+	dt = datetime.date(1970, 1, 1)
+	for act in get_monica_activity_data():
+		if not('happened_at' in act):
+			continue
+		ds = act['happened_at'].split('-')
+		if len(ds) != 3:
+			continue
+		dtc = datetime.date(int(ds[0]), int(ds[1]), int(ds[2]))
+		if dtc > dt:
+			dt = dtc
+	return dt
+
+def get_monica_activity_data():
+
+	key = 'monica_activity_data'
+	data = cache.get(key)
+	if not(data is None):
+		return data
+
+	try:
+		url = settings.MONICA_URL.lstrip('/') + '/activities'
+	except AttributeError:
+		url = ''
+	try:
+		token = settings.MONICA_PERSONAL_TOKEN
+	except AttributeError:
+		token = ''
+	data = []
+	if url == '':
+		return ret
+	if token == '':
+		return ret
+	page = 1
+	while True:
+		r = requests.get(url, headers={'Authorization': 'Bearer ' + token}, params={'page': page})
+		data_ret = json.loads(r.text)
+		if not(isinstance(data_ret, (dict))):
+			break
+		if not('data' in data_ret):
+			break
+		if len(data_ret['data']) == 0:
+			break
+		data = data + data_ret['data']
+		page = page + 1
+
+	cache.set(key, data, timeout=300)
+
+	return data
+
+def get_monica_contact_data():
+
+	key = 'monica_contact_data'
+	data = cache.get(key)
+	if not(data is None):
+		return data
+
+	try:
+		url = settings.MONICA_URL.lstrip('/') + '/contacts'
+	except AttributeError:
+		url = ''
+	try:
+		token = settings.MONICA_PERSONAL_TOKEN
+	except AttributeError:
+		token = ''
+	data = []
+	if url == '':
+		return ret
+	if token == '':
+		return ret
+	page = 1
+	while True:
+		r = requests.get(url, headers={'Authorization': 'Bearer ' + token}, params={'with': 'contactfields', 'page': page})
+		data_ret = json.loads(r.text)
+		if not(isinstance(data_ret, (dict))):
+			break
+		if not('data' in data_ret):
+			break
+		if len(data_ret['data']) == 0:
+			break
+		data = data + data_ret['data']
+		page = page + 1
+
+	cache.set(key, data, timeout=300)
+
+	return data
 
 def convert_to_degrees(value):
 

@@ -11,11 +11,37 @@ from PIL import Image
 from dateutil.parser import parse as dateparse
 from django.db.models import Q
 from django.core.files import File
+from django.core.cache import cache
 from tempfile import NamedTemporaryFile
 from dateutil import tz
 
-from viewer.functions import find_person_by_picasaid as find_person, convert_to_degrees
+from viewer.functions import get_monica_contact_data, get_last_monica_activity, find_person_by_picasaid as find_person, convert_to_degrees
 from viewer.models import *
+
+def import_monica_contact_mappings():
+
+	items = []
+	ret = []
+	for item in get_monica_contact_data():
+		if not('contactFields' in item):
+			continue
+		for contact in item['contactFields']:
+			items.append([contact['contact']['hash_id'], contact['contact_field_type']['type'], contact['content'].replace(' ', ''), contact['id']])
+	for item in items:
+		if item[1] != 'email':
+			continue
+		try:
+			prop = PersonProperty.objects.get(key=item[1], value=item[2])
+		except:
+			prop = None
+		if prop is None:
+			continue
+		if PersonProperty.objects.filter(person=prop.person, key='monicahash').count() > 0:
+			continue
+		newprop = PersonProperty(person=prop.person, key='monicahash', value=item[0])
+		newprop.save()
+		ret.append(newprop.person)
+	return ret
 
 def import_home_assistant_readings(entity_id, reading_type, days=7):
 
