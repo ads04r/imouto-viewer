@@ -15,8 +15,66 @@ from django.core.cache import cache
 from tempfile import NamedTemporaryFile
 from dateutil import tz
 
-from viewer.functions import get_monica_contact_data, get_last_monica_activity, assign_monica_avatar, find_person_by_picasaid as find_person, convert_to_degrees
+from viewer.functions import get_monica_contact_data, get_last_monica_activity, get_last_monica_call, assign_monica_avatar, create_monica_call, create_monica_activity_from_event, find_person_by_picasaid as find_person, convert_to_degrees
 from viewer.models import *
+
+def export_monica_calls(from_date=None):
+
+	dtsd = from_date
+	now = datetime.datetime.now()
+	tz = get_localzone()
+	ret = []
+	if from_date is None:
+		dtsd = get_last_monica_call() + datetime.timedelta(days=1)
+	dts = datetime.datetime(dtsd.year, dtsd.month, dtsd.day, 0, 0, 0, tzinfo=tz)
+	dte = datetime.datetime(now.year, now.month, now.day, 0, 0, 0, tzinfo=tz) - datetime.timedelta(seconds=1)
+	ret = []
+	for call in RemoteInteraction.objects.filter(type='phone-call', time__gte=dts, time__lte=dte).order_by('time'):
+		if 'incoming call, rejected' in call.message:
+			continue
+		if 'missed call' in call.message:
+			continue
+		try:
+			prop = PersonProperty.objects.get(value=call.address, key='phone')
+		except:
+			prop = None
+		if prop is None:
+			try:
+				prop = PersonProperty.objects.get(value=call.address, key='mobile')
+			except:
+				prop = None
+		if prop is None:
+			continue
+		person = prop.person
+		if person is None:
+			continue
+		if call.incoming:
+			item = create_monica_call('Incoming call from ' + str(person), person, call.time, incoming=True)
+		else:
+			item = create_monica_call('Called ' + str(person), person, call.time, incoming=False)
+		if item:
+			ret.append(call)
+	return ret
+
+def export_monica_events(from_date=None):
+
+	dtsd = from_date
+	now = datetime.datetime.now()
+	tz = get_localzone()
+	ret = []
+	if from_date is None:
+		dtsd = get_last_monica_activity() + datetime.timedelta(days=1)
+	dts = datetime.datetime(dtsd.year, dtsd.month, dtsd.day, 0, 0, 0, tzinfo=tz)
+	dte = datetime.datetime(now.year, now.month, now.day, 0, 0, 0, tzinfo=tz) - datetime.timedelta(seconds=1)
+	ret = []
+	for event in Event.objects.filter(start_time__gte=dts, start_time__lte=dte):
+		if not((event.type == 'event') or (event.type == 'loc_prox')):
+			continue
+		if event.people.count() == 0:
+			continue
+		if create_monica_activity_from_event(event):
+			ret.append(event)
+	return ret
 
 def export_monica_thumbnails():
 

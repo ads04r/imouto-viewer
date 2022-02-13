@@ -28,6 +28,42 @@ def __display_timeline_event(event):
 							return False
 	return True
 
+def create_monica_call(content, person, date, incoming=False):
+
+	hashes = person.get_property('monicahash')
+	if len(hashes) == 0:
+		return False
+	item = find_person_by_monica_hash(hashes[0])
+	if not('id' in item):
+		return False
+	contact_id = item['id']
+
+	try:
+		url = settings.MONICA_URL.lstrip('/') + '/calls'
+	except AttributeError:
+		url = ''
+	try:
+		token = settings.MONICA_PERSONAL_TOKEN
+	except AttributeError:
+		token = ''
+	if url == '':
+		return []
+	if token == '':
+		return []
+
+	data = {'content': content, 'called_at': date.strftime("%Y-%m-%d"), 'contact_id': contact_id, 'contact_called': incoming}
+	r = requests.request("POST", url, headers={'Authorization': 'Bearer ' + token}, json=data)
+	ret = json.loads(r.text)
+	if not('data' in ret):
+		return False
+	if not('id' in ret['data']):
+		return False
+
+	key = 'monica_call_data'
+	cache.delete(key)
+	return True
+
+
 def create_monica_activity_from_event(event):
 
 	return create_monica_activity(event.caption, event.start_time, event.people.all())
@@ -67,6 +103,8 @@ def create_monica_activity(summary, date, people):
 	if not('id' in ret['data']):
 		return False
 
+	key = 'monica_activity_data'
+	cache.delete(key)
 	return True
 
 def assign_monica_avatar(hash, file, force=True):
@@ -110,6 +148,8 @@ def assign_monica_avatar(hash, file, force=True):
 		return False
 
 	if ret['data']['hash_id'] == hash:
+		key = 'monica_contact_data'
+		cache.delete(key)
 		return True
 
 	return False
@@ -124,6 +164,17 @@ def get_last_monica_activity():
 		if len(ds) != 3:
 			continue
 		dtc = datetime.date(int(ds[0]), int(ds[1]), int(ds[2]))
+		if dtc > dt:
+			dt = dtc
+	return dt
+
+def get_last_monica_call():
+
+	dt = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.UTC)
+	for act in get_monica_call_data():
+		if not('called_at' in act):
+			continue
+		dtc = parser.parse(act['called_at'])
 		if dtc > dt:
 			dt = dtc
 	return dt
@@ -188,6 +239,43 @@ def get_monica_contact_data():
 	page = 1
 	while True:
 		r = requests.get(url, headers={'Authorization': 'Bearer ' + token}, params={'with': 'contactfields', 'page': page})
+		data_ret = json.loads(r.text)
+		if not(isinstance(data_ret, (dict))):
+			break
+		if not('data' in data_ret):
+			break
+		if len(data_ret['data']) == 0:
+			break
+		data = data + data_ret['data']
+		page = page + 1
+
+	cache.set(key, data, timeout=300)
+
+	return data
+
+def get_monica_call_data():
+
+	key = 'monica_call_data'
+	data = cache.get(key)
+	if not(data is None):
+		return data
+
+	try:
+		url = settings.MONICA_URL.lstrip('/') + '/calls'
+	except AttributeError:
+		url = ''
+	try:
+		token = settings.MONICA_PERSONAL_TOKEN
+	except AttributeError:
+		token = ''
+	data = []
+	if url == '':
+		return ret
+	if token == '':
+		return ret
+	page = 1
+	while True:
+		r = requests.get(url, headers={'Authorization': 'Bearer ' + token}, params={'page': page})
 		data_ret = json.loads(r.text)
 		if not(isinstance(data_ret, (dict))):
 			break
