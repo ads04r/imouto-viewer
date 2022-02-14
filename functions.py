@@ -63,6 +63,41 @@ def create_monica_call(content, person, date, incoming=False):
 	cache.delete(key)
 	return True
 
+def delete_monica_activity(activity_id):
+
+	try:
+		url = settings.MONICA_URL.lstrip('/') + '/activities/' + str(activity_id)
+	except AttributeError:
+		url = ''
+	try:
+		token = settings.MONICA_PERSONAL_TOKEN
+	except AttributeError:
+		token = ''
+	if url == '':
+		return []
+	if token == '':
+		return []
+
+	r = requests.request("DELETE", url, headers={'Authorization': 'Bearer ' + token})
+	ret = json.loads(r.text)
+	if not('deleted' in ret):
+		return False
+	if not('id' in ret):
+		return False
+	return ret['deleted']
+
+def delete_monica_activities():
+
+	data = get_monica_activity_data()
+	ret = 0
+
+	for item in data:
+		if delete_monica_activity(item['id']):
+			ret = ret + 1
+
+	key = 'monica_activity_data'
+	cache.delete(key)
+	return ret
 
 def create_monica_activity_from_event(event):
 
@@ -225,6 +260,43 @@ def get_monica_contact_data():
 
 	try:
 		url = settings.MONICA_URL.lstrip('/') + '/contacts'
+	except AttributeError:
+		url = ''
+	try:
+		token = settings.MONICA_PERSONAL_TOKEN
+	except AttributeError:
+		token = ''
+	data = []
+	if url == '':
+		return ret
+	if token == '':
+		return ret
+	page = 1
+	while True:
+		r = requests.get(url, headers={'Authorization': 'Bearer ' + token}, params={'with': 'contactfields', 'page': page})
+		data_ret = json.loads(r.text)
+		if not(isinstance(data_ret, (dict))):
+			break
+		if not('data' in data_ret):
+			break
+		if len(data_ret['data']) == 0:
+			break
+		data = data + data_ret['data']
+		page = page + 1
+
+	cache.set(key, data, timeout=300)
+
+	return data
+
+def get_monica_journal_data():
+
+	key = 'monica_journal_data'
+	data = cache.get(key)
+	if not(data is None):
+		return data
+
+	try:
+		url = settings.MONICA_URL.lstrip('/') + '/journal'
 	except AttributeError:
 		url = ''
 	try:
