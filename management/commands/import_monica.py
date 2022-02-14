@@ -20,13 +20,13 @@ class Command(BaseCommand):
 		operations = kwargs['op']
 		if 'contacts' in operations:
 			for person in import_monica_contact_mappings():
-				sys.stderr.write(self.style.SUCCESS("Linked " + str(person)))
+				sys.stderr.write(self.style.SUCCESS("Linked " + str(person) + "\n"))
 		if 'thumbnails' in operations:
 			for person in export_monica_thumbnails():
-				sys.stderr.write(self.style.SUCCESS("Updated thumbnail for " + str(person)))
+				sys.stderr.write(self.style.SUCCESS("Updated thumbnail for " + str(person) + "\n"))
 		if 'events' in operations:
 			for event in export_monica_events():
-				sys.stderr.write(self.style.SUCCESS("Exported event on " + event.start_time.strftime("%Y-%m-%d") + ":" + str(event)))
+				sys.stderr.write(self.style.SUCCESS("Exported event on " + event.start_time.strftime("%Y-%m-%d") + ":" + str(event) + "\n"))
 		if 'calls' in operations:
 			for call in export_monica_calls():
-				sys.stderr.write(self.style.SUCCESS("Exported call on " + call.start_time.strftime("%Y-%m-%d") + ":" + str(call.address)))
+				sys.stderr.write(self.style.SUCCESS("Exported call on " + call.start_time.strftime("%Y-%m-%d") + ":" + str(call.address) + "\n"))
