@@ -695,35 +695,13 @@ def import_photo_file(filepath, tzinfo=pytz.UTC):
 
 	return photo
 
-def import_photo_directory(path, tzinfo=pytz.UTC):
-
-	full_path = os.path.abspath(path)
-	ret = []
-
-	picasafile = os.path.join(full_path, '.picasa.ini')
-	if(not(os.path.exists(picasafile))):
-		picasafile = os.path.join(full_path, 'picasa.ini')
-	if(not(os.path.exists(picasafile))):
-		picasafile = os.path.join(full_path, 'Picasa.ini')
-
-	photos = []
-	for f in os.listdir(full_path):
-		if not(f.lower().endswith('.jpg')):
-			continue
-		photo_file = os.path.join(full_path, f)
-		try:
-			photo = Photo.objects.get(file=photo_file)
-		except:
-			photo = None
-			photos.append(photo_file)
-
-	for photo in photos:
-		if import_photo_file(photo, tzinfo) is None:
-			continue
-		ret.append(photo)
+def import_picasa_faces(picasafile):
 
 	contacts = {}
 	faces = {}
+	path = os.path.dirname(picasafile)
+	full_path = os.path.abspath(path)
+	ret = 0
 	if os.path.exists(picasafile):
 		lf = ''
 		with open(picasafile) as f:
@@ -764,9 +742,42 @@ def import_photo_directory(path, tzinfo=pytz.UTC):
 			person = contacts[file_face]
 			if person is None:
 				continue
+			if person in photo.people.all():
+				continue
 			photo.people.add(person)
+			ret = ret + 1
 			for event in photo.events().all():
 				event.people.add(person)
+	return ret
+
+def import_photo_directory(path, tzinfo=pytz.UTC):
+
+	full_path = os.path.abspath(path)
+	ret = []
+
+	picasafile = os.path.join(full_path, '.picasa.ini')
+	if(not(os.path.exists(picasafile))):
+		picasafile = os.path.join(full_path, 'picasa.ini')
+	if(not(os.path.exists(picasafile))):
+		picasafile = os.path.join(full_path, 'Picasa.ini')
+
+	photos = []
+	for f in os.listdir(full_path):
+		if not(f.lower().endswith('.jpg')):
+			continue
+		photo_file = os.path.join(full_path, f)
+		try:
+			photo = Photo.objects.get(file=photo_file)
+		except:
+			photo = None
+			photos.append(photo_file)
+
+	for photo in photos:
+		if import_photo_file(photo, tzinfo) is None:
+			continue
+		ret.append(photo)
+
+	faces = import_picasa_faces(picasafile)
 
 	gps_data = []
 	for photo_path in ret:
