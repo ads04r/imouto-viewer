@@ -750,6 +750,75 @@ def import_picasa_faces(picasafile):
 				event.people.add(person)
 	return ret
 
+def import_autographer_event_people(picasafile):
+
+	contacts = {}
+	faces = {}
+	items = []
+	path = os.path.dirname(picasafile)
+	full_path = os.path.abspath(path)
+	ret = []
+	if os.path.exists(picasafile):
+		lf = ''
+		with open(picasafile) as f:
+			lines = f.readlines()
+		for liner in lines:
+			line = liner.strip()
+			if line == '':
+				continue
+			if ((line[0] == '[') & (line[-1:] == ']')):
+				lf = line.lstrip('[').rstrip(']')
+			if lf == 'Contacts2':
+				parse = line.replace(';', '').split('=')
+				if len(parse) == 2:
+					contacts[parse[0]] = find_person(parse[0], parse[1])
+			if ((line[0:6] == 'faces=') & (lf != '')):
+				item = []
+				for segment in line[6:].split(';'):
+					structure = segment.split(',')
+					if not(lf in faces):
+						faces[lf] = []
+					faces[lf].append(structure[1])
+
+	for filename in faces.keys():
+		if len(filename) == 0:
+			continue
+		if not(filename.lower().endswith('.jpg')):
+			continue
+		parse = filename.lower().replace('.jpg', '').split('_')
+		if len(parse) != 4:
+			continue
+		if not(parse[3].endswith('e')):
+			continue
+		parse[3] = parse[3][0:-1]
+		if len(parse[2]) != 8:
+			continue
+		if len(parse[3]) != 6:
+			continue
+		dt = datetime.datetime(int(parse[2][0:4]), int(parse[2][4:6]), int(parse[2][6:8]), int(parse[3][0:2]), int(parse[3][2:4]), int(parse[3][4:6]), tzinfo=pytz.timezone(settings.TIME_ZONE))
+		item = {'date': dt, 'people': [], 'events': []}
+		for face in faces[filename]:
+			person = find_person(face)
+			if person is None:
+				continue
+			item['people'].append(person)
+		for event in Event.objects.filter(start_time__lte=dt, end_time__gte=dt):
+			item['events'].append(event)
+		if len(item['people']) == 0:
+			continue
+		if len(item['events']) == 0:
+			continue
+		items.append(item)
+
+	for item in items:
+		for event in item['events']:
+			for person in item['people']:
+				event.people.add(person)
+			if not(event in ret):
+				ret.append(event)
+
+	return ret
+
 def import_photo_directory(path, tzinfo=pytz.UTC):
 
 	full_path = os.path.abspath(path)
