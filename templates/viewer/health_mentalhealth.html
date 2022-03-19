@@ -35,8 +35,10 @@
 {% for item in data %}
 				<tr>
 					<td>
+						<a href="#day_{{ item.date|date:"Ymd" }}">
 						<span class="hidden-lg">{{ item.date|date:"Y-m-d H:i" }}</span>
 						<span class="hidden-xs visible-lg">{{ item.date|date:"l jS F Y, g:ia" }}</span>
+						</a>
                                         </td>
 					<td>{{ item.anxiety }}{% if item.anxiety >= 11 %}&nbsp;<i class="fa fa-warning text-danger"></i>{% else %}{% if item.anxiety >= 8 %}&nbsp;<i class="fa fa-question-circle text-warning"></i>{% endif %}{% endif %}</td>
 					<td>{{ item.depression }}{% if item.depression >= 11 %}&nbsp;<i class="fa fa-warning text-danger"></i>{% else %}{% if item.depression >= 8 %}&nbsp;<i class="fa fa-question-circle text-warning"></i>{% endif %}{% endif %}</td>
