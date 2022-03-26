@@ -1214,7 +1214,6 @@ function makeLineChart(lineChartCanvas, data, colstr, timeline=false)
         }
     }
     if(data.length > 0) { config.options.scales.xAxes[0].ticks.min = data[0].x; }
-    console.log(config.options.scales);
     lineChart = new Chart(lineChartCanvas, config);
 }
 

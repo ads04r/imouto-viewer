@@ -12,9 +12,9 @@
     {% include 'viewer/_main_sidebar.html' %}
 {% endblock %}
 {% block extra_head %}
-    <link rel="stylesheet" href="{% static "viewer/script/chart/Chart.css" %}" />
-    <link rel="stylesheet" href="{% static "viewer/script/leaflet/leaflet.css" %}" />
-    <link rel="stylesheet" href="{% static "viewer/script/fullcalendar/fullcalendar.min.css" %}" />
+    <link rel="stylesheet" href="{% static "libraries/chart/Chart.css" %}" />
+    <link rel="stylesheet" href="{% static "libraries/leaflet/leaflet.css" %}" />
+    <link rel="stylesheet" href="{% static "libraries/fullcalendar/fullcalendar.min.css" %}" />
     <link rel="stylesheet" href="{% static "viewer/styles/imouto.css" %}" />
 {% endblock %}
 {% block extra_foot %}
@@ -23,10 +23,10 @@
 {% block javascript %}
 
   {{ block.super }}
-  <script src="{% static "viewer/script/chart/Chart.bundle.js" %}"></script>
-  <script src="{% static "viewer/script/leaflet/leaflet.js" %}"></script>
-  <script src="{% static "viewer/script/moment/moment.min.js" %}"></script>
-  <script src="{% static "viewer/script/fullcalendar/fullcalendar.min.js" %}"></script>
+  <script src="{% static "libraries/chart/Chart.bundle.js" %}"></script>
+  <script src="{% static "libraries/leaflet/leaflet.js" %}"></script>
+  <script src="{% static "libraries/moment/moment.min.js" %}"></script>
+  <script src="{% static "libraries/fullcalendar/fullcalendar.min.js" %}"></script>
   <script src="script/imouto.js"></script>
 
 {% endblock %}

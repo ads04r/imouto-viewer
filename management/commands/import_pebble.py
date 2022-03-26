@@ -116,6 +116,32 @@ class Command(BaseCommand):
 					data = DataReading(type='awake', value='0', start_time=sleeps[i - 1].end_time, end_time=sleeps[i].start_time)
 					data.save()
 
+			# Now go through the 'awake' events making sure they're actual days, and I didn't just take a nap
+
+			joins = []
+			prev = None
+			for cur in DataReading.objects.filter(type='awake', start_time__gte=(dtmin - datetime.timedelta(hours=48))).order_by('start_time'):
+				if prev is None:
+					prev = cur
+					continue
+				if ((prev.end_time.day == cur.start_time.day) & (prev.end_time.month == cur.start_time.month) & (prev.end_time.year == cur.start_time.year)):
+					if len(joins) > 0:
+						if joins[-1][1] == prev.pk:
+							continue
+					joins.append([prev.pk, cur.pk])
+				prev = cur
+
+#				for j in joins:
+#					try:
+#						item = DataReading.objects.get(pk=j[0])
+#						dead = DataReading.objects.get(pk=j[1])
+#					except:
+#						continue
+#					item.end_time = dead.end_time
+#					item.save()
+#					print(dead)
+#					dead.delete()
+
 		# This bit counts steps and adds them as DataReadings
 
 		if db_type == 'pebble':
