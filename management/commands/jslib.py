@@ -11,7 +11,7 @@ class Command(BaseCommand):
 		files = [ ('chart/Chart.js', 'https://cdn.jsdelivr.net/npm/chart.js/dist/Chart.js'),
 			  ('chart/Chart.css', 'https://cdn.jsdelivr.net/npm/chart.js/dist/Chart.css'),
 			  ('chart/Chart.bundle.js', 'https://cdn.jsdelivr.net/npm/chart.js/dist/Chart.bundle.js'),
-			  ('moment/moment.min.js', 'https://cdn.jsdelivr.net/npm/moment/dist/moment.js'),
+			  ('moment/moment.min.js', 'https://raw.githubusercontent.com/ads04r/imouto-viewer/06536ccbaea7885147f300353af0eca4ce2f11a5/static/viewer/script/moment/moment.min.js'),
 			  ('leaflet/leaflet-src.js', 'https://cdn.jsdelivr.net/npm/leaflet/dist/leaflet-src.js'),
 			  ('leaflet/leaflet.js', 'https://cdn.jsdelivr.net/npm/leaflet/dist/leaflet.js'),
 			  ('leaflet/leaflet.css', 'https://cdn.jsdelivr.net/npm/leaflet/dist/leaflet.css'),
@@ -24,11 +24,11 @@ class Command(BaseCommand):
 			  ('leaflet/leaflet-src.esm.js.map', 'https://cdn.jsdelivr.net/npm/leaflet/dist/leaflet-src.esm.js.map'),
 			  ('leaflet/leaflet-src.js.map', 'https://cdn.jsdelivr.net/npm/leaflet/dist/leaflet-src.js.map'),
 			  ('leaflet/leaflet.js.map', 'https://cdn.jsdelivr.net/npm/leaflet/dist/leaflet.js.map'),
-			  ('fullcalendar/fullcalendar.print.css', 'https://cdn.jsdelivr.net/npm/fullcalendar/dist/fullcalendar.print.css'),
-			  ('fullcalendar/fullcalendar.js', 'https://cdn.jsdelivr.net/npm/fullcalendar/dist/fullcalendar.js'),
-			  ('fullcalendar/fullcalendar.min.js', 'https://cdn.jsdelivr.net/npm/fullcalendar/dist/fullcalendar.min.js'),
-			  ('fullcalendar/fullcalendar.css', 'https://cdn.jsdelivr.net/npm/fullcalendar/dist/fullcalendar.css'),
-			  ('fullcalendar/fullcalendar.min.css', 'https://cdn.jsdelivr.net/npm/fullcalendar/dist/fullcalendar.min.css')]
+			  ('fullcalendar/fullcalendar.print.css', 'https://cdn.jsdelivr.net/npm/fullcalendar@2.3.1/dist/fullcalendar.print.css'),
+			  ('fullcalendar/fullcalendar.js', 'https://cdn.jsdelivr.net/npm/fullcalendar@2.3.1/dist/fullcalendar.js'),
+			  ('fullcalendar/fullcalendar.min.js', 'https://cdn.jsdelivr.net/npm/fullcalendar@2.3.1/dist/fullcalendar.min.js'),
+			  ('fullcalendar/fullcalendar.css', 'https://cdn.jsdelivr.net/npm/fullcalendar@2.3.1/dist/fullcalendar.css'),
+			  ('fullcalendar/fullcalendar.min.css', 'https://cdn.jsdelivr.net/npm/fullcalendar@2.3.1/dist/fullcalendar.min.css')]
 
 		path = ''
 		if hasattr(settings, 'STATIC_ROOT'):
