@@ -67,17 +67,18 @@ def generate_photo_collages(event_id):
 		photo_path = str(photo.file.path)
 		if photo_path in photos:
 			continue
-		if len(photo.picasa_info()) == 0:
-			photos.append(photo_path)
-		else:
-			tf = NamedTemporaryFile(delete=False)
-			im = photo.image()
-			try:
-				im.save(tf, format='JPEG')
-				photos.append(tf.name)
-				tempphotos.append(tf.name)
-			except:
+		if os.path.exists(photo_path):
+			if len(photo.picasa_info()) == 0:
 				photos.append(photo_path)
+			else:
+				tf = NamedTemporaryFile(delete=False)
+				im = photo.image()
+				try:
+					im.save(tf, format='JPEG')
+					photos.append(tf.name)
+					tempphotos.append(tf.name)
+				except:
+					photos.append(photo_path)
 
 	if len(photos) < min_photos:
 		return []
