@@ -26,6 +26,8 @@ class Command(BaseCommand):
 				tz = pytz.timezone(settings.TIME_ZONE)
 			else:
 				tz = pytz.UTC
+		elif tz_string.upper() == 'UTC':
+			tz = pytz.UTC
 		else:
 			tz = pytz.timezone(tz_string)
 		if len(path) == 0:

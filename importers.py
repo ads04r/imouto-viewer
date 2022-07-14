@@ -842,7 +842,8 @@ def import_photo_directory(path, tzinfo=pytz.UTC):
 			photos.append(photo_file)
 
 	for photo in photos:
-		if import_photo_file(photo, tzinfo) is None:
+		p = import_photo_file(photo, tzinfo)
+		if p is None:
 			continue
 		ret.append(photo)
 
