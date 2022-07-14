@@ -736,6 +736,41 @@ function dayScreen(id)
 function daySummary(date)
 {
         $.ajax({
+            url: './days/' + date + '/weight.json',
+            method: 'GET',
+            success: function(data) {
+
+		var html = "";
+
+		if(data.length > 0){
+
+			html = html + "<div class=\"box box-primary\">";
+			html = html + "<div class=\"box-body\">";
+
+			html = html + "<p>Weigh-ins</p>";
+
+			html = html + "<div class=\"table-responsive\">";
+			html = html + "<table class=\"table no-margin\">";
+
+			html = html + "<tr><th>Time</th><th>Weight</th></tr>";
+			for(var i = 0; i < data.length; i++)
+			{
+				var item = data[i];
+				html = html + "<tr><td>" + item.time + "</td><td>" + item.weight + "kg</td></tr>";
+			}
+
+			html = html + "</table>";
+			html = html + "</div>";
+
+			html = html + "</div>";
+			html = html + "</div>";
+
+		}
+
+		if(html != '') { $(".day-weight-summary").html(html); }
+            }
+        });
+        $.ajax({
             url: './days/' + date + '/heart.json',
             method: 'GET',
             success: function(data) {

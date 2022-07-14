@@ -64,8 +64,10 @@
 {% for item in data %}
 				<tr>
 					<td>
+						<a href="#day_{{ item.date|date:"Ymd" }}">
 						<span class="hidden-lg">{{ item.date|date:"Y-m-d H:i" }}</span>
 						<span class="hidden-xs visible-lg">{{ item.date|date:"l jS F Y, g:ia" }}</span>
+						</a>
 					</td>
 					<td>{% if item.weight %}{{ item.weight }}kg{% endif %}</td>
 					<td>{% if item.fat %}{{ item.fat }}%{% endif %}</td>

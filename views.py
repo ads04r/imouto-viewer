@@ -48,6 +48,23 @@ def dashboard(request):
 		cache.set(key, ret, timeout=86400)
 	return ret
 
+def imouto_json_serializer(data):
+	if isinstance(data, datetime.datetime):
+		return data.strftime("%Y-%m-%d %H:%M:%S %Z")
+	if isinstance(data, (Person, Location, Event)):
+		return data.to_dict()
+
+def dashboard_json(request):
+	data = generate_dashboard()
+	if 'heart' in data:
+		data['heart'] = json.loads(data['heart'])
+	if 'steps' in data:
+		data['steps'] = json.loads(data['steps'])
+	if 'sleep' in data:
+		data['sleep'] = json.loads(data['sleep'])
+	response = HttpResponse(json.dumps(data, default=imouto_json_serializer), content_type='application/json')
+	return response
+
 def onthisday(request, format='html'):
 	key = 'onthisday_' + datetime.date.today().strftime("%Y%m%d")
 	data = cache.get(key)
@@ -294,9 +311,30 @@ def day(request, ds):
 		context['stats']['sleep_time'] = wakes[(wakecount - 1)].end_time
 	context['stats']['prev'] = (dts - datetime.timedelta(days=1)).strftime("%Y%m%d")
 	context['stats']['cur'] = dts.strftime("%Y%m%d")
+	for weight in DataReading.objects.filter(end_time__gte=dts, start_time__lte=dte, type='weight'):
+		if not('weight' in context['stats']):
+			context['stats']['weight'] = []
+		context['stats']['weight'].append({"time": weight.start_time, "weight": (float(weight.value) / 1000)})
 	if dte < dt:
 		context['stats']['next'] = (dts + datetime.timedelta(days=1)).strftime("%Y%m%d")
 	return render(request, 'viewer/day.html', context)
+
+def day_weight(request, ds):
+
+	if len(ds) != 8:
+		raise Http404()
+	y = int(ds[0:4])
+	m = int(ds[4:6])
+	d = int(ds[6:])
+	dts = datetime.datetime(y, m, d, 4, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
+	dte = dts + datetime.timedelta(seconds=86400)
+	dt = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+	data = []
+	for weight in DataReading.objects.filter(end_time__gte=dts, start_time__lte=dte, type='weight'):
+		data.append({"time": weight.start_time.astimezone(tz=pytz.timezone(settings.TIME_ZONE)).strftime("%H:%M"), "date": weight.start_time.strftime("%Y-%m-%dT%H:%M:%S%z"), "weight": (float(weight.value) / 1000)})
+
+	response = HttpResponse(json.dumps(data), content_type='application/json')
+	return response
 
 def day_heart(request, ds):
 
@@ -749,7 +787,9 @@ def person_json(request, uid):
 
 def place_json(request, uid):
 	data = get_object_or_404(Location, uid=uid)
-	response = HttpResponse(json.dumps(data.to_dict()), content_type='application/json')
+	data_dict = data.to_dict()
+	data_dict['internal_id'] = data.pk
+	response = HttpResponse(json.dumps(data_dict), content_type='application/json')
 	return response
 
 def locman_import(request):
