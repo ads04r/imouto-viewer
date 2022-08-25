@@ -73,6 +73,11 @@ class LocationCountry(models.Model):
 	wikipedia = models.URLField(blank=True, null=True)
 	def __str__(self):
 		return str(self.label)
+	def to_dict(self):
+		ret = {'iso': [self.a2, self.a3], "label": str(self.label)}
+		if self.wikipedia:
+			ret['wikipedia'] = str(self.wikipedia)
+		return ret
 	class Meta:
 		app_label = 'viewer'
 		verbose_name = 'country'
@@ -324,6 +329,19 @@ class Photo(models.Model):
 	location = models.ForeignKey(Location, null=True, blank=True, on_delete=models.CASCADE, related_name="photos")
 	cached_thumbnail = models.ImageField(blank=True, null=True, upload_to=photo_thumbnail_upload_location)
 	face_count = models.IntegerField(null=True, blank=True)
+	def to_dict(self):
+		ret = {}
+		ret['lat'] = self.lat
+		ret['lon'] = self.lon
+		ret['filename'] = str(self.file)
+		ret['caption'] = str(self.caption)
+		ret['date'] = None
+		if self.time:
+			ret['date'] = self.time.strftime("%Y-%m-%d %H:%M:%S %z")
+		ret['people'] = []
+		for person in self.people.all():
+			ret['people'].append(person.to_dict())
+		return ret
 	def picasa_info(self):
 		image_path = str(self.file.path)
 		parsed = os.path.split(image_path)
@@ -875,10 +893,12 @@ class LifeReport(models.Model):
 	options = models.TextField(default='{}')
 	def __format_date(self, dt):
 		return dt.strftime("%a %-d %b") + ' ' + (dt.strftime("%I:%M%p").lower().lstrip('0'))
+	def countries(self):
+		return LocationCountry.objects.filter(locations__in=self.locations.all()).distinct()
 	def to_dict(self):
 		if self.cached_dict:
 			return json.loads(self.cached_dict)
-		ret = {'id': self.pk, 'label': self.label, 'year': self.year(), 'stats': [], 'created_date': self.created_date.strftime("%Y-%m-%d %H:%M:%S %z"), 'modified_date': self.modified_date.strftime("%Y-%m-%d %H:%M:%S %z"), 'style': self.style, 'type': self.type, 'people': [], 'places': [], 'life_events': [], 'events': []}
+		ret = {'id': self.pk, 'label': self.label, 'year': self.year(), 'stats': [], 'created_date': self.created_date.strftime("%Y-%m-%d %H:%M:%S %z"), 'modified_date': self.modified_date.strftime("%Y-%m-%d %H:%M:%S %z"), 'style': self.style, 'type': self.type, 'people': [], 'places': [], 'countries': [], 'life_events': [], 'events': []}
 		for personlink in ReportPeople.objects.filter(report=self):
 			person = personlink.person
 			persondata = person.to_dict()
@@ -894,6 +914,8 @@ class LifeReport(models.Model):
 			ret['events'].append(event.to_dict())
 		for prop in LifeReportProperties.objects.filter(report=self).order_by('category'):
 			ret['stats'].append(prop.to_dict())
+		for country in self.countries():
+			ret['countries'].append(country.to_dict())
 		self.cached_dict = json.dumps(ret)
 		self.save()
 		return ret
