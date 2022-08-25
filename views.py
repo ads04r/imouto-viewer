@@ -701,6 +701,11 @@ def place_photo(request, uid):
 	im.save(response, "JPEG")
 	return response
 
+def photo_json(request, uid):
+	data = get_object_or_404(Photo, pk=uid)
+	response = HttpResponse(json.dumps(data.to_dict()), content_type='application/json')
+	return response
+
 def photo_full(request, uid):
 	data = get_object_or_404(Photo, pk=uid)
 	im = data.image()
