@@ -637,6 +637,7 @@ class Event(models.Model):
 		self.save()
 		return ret
 	def gpx(self):
+		dt = self.start_time
 		root = minidom.Document()
 		xml = root.createElement('gpx')
 		xml.setAttribute('version', '1.1')
@@ -649,12 +650,20 @@ class Event(models.Model):
 			g = json.loads(self.geo)
 			if 'geometry' in g:
 				if 'coordinates' in g['geometry']:
+					trk = root.createElement('trk')
 					for ptl in g['geometry']['coordinates']:
+						seg = root.createElement('trkseg')
 						for pt in ptl:
-							ptx = root.createElement('wpt')
+							ptx = root.createElement('trkpt')
 							ptx.setAttribute('lat', str(pt[1]))
 							ptx.setAttribute('lon', str(pt[0]))
-							xml.appendChild(ptx)
+							pdt = root.createElement('time')
+							pdt.appendChild(root.createTextNode(dt.strftime("%Y-%m-%d %H:%M:%S").replace(' ', 'T') + 'Z'))
+							dt = dt + datetime.timedelta(seconds=1)
+							ptx.appendChild(pdt)
+							seg.appendChild(ptx)
+						trk.appendChild(seg)
+					xml.appendChild(trk)
 		return(root.toprettyxml(indent='\t'))
 
 	def distance(self):
