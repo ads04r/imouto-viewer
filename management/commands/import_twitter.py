@@ -3,7 +3,7 @@ from django.core.cache import cache
 from django.conf import settings
 from dateutil.parser import parse as dateparse
 from viewer.models import *
-import os, sys, datetime, pytz, twitter, json
+import os, sys, datetime, pytz, twitter, json, requests
 
 class Command(BaseCommand):
 	"""
@@ -13,6 +13,31 @@ class Command(BaseCommand):
 
 		choices = []
 		parser.add_argument("-u", "--username", action="store", dest="username", default="", help="A Twitter username.")
+
+	def __resolve_urls(self, message):
+
+		words = message.split(' ')
+		for i in range(0, len(words)):
+			if not('://' in words[i]):
+				continue
+			try:
+				response = requests.head(words[i], allow_redirects=True)
+				if response.status_code == 200:
+					words[i] = response.url
+			except:
+				pass
+		return ' '.join(words)
+
+	def __resolve_all_tweets(self):
+
+		for tweet in RemoteInteraction.objects.filter(type='microblogpost', message__icontains='://').order_by('-time'):
+			msg = tweet.message
+			if '://' in msg:
+				proc_msg = self.__resolve_urls(msg)
+				if proc_msg != msg:
+					print(proc_msg)
+					tweet.message = proc_msg
+					tweet.save()
 
 	def handle(self, *args, **kwargs):
 
@@ -27,6 +52,8 @@ class Command(BaseCommand):
 		outgoing = []
 		incoming = []
 		for tweet in res['statuses']:
+			if 'full_text' in tweet:
+				tweet['full_text'] = self.__resolve_urls(tweet['full_text'])
 			if tweet['user']['screen_name'] == kwargs['username']:
 				if 'retweeted_status' in tweet:
 					continue
