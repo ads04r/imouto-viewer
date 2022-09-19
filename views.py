@@ -501,6 +501,13 @@ def event_staticmap(request, eid):
 	else:
 		raise Http404()
 
+def event_gpx(request, eid):
+	data = get_object_or_404(Event, id=eid)
+	if data.geo:
+		return HttpResponse(data.gpx(), content_type='application/xml')
+	else:
+		raise Http404()
+
 def event_collage(request, eid):
 	data = get_object_or_404(Event, id=eid)
 	imc = data.photo_collages.count()

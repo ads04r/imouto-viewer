@@ -11,6 +11,7 @@ from configparser import ConfigParser
 from viewer.health import parse_sleep
 from staticmap import StaticMap, Line
 from viewer.staticcharts import generate_pie_chart, generate_donut_chart
+from xml.dom import minidom
 import random, datetime, pytz, json, markdown, re, os, urllib.request
 
 def user_thumbnail_upload_location(instance, filename):
@@ -635,6 +636,26 @@ class Event(models.Model):
 		self.geo = ret
 		self.save()
 		return ret
+	def gpx(self):
+		root = minidom.Document()
+		xml = root.createElement('gpx')
+		xml.setAttribute('version', '1.1')
+		xml.setAttribute('creator', 'Imouto')
+		xml.setAttribute('xmlns', 'http://www.topografix.com/GPX/1/1')
+		xml.setAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
+		xml.setAttribute('xsi:schemaLocation', 'http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd')
+		root.appendChild(xml)
+		if self.geo:
+			g = json.loads(self.geo)
+			if 'geometry' in g:
+				if 'coordinates' in g['geometry']:
+					for ptl in g['geometry']['coordinates']:
+						for pt in ptl:
+							ptx = root.createElement('wpt')
+							ptx.setAttribute('lat', str(pt[1]))
+							ptx.setAttribute('lon', str(pt[0]))
+							xml.appendChild(ptx)
+		return(root.toprettyxml(indent='\t'))
 
 	def distance(self):
 		if not(self.geo):
