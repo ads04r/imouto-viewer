@@ -18,6 +18,17 @@ from dateutil import tz
 from viewer.functions import get_monica_contact_data, get_last_monica_activity, get_last_monica_call, assign_monica_avatar, create_monica_call, create_monica_activity_from_event, find_person_by_picasaid as find_person, convert_to_degrees
 from viewer.models import *
 
+def upload_file(temp_file, file_source, format=''):
+
+	url = str(settings.LOCATION_MANAGER_URL).rstrip('/') + '/import'
+	if format == '':
+		r = requests.post(url, data={'file_source': file_source}, files={'uploaded_file': (temp_file, open(temp_file, 'rb'))})
+	else:
+		r = requests.post(url, data={'file_source': file_source, 'file_format': format}, files={'uploaded_file': (temp_file, open(temp_file, 'rb'))})
+	if r.status_code == 200:
+		return True
+	return False
+
 def export_monica_calls(from_date=None):
 
 	dtsd = from_date
