@@ -15,11 +15,12 @@ django-background-tasks==1.2.5
 django-colorfield==0.4.5
 django-compat==1.0.15
 django-haystack==3.0
+django-macaddress==1.8.0
 djangorestframework==3.10.3
 docutils==0.17.1
 entrypoints==0.3
 ExifRead==2.1.2
-fitparse==1.1.0
+fitparse==1.2.0
 fpdf==1.7.2
 future==0.18.2
 geographiclib==1.50
@@ -38,6 +39,7 @@ Markdown==3.3.3
 MarkupSafe==2.0.1
 matplotlib==3.2.2
 mysqlclient==1.4.4
+netaddr==0.8.0
 numpy==1.18.1
 oauthlib==3.1.0
 opencv-python==4.1.1.26
