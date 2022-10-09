@@ -1,8 +1,12 @@
 *.pyc
 __pycache__
-__init__.py
-migrations
-static/viewer/cycling.json
-static/libraries
+viewer/migrations
+viewer/static/viewer/cycling.json
+viewer/static/libraries
+imouto/settings_local.py
+media
+static
+nohup.out
 
-!report_styles/__init__.py
+!static/viewer/*
+!static/viewer
