@@ -9,7 +9,7 @@ clang==6.0.0.2
 cryptography==2.6.1
 cycler==0.10.0
 dateparser==1.0.0
-Django==2.2.5
+Django==2.2.28
 django-adminlte2==0.4.1
 django-background-tasks==1.2.5
 django-colorfield==0.4.5
