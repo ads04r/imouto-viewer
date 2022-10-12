@@ -535,7 +535,13 @@ class Event(models.Model):
 	speed = models.TextField(default='', blank=True)
 	cover_photo = models.ForeignKey(Photo, null=True,  blank=True, on_delete=models.SET_NULL)
 	def to_dict(self):
-		ret = {'id': self.pk, 'caption': self.caption, 'start_time': self.start_time.strftime("%Y-%m-%d %H:%M:%S %z"), 'end_time': self.end_time.strftime("%Y-%m-%d %H:%M:%S %z"), 'people': [], 'photos': []}
+		ret = {'id': self.pk, 'caption': self.caption, 'start_time': self.start_time.strftime("%Y-%m-%d %H:%M:%S %z"), 'end_time': self.end_time.strftime("%Y-%m-%d %H:%M:%S %z"), 'people': [], 'photos': [], 'geo': {}}
+		if self.geo:
+			ret['geo'] = self.geo
+		else:
+			self.refresh_geo()
+			if self.geo:
+				ret['geo'] = self.geo
 		if self.description:
 			if self.description != '':
 				ret['description'] = self.description

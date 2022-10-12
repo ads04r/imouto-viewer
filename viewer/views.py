@@ -301,8 +301,15 @@ def day(request, ds):
 	dts = datetime.datetime(y, m, d, 4, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
 	dte = dts + datetime.timedelta(seconds=86400)
 	dt = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
-	events = Event.objects.filter(end_time__gte=dts, start_time__lte=dte).exclude(type='life_event').order_by('start_time')
+	events = []
+	for event in Event.objects.filter(end_time__gte=dts, start_time__lte=dte).exclude(type='life_event').order_by('start_time'):
+		events.append(event)
+	for tweet in RemoteInteraction.objects.filter(time__gte=dts, time__lte=dte, type='microblogpost', address='').order_by('time'):
+		events.append(tweet)
+	for sms in RemoteInteraction.objects.filter(time__gte=dts, time__lte=dte, type='sms').order_by('time'):
+		events.append(sms)
 	dss = dts.strftime('%A, %-d %B %Y')
+	events = sorted(events, key=lambda x: x.start_time if x.__class__.__name__ == 'Event' else x.time)
 	context = {'type':'view', 'caption': dss, 'events':events, 'stats': {}}
 	wakes = DataReading.objects.filter(type='awake', start_time__lt=dte, end_time__gt=dts).order_by('start_time')
 	wakecount = wakes.count()
