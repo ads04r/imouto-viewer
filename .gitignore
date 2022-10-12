@@ -4,8 +4,10 @@ viewer/migrations
 viewer/static/viewer/cycling.json
 viewer/static/libraries
 imouto/settings_local.py
+index
 media
 static
+importers
 nohup.out
 
 !static/viewer/*
