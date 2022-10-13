@@ -309,7 +309,7 @@ def day(request, ds):
 	for sms in RemoteInteraction.objects.filter(time__gte=dts, time__lte=dte, type='sms').order_by('time'):
 		events.append(sms)
 	dss = dts.strftime('%A, %-d %B %Y')
-	events = sorted(events, key=lambda x: x.start_time if x.__class__.__name__ == 'Event' else x.time)
+	events = sorted(events, key=lambda x: x.start_time if x.__class__.__name__ == 'Event' else (x['time'] if isinstance(x, (dict)) else x.time))
 	context = {'type':'view', 'caption': dss, 'events':events, 'stats': {}}
 	wakes = DataReading.objects.filter(type='awake', start_time__lt=dte, end_time__gt=dts).order_by('start_time')
 	wakecount = wakes.count()
@@ -325,6 +325,23 @@ def day(request, ds):
 	if dte < dt:
 		context['stats']['next'] = (dts + datetime.timedelta(days=1)).strftime("%Y%m%d")
 	return render(request, 'viewer/day.html', context)
+
+def day_music(request, ds):
+
+	if len(ds) != 8:
+		raise Http404()
+	y = int(ds[0:4])
+	m = int(ds[4:6])
+	d = int(ds[6:])
+	dts = datetime.datetime(y, m, d, 4, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
+	dte = dts + datetime.timedelta(seconds=86400)
+
+	data = []
+	for item in get_moonshine_tracks(dts, dte):
+		item['time'] = item['time'].strftime("%H:%M")
+		data.append(item)
+	response = HttpResponse(json.dumps(data), content_type='application/json')
+	return response
 
 def day_weight(request, ds):
 
@@ -493,6 +510,16 @@ def event(request, eid):
 
 	form = EventForm(instance=data)
 	context = {'type':'event', 'data':data, 'form':form, 'people':Person.objects.all(), 'categories':EventWorkoutCategory.objects.all()}
+	music = cache.get(cache_key + '_music')
+	if music is None:
+		music = get_moonshine_tracks(data.start_time, data.end_time)
+		if len(music) > 0:
+			cache.set(cache_key + '_music', music, 86400)
+		else:
+			music = False
+			cache.set(cache_key + '_music', music, 86400)
+	if music:
+		context['music'] = music
 	template = 'viewer/event.html'
 	if data.type=='life_event':
 		template = 'viewer/lifeevent.html'

@@ -52,12 +52,34 @@
 		<div class="day-heart-summary"></div>
 		<div class="hidden-xs hidden-sm hidden-md day-weight-summary"></div>
 		<div class="hidden-xs hidden-sm hidden-md day-sleep-summary"></div>
+		<div class="hidden-xs hidden-sm hidden-md day-music-summary"></div>
 		<div class="hidden-xs day-people-summary"></div>
 
             </div>
             <div class="col-xs-12 col-sm-6 col-md-8 col-sm-pull-6 col-md-pull-4">
 
 {% for event in events %}
+
+	{% if event|get_class == 'dict' %}
+
+		{% if event.type == 'music_track' %}
+
+	        <div class="callout callout-info">
+	          <table>
+	            <td valign="top"><i class="fa fa-music"></i>&nbsp;</td>
+	            <td valign="top">
+			{{ event.title }}
+			<br>
+			{% for artist in event.artists %}
+				<small class="muted">{{ artist.name }}</small> 
+			{% endfor %}
+		    </td>
+	          </table>
+	        </div>
+
+		{% endif %}
+
+	{% endif %}
 
 	{% if event|get_class == 'RemoteInteraction' %}
 
@@ -161,6 +183,7 @@
 		<!--// Bottom of left column --//-->
 		<div class="hidden-lg hidden-xl day-weight-summary"></div>
 		<div class="hidden-lg hidden-xl day-sleep-summary"></div>
+		<div class="hidden-lg hidden-xl day-music-summary"></div>
 		<div class="hidden-sm hidden-md hidden-lg hidden-xl day-people-summary"></div>
             </div>
         </div>

@@ -26,6 +26,7 @@ urlpatterns = [
     path('days/<ds>/weight.json', views.day_weight),
     path('days/<ds>/people.json', views.day_people),
     path('days/<ds>/events.json', views.day_events),
+    path('days/<ds>/music.json', views.day_music),
     path('days/<ds>/locevents.json', views.day_locevents),
     path('tags.html', views.tags),
     path('tags/<id>.html', views.tag),

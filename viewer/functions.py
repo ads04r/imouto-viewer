@@ -28,6 +28,30 @@ def __display_timeline_event(event):
 							return False
 	return True
 
+def get_moonshine_tracks(start_time, end_time):
+
+	if not(hasattr(settings, 'MOONSHINE_URL')):
+		return []
+
+	dt = datetime.date(start_time.year, start_time.month, 1)
+	ret = []
+	while dt < end_time.date():
+		url = settings.MOONSHINE_URL + '/time/' + dt.strftime("%Y-%m")
+		r = requests.get(url)
+		for item in r.json():
+			if not('time' in item):
+				continue
+			item['time'] = parser.parse(item['time'])
+			if item['time'] < start_time:
+				continue
+			if item['time'] > end_time:
+				continue
+			item['type'] = 'music_track'
+			ret.append(item)
+		dtd = dt.day
+		dt = (dt + datetime.timedelta(days=32)).replace(day=dtd) # Add a calendar month
+	return ret
+
 def create_monica_call(content, person, date, incoming=False):
 
 	hashes = person.get_property('monicahash')

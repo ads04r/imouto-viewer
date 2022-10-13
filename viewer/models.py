@@ -744,8 +744,6 @@ class Event(models.Model):
 			if len(conversation) > 0:
 				ret.append(conversation)
 		return sorted(ret, key=lambda item: item[0].time)
-	def music(self):
-		return MediaEvent.objects.filter(time__gte=self.start_time, time__lte=self.end_time).filter(media__type='music').order_by('time')
 	def health(self):
 		if len(self.cached_health) > 2:
 			return json.loads(self.cached_health)

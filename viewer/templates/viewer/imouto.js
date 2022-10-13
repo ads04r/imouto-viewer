@@ -885,6 +885,44 @@ function daySummary(date)
             }
         });
         $.ajax({
+            url: './days/' + date + '/music.json',
+            method: 'GET',
+            success: function(data) {
+
+		var html = "";
+
+		if(data.length > 0){
+
+			html = html + "<div class=\"box box-primary\">";
+			html = html + "<div class=\"box-body\">";
+
+			html = html + "<p>Today's Music</p>";
+
+			html = html + "<div class=\"table-responsive\">";
+			html = html + "<table class=\"table table-sm no-margin\">";
+
+			for(i = 0; i < data.length; i++){
+				var artists = '';
+				for(j = 0; j < data[i].artists.length; j++)
+				{
+					if(artists != '') { artists = artists + ', '; }
+					artists = artists + data[i].artists[j].name;
+				}
+				html = html + "<tr><td>" + data[i].time + "</td><td>" + data[i].title + '<br><small class="muted">' + artists + '</small></td></tr>';
+			}
+
+			html = html + "</table>";
+			html = html + "</div>";
+
+			html = html + "</div>";
+			html = html + "</div>";
+
+		}
+
+		if(html != '') { $(".day-music-summary").html(html); }
+            }
+        });
+        $.ajax({
             url: './days/' + date + '/people.json',
             method: 'GET',
             success: function(data) {

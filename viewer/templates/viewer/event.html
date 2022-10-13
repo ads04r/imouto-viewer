@@ -60,7 +60,7 @@
 
                 <div class="box box-primary">
                     <div class="box-body">
-    {% if data.description == '' and data.photos.count == 0 and data.music.count == 0 %}
+    {% if data.description == '' and data.photos.count == 0 %}
                         <div id="map{{ data.pk }}" class="journeyeventmap eventmap" data-geojson="{{ data.geo }}"></div>
     {% else %}
                         <div id="map{{ data.pk }}" class="eventmap" data-geojson="{{ data.geo }}"></div>
@@ -212,7 +212,7 @@
 
 {% endfor %}
 
-{% if data.music.count > 0 %}
+{% if music %}
 
                 <div class="box box-primary">
                     <div class="box-header with-border">
@@ -230,12 +230,11 @@
                             </thead>
                             <tbody>
                                                                     
-{% for track in data.music.all %}
+{% for track in music %}
 
                             <tr>
                                 <td>{{ track.time|date:"H:i" }}</td>
-                                <td>{{ track.media.label }}</td>
-                                <td><a href="#music_{{ track.media.unique_id }}">Details</a></td>
+                                <td>{{ track.artists.0.name }} - {{ track.title }}</td>
                             </tr>
 
 {% endfor %}
