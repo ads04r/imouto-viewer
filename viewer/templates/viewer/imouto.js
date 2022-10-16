@@ -985,6 +985,7 @@ function placeScreen(id)
     $(".content-wrapper").load("./places/" + id + ".html", function(response, status, xhr){
         if(status == 'error') { errorPage(xhr); return false; }
         makeMap();
+        initialiseGraphics();
     });
 }
 

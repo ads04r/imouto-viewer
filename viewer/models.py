@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.files import File
-from django.db.models import Count
+from django.db.models import Count, Avg, Transform, Field, IntegerField, F, ExpressionWrapper
+from django.db.models.fields import DurationField
 from django.conf import settings
 from django.utils.html import strip_tags
 from colorfield.fields import ColorField
@@ -13,6 +14,14 @@ from staticmap import StaticMap, Line
 from viewer.staticcharts import generate_pie_chart, generate_donut_chart
 from xml.dom import minidom
 import random, datetime, pytz, json, markdown, re, os, urllib.request
+
+@Field.register_lookup
+class WeekdayLookup(Transform):
+	lookup_name = 'wd'
+	function = 'DAYOFWEEK'
+	@property
+	def output_field(self):
+		return IntegerField()
 
 def user_thumbnail_upload_location(instance, filename):
 	return 'people/' + str(instance.pk) + '/' + filename
@@ -177,6 +186,23 @@ class Location(models.Model):
 			if dt < self.creation_time:
 				return False
 		return True
+	def tags(self):
+		return EventTag.objects.filter(events__location=self).distinct().exclude(id='')
+	def longest_event(self):
+		duration = ExpressionWrapper(F('end_time') - F('start_time'), output_field=DurationField())
+		return Event.objects.filter(location=self).exclude(type='life_event').annotate(duration=duration).order_by('-duration')[0].duration
+	def average_event(self):
+		duration = ExpressionWrapper(F('end_time') - F('start_time'), output_field=DurationField())
+		return Event.objects.filter(location=self).exclude(type='life_event').annotate(duration=duration).aggregate(av=Avg('duration'))['av']
+	def weekdays(self):
+		ret = {'days': [], 'values': []}
+		d = ['', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+		for item in Event.objects.filter(location=self).exclude(type='life_event').values('start_time__wd').annotate(ct=Count('start_time__wd')).order_by('start_time__wd'):
+			id = item['start_time__wd']
+			ret['days'].append(d[id])
+			ret['values'].append(item['ct'])
+		ret['json'] = json.dumps(ret['days'])
+		return ret
 	def __str__(self):
 		label = self.label
 		if self.full_label != '':
@@ -680,6 +706,7 @@ class Event(models.Model):
 			if 'distance' in geo['properties']:
 				return (float(int((geo['properties']['distance'] / 1.609) * 100)) / 100)
 		return 0
+	@property
 	def length(self):
 		return((self.end_time - self.start_time).total_seconds())
 	def length_string(self, value=0):
