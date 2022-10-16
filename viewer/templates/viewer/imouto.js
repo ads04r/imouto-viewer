@@ -158,7 +158,7 @@ function updateUploadStats()
         method: 'GET',
         success: function(data) {
 
-		var ps = new Date(data.stats['last_calculated_positon'] * 1000);
+		var ps = new Date(data.stats['last_calculated_position'] * 1000);
 		var ev = new Date(data.stats['last_generated_event'] * 1000);
 
 		$('#stats-last-position').html(ps.toLocaleString());
