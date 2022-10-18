@@ -104,7 +104,7 @@
 
                 <div class="box box-primary">
                     <div class="box-body">
-			<canvas class="donut-chart" style="height: 160px" data-data="{{ data.weekdays.values|escape }}" data-labels="{{ data.weekdays.json|escape }}"></canvas>
+			<canvas class="donut-chart" data-data="{{ data.weekdays.values|escape }}" data-labels="{{ data.weekdays.json|escape }}"></canvas>
                         <ul class="list-group list-group-unbordered">
                           <li class="list-group-item"><b>Average visit</b><span class="pull-right">{{ data.average_event }}</span></li>
                           <li class="list-group-item"><b>Longest visit</b><span class="pull-right">{{ data.longest_event }}</span></li>

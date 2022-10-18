@@ -1128,7 +1128,12 @@ function makeMap()
 function makeDonutChart(donutChartCanvas, data, labels)
 {
     var donutChart = new Chart(donutChartCanvas);
-    var colours = ['#ABC1D8', '#3C8DBC', '#0073B7', '#005C92'];
+    if(labels.length <= 4)
+    {
+        var colours = ['#ABC1D8', '#3C8DBC', '#0073B7', '#005C92'];
+    } else {
+        var colours = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#00FFFF', '#0000FF', '#7F00FF', '#FF00FF'];
+    }
     var config = {
         type: 'doughnut',
         data: {
@@ -1142,8 +1147,10 @@ function makeDonutChart(donutChartCanvas, data, labels)
         },
         options: {
             responsive: true,
+            aspectRatio: 0.5,
+            maintainAspectRatio: true,
             animation: { animateScale: true, animateRotate: true },
-            legend: { display: false },
+            legend: { display: true, position: 'bottom', align: 'start' },
             tooltips: {
 		callbacks: {
 			label: function(item, data){
