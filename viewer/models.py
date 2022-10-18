@@ -800,7 +800,7 @@ class Event(models.Model):
 		elev_max = -99999.99
 		elev_min = 99999.99
 		sleep = []
-		if self.length() > 86400:
+		if self.length > 86400:
 			eventsearch = DataReading.objects.filter(end_time__gte=self.start_time, start_time__lte=self.end_time).exclude(type='heart-rate').exclude(type='cadence')
 		else:
 			eventsearch = DataReading.objects.filter(end_time__gte=self.start_time, start_time__lte=self.end_time)
@@ -866,7 +866,7 @@ class Event(models.Model):
 			ret['heartmax'] = int(heart_max)
 			ret['heartavgprc'] = int(((heart_total / heart_count) / self.max_heart_rate()) * 100)
 			ret['heartmaxprc'] = int((heart_max / self.max_heart_rate()) * 100)
-			ret['heartzonetime'] = [int(self.length() - (heart_zone + heart_zone_2)), int(heart_zone), int(heart_zone_2)]
+			ret['heartzonetime'] = [int(self.length - (heart_zone + heart_zone_2)), int(heart_zone), int(heart_zone_2)]
 			ret['heartoptimaltime'] = self.length_string(ret['heartzonetime'][1])
 			ret['efficiency'] = int((float(ret['heartzonetime'][1]) / float(ret['heartzonetime'][0] + ret['heartzonetime'][1] + ret['heartzonetime'][2])) * 100.0)
 			ret['heart'] = ','.join(heart_csv)
