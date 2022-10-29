@@ -194,7 +194,7 @@ function onLocEventMapClick(e)
                 item = data[i];
                 html = html + '<tr class="loceventadd">'
                 html = html + '<td data-start="' + item.start_time + '" data-end="' + item.end_time + '">' + item.text + '</td>';
-                html = html + '<td class="pull-right"><a data-start="' + item.start_time + '" data-end="' + item.end_time + '" class="btn btn-success btn-xs addlocationevent" href="#">Add Event</a></td>';
+                html = html + '<td class="pull-right"><a data-location="' + item.location + '" data-start="' + item.start_time + '" data-end="' + item.end_time + '" class="btn btn-success btn-xs addlocationevent" href="#">Add Event</a></td>';
                 html = html + '</tr>';
             }
             if(html == '')
@@ -209,6 +209,7 @@ function onLocEventMapClick(e)
                 var form = new FormData();
                 var dss = $(this).data('start');
                 var dse = $(this).data('end');
+		var location = $(this).data('location');
                 var caption = $(this).parent().parent().find('td:not(.pull-right)').text()
                 form.append('type', 'loc_prox');
                 form.append('csrfmiddlewaretoken', csrf);
@@ -216,7 +217,7 @@ function onLocEventMapClick(e)
                 form.append('end_time', dse);
                 form.append('workout_type', '');
                 form.append('caption', caption);
-                form.append('location', '');
+                form.append('location', location);
                 form.append('description', '');
                 $.ajax({
                     url: url,
