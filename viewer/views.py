@@ -264,6 +264,7 @@ def events(request):
 				for category in EventWorkoutCategory.objects.filter(id=catid):
 					event.workout_categories.add(category)
 			event.save()
+			event.populate_people_from_photos()
 
 			return HttpResponseRedirect('./#event_' + str(event.id))
 		else:
@@ -492,6 +493,8 @@ def event(request, eid):
 					event.workout_categories.add(category)
 			event.cached_health = ''
 			event.save()
+			event.populate_people_from_photos()
+
 			cache.set(cache_key, data, 86400)
 			return HttpResponseRedirect('../#event_' + str(eid))
 		else:

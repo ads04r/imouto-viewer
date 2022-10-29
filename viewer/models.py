@@ -891,6 +891,14 @@ class Event(models.Model):
 		self.cached_health = json.dumps(ret)
 		self.save()
 		return ret
+	def populate_people_from_photos(self):
+		for photo in self.photos():
+			if photo.people.count() == 0:
+				continue
+			for person in photo.people.all():
+				if person in self.people.all():
+					continue
+				self.people.add(person)
 	def __str__(self):
 		if self.caption == '':
 			return "Event " + str(self.pk)
