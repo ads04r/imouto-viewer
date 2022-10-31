@@ -87,6 +87,10 @@ REST_FRAMEWORK = {
     )
 }
 
+# Stops background_tasks throwing a million warnings on startup
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
 
