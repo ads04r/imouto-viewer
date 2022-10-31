@@ -157,6 +157,7 @@
                 {% for photo in event.photos %}{% if forloop.counter <= 5 %}<a href="photo/{{ photo.pk }}.jpg" target="_blank"><img src="photo/{{ photo.pk }}_thumb.jpg" width="100" height="100"></a>{% endif %}{% endfor %}
             {% else %}
                 <div id="map{{ event.pk }}" class="eventmap" data-geojson="{{ event.geo }}"></div>
+                {% if event.description != '' %}<p>{{ event.description_html|safe }}</p>{% endif %}
             {% endif %}
 
                     </div>
