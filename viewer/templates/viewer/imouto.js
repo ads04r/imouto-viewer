@@ -1644,6 +1644,7 @@ function pageRefresh()
         });
     }, 500));
     $(".content-wrapper").html(loading);
+    $(".control-sidebar").removeClass('control-sidebar-open');
     
     if(page == '') { homeScreen(); return true; }
     if(page == 'timeline') { timelineScreen(); return true; }
