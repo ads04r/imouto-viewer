@@ -1060,7 +1060,7 @@ def generate_location_events(minlength):
 	r = urllib.request.urlopen(url)
 	data = json.loads(r.read())
 	dts = Event.objects.filter(type='loc_prox').exclude(caption='Home').order_by('-start_time')[0].start_time.replace(hour=0, minute=0, second=0)
-	dte1 = datetime.datetime.fromtimestamp(int(data['stats']['last_calculated_positon'])).replace(tzinfo=pytz.UTC)
+	dte1 = datetime.datetime.fromtimestamp(int(data['stats']['last_calculated_position'])).replace(tzinfo=pytz.UTC)
 	dte2 = Event.objects.all().order_by('-end_time')[0].end_time
 	if dte1 > dte2:
 		dte = dte1
