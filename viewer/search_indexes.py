@@ -7,12 +7,13 @@ class EventIndex(indexes.SearchIndex, indexes.Indexable):
 	text = indexes.CharField(document=True, use_template=True)
 	start_time = indexes.DateTimeField(model_attr='start_time')
 	end_time = indexes.DateTimeField(model_attr='end_time')
+	updated_time = indexes.DateTimeField(model_attr='updated_time')
 
 	def get_model(self):
 		return Event
 
 	def get_updated_field(self):
-		return 'start_time'
+		return 'updated_time'
 
 
 #    start_time = models.DateTimeField()
