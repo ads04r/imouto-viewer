@@ -1606,7 +1606,9 @@ function pageRefresh()
     $("#imouto-search-text").on('keyup', typingDelay(function()
     {
         var text = $(this).val();
+        var spinner = '<ul class="control-sidebar-menu"><li><span class="imitation-search-item"><i class="menu-icon fa fa-spinner fa-spin"></i><div class="menu-info"><h4 class="control-sidebar-subheading">Searching...</h4></div></span></li></ul>';
         if(text == '') { return; }
+        $('#imouto-search-results').html(spinner);
         search(text, function(data)
         {
             var html = '';
@@ -1640,6 +1642,7 @@ function pageRefresh()
                 }
                 html = html + '<div class="menu-info"><h4 class="control-sidebar-subheading">' + item.label + '</h4><p>' + item.description + '</p></div></a></li>';
             }
+            if(html.length == 0) { html = '<li><span class="imitation-search-item"><div class="menu-info"><h4 class="control-sidebar-subheading">No results</h4><p>Try broadening your search.</p></div></span></li>'; }
             $("#imouto-search-results").html('<ul class="control-sidebar-menu">' + html + '</ul>');
         });
     }, 500));
