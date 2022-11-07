@@ -789,7 +789,7 @@ def search(request):
 	cache_key = 'search_' + query
 	sq = cache.get(cache_key)
 	if sq is None:
-		sq = SearchQuerySet().filter(content=query)
+		sq = SearchQuerySet().filter(content=query).order_by('-start_time')[0:50]
 		cache.set(cache_key, sq, 86400)
 
 	for searchresult in sq:

@@ -549,6 +549,8 @@ class DataReading(models.Model):
 class Event(models.Model):
 	start_time = models.DateTimeField()
 	end_time = models.DateTimeField()
+	created_time = models.DateTimeField(auto_now_add=True)
+	updated_time = models.DateTimeField(auto_now=True)
 	type = models.SlugField(max_length=32)
 	caption = models.CharField(max_length=255, default='', blank=True)
 	description = models.TextField(default='', blank=True)
