@@ -6,6 +6,8 @@ from io import StringIO
 from dateutil.tz import tzlocal
 import os, sys, datetime, shutil, sqlite3, pytz, csv, xmltodict, json
 from viewer.models import RemoteInteraction
+from tempfile import TemporaryDirectory
+from zipfile import ZipFile
 
 class Command(BaseCommand):
 	"""
@@ -36,7 +38,9 @@ class Command(BaseCommand):
 				format = 'xml'
 			if uploaded_file.lower().endswith('.msg'):
 				format = 'msg'
-		if not(format in ['ncc', 'xml', 'msg']):
+			if uploaded_file.lower().endswith('.pib'):
+				format = 'pib'
+		if not(format in ['ncc', 'xml', 'msg', 'pib']):
 			sys.stderr.write(self.style.ERROR("File format cannot be identified.\n"))
 			sys.exit(1)
 
@@ -46,6 +50,8 @@ class Command(BaseCommand):
 			ct = self.import_ncc_file(uploaded_file)
 		if format == 'xml':
 			ct = self.import_xml_file(uploaded_file)
+		if format == 'pib':
+			ct = self.import_pim_file(uploaded_file)
 		if format == 'msg':
 			ct = self.import_xml_file(uploaded_file)
 
@@ -220,3 +226,52 @@ class Command(BaseCommand):
 
 		return ct
 
+	def decode_dodgy_utf(self, data):
+
+		ret = data.decode('utf-16le', 'ignore')
+		try:
+			i = ret.index('\u0000')
+			ret = ret[:i]
+		except ValueError:
+			pass
+		return ret
+
+	def import_pim_file(self, filename):
+
+		data = []
+		with TemporaryDirectory() as temp:
+			with ZipFile(filename, 'r') as zip:
+				zip.extractall(temp)
+			for file in os.listdir(temp):
+				filename = os.fsdecode(file)
+				if not(filename.startswith('msgs_')) or not(filename.endswith('.csm')):
+					continue
+				filename = os.path.join(temp, filename)
+
+				fp = open(filename, 'rb')
+				csvb = fp.read()
+				fp.close()
+				csvs = self.decode_dodgy_utf(csvb)
+				f = StringIO(csvs)
+				r = csv.reader(f, delimiter=';', quotechar='"')
+				headers = []
+				for row in r:
+					item = {}
+					if len(headers) == 0:
+						headers = row
+						continue
+					for i in range(0, min([len(headers), len(row)])):
+						k = headers[i]
+						v = row[i]
+						if len(k) == 0:
+							continue
+						if len(v) == 0:
+							continue
+						item[k] = v
+					if len(item) > 0:
+						data.append(item)
+
+			print(json.dumps(data))
+
+
+		return 0
