@@ -9,8 +9,10 @@ static/libraries
 imouto/settings_local.py
 index
 media
+static/*
 importers
 nohup.out
 
+-static/viewer
 -static/viewer/script/.gitkeep
 -viewer/static/viewer/script/.gitkeep
