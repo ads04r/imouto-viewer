@@ -11,5 +11,6 @@ admin.site.site_title = 'Imouto Admin'
 urlpatterns = [
     path('viewer/', include('viewer.urls')),
     path('admin/', admin.site.urls),
-    path('', RedirectView.as_view(url='/viewer/', permanent=False))
+    path('', RedirectView.as_view(url='/viewer/', permanent=False)),
+    path('favicon.ico', RedirectView.as_view(url='static/viewer/graphics/favicon.ico', permanent=True))
 ]
