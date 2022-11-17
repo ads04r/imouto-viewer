@@ -2,15 +2,15 @@
 __pycache__
 viewer/migrations
 viewer/static/viewer/cycling.json
+viewer/static/viewer/script
 viewer/static/libraries
+static/viewer/script
+static/libraries
 imouto/settings_local.py
 index
 media
-static
 importers
 nohup.out
 
-!static/viewer/*
-!static/viewer
-!viewer/static/viewer/*
-!viewer/static/viewer
+-static/viewer/script/.gitkeep
+-viewer/static/viewer/script/.gitkeep
