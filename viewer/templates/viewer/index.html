@@ -12,10 +12,22 @@
     {% include 'viewer/_main_sidebar.html' %}
 {% endblock %}
 {% block extra_head %}
+
     <link rel="stylesheet" href="{% static "libraries/chart/Chart.css" %}" />
     <link rel="stylesheet" href="{% static "libraries/leaflet/leaflet.css" %}" />
     <link rel="stylesheet" href="{% static "libraries/fullcalendar/fullcalendar.min.css" %}" />
     <link rel="stylesheet" href="{% static "viewer/styles/imouto.css" %}" />
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/viewer/graphics/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/viewer/graphics/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/viewer/graphics/favicon-16x16.png">
+    <link rel="manifest" href="/static/viewer/site.webmanifest">
+    <link rel="mask-icon" href="/static/viewer/graphics/safari-pinned-tab.svg" color="#603cba">
+    <link rel="shortcut icon" href="/static/viewer/graphics/favicon.ico">
+    <meta name="msapplication-TileColor" content="#603cba">
+    <meta name="msapplication-config" content="/static/viewer/browserconfig.xml">
+    <meta name="theme-color" content="#ffffff">
+
 {% endblock %}
 {% block extra_foot %}
     {% include 'viewer/search.html' %}    
