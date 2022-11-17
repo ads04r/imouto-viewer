@@ -12,3 +12,5 @@ nohup.out
 
 !static/viewer/*
 !static/viewer
+!viewer/static/viewer/*
+!viewer/static/viewer
