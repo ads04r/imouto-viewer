@@ -710,6 +710,13 @@ def report(request, id):
 	context = {'type':'report', 'data':data}
 	return render(request, 'viewer/report.html', context)
 
+def report_graph(request, id):
+	data = get_object_or_404(LifeReportGraph, id=id)
+	im = data.image()
+	response = HttpResponse(content_type='image/png')
+	im.save(response, "PNG")
+	return response
+
 def report_pdf(request, id):
 	data = get_object_or_404(LifeReport, id=id)
 	pdf = open(data.pdf.path, 'rb')
