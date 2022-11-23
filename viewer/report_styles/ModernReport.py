@@ -10,7 +10,7 @@ class ModernReport(FPDF):
 		super().__init__(orientation='P', unit='mm', format='A4')
 		self.set_author('Imouto')
 		self.set_creator('Imouto')
-		self.add_font(family='Hatten', fname=settings.WORDCLOUD_FONT, uni=True)
+		self.add_font(family='Hatten', fname=settings.DEFAULT_FONT, uni=True)
 		self.set_font('Arial', '', 14)
 		self.__temp = []
 
@@ -261,7 +261,7 @@ class ModernReport(FPDF):
 		self.set_text_color(255, 255, 255)
 		self.set_font('Hatten', '', 28)
 		self.set_xy(x, 10)
-		self.cell(175, 15, title, 0, 1, 'C', False)
+		self.cell(175, 15, title.title(), 0, 1, 'C', False)
 		self.set_text_color(0, 0, 0)
 		self.set_font('Arial', '', 12)
 		cols = 4
