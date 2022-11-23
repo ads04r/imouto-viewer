@@ -38,6 +38,9 @@ def report_pdf_upload_location(instance, filename):
 def report_wordcloud_upload_location(instance, filename):
 	return 'wordclouds/report_wc_' + str(instance.id) + '.png'
 
+def report_graph_upload_location(instance, filename):
+	return 'staticgraphs/report_graph_' + str(instance.id) + '.png'
+
 def event_collage_upload_location(instance, filename):
 	return 'events/event_collage_' + str(instance.id) + '.jpg'
 
@@ -1017,7 +1020,13 @@ class LifeReport(models.Model):
 			item = {'type': 'stats', 'title': category, 'data': []}
 			for prop in LifeReportProperties.objects.filter(report=self, category=category):
 				item['data'].append(prop.to_dict())
-			ret.append(item)
+			if len(item['data']) > 0:
+				ret.append(item)
+			item = {'type': 'grid', 'title': category, 'data': []}
+			for graph in LifeReportGraph.objects.filter(report=self, category=category):
+				item['data'].append(graph.to_dict())
+			if len(item['data']) > 0:
+				ret.append(item)
 		for chart in LifeReportChart.objects.filter(report=self):
 			if options['peoplestats'] == False:
 				if chart.text.lower() == 'people':
@@ -1344,13 +1353,31 @@ class LifeReportGraph(models.Model):
 	category = models.SlugField(max_length=32, default='')
 	type = models.SlugField(max_length=16, default='bar')
 	icon = models.SlugField(max_length=64, default='bar-chart')
+	cached_image = models.ImageField(blank=True, null=True, upload_to=report_graph_upload_location)
 	description = models.TextField(null=True, blank=True)
 	def image(self, w=640, h=640):
+		if ((w == 640) & (h == 640)):
+			if self.cached_image:
+				im = Image.open(self.cached_image)
+				return im
 		data = json.loads(self.data)
+		ret = None
 		if self.type == 'pie':
-			return generate_pie_chart(data, w, h)
+			ret = generate_pie_chart(data, w, h)
 		if self.type == 'donut':
-			return generate_donut_chart(data, w, h)
+			ret = generate_donut_chart(data, w, h)
+		if ret is None:
+			return False
+		if ((w == 640) & (h == 640)):
+			blob = BytesIO()
+			ret.save(blob, 'PNG')
+			self.cached_image.save(report_graph_upload_location, File(blob), save=False)
+			self.save()
+		return ret
+	def to_dict(self):
+		if not self.cached_image:
+			im = self.image()
+		return {'category': self.category, 'name': self.key, 'image': self.cached_image.path}
 	def __str__(self):
 		return str(self.report) + ' - ' + self.key
 	class Meta:
