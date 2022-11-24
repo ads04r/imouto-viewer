@@ -58,11 +58,17 @@ def get_moonshine_artist_image(mbid):
 	images = artist_info['images']
 	random.shuffle(images)
 	for image_url in images:
-		r = requests.get(image_url, stream=True)
-		with open(ret, 'wb') as fp:
-			for chunk in r.iter_content(chunk_size=1024):
-				if chunk:
-					fp.write(chunk)
+		r = requests.get(image_url)
+		im = Image.open(BytesIO(r.content))
+		bbox = im.getbbox()
+		w = bbox[2]
+		h = bbox[3]
+		if h > w:
+			im = im.crop((0, 0, w, w))
+		else:
+			x = int((w - h) / 2)
+			im = im.crop((x, 0, x + h, h))
+		im.save(ret, quality=95)
 		if os.path.exists(ret):
 			if os.path.getsize(ret) > 4:
 				return ret
