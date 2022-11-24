@@ -157,6 +157,9 @@ def generate_report_music(report, dts, dte, moonshine_url=''):
 					chart_data = []
 					for artist in music_data['charts']['artists']:
 						item = {'text': artist['name'], 'value': artist['plays']}
+						image = get_moonshine_artist_image(artist['mbid'])
+						if image:
+							item['image'] = image
 						chart_data.append(item)
 					if len(chart_data) > 0:
 						chart = LifeReportChart(text='Most Played Artists', data=json.dumps(chart_data), report=report)

@@ -1,4 +1,4 @@
-import datetime, time, pytz, json, random, urllib.request, re, sys, requests
+import datetime, time, pytz, json, random, urllib.request, re, sys, requests, os
 from viewer.models import *
 from background_task.models import Task
 from django.db.models import Sum, Count, F, ExpressionWrapper, DurationField, fields
@@ -27,6 +27,48 @@ def __display_timeline_event(event):
 						if (float(event.distance()) < 1):
 							return False
 	return True
+
+def get_moonshine_artist_image(mbid):
+
+	if not(hasattr(settings, 'MOONSHINE_URL')):
+		return None
+	if not(hasattr(settings, 'MEDIA_ROOT')):
+		return None
+
+	filename = mbid.replace('-', '').lower() + '.jpg'
+	images_path = os.path.join(settings.MEDIA_ROOT, 'artist_images', filename[0])
+	try:
+		os.makedirs(images_path)
+	except:
+		pass
+	if not os.path.exists(images_path):
+		return None
+
+	ret = os.path.join(images_path, filename)
+	if os.path.exists(ret):
+		return ret
+
+	url = settings.MOONSHINE_URL + '/artist/' + mbid
+	r = requests.get(url)
+	artist_info = r.json()
+	if not isinstance(artist_info, (dict)):
+		return None
+	if not 'images' in artist_info:
+		return None
+	images = artist_info['images']
+	random.shuffle(images)
+	for image_url in images:
+		r = requests.get(image_url, stream=True)
+		with open(ret, 'wb') as fp:
+			for chunk in r.iter_content(chunk_size=1024):
+				if chunk:
+					fp.write(chunk)
+		if os.path.exists(ret):
+			if os.path.getsize(ret) > 4:
+				return ret
+			os.remove(ret)
+
+	return None
 
 def get_moonshine_tracks(start_time, end_time):
 
