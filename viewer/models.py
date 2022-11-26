@@ -954,13 +954,13 @@ class MediaEvent(models.Model):
 
 class LifeReport(models.Model):
 	label = models.CharField(max_length=128)
-	type = models.SlugField(max_length=32, default='year')
+	year = models.IntegerField()
 	style = models.SlugField(max_length=32, default='default')
 	people = models.ManyToManyField(Person, through='ReportPeople')
 	locations = models.ManyToManyField(Location, through='ReportLocations')
 	events = models.ManyToManyField(Event, through='ReportEvents')
-	created_date = models.DateTimeField(auto_now_add=True, blank=True)
-	modified_date = models.DateTimeField(default=datetime.datetime.now)
+	created_date = models.DateTimeField(auto_now_add=True)
+	modified_date = models.DateTimeField(auto_now=True)
 	pdf = models.FileField(blank=True, null=True, upload_to=report_pdf_upload_location)
 	cached_wordcloud = models.ImageField(blank=True, null=True, upload_to=report_wordcloud_upload_location)
 	cached_dict = models.TextField(blank=True, null=True)
@@ -969,10 +969,39 @@ class LifeReport(models.Model):
 		return dt.strftime("%a %-d %b") + ' ' + (dt.strftime("%I:%M%p").lower().lstrip('0'))
 	def countries(self):
 		return LocationCountry.objects.filter(locations__in=self.locations.all()).distinct()
+	def refresh_events(self):
+		tz = pytz.timezone(settings.TIME_ZONE)
+		dts = datetime.datetime(self.year, 1, 1, 0, 0, 0, tzinfo=tz)
+		dte = datetime.datetime(self.year, 12, 31, 23, 59, 59, tzinfo=tz)
+		subevents = []
+		self.events.clear()
+		self.cached_dict = None
+		self.save()
+		for event in Event.objects.filter(type='life_event', start_time__lte=dte, end_time__gte=dts).order_by('start_time'):
+			self.events.add(event)
+			if event.location:
+				self.locations.add(event.location)
+			for e in event.subevents():
+				if e in subevents:
+					continue
+				subevents.append(e)
+		for event in Event.objects.filter(start_time__lte=dte, end_time__gte=dts).order_by('start_time').exclude(type='life_event'):
+			if event.location:
+				self.locations.add(event.location)
+			if event in subevents:
+				continue
+			if event.photos().count() > 5:
+				self.events.add(event)
+				continue
+			if event.description is None:
+				continue
+			if event.description == '':
+				continue
+			self.events.add(event)
 	def to_dict(self):
 		if self.cached_dict:
 			return json.loads(self.cached_dict)
-		ret = {'id': self.pk, 'label': self.label, 'year': self.year(), 'stats': [], 'created_date': self.created_date.strftime("%Y-%m-%d %H:%M:%S %z"), 'modified_date': self.modified_date.strftime("%Y-%m-%d %H:%M:%S %z"), 'style': self.style, 'type': self.type, 'people': [], 'places': [], 'countries': [], 'life_events': [], 'events': []}
+		ret = {'id': self.pk, 'label': self.label, 'year': self.year, 'stats': [], 'created_date': self.created_date.strftime("%Y-%m-%d %H:%M:%S %z"), 'modified_date': self.modified_date.strftime("%Y-%m-%d %H:%M:%S %z"), 'style': self.style, 'type': 'year', 'people': [], 'places': [], 'countries': [], 'life_events': [], 'events': []}
 		for personlink in ReportPeople.objects.filter(report=self):
 			person = personlink.person
 			persondata = person.to_dict()
@@ -1006,7 +1035,7 @@ class LifeReport(models.Model):
 			options['wordcloud'] = False
 		if not('maps' in options):
 			options['maps'] = False
-		year = self.year()
+		year = self.year
 		months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 		title = str(year)
 		subtitle = str(self.label)
@@ -1266,8 +1295,6 @@ class LifeReport(models.Model):
 		self.cached_wordcloud.save(report_wordcloud_upload_location, File(blob), save=False)
 		self.save()
 		return im
-	def year(self):
-		return int(self.events.order_by('start_time').first().end_time.year)
 	def life_events(self):
 		return self.events.filter(type='life_event')
 	def diary_entries(self):

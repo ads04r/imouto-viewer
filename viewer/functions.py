@@ -506,9 +506,9 @@ def get_report_queue():
 			except:
 				report = None
 			if not(report is None):
-				item['report'] = {"id": report.id, "year": report.year(), "label": report.label}
+				item['report'] = {"id": report.id, "year": report.year, "label": report.label}
 		if item['name'] == 'viewer.tasks.generate_report':
-			item['report'] = {"id": 0, "year": params[0][1][0:4], "label": params[0][0]}
+			item['report'] = {"id": 0, "year": params[0][1], "label": params[0][0]}
 
 		ret.append(item)
 

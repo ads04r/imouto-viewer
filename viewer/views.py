@@ -201,8 +201,6 @@ def reports(request):
 		form = CreateReportForm(request.POST)
 		if form.is_valid():
 			year = int(request.POST['year'])
-			dss = datetime.datetime(year, 1, 1, 0, 0, 0, tzinfo=pytz.UTC).strftime("%Y-%m-%d %H:%M:%S %z")
-			dse = datetime.datetime(year, 12, 31, 23, 59, 59, tzinfo=pytz.UTC).strftime("%Y-%m-%d %H:%M:%S %z")
 			title = str(request.POST['label'])
 			style = str(request.POST['style'])
 			options = {}
@@ -220,9 +218,9 @@ def reports(request):
 				if request.POST['maps'] == 'on':
 					options['maps'] = True
 			if 'moonshine_url' in request.POST:
-				generate_report(title, dss, dse, options, 'year', style, str(request.POST['moonshine_url']))
+				generate_report(title, year, options, style, str(request.POST['moonshine_url']))
 			else:
-				generate_report(title, dss, dse, options, 'year', style)
+				generate_report(title, year, options, style)
 			return HttpResponseRedirect('./#reports')
 		else:
 			raise Http404(form.errors)
@@ -821,7 +819,7 @@ def event_json(request, eid):
 def reports_json(request):
 	data = []
 	for report in LifeReport.objects.all():
-		item = {'id': report.id, 'label': report.label, 'year': report.year(), 'pdf': False, 'style': report.style, 'options': json.loads(report.options)}
+		item = {'id': report.id, 'label': report.label, 'year': report.year, 'pdf': False, 'style': report.style, 'options': json.loads(report.options)}
 		if report.pdf:
 			if os.path.exists(report.pdf.path):
 				item['pdf'] = True

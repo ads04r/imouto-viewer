@@ -118,23 +118,22 @@ def generate_report_wordcloud(reportid):
 	im = report.wordcloud()
 
 @background(schedule=0, queue='reports')
-def generate_report(title, dss, dse, options, type='year', style='default', moonshine_url='', pdf=True):
+def generate_report(title, year, options, style='default', moonshine_url='', pdf=True):
 	""" A background task for generating LifeReport objects"""
 
-	dts = datetime.datetime.strptime(dss, "%Y-%m-%d %H:%M:%S %z")
-	dte = datetime.datetime.strptime(dse, "%Y-%m-%d %H:%M:%S %z")
+	tz = pytz.timezone(settings.TIME_ZONE)
+	dts = datetime.datetime(year, 1, 1, 0, 0, 0, tzinfo=tz)
+	dte = datetime.datetime(year, 12, 31, 23, 59, 59, tzinfo=tz)
 
-	tz = get_localzone()
 	now = pytz.UTC.localize(datetime.datetime.utcnow())
-	report = LifeReport(label=title, type=type, style=style, modified_date=now)
+	report = LifeReport(label=title, style=style, year=year)
 	report.options = json.dumps(options)
 	report.save()
-	subevents = []
 
-	for event in Event.objects.filter(type='life_event', start_time__lte=dte, end_time__gte=dts).order_by('start_time'):
-		report.events.add(event)
-		if event.location:
-			report.locations.add(event.location)
+	subevents = []
+	report.refresh_events()
+
+	for event in report.events.filter(type='life_event').order_by('start_time'):
 		for e in event.subevents():
 			if e in subevents:
 				continue
@@ -146,23 +145,15 @@ def generate_report(title, dss, dse, options, type='year', style='default', moon
 					if e.description != '':
 						generate_staticmap(e.pk)
 
-	for event in Event.objects.filter(start_time__lte=dte, end_time__gte=dts).order_by('start_time').exclude(type='life_event'):
-		if event.location:
-			report.locations.add(event.location)
+	for event in report.events.exclude(type='life_event').order_by('start_time'):
 		if event in subevents:
 			continue
 		if event.photos().count() > 5:
-			report.events.add(event)
 			if event.photo_collages.count() == 0:
 				generate_photo_collages(event.pk)
 		if not(event.cached_staticmap):
 			if event.geo:
 				generate_staticmap(event.pk)
-		if event.description is None:
-			continue
-		if event.description == '':
-			continue
-		report.events.add(event)
 
 	generate_report_people(report, dts, dte)
 	generate_report_travel(report, dts, dte)
@@ -194,7 +185,7 @@ def generate_report_pdf(reportid, override_style=''):
 	if style == '':
 		style = report.style
 	options = json.loads(report.options)
-	filename = os.path.join(settings.MEDIA_ROOT, 'reports', 'report_' + str(report.id) + '.pdf')
+	filename = os.path.join(settings.MEDIA_ROOT, 'reports', 'report_' + str(report.id) + '_' + str(report.year) + '.pdf')
 	pages = report.pages()
 
 	if style == 'modern':
