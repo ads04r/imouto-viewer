@@ -301,15 +301,20 @@ def day(request, ds):
 	dte = dts + datetime.timedelta(seconds=86400)
 	dt = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
 	events = []
+	potential_joins = []
+	last_event = None
 	for event in Event.objects.filter(end_time__gte=dts, start_time__lte=dte).exclude(type='life_event').order_by('start_time'):
 		events.append(event)
+		if not(last_event is None):
+			potential_joins.append([str(last_event.pk) + '_' + str(event.pk), str(last_event.caption) + ' to ' + str(event.caption)])
+		last_event = event
 	for tweet in RemoteInteraction.objects.filter(time__gte=dts, time__lte=dte, type='microblogpost', address='').order_by('time'):
 		events.append(tweet)
 	for sms in RemoteInteraction.objects.filter(time__gte=dts, time__lte=dte, type='sms').order_by('time'):
 		events.append(sms)
 	dss = dts.strftime('%A, %-d %B %Y')
 	events = sorted(events, key=lambda x: x.start_time if x.__class__.__name__ == 'Event' else (x['time'] if isinstance(x, (dict)) else x.time))
-	context = {'type':'view', 'caption': dss, 'events':events, 'stats': {}}
+	context = {'type':'view', 'caption': dss, 'events':events, 'stats': {}, 'potential_joins': potential_joins}
 	wakes = DataReading.objects.filter(type='awake', start_time__lt=dte, end_time__gt=dts).order_by('start_time')
 	wakecount = wakes.count()
 	if wakecount > 0:
@@ -525,6 +530,28 @@ def event(request, eid):
 	if data.type=='life_event':
 		template = 'viewer/lifeevent.html'
 	return render(request, template, context)
+
+def event_addjourney(request):
+	if request.method != 'POST':
+		raise MethodNotAllowed(str(request.method))
+	vals = request.POST['join_events'].split('_')
+	if len(vals) != 2:
+		raise Http404()
+	try:
+		event_from = Event.objects.get(id=vals[0])
+		event_to = Event.objects.get(id=vals[1])
+	except:
+		raise Http404()
+	event = join_location_events(event_from.pk, event_to.pk)
+	if event is None:
+		raise Http404()
+	event.geo = getgeoline(event.start_time, event.end_time)
+	event.elevation = getelevation(event.start_time, event.end_time)
+	event.speed = getspeed(event.start_time, event.end_time)
+	event.caption = event_from.caption + ' to ' + event_to.caption
+	event.save()
+	ds = event.start_time.strftime("%Y%m%d")
+	return HttpResponseRedirect('../#day_' + str(ds))
 
 def event_staticmap(request, eid):
 	data = get_object_or_404(Event, id=eid)

@@ -43,6 +43,7 @@
                       <div>
 
                               <a class="btn btn-app" data-toggle="modal" data-target="#day_locevent_add" aria-hidden="true" href="#loc"><i class="fa fa-map-marker"></i>Location Event</a>
+                              <a class="btn btn-app" data-toggle="modal" data-target="#day_journeyevent_add" aria-hidden="true" href="#loc"><i class="fa fa-road"></i>Journey Event</a>
 
                       </div>
                     </div>
@@ -226,6 +227,29 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
             </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade nav-tabs-custom" id="day_journeyevent_add" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+	<form action="events/add_journey" method="POST">
+            <div class="modal-body">
+
+		<select class="form-control" id="join_events" name="join_events">
+{% for join in potential_joins %}
+			<option value="{{ join.0 }}">{{ join.1 }}</option>
+{% endfor %}
+		</select>
+{% csrf_token %}
+                
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+	</form>
         </div>
     </div>
 </div>
