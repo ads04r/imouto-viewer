@@ -15,7 +15,13 @@ import datetime, pytz, dateutil.parser, json, tzlocal, requests
 from .tasks import *
 from .models import *
 from .forms import *
-from .functions import *
+
+from .functions.moonshine import get_moonshine_tracks
+from .functions.locations import nearest_location, join_location_events, get_possible_location_events
+from .functions.people import explode_properties
+from .functions.geo import getgeoline, getelevation, getspeed
+from .functions.health import get_heart_information, get_sleep_history, get_sleep_information
+from .functions.utils import get_report_queue, get_timeline_events, generate_onthisday, generate_dashboard
 
 def index(request):
 	context = {'type':'index', 'data':[]}

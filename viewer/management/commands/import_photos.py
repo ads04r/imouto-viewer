@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand
 from django.core.cache import cache
 from django.conf import settings
 from viewer.importers import import_photo_directory, import_picasa_faces
-from viewer.functions import bubble_photo_locations, locate_photos_by_exif
+from viewer.functions.photos import bubble_photo_locations, locate_photos_by_exif
 import os, sys, pytz
 
 class Command(BaseCommand):

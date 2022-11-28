@@ -1,39 +1,18 @@
 from background_task import background
 from django.db.models import Count
-from .models import LifeReport, Event
-from .functions import *
-from .report_styles import DefaultReport, ModernReport
 from xml.dom import minidom
 from tzlocal import get_localzone
 from viewer.eventcollage import make_collage
 from tempfile import NamedTemporaryFile
 import datetime, pytz, os, random
+
+from .models import LifeReport, Event
+from .functions.utils import *
+from .report_styles import DefaultReport, ModernReport
 from .reporting import generate_report_travel, generate_report_photos, generate_report_people, generate_report_comms, generate_report_music
 
 def photo_collage_upload_location(instance, filename):
 	return 'collages/photo_collage_' + str(instance.pk) + '.jpg'
-
-@background(schedule=0, queue='reports')
-def generate_life_event_photo_collages(event_id):
-	""" A task for ensuring all sub-events within a life event have photo collages generated. """
-
-	max_photos = 30
-	min_photos = 2
-
-	ret = []
-	event = Event.objects.get(pk=event_id)
-	if event.type != 'life_event':
-		return ret
-
-	for e in event.subevents():
-		photos = e.photos()
-		if len(photos) <= min_photos:
-			continue
-		if e.photo_collages.count() == 0:
-			generate_photo_collages(e.pk)
-			ret.append(e.pk)
-
-	return ret
 
 @background(schedule=0, queue='reports')
 def generate_staticmap(event_id):
@@ -106,6 +85,28 @@ def generate_photo_collages(event_id):
 
 	for photo in tempphotos:
 		os.remove(photo)
+
+	return ret
+
+@background(schedule=0, queue='reports')
+def generate_life_event_photo_collages(event_id):
+	""" A task for ensuring all sub-events within a life event have photo collages generated. """
+
+	max_photos = 30
+	min_photos = 2
+
+	ret = []
+	event = Event.objects.get(pk=event_id)
+	if event.type != 'life_event':
+		return ret
+
+	for e in event.subevents():
+		photos = e.photos()
+		if len(photos) <= min_photos:
+			continue
+		if e.photo_collages.count() == 0:
+			generate_photo_collages(e.pk)
+			ret.append(e.pk)
 
 	return ret
 

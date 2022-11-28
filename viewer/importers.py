@@ -15,7 +15,9 @@ from django.core.cache import cache
 from tempfile import NamedTemporaryFile
 from dateutil import tz
 
-from viewer.functions import get_monica_contact_data, get_last_monica_activity, get_last_monica_call, assign_monica_avatar, create_monica_call, create_monica_activity_from_event, find_person_by_picasaid as find_person, convert_to_degrees
+from viewer.functions.monica import get_monica_contact_data, get_last_monica_activity, get_last_monica_call, assign_monica_avatar, create_monica_call, create_monica_activity_from_event
+from viewer.functions.people import find_person_by_picasaid as find_person
+from viewer.functions.geo import convert_to_degrees
 from viewer.models import *
 
 def upload_file(temp_file, file_source, format=''):

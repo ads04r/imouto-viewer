@@ -1,8 +1,10 @@
 from django.db.models import Count
 from .models import LifeReport, Event
-from .functions import *
 from tzlocal import get_localzone
 import datetime, pytz, os, random
+
+from .functions.utils import *
+from .functions.moonshine import get_moonshine_artist_image
 
 def generate_report_travel(report, dts, dte):
 

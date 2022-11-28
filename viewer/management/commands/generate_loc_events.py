@@ -2,7 +2,8 @@ from django.core.management.base import BaseCommand
 from django.core.cache import cache
 from django.conf import settings
 from viewer.models import Event, Location
-from viewer.functions import generate_location_events, bubble_event_people
+from viewer.functions.people import bubble_event_people
+from viewer.functions.locations import generate_location_events
 import os, sys, datetime, pytz, csv, socket, json, urllib, re, random, sys, urllib.request
 
 class Command(BaseCommand):
