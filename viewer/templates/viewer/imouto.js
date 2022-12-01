@@ -3,6 +3,23 @@ var quiz;
 var quiz_score_a;
 var quiz_score_d;
 
+var timers = [];
+
+function createTimer(callback, delay)
+{
+	var x = window.setInterval(callback, delay);
+	timers.push(x)
+}
+
+function clearTimers()
+{
+	while(timers.length > 0)
+	{
+		var x = timers.pop();
+		window.clearInterval(x);
+	}
+}
+
 function errorPage(e)
 {
     console.log(e);
@@ -57,8 +74,8 @@ function uploadScreen()
 
         if(status == 'error') { errorPage(xhr); return false; }
 
-	window.setInterval(updateUploadStats, 1000);
-	window.setInterval(updateUploadQueue, 5000);
+	createTimer(updateUploadStats, 1000);
+	createTimer(updateUploadQueue, 5000);
 	updateUploadStats();
 	updateUploadQueue();
 
@@ -282,7 +299,6 @@ function updateReportYearSelect(year)
 {
 	$('#id_label').val(year);
 	$('#new-report-generate-year').val(year);
-	console.log(year);
 }
 
 function reportsScreen()
@@ -313,7 +329,7 @@ function reportsScreen()
                 success: function(data) { }
             });
         });
-	window.setInterval(updateReportQueue, 5000);
+	createTimer(updateReportQueue, 5000);
 	updateReportQueue();
     });
 }
@@ -1601,7 +1617,9 @@ function pageRefresh()
 {
     var page = window.location.hash.replace('#', '');
     var loading = '<section class="content"><div class="container-fluid"><div class="row"><div class="col-xs-1 col-sm-3 col-md-5"></div><div class="col-xs-10 col-sm-6 col-md-2"><div class="box box-primary"><div class="box-body text-center"><i class="fa fa-spin fa-refresh"></i>&nbsp;Loading</div></div></div></div></div></section>';
-    
+
+    clearTimers();
+
     $("#imouto-search-text").on('keydown', function() { $("#imouto-search-results").html(''); });
     $("#imouto-search-text").on('keyup', typingDelay(function()
     {
