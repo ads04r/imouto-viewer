@@ -193,10 +193,20 @@ class Location(models.Model):
 		return EventTag.objects.filter(events__location=self).distinct().exclude(id='')
 	def longest_event(self):
 		duration = ExpressionWrapper(F('end_time') - F('start_time'), output_field=DurationField())
-		return Event.objects.filter(location=self).exclude(type='life_event').annotate(duration=duration).order_by('-duration')[0].duration
+		try:
+			ret = Event.objects.filter(location=self).exclude(type='life_event').annotate(duration=duration).order_by('-duration')[0].duration
+		except:
+			ret = datetime.timedelta(hours=0)
+		return ret
 	def average_event(self):
 		duration = ExpressionWrapper(F('end_time') - F('start_time'), output_field=DurationField())
-		return Event.objects.filter(location=self).exclude(type='life_event').annotate(duration=duration).aggregate(av=Avg('duration'))['av']
+		try:
+			ret = Event.objects.filter(location=self).exclude(type='life_event').annotate(duration=duration).aggregate(av=Avg('duration'))['av']
+		except:
+			ret = datetime.timedelta(hours=0)
+		if ret is None:
+			ret = datetime.timedelta(hours=0)
+		return ret
 	def weekdays(self):
 		ret = {'days': [], 'values': []}
 		d = ['', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
