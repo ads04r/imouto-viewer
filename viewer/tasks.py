@@ -139,11 +139,12 @@ def generate_report(title, year, options, style='default', moonshine_url='', pdf
 			if e in subevents:
 				continue
 			subevents.append(e)
-			if e.photo_collages.count() == 0:
-				generate_photo_collages(e.pk)
+			if e.photos().count() > 5:
+				if e.photo_collages.count() == 0:
+					generate_photo_collages(e.pk)
 			if not(e.cached_staticmap):
 				if e.geo:
-					if e.description != '':
+					if ((e.description != '') & (e.geo != '')):
 						generate_staticmap(e.pk)
 
 	for event in report.events.exclude(type='life_event').order_by('start_time'):
