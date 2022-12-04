@@ -1,6 +1,6 @@
 import datetime, pytz, sys, os
 from viewer.models import *
-from viewer.locations import nearest_location
+from viewer.functions.locations import nearest_location
 
 def locate_photos_by_exif(since=None, reassign=False):
 
