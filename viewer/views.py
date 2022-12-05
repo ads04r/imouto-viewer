@@ -27,6 +27,12 @@ def index(request):
 	context = {'type':'index', 'data':[]}
 	return render(request, 'viewer/index.html', context)
 
+def thunderbird(request):
+	data = generate_dashboard()
+	context = {'type':'view', 'data':data}
+	ret = render(request, 'viewer/thunderbird.html', context)
+	return ret
+
 def upload_file(request):
 	if request.method != 'POST':
 		raise MethodNotAllowed(str(request.method))

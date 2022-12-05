@@ -11,6 +11,7 @@ urlpatterns = [
     path('upload.html', views.importer),
     path('timeline.html', views.timeline),
     path('timeline/<ds>.html', views.timelineitem),
+    path('thunderbird.html', views.thunderbird),
     path('reports.html', views.reports),
     path('reports.json', views.reports_json),
     path('report_queue.json', views.report_queue),
