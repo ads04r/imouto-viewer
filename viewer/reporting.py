@@ -106,7 +106,7 @@ def generate_report_people(report, dts, dte):
 			if changed:
 				rp.save()
 
-	pytz.timezone(settings.TIME_ZONE)
+	tz = pytz.timezone(settings.TIME_ZONE)
 	now = pytz.UTC.localize(datetime.datetime.utcnow())
 	report.cached_dict = ''
 	report.modified_date=now
@@ -137,7 +137,7 @@ def generate_report_comms(report, dts, dte):
 		smsg1 = LifeReportGraph(key='SMS Sent vs SMS Received', type='donut', description='', icon='', report=report, category='communication', data=json.dumps([["Sent", "Received"],[sms_sent, sms_recv]]))
 		smsg1.save()
 
-	pytz.timezone(settings.TIME_ZONE)
+	tz = pytz.timezone(settings.TIME_ZONE)
 	now = pytz.UTC.localize(datetime.datetime.utcnow())
 	report.cached_dict = ''
 	report.modified_date=now
@@ -188,7 +188,7 @@ def generate_report_music(report, dts, dte, moonshine_url=''):
 						prop.description = str(len(music_data['discovery']['albums'])) + ' albums discovered'
 				prop.save()
 
-	pytz.timezone(settings.TIME_ZONE)
+	tz = pytz.timezone(settings.TIME_ZONE)
 	now = pytz.UTC.localize(datetime.datetime.utcnow())
 	report.cached_dict = ''
 	report.modified_date=now
@@ -229,7 +229,7 @@ def generate_report_movies(report, username=''):
 		chart = LifeReportChart(text=title, data=json.dumps(chart_data), report=report)
 		chart.save()
 
-	pytz.timezone(settings.TIME_ZONE)
+	tz = pytz.timezone(settings.TIME_ZONE)
 	now = pytz.UTC.localize(datetime.datetime.utcnow())
 	report.cached_dict = ''
 	report.modified_date=now
