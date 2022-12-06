@@ -3,7 +3,6 @@ import datetime, pytz, pymysql, math
 from django.conf import settings
 from xml.dom import minidom
 from fitparse import FitFile
-from tzlocal import get_localzone
 from xml.dom import minidom
 from requests import request
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth

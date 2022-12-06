@@ -3,7 +3,6 @@ from django.core.cache import cache
 from django.conf import settings
 from viewer.models import DataReading, Event
 from io import StringIO
-from dateutil.tz import tzlocal
 import os, sys, datetime, shutil, sqlite3, pytz, csv, xmltodict, json
 from viewer.models import RemoteInteraction
 from viewer.importers import import_fit

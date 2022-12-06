@@ -3,7 +3,6 @@ from django.core.cache import cache
 from django.conf import settings
 from viewer.models import DataReading, Event
 from io import StringIO
-from dateutil.tz import tzlocal
 import os, sys, datetime, shutil, sqlite3, pytz, csv, xmltodict, json
 from viewer.models import RemoteInteraction
 
@@ -189,7 +188,7 @@ class Command(BaseCommand):
 				continue
 			if message['1020'] != 'PIT_MESSAGE_INBOX':
 				continue
-			dt = datetime.datetime.strptime(message['1041'], '%Y-%m-%dT%H:%M').replace(tzinfo=tzlocal())
+			dt = datetime.datetime.strptime(message['1041'], '%Y-%m-%dT%H:%M').replace(tzinfo=pytz.timezone(settings.TIME_ZONE))
 
 			phone_number = self.format_number(message['1080'])
 			try:
@@ -209,7 +208,7 @@ class Command(BaseCommand):
 				continue
 			if message['1021'] != 'PIT_MESSAGE_OUTBOX':
 				continue
-			dt = datetime.datetime.strptime(message['1041'], '%Y-%m-%dT%H:%M').replace(tzinfo=tzlocal())
+			dt = datetime.datetime.strptime(message['1041'], '%Y-%m-%dT%H:%M').replace(tzinfo=pytz.timezone(settings.TIME_ZONE))
 			try:
 				msg = RemoteInteraction.objects.get(type='sms', time=dt, address=message['1081'], incoming=True)
 			except:

@@ -10,7 +10,7 @@ from rest_framework.exceptions import MethodNotAllowed
 from background_task.models import Task
 from haystack.query import SearchQuerySet
 from viewer.tasks import generate_photo_collages
-import datetime, pytz, dateutil.parser, json, tzlocal, requests
+import datetime, pytz, dateutil.parser, json, requests
 
 from .tasks import *
 from .models import *
@@ -191,7 +191,7 @@ def timelineitem(request, ds):
 	dsyear = int(ds[0:4])
 	dsmonth = int(ds[4:6])
 	dsday = int(ds[6:])
-	dtq = datetime.datetime(dsyear, dsmonth, dsday, 0, 0, 0, tzinfo=tzlocal.get_localzone())
+	dtq = datetime.datetime(dsyear, dsmonth, dsday, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
 	events = get_timeline_events(dtq)
 
 	dtq = events[0].start_time
@@ -625,7 +625,7 @@ def eventjson(request):
 	dse = request.GET.get('end', '')
 	dts = dateutil.parser.parse(dss)
 	dte = dateutil.parser.parse(dse)
-	tz = tzlocal.get_localzone()
+	tz = pytz.timezone(settings.TIME_ZONE)
 	ret = []
 	for event in Event.objects.filter(end_time__gte=dts).filter(start_time__lte=dte):
 		item = {}
