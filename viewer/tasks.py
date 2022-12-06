@@ -33,7 +33,10 @@ def generate_staticmap(event_id):
 def generate_photo_collages(event_id):
 	""" A background task for generating photo collages"""
 
-	max_photos = 30
+	try:
+		max_photos = settings.PHOTO_COLLAGE_MAX_PHOTOS
+	except:
+		max_photos = 15
 	min_photos = 2
 
 	event = Event.objects.get(pk=event_id)

@@ -225,9 +225,10 @@ def generate_report_movies(report, username=''):
 			item = {'text': label, 'value': dt}
 			chart_data.append(item)
 
-		chart_data.reverse()
-		chart = LifeReportChart(text=title, data=json.dumps(chart_data), report=report)
-		chart.save()
+		if len(chart_data) > 2:
+			chart_data.reverse()
+			chart = LifeReportChart(text=title, data=json.dumps(chart_data), report=report)
+			chart.save()
 
 	tz = pytz.timezone(settings.TIME_ZONE)
 	now = pytz.UTC.localize(datetime.datetime.utcnow())

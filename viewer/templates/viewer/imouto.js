@@ -103,18 +103,20 @@ function updateReportQueue()
 				var icon = '';
 				var url = '';
 
+				var task_name = item.name.split('.');
+
 				if(item.error) { icon = '<i class="fa fa-warning text-danger"></i>'; }
 				if(item.running) { icon = '<i class="fa fa-play-circle text-success"></i>'; }
 				if(item.event)
 				{
 					title = item.event.caption;
-					type = item.event.type;
+					type = task_name[task_name.length - 1];
 					url = '#event_' + item.event.id;
 				}
 				if(item.report)
 				{
 					title = item.report.label;
-					type = item.report.year;
+					type = task_name[task_name.length - 1];
 					if(item.report.id > 0) { url = '#report_' + item.report.id; }
 				}
 
