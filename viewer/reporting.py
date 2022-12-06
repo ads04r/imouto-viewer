@@ -1,7 +1,8 @@
 from django.db.models import Count
 from .models import LifeReport, Event
 from tzlocal import get_localzone
-import datetime, pytz, os, random
+from bs4 import BeautifulSoup
+import datetime, pytz, os, random, requests
 
 from .functions.utils import *
 from .functions.moonshine import get_moonshine_artist_image
@@ -193,3 +194,43 @@ def generate_report_music(report, dts, dte, moonshine_url=''):
 	report.modified_date=now
 	report.save()
 
+def generate_report_movies(report, username=''):
+
+	if len(username) > 0:
+
+		title = "Movies Seen in " + str(report.year)
+
+		for chart in LifeReportChart.objects.filter(report=report, text=title):
+			chart.delete()
+
+		url = "https://letterboxd.com/" + str(username) + "/films/diary/for/" + str(report.year) + "/"
+		session = requests.Session()
+		session.headers.update({"User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win94; x64; rv:55.0) Gecko/20100101 Firefox/55.0"})
+		r = session.get(url, allow_redirects=True, timeout=10)
+		html = r.text
+
+		soup = BeautifulSoup(html, features='html.parser')
+		chart_data = []
+		for link in soup.findAll('a'):
+
+			try:
+				ds = link['data-viewing-date']
+			except:
+				ds = ''
+			if ds == '':
+				continue
+
+			label = link['data-film-name']
+			dt = datetime.datetime.strptime(ds, '%Y-%m-%d').date().strftime("%-d %B")
+			item = {'text': label, 'value': dt}
+			chart_data.append(item)
+
+		chart_data.reverse()
+		chart = LifeReportChart(text=title, data=json.dumps(chart_data), report=report)
+		chart.save()
+
+	tz = get_localzone()
+	now = pytz.UTC.localize(datetime.datetime.utcnow())
+	report.cached_dict = ''
+	report.modified_date=now
+	report.save()

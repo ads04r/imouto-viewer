@@ -9,7 +9,7 @@ import datetime, pytz, os, random
 from .models import LifeReport, Event
 from .functions.utils import *
 from .report_styles import DefaultReport, ModernReport
-from .reporting import generate_report_travel, generate_report_photos, generate_report_people, generate_report_comms, generate_report_music
+from .reporting import generate_report_travel, generate_report_photos, generate_report_people, generate_report_comms, generate_report_music, generate_report_movies
 
 def photo_collage_upload_location(instance, filename):
 	return 'collages/photo_collage_' + str(instance.pk) + '.jpg'
@@ -162,6 +162,7 @@ def generate_report(title, year, options, style='default', moonshine_url='', pdf
 	generate_report_comms(report, dts, dte)
 	generate_report_photos(report, dts, dte)
 	generate_report_music(report, dts, dte, moonshine_url)
+	generate_report_movies(report, letterboxd_username)
 
 	if options['wordcloud']:
 		generate_report_wordcloud(report.id)

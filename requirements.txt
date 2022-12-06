@@ -4,6 +4,8 @@ asgiref==3.5.2
 asn1crypto==0.24.0
 attrs==22.1.0
 Babel==2.9.1
+beautifulsoup4==4.11.1
+bs4==0.0.1
 caldav==0.6.2
 certifi==2018.8.24
 chardet==3.0.4
@@ -72,6 +74,7 @@ scipy==1.4.1
 SecretStorage==2.3.1
 six==1.12.0
 snowballstemmer==2.1.0
+soupsieve==2.3.2.post1
 Sphinx==4.1.2
 sphinxcontrib-applehelp==1.0.2
 sphinxcontrib-devhelp==1.0.2
