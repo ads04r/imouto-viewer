@@ -1,7 +1,7 @@
 from background_task import background
 from django.db.models import Count
+from django.conf import settings
 from xml.dom import minidom
-from tzlocal import get_localzone
 from viewer.eventcollage import make_collage
 from tempfile import NamedTemporaryFile
 import datetime, pytz, os, random
@@ -119,7 +119,7 @@ def generate_report_wordcloud(reportid):
 	im = report.wordcloud()
 
 @background(schedule=0, queue='reports')
-def generate_report(title, year, options, style='default', moonshine_url='', pdf=True):
+def generate_report(title, year, options, style='default', pdf=True):
 	""" A background task for generating LifeReport objects"""
 
 	tz = pytz.timezone(settings.TIME_ZONE)
@@ -156,6 +156,15 @@ def generate_report(title, year, options, style='default', moonshine_url='', pdf
 		if not(event.cached_staticmap):
 			if event.geo:
 				generate_staticmap(event.pk)
+
+	try:
+		letterboxd_username = settings.LETTERBOXD_USERNAME
+	except:
+		letterboxd_username = ''
+	try:
+		moonshine_url = settings.MOONSHINE_URL
+	except:
+		moonshine_url = ''
 
 	generate_report_people(report, dts, dte)
 	generate_report_travel(report, dts, dte)

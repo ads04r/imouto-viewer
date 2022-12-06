@@ -223,10 +223,7 @@ def reports(request):
 			if 'maps' in request.POST:
 				if request.POST['maps'] == 'on':
 					options['maps'] = True
-			if 'moonshine_url' in request.POST:
-				generate_report(title, year, options, style, str(request.POST['moonshine_url']))
-			else:
-				generate_report(title, year, options, style)
+			generate_report(title, year, options, style)
 			return HttpResponseRedirect('./#reports')
 		else:
 			raise Http404(form.errors)
