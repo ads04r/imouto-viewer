@@ -34,7 +34,7 @@ def export_monica_calls(from_date=None):
 
 	dtsd = from_date
 	now = datetime.datetime.now()
-	tz = get_localzone()
+	tz = pytz.timezone(settings.TIME_ZONE)
 	ret = []
 	if from_date is None:
 		dtsd = get_last_monica_call() + datetime.timedelta(days=1)
@@ -72,7 +72,7 @@ def export_monica_events(from_date=None):
 
 	dtsd = from_date
 	now = datetime.datetime.now()
-	tz = get_localzone()
+	tz = pytz.timezone(settings.TIME_ZONE)
 	ret = []
 	if from_date is None:
 		dtsd = get_last_monica_activity() + datetime.timedelta(days=1)
@@ -281,7 +281,6 @@ def import_fit(parseable_fit_input):
 
 	data = []
 	fit = FitFile(parseable_fit_input)
-	tz = get_localzone()
 	tz = pytz.UTC
 	for record in fit.get_messages('record'):
 		item = {}
