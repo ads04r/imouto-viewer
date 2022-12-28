@@ -1055,6 +1055,20 @@ class LifeReport(models.Model):
 		if options['wordcloud'] == True:
 			if self.cached_wordcloud:
 				ret.append({'type': 'image', 'image': self.cached_wordcloud.path})
+		if options['maps'] == False:
+			checked = []
+			for event in self.events.filter(type='life_event'):
+				for subevent in event.subevents():
+					checked.append(subevent.id)
+					if ((subevent.photos().count() < 5) & (subevent.description == '')):
+						done.append(subevent.id)
+					if ((subevent.photos().count() < 5) & (subevent.description is None)):
+						done.append(subevent.id)
+			for event in self.events.exclude(type='life_event'):
+				if event.id in checked:
+					continue
+				if ((event.photos().count() == 0) & (event.description == '')):
+					done.append(subevent.id)
 		for category in list(LifeReportProperties.objects.filter(report=self).values_list('category', flat=True).distinct()):
 			item = {'type': 'stats', 'title': category, 'data': []}
 			for prop in LifeReportProperties.objects.filter(report=self, category=category):
