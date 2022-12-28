@@ -1,6 +1,22 @@
 import datetime, pytz, json, urllib.request, re, sys, os
 from viewer.models import *
 from django.conf import settings
+from geopy import distance
+
+def distance_waffle(dist_value):
+
+	home = Location.objects.get(pk=settings.USER_HOME_LOCATION)
+	homeloc = (home.lat, home.lon)
+	ret = {"dist": 0.0}
+	for city in settings.CITY_LOCATIONS:
+		pos = (float(city['lat']), float(city['lon']))
+		dist = distance.distance(homeloc, pos).miles
+		if dist > dist_value:
+			continue
+		if dist < ret['dist']:
+			continue
+		ret = {"city": city, "dist": dist}
+	return "Further than the distance to " + (", ".join([ret['city']['capital'], ret['city']['country']])) + " (" + str(int(ret['dist'])) + " miles)"
 
 def convert_to_degrees(value):
 
