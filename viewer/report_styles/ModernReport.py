@@ -13,6 +13,10 @@ class ModernReport(FPDF):
 		self.add_font(family='Hatten', fname=settings.DEFAULT_FONT, uni=True)
 		self.set_font('Arial', '', 14)
 		self.__temp = []
+		self.scribble_pad = FPDF(orientation='P', unit='mm', format='A4')
+		self.scribble_pad.set_font('Arial', '', 14)
+		self.scribble_pad.add_page()
+		self.scribble_pad.set_auto_page_break(False, 0)
 
 	def header(self):
 		pn = int(self.page_no())
@@ -64,12 +68,12 @@ class ModernReport(FPDF):
 			self.set_fill_color(63, 164, 53)
 			self.cell(35, 15, '', 0, 2, 'L', True)
 
-	def __new_page(self):
+	def __new_page(self, force=False):
 		try:
 			y = self.get_y()
 		except AttributeError:
 			y = 200
-		if y >= 11:
+		if ((y >= 11) or (force == True)):
 			self.add_page()
 
 	def __person_thumbnail(self, image):
@@ -198,12 +202,20 @@ class ModernReport(FPDF):
 		y = self.get_y()
 		row_top = y + 5
 		for item in data:
-			self.set_xy(x + 60, row_top)
-			self.set_font('Hatten', '', 16)
-			self.cell(160, 18, item['text'], 0, 1, 'L', False)
-			if 'image' in item:
-				self.image(self.__person_thumbnail(item['image']), 30 + x, row_top, 18, 18)
-			row_top = self.get_y() + 4
+			if len(data) > 10:
+				self.set_xy(x + 60, row_top)
+				self.set_font('Hatten', '', 16)
+				self.cell(160, 10, item['text'], 0, 1, 'L', False)
+				if 'image' in item:
+					self.image(self.__person_thumbnail(item['image']), 30 + x, row_top, 10, 10)
+				row_top = self.get_y() + 4
+			else:
+				self.set_xy(x + 60, row_top)
+				self.set_font('Hatten', '', 16)
+				self.cell(160, 18, item['text'], 0, 1, 'L', False)
+				if 'image' in item:
+					self.image(self.__person_thumbnail(item['image']), 30 + x, row_top, 18, 18)
+				row_top = self.get_y() + 4
 		self.set_font('Arial', '', 12)
 
 	def add_stats_page(self, title, data):
@@ -251,6 +263,7 @@ class ModernReport(FPDF):
 		self.set_auto_page_break(True, 2)
 
 	def add_grid_page(self, title, data):
+
 		self.__new_page()
 		pn = int(self.page_no())
 		if pn % 2 == 0:
@@ -297,29 +310,41 @@ class ModernReport(FPDF):
 		self.set_auto_page_break(True, 2)
 
 	def add_row_items_page(self, rows):
+
 		self.__new_page()
-		pn = int(self.page_no())
-		if pn % 2 == 0:
-			x = 0
-		else:
-			x = 35
-		self.set_fill_color(0, 0, 0)
+
 		margin_height = 5
 		margin_width = 5
 		page_height = 240.0
 		page_width = 175.0
-		row_height = int(page_height / len(rows))
+		ideal_row_height = int(page_height / len(rows))
+
 		self.set_fill_color(0, 0, 0)
 		self.set_xy(0, 0)
 		self.set_auto_page_break(False, 0)
+
+		row_top = 35 + margin_height
 		for i in range(0, len(rows)):
-			row_top = 35 + (row_height * i) + margin_height
-			actual_y = self.get_y()
-			if actual_y > row_top:
-				row_top = actual_y
+
 			text_width = page_width - (2 * margin_width)
 			if 'image' in rows[i]:
 				text_width = ((page_width / 3) * 2) - (2 * margin_width)
+
+			self.scribble_pad.set_auto_page_break(False, 0)
+			self.scribble_pad.set_xy(margin_width, row_top + 21)
+			self.scribble_pad.set_font('Arial', '', 10)
+			self.scribble_pad.multi_cell(text_width, 5, rows[i]['description'], 0, 2, 'L')
+			row_bottom = self.scribble_pad.get_y()
+			actual_row_height = row_bottom - row_top
+			if row_bottom > (page_height - margin_height):
+				self.__new_page(force=True)
+				row_top = 35 + margin_height
+
+			pn = int(self.page_no())
+			if pn % 2 == 0:
+				x = 0
+			else:
+				x = 35
 			image_left = x + text_width + (margin_width * 2)
 
 			self.set_xy(x + margin_width, row_top)
@@ -338,6 +363,11 @@ class ModernReport(FPDF):
 
 			if 'image' in rows[i]:
 				self.image(self.__cache_image(rows[i]['image']), image_left, row_top, (text_width / 2) - margin_width)
+
+			if actual_row_height > ideal_row_height:
+				row_top = row_top + actual_row_height + 5
+			else:
+				row_top = row_top + ideal_row_height + 5
 
 		self.set_auto_page_break(True, 2)
 		self.set_fill_color(255, 255, 255)

@@ -1121,7 +1121,8 @@ class LifeReport(models.Model):
 						photos_done.append(photo.id)
 						new_photos = True
 					if new_photos:
-						ret.append({'type': 'image', 'text': event.caption, 'image': pc.image.path})
+						if pc.image.size >= 1000:
+							ret.append({'type': 'image', 'text': event.caption, 'image': pc.image.path})
 				subevents = []
 				collages = []
 				for subevent in event.subevents().order_by('start_time'):
@@ -1136,7 +1137,8 @@ class LifeReport(models.Model):
 							photos_done.append(photo.id)
 							new_photos = True
 						if new_photos:
-							collages.append([pc.event.caption, pc.image.path])
+							if pc.image.size >= 1000:
+								collages.append([pc.event.caption, pc.image.path])
 					if ((subevent.description) or (subevent.cover_photo) or (subevent.cached_staticmap)):
 						item = {'title': subevent.caption, 'description': subevent.description, 'date': self.__format_date(subevent.start_time)}
 						if subevent.cover_photo:
@@ -1201,7 +1203,8 @@ class LifeReport(models.Model):
 							photos_done.append(photo.id)
 							new_photos = True
 						if new_photos:
-							ret.append({'type': 'image', 'text': event.caption, 'image': pc.image.path})
+							if pc.image.size >= 1000:
+								ret.append({'type': 'image', 'text': event.caption, 'image': pc.image.path})
 					subevents = []
 					collages = []
 					for subevent in event.subevents().order_by('start_time'):
@@ -1216,7 +1219,8 @@ class LifeReport(models.Model):
 								photos_done.append(photo.id)
 								new_photos = True
 							if new_photos:
-								collages.append([pc.event.caption, pc.image.path])
+								if pc.image.size >= 1000:
+									collages.append([pc.event.caption, pc.image.path])
 						if ((subevent.description) or (subevent.cover_photo) or (subevent.cached_staticmap)):
 							item = {'title': subevent.caption, 'description': subevent.description, 'date': self.__format_date(subevent.start_time)}
 							if subevent.cover_photo:
@@ -1252,7 +1256,8 @@ class LifeReport(models.Model):
 							photos_done.append(photo.id)
 							new_photos = True
 						if new_photos:
-							collages.append([pc.event.caption, pc.image.path])
+							if pc.image.size >= 1000:
+								collages.append([pc.event.caption, pc.image.path])
 					if ((subevent.description) or (subevent.cover_photo) or (subevent.cached_staticmap)):
 						item = {'title': subevent.caption, 'description': subevent.description, 'date': self.__format_date(subevent.start_time)}
 						if subevent.cover_photo:

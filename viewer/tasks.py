@@ -134,6 +134,13 @@ def generate_report(title, year, options, style='default', pdf=True):
 	report.options = json.dumps(options)
 	report.save()
 
+	generate_report_people(report, dts, dte)
+	generate_report_travel(report, dts, dte)
+	generate_report_comms(report, dts, dte)
+	generate_report_photos(report, dts, dte)
+	generate_report_music(report, dts, dte, moonshine_url)
+	generate_report_movies(report, letterboxd_username)
+
 	subevents = []
 	report.refresh_events()
 
@@ -168,13 +175,6 @@ def generate_report(title, year, options, style='default', pdf=True):
 		moonshine_url = settings.MOONSHINE_URL
 	except:
 		moonshine_url = ''
-
-	generate_report_people(report, dts, dte)
-	generate_report_travel(report, dts, dte)
-	generate_report_comms(report, dts, dte)
-	generate_report_photos(report, dts, dte)
-	generate_report_music(report, dts, dte, moonshine_url)
-	generate_report_movies(report, letterboxd_username)
 
 	if options['wordcloud']:
 		generate_report_wordcloud(report.id)
