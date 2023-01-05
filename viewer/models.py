@@ -712,6 +712,18 @@ class Event(models.Model):
 						trk.appendChild(seg)
 					xml.appendChild(trk)
 		return(root.toprettyxml(indent='\t'))
+	def coordinates(self):
+		dt = self.start_time
+		ret = []
+		if self.geo:
+			g = json.loads(self.geo)
+			if 'geometry' in g:
+				if 'coordinates' in g['geometry']:
+					for ptl in g['geometry']['coordinates']:
+						for pt in ptl:
+							item = [pt[1], pt[0]]
+							ret.append(item)
+		return(ret)
 
 	def distance(self):
 		if not(self.geo):
@@ -914,6 +926,9 @@ class Event(models.Model):
 				if person in self.people.all():
 					continue
 				self.people.add(person)
+	@property
+	def similar(self):
+		return list(self.similar_to.filter(diff_value__lt=0.1).order_by('diff_value').values('event1', 'event1__caption', 'event1__start_time', 'diff_value'))
 	def __str__(self):
 		if self.caption == '':
 			return "Event " + str(self.pk)
@@ -1498,6 +1513,23 @@ class ReportEvents(models.Model):
 		app_label = 'viewer'
 		verbose_name = 'report event'
 		verbose_name_plural = 'report events'
+
+class EventSimilarity(models.Model):
+	event1 = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="similar_from")
+	event2 = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="similar_to")
+	diff_value = models.FloatField()
+	def __str__(self):
+		return "Similarity between " + str(self.event1) + " and " + str(self.event2)
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'event similarity'
+		verbose_name_plural = 'event similarities'
+		indexes = [
+			models.Index(fields=['diff_value'])
+		]
+		constraints = [
+			models.UniqueConstraint(fields=['event1', 'event2'], name='events to compare')
+		]
 
 class EventWorkoutCategory(models.Model):
 	events = models.ManyToManyField(Event, related_name='workout_categories')

@@ -1,7 +1,23 @@
 import datetime, pytz, json, urllib.request, re, sys, os
+import Fred as fred
 from viewer.models import *
 from django.conf import settings
 from geopy import distance
+
+def journey_similarity(event1, event2):
+
+	ec1 = event1.coordinates()
+	ec2 = event2.coordinates()
+	if len(ec1) == 0:
+		return 100.0
+	if len(ec2) == 0:
+		return 100.0
+
+	c1 = fred.Curve(ec1)
+	c2 = fred.Curve(ec2)
+	diff = ((fred.continuous_frechet(c1, c2).value) * 100)
+
+	return diff
 
 def distance_waffle(dist_value):
 

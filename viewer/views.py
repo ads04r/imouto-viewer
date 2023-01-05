@@ -488,6 +488,7 @@ def event(request, eid):
 		if form.is_valid():
 			event = form.save(commit=False)
 			if event.type == 'journey':
+				regenerate_similar_events(event.pk)
 				event.geo = getgeoline(event.start_time, event.end_time)
 				event.elevation = getelevation(event.start_time, event.end_time)
 				event.speed = getspeed(event.start_time, event.end_time)
