@@ -2,9 +2,10 @@ from django.core.management.base import BaseCommand
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
-from viewer.models import Event
+from viewer.models import Event, PhotoCollage
 from viewer.tasks import generate_photo_collages
 from random import shuffle
+import datetime, pytz, os
 
 class Command(BaseCommand):
 	"""
@@ -12,31 +13,35 @@ class Command(BaseCommand):
 	"""
 	def handle(self, *args, **kwargs):
 
-		min_photos = 1
+		min_photos = 3
+		dt = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+		dts = dt - datetime.timedelta(days=365)
+		dte = dt - datetime.timedelta(days=7)
 
+		collages = []
 		events = []
-		for le in Event.objects.filter(type='life_event'):
-			for e in le.subevents():
-				if len(e.photos()) < min_photos:
-					continue
-				if le.photo_collages.count() > 0:
-					continue
-				events.append(e.id)
-		for e in Event.objects.filter(type='event'):
-			if len(e.photos()) < min_photos:
+		for collage in PhotoCollage.objects.all():
+			if not(os.path.exists(collage.image.path)):
+				collages.append(collage)
 				continue
-			if e.photo_collages.count() > 0:
-				continue
-			events.append(e.id)
+			if collage.image.size < 1000:
+				collage.image.delete()
+				collages.append(collage)
 
-		shuffle(events)
+		for collage in collages:
+			if not(collage.event is None):
+				if not(collage.event in events):
+					events.append(collage.event)
+			collage.delete()
 
-		for eid in events[0:5]:
-			try:
-				event = Event.objects.get(id=eid)
-			except:
-				event = None
-			if event is None:
+		for e in Event.objects.filter(photo_collages=None, end_time__gte=dts, start_time__lte=dte).exclude(type='life_event').order_by("?"):
+			if len(events) >= 5:
+				break
+			if e.photos().count() < min_photos:
 				continue
+			if not(e in events):
+				events.append(e)
+
+		for event in events:
 			print(event)
 			generate_photo_collages(event.id)

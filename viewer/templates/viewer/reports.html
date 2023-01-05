@@ -54,11 +54,7 @@
                 <div class="box box-primary" id="report_box_{{ item.pk }}">
                     <div class="box-body with-border">
 
-                        <h4>{{ item.label }}</h4>
-
-			<p>{% for property in item.properties.all %}{% if forloop.counter > 1 %}, {% endif %}{{ property.key }}: {{ property.value }}{% endfor %}</p>
-			{% if item.life_events.count > 0 %}<p>Life Events<br><small>{% for event in item.life_events %}{{ event.caption }}<br>{% endfor %}</small></p>{% endif %}
-			<p><small class="text-muted">{% if item.events.count > 0 %}{{ item.events.count }} significant events, {% endif %}{{ item.locations.count }} places visited, {{ item.people.distinct.count }} people encountered.</small></p>
+                        <h4>{{ item.label }} ({{ item.year }})</h4>
 
                     </div>
                     <div class="box-footer clearfix">

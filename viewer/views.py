@@ -229,12 +229,21 @@ def reports(request):
 			raise Http404(form.errors)
 
 	form = CreateReportForm()
-	data = LifeReport.objects.all().order_by('-modified_date')
+	data = []
+	completed_years = []
+	for report in LifeReport.objects.all().order_by('-modified_date').values('id', 'label', 'year', 'pdf'):
+		item = {'id': report['id'], 'pk': report['id'], 'year': report['year'], 'label': report['label'], 'pdf': False}
+		completed_years.append(report['year'])
+		if report['pdf']:
+			if os.path.exists(report['pdf']):
+				item['pdf'] = True
+		data.append(item)
 	context = {'type':'view', 'data':data, 'form': form, 'settings': {}, 'years': []}
 	y1 = Event.objects.all().order_by('start_time')[0].start_time.year + 1
 	y2 = Event.objects.all().order_by('-start_time')[0].start_time.year - 1
 	for y in range(y2, y1 - 1, -1):
-		context['years'].append(y)
+		if not(y in completed_years):
+			context['years'].append(y)
 	if hasattr(settings, 'MOONSHINE_URL'):
 		if settings.MOONSHINE_URL != '':
 			context['settings']['moonshine_url'] = settings.MOONSHINE_URL
