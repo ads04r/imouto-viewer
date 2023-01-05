@@ -134,6 +134,15 @@ def generate_report(title, year, options, style='default', pdf=True):
 	report.options = json.dumps(options)
 	report.save()
 
+	try:
+		letterboxd_username = settings.LETTERBOXD_USERNAME
+	except:
+		letterboxd_username = ''
+	try:
+		moonshine_url = settings.MOONSHINE_URL
+	except:
+		moonshine_url = ''
+
 	generate_report_people(report, dts, dte)
 	generate_report_travel(report, dts, dte)
 	generate_report_comms(report, dts, dte)
@@ -165,16 +174,8 @@ def generate_report(title, year, options, style='default', pdf=True):
 				generate_photo_collages(event.pk)
 		if not(event.cached_staticmap):
 			if event.geo:
-				generate_staticmap(event.pk)
-
-	try:
-		letterboxd_username = settings.LETTERBOXD_USERNAME
-	except:
-		letterboxd_username = ''
-	try:
-		moonshine_url = settings.MOONSHINE_URL
-	except:
-		moonshine_url = ''
+				if ((event.description != '') & (event.geo != '')):
+					generate_staticmap(event.pk)
 
 	if options['wordcloud']:
 		generate_report_wordcloud(report.id)
