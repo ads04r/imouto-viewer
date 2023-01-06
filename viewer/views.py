@@ -259,7 +259,11 @@ def events(request):
 				event.geo = getgeoline(event.start_time, event.end_time)
 				event.elevation = getelevation(event.start_time, event.end_time)
 				event.speed = getspeed(event.start_time, event.end_time)
-				event.cached_health = ''
+			if event.type == 'loc_prox':
+				event.geo = ''
+				event.elevation = ''
+				event.speed = ''
+			event.cached_health = ''
 			event.save()
 			event.tags.clear()
 			try:
@@ -899,4 +903,3 @@ def locman_process(request):
 	r.raise_for_status()
 	response = HttpResponse(r.text, content_type='application/json')
 	return response
-

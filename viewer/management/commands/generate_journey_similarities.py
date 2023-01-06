@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.core.cache import cache
 from django.conf import settings
+from background_task.models import Task
 from viewer.tasks import generate_similar_events
 
 class Command(BaseCommand):
@@ -14,5 +15,7 @@ class Command(BaseCommand):
 	def handle(self, *args, **kwargs):
 
 		max_events = int(kwargs['maxevents'])
+		existing_tasks = Task.objects.filter(task_name='viewer.tasks.generate_similar_events').count()
 
-		task = generate_similar_events(max_events)
+		if existing_tasks == 0:
+			task = generate_similar_events(max_events)

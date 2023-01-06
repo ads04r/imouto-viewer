@@ -12,6 +12,11 @@ def journey_similarity(event1, event2):
 		return 100.0
 	if len(ec2) == 0:
 		return 100.0
+	d1 = event1.distance()
+	d2 = event2.distance()
+	ddiff = abs(d1 - d2)
+	if ddiff > 5:
+		return 100
 
 	c1 = fred.Curve(ec1)
 	c2 = fred.Curve(ec2)
