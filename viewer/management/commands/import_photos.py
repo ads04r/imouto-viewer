@@ -3,6 +3,7 @@ from django.core.cache import cache
 from django.conf import settings
 from viewer.importers import import_photo_directory, import_picasa_faces
 from viewer.functions.photos import bubble_photo_locations, locate_photos_by_exif
+from viewer.tasks import precache_photo_thumbnails
 import os, sys, pytz
 
 class Command(BaseCommand):
@@ -59,3 +60,5 @@ class Command(BaseCommand):
 			ret = bubble_photo_locations() + locate_photos_by_exif()
 			if ret > 0:
 				sys.stderr.write(self.style.SUCCESS(str(ret) + " photo(s) tagged with locations.\n"))
+
+		precache_photo_thumbnails()

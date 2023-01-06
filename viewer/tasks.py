@@ -17,6 +17,21 @@ def photo_collage_upload_location(instance, filename):
 
 
 @background(schedule=0, queue='process')
+def precache_photo_thumbnails(limit=200):
+
+	for photo in Photo.objects.filter(cached_thumbnail=None)[0:limit]:
+		precache_photo_thumbnail(photo.id)
+
+@background(schedule=0, queue='process')
+def precache_photo_thumbnail(photo_id):
+
+	photo = Photo.objects.get(id=photo_id)
+	try:
+		im = photo.thumbnail(200)
+	except:
+		pass
+
+@background(schedule=0, queue='process')
 def regenerate_similar_events(event_id):
 
 	e1 = Event.objects.get(id=event_id)
