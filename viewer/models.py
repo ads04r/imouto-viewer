@@ -9,8 +9,7 @@ from PIL import Image, ImageDraw
 from io import BytesIO
 from wordcloud import WordCloud, STOPWORDS
 from configparser import ConfigParser
-from viewer.functions.health import max_heart_rate
-from viewer.health import parse_sleep
+from viewer.health import parse_sleep, max_heart_rate
 from staticmap import StaticMap, Line
 from viewer.staticcharts import generate_pie_chart, generate_donut_chart
 from xml.dom import minidom

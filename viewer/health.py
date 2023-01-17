@@ -2,6 +2,14 @@ import datetime, pytz, json, random, urllib.request, re
 from django.db.models import Sum, Count, F, ExpressionWrapper, DurationField, fields
 from django.conf import settings
 
+def max_heart_rate(self, at_time=None):
+	if at_time is None:
+		dt = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+	else:
+		dt = at_time
+	age = int(((dt - datetime.datetime(settings.USER_DATE_OF_BIRTH.year, settings.USER_DATE_OF_BIRTH.month, settings.USER_DATE_OF_BIRTH.day, 0, 0, 0, tzinfo=dt.tzinfo)).days) / 365.25)
+	return (220 - age)
+
 def parse_sleep(sleep):
 
 	time_from = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
