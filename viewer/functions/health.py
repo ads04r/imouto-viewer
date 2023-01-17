@@ -4,6 +4,14 @@ from django.db.models import F, ExpressionWrapper, DurationField
 from django.core.cache import cache
 from django.conf import settings
 
+def max_heart_rate(self, at_time=None):
+	if at_time is None:
+		dt = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+	else:
+		dt = at_time
+	age = int(((dt - datetime.datetime(settings.USER_DATE_OF_BIRTH.year, settings.USER_DATE_OF_BIRTH.month, settings.USER_DATE_OF_BIRTH.day, 0, 0, 0, tzinfo=dt.tzinfo)).days) / 365.25)
+	return (220 - age)
+
 def get_heart_history(days):
 
 	dte = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC).astimezone(pytz.timezone(settings.TIME_ZONE)).replace(hour=0, minute=0, second=0)

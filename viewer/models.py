@@ -9,6 +9,7 @@ from PIL import Image, ImageDraw
 from io import BytesIO
 from wordcloud import WordCloud, STOPWORDS
 from configparser import ConfigParser
+from viewer.functions.health import max_heart_rate
 from viewer.health import parse_sleep
 from staticmap import StaticMap, Line
 from viewer.staticcharts import generate_pie_chart, generate_donut_chart
@@ -652,9 +653,6 @@ class Event(models.Model):
 		for tag in self.tags.all():
 			ret.append(tag.id)
 		return ', '.join(ret)
-	def max_heart_rate(self):
-		age = int(((self.start_time - datetime.datetime(settings.USER_DATE_OF_BIRTH.year, settings.USER_DATE_OF_BIRTH.month, settings.USER_DATE_OF_BIRTH.day, 0, 0, 0, tzinfo=self.start_time.tzinfo)).days) / 365.25)
-		return (220 - age)
 	def description_html(self):
 		if self.description == '':
 			return ''
@@ -799,14 +797,15 @@ class Event(models.Model):
 				ret.append(conversation)
 		return sorted(ret, key=lambda item: item[0].time)
 	def health(self):
-		if len(self.cached_health) > 2:
-			return json.loads(self.cached_health)
+		max_hr = float(max_heart_rate(self.start_time))
+#		if len(self.cached_health) > 2:
+#			return json.loads(self.cached_health)
 		ret = {}
 		heart_total = 0.0
 		heart_count = 0.0
 		heart_max = 0.0
-		heart_threshold = self.max_heart_rate() * 0.5
-		heart_threshold_2 = self.max_heart_rate() * 0.7
+		heart_threshold = int(max_hr * 0.5)
+		heart_threshold_2 = int(max_hr * 0.7)
 		heart_csv = []
 		heart_json = []
 		heart_zone = 0.0
@@ -828,10 +827,14 @@ class Event(models.Model):
 		elev_min = 99999.99
 		sleep = []
 		if self.length > 86400:
-			eventsearch = DataReading.objects.filter(end_time__gte=self.start_time, start_time__lte=self.end_time).exclude(type='heart-rate').exclude(type='cadence')
+			eventsearch = DataReading.objects.filter(end_time__gte=self.start_time, start_time__lte=self.end_time).exclude(type='heart-rate').exclude(type='cadence').order_by('start_time')
 		else:
-			eventsearch = DataReading.objects.filter(end_time__gte=self.start_time, start_time__lte=self.end_time)
+			eventsearch = DataReading.objects.filter(end_time__gte=self.start_time, start_time__lte=self.end_time).order_by('start_time')
+		cum = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.UTC)
 		for item in eventsearch:
+			if item.start_time <= cum:
+				continue
+			cum = item.start_time
 			if item.type=='cadence':
 				cadence_csv.append(str(item.value))
 				cadence_json.append({"x": item.start_time.strftime("%Y-%m-%d %H:%M:%S"), "y": item.value})
@@ -849,7 +852,7 @@ class Event(models.Model):
 				if item.value > heart_threshold:
 					zone_secs = (item.end_time - item.start_time).total_seconds()
 					if item.value > heart_threshold_2:
-						heart_zone_2 = heart_zone + zone_secs
+						heart_zone_2 = heart_zone_2 + zone_secs
 					else:
 						heart_zone = heart_zone + zone_secs
 			if item.type=='step-count':
@@ -891,8 +894,8 @@ class Event(models.Model):
 		if heart_count > 0:
 			ret['heartavg'] = int(heart_total / heart_count)
 			ret['heartmax'] = int(heart_max)
-			ret['heartavgprc'] = int(((heart_total / heart_count) / self.max_heart_rate()) * 100)
-			ret['heartmaxprc'] = int((heart_max / self.max_heart_rate()) * 100)
+			ret['heartavgprc'] = int(((heart_total / heart_count) / max_hr) * 100)
+			ret['heartmaxprc'] = int((heart_max / max_hr) * 100)
 			ret['heartzonetime'] = [int(self.length - (heart_zone + heart_zone_2)), int(heart_zone), int(heart_zone_2)]
 			ret['heartoptimaltime'] = self.length_string(ret['heartzonetime'][1])
 			ret['efficiency'] = int((float(ret['heartzonetime'][1]) / float(ret['heartzonetime'][0] + ret['heartzonetime'][1] + ret['heartzonetime'][2])) * 100.0)
