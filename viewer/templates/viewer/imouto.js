@@ -212,8 +212,8 @@ function onLocEventMapClick(e)
             for(i = 0; i < data.length; i++) {
                 item = data[i];
                 html = html + '<tr class="loceventadd">'
-                html = html + '<td data-start="' + item.start_time + '" data-end="' + item.end_time + '">' + item.text + '</td>';
-                html = html + '<td class="pull-right"><a data-location="' + item.location + '" data-start="' + item.start_time + '" data-end="' + item.end_time + '" class="btn btn-success btn-xs addlocationevent" href="#">Add Event</a></td>';
+                html = html + '<td data-start="' + item.start_time + '" data-end="' + item.end_time + '" data-text="' + item.text + '">' + item.display_text + '</td>';
+                html = html + '<td class="pull-right"><a data-text="' + item.text + '" data-location="' + item.location + '" data-start="' + item.start_time + '" data-end="' + item.end_time + '" class="btn btn-success btn-xs addlocationevent" href="#">Add Event</a></td>';
                 html = html + '</tr>';
             }
             if(html == '')
@@ -229,7 +229,7 @@ function onLocEventMapClick(e)
                 var dss = $(this).data('start');
                 var dse = $(this).data('end');
 		var location = $(this).data('location');
-                var caption = $(this).parent().parent().find('td:not(.pull-right)').text()
+		var caption = $(this).data('text');
                 form.append('type', 'loc_prox');
                 form.append('csrfmiddlewaretoken', csrf);
                 form.append('start_time', dss);

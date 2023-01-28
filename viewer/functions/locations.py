@@ -1,5 +1,6 @@
 import datetime, pytz, json, urllib.request, re, sys, os
 from viewer.models import *
+from viewer.functions.calendar import event_label
 from django.conf import settings
 from geopy import distance
 from dateutil import parser
@@ -88,7 +89,11 @@ def generate_location_events(minlength):
 				if Event.objects.filter(start_time__lte=dtend, end_time__gte=dtstart).exclude(type='journey').count() > 0:
 					continue
 
-				ev = Event(caption=location.label, location=location, start_time=dtstart, end_time=dtend, type='loc_prox')
+				caption = event_label(dtstart, dtend)
+				if caption == '':
+					caption = location.label
+
+				ev = Event(caption=caption, location=location, start_time=dtstart, end_time=dtend, type='loc_prox')
 				ret.append(ev)
 				ev.save()
 

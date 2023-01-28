@@ -22,6 +22,7 @@ from .functions.people import explode_properties
 from .functions.geo import getgeoline, getelevation, getspeed
 from .functions.health import get_heart_information, get_sleep_history, get_sleep_information
 from .functions.utils import get_report_queue, get_timeline_events, generate_onthisday, generate_dashboard
+from .functions.calendar import event_label
 
 def index(request):
 	context = {'type':'index', 'data':[]}
@@ -330,7 +331,8 @@ def day(request, ds):
 		events.append(sms)
 	dss = dts.strftime('%A, %-d %B %Y')
 	events = sorted(events, key=lambda x: x.start_time if x.__class__.__name__ == 'Event' else (x['time'] if isinstance(x, (dict)) else x.time))
-	context = {'type':'view', 'caption': dss, 'events':events, 'stats': {}, 'potential_joins': potential_joins}
+	appointments = CalendarAppointment.objects.filter(end_time__gte=dts, start_time__lte=dte).values('id', 'eventid', 'caption')
+	context = {'type':'view', 'caption': dss, 'events':events, 'stats': {}, 'potential_joins': potential_joins, 'appointments': appointments}
 	wakes = DataReading.objects.filter(type='awake', start_time__lt=dte, end_time__gt=dts).order_by('start_time')
 	wakecount = wakes.count()
 	if wakecount > 0:
@@ -470,10 +472,15 @@ def day_locevents(request, ds):
 	loc = nearest_location(data['lat'], data['lon'])
 	for item in get_possible_location_events(dt, data['lat'], data['lon']):
 		result = {"start_time": item['start_time'].strftime("%Y-%m-%d %H:%M:%S"), "end_time": item['end_time'].strftime("%Y-%m-%d %H:%M:%S")}
-		result['text'] = (item['start_time'].strftime("%-I:%M%p") + ' to ' + item['end_time'].strftime("%-I:%M%p")).lower()
+		result['display_text'] = (item['start_time'].strftime("%-I:%M%p") + ' to ' + item['end_time'].strftime("%-I:%M%p")).lower()
+		result['text'] = result['display_text']
 		if not(loc is None):
-			result['text'] = str(loc.label) + ', ' + result['text']
+			result['display_text'] = str(loc.label) + ', ' + result['text']
+			result['text'] = str(loc.label)
 			result['location'] = loc.id
+		appointment = event_label(item['start_time'], item['end_time'])
+		if len(appointment) > 0:
+			result['text'] = appointment
 		ret.append(result)
 
 	response = HttpResponse(json.dumps(ret), content_type='application/json')
@@ -569,6 +576,24 @@ def event_addjourney(request):
 	event.save()
 	ds = event.start_time.strftime("%Y%m%d")
 	return HttpResponseRedirect('../#day_' + str(ds))
+
+def event_addappointmentevent(request):
+	if request.method != 'POST':
+		raise MethodNotAllowed(str(request.method))
+	try:
+		c = CalendarAppointment.objects.get(id=request.POST['add_appointment_event'])
+	except:
+		c = None
+	if c is None:
+		raise Http404()
+	else:
+		event = Event(caption=c.caption, start_time=c.start_time, end_time=c.end_time, type='event', location=c.location, description='')
+		if c.description:
+			if c.description != 'None':
+				event.description = c.description
+		event.save()
+		ds = event.start_time.strftime("%Y%m%d")
+		return HttpResponseRedirect('../#day_' + str(ds))
 
 def event_staticmap(request, eid):
 	data = get_object_or_404(Event, id=eid)

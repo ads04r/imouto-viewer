@@ -44,6 +44,7 @@
 
                               <a class="btn btn-app" data-toggle="modal" data-target="#day_locevent_add" aria-hidden="true" href="#loc"><i class="fa fa-map-marker"></i>Location Event</a>
                               <a class="btn btn-app" data-toggle="modal" data-target="#day_journeyevent_add" aria-hidden="true" href="#loc"><i class="fa fa-road"></i>Journey Event</a>
+                              {% if appointments.count > 0 %}<a class="btn btn-app" data-toggle="modal" data-target="#day_appointmentevent_add" aria-hidden="true" href="#loc"><i class="fa fa-calendar"></i>Calendar Event</a>{% endif %}
 
                       </div>
                     </div>
@@ -240,6 +241,29 @@
 		<select class="form-control" id="join_events" name="join_events">
 {% for join in potential_joins %}
 			<option value="{{ join.0 }}">{{ join.1 }}</option>
+{% endfor %}
+		</select>
+{% csrf_token %}
+                
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+	</form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade nav-tabs-custom" id="day_appointmentevent_add" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+	<form action="events/add_appointment_event" method="POST">
+            <div class="modal-body">
+
+		<select class="form-control" id="add_appointment_event" name="add_appointment_event">
+{% for ap in appointments %}
+			<option value="{{ ap.id }}">{{ ap.caption }}</option>
 {% endfor %}
 		</select>
 {% csrf_token %}

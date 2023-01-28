@@ -40,6 +40,7 @@ urlpatterns = [
     path('events/<eid>.gpx', views.event_gpx),
     path('events/<eid>/delete', views.eventdelete),
     path('events/add_journey', views.event_addjourney),
+    path('events/add_appointment_event', views.event_addappointmentevent),
     path('places.html', views.places),
     path('places/<uid>.html', views.place),
     path('places/<uid>.json', views.place_json),

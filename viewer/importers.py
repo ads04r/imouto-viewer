@@ -12,6 +12,7 @@ from django.db.models import Q
 from django.core.files import File
 from django.core.cache import cache
 from tempfile import NamedTemporaryFile
+from ics import Calendar
 from dateutil import tz
 
 from viewer.functions.monica import get_monica_contact_data, get_last_monica_activity, get_last_monica_call, assign_monica_avatar, create_monica_call, create_monica_activity_from_event
@@ -889,3 +890,62 @@ def import_photo_directory(path, tzinfo=pytz.UTC):
 		st = r.status_code
 
 	return ret
+
+def import_calendar_feed(url):
+
+	try:
+		feed = CalendarFeed.objects.get(url=url)
+	except:
+		feed = CalendarFeed(url=url)
+		feed.save()
+
+	try:
+		cal = Calendar(requests.get(url).text)
+		events = list(cal.events)
+	except:
+		cal = None
+		events = []
+
+	if cal is None:
+		return None
+
+	ret = []
+
+	for event in events:
+
+		id = str(event.uid)
+
+		label = str(event.name)
+		description = str(event.description)
+		data = str(event.serialize())
+		location = str(event.location)
+		try:
+			loc = Location.objects.get(label__icontains=location)
+		except:
+			loc = None
+
+		start_time = event.begin.datetime
+		end_time = None
+		if event.has_end():
+			end_time = event.end.datetime
+		all_day = event.all_day
+
+		try:
+			item = CalendarAppointment.objects.get(eventid=id, calendar=feed)
+		except:
+			item = CalendarAppointment(eventid=id, calendar=feed)
+			ret.append(item)
+
+		item.start_time = start_time
+		item.end_time = end_time
+		item.all_day = all_day
+		item.data = data
+		item.caption = label
+		item.description = description
+		if not(loc is None):
+			item.location = loc
+
+		item.save()
+
+	return ret
+
