@@ -63,24 +63,7 @@ def generate_similar_events(max_events=10):
 	if events.count() == 0:
 		events = Event.objects.filter(similar_from=None, similar_to=None, type='journey')[0:max_events]
 	for e1 in events:
-		for e2 in events:
-			if e1 == e2:
-				continue
-			diff = journey_similarity(e1, e2)
-
-			try:
-				es = EventSimilarity(event1=e1, event2=e2, diff_value=diff)
-				es.save()
-				print(es)
-			except:
-				pass
-
-			try:
-				es = EventSimilarity(event1=e2, event2=e1, diff_value=diff)
-				es.save()
-				print(es)
-			except:
-				pass
+		regenerate_similar_events(e1.pk)
 
 @background(schedule=0, queue='reports')
 def generate_staticmap(event_id):
