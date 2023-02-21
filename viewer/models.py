@@ -9,10 +9,13 @@ from PIL import Image, ImageDraw
 from io import BytesIO
 from wordcloud import WordCloud, STOPWORDS
 from configparser import ConfigParser
-from viewer.health import parse_sleep, max_heart_rate
 from staticmap import StaticMap, Line
-from viewer.staticcharts import generate_pie_chart, generate_donut_chart
 from xml.dom import minidom
+
+from viewer.health import parse_sleep, max_heart_rate
+from viewer.staticcharts import generate_pie_chart, generate_donut_chart
+from viewer.functions.geo import getposition, get_location_name
+
 import random, datetime, pytz, json, markdown, re, os, urllib.request
 
 @Field.register_lookup
@@ -375,6 +378,8 @@ class Photo(models.Model):
 		ret['lon'] = self.lon
 		ret['filename'] = str(self.file)
 		ret['caption'] = str(self.caption)
+		if ret['caption'] == '':
+			ret['caption'] = str(self.generate_caption())
 		ret['date'] = None
 		if self.time:
 			ret['date'] = self.time.strftime("%Y-%m-%d %H:%M:%S %z")
@@ -477,6 +482,36 @@ class Photo(models.Model):
 		if self.time is None:
 			return Event.objects.none()
 		return Event.objects.filter(start_time__lte=self.time, end_time__gte=self.time)
+	def generate_caption(self):
+		if self.caption != '':
+			return self.caption
+		loc = ''
+		ppl = ''
+		if self.location:
+			loc = str(self.location)
+		else:
+			if not((self.lat is None) or (self.lon is None)):
+				loc = get_location_name(self.lat, self.lon)
+		if self.people.count() > 0:
+			ppla = []
+			for p in self.people.all():
+				ppla.append(str(p))
+			if len(ppla) > 1:
+				ppla[-1] = "and " + ppla[-1]
+			if len(ppla) == 2:
+				ppl = ' '.join(ppla)
+			else:
+				ppl = ', '.join(ppla)
+		if loc == '':
+			if ppl == '':
+				return ''
+			else:
+				return "Photo of " + ppl
+		else:
+			if ppl == '':
+				return "Photo taken at " + loc
+			else:
+				return "Photo of " + ppl + ", taken at " + loc
 	def __str__(self):
 		return 'Photo ' + str(self.file.path)
 	class Meta:
@@ -1588,4 +1623,3 @@ class CalendarAppointment(models.Model):
 		app_label = 'viewer'
 		verbose_name = 'calendar appointment'
 		verbose_name_plural = 'calendar appointments'
-

@@ -689,7 +689,6 @@ function eventsScreen()
         $("#event-save-form-button").on('click', function()
         {
             $("form#event-edit").submit();
-            
             return false;
         })
 
@@ -1559,7 +1558,6 @@ function eventScreen(id)
         $("#event-save-form-button").on('click', function()
         {
             $("form#event-edit").submit();
-            
             return false;
         });
 	$("#person_add_submit").on('click', function()
@@ -1582,6 +1580,42 @@ function eventScreen(id)
 		});
 		$('<form method="POST" action="./add-people-to-event"><input type="hidden" id="id" name="id" value="' + id + '"/><input type="hidden" id="people" name="people" value="' + data.join('|') + '"/></form>').appendTo('body').submit();
 		return false;
+	});
+	$('.event_image_select').on('click', function() {
+		var html = '';
+		var eventid = $(this).data('eventid');
+		var photoid = $(this).data('photoid');
+		var cover_image = $(this).data('cover');
+		var img = $(this).html();
+		var alt = $('img', this).attr('alt');
+		html = html + '<table class="table">';
+		html = html + '<tr>';
+		html = html + '<td id="event_photo_image">' + img + '</td>';
+		html = html + '<td>';
+		html = html + '<form role="form" id="photo-form" method="POST" action="photo/' + photoid + '.json">';
+		html = html + '<div class="form-group">';
+		html = html + '<label for="form-input-image-caption">Image Caption</label>';
+		html = html + '<input id="form-input-image-caption" name="image_caption" class="form-control" type="text" placeholder="Image caption" value="' + alt + '"/>';
+		html = html + '</div>';
+		html = html + '<div class="checkbox">';
+		html = html + '<label>';
+		if(cover_image) { html = html + '<input type="checkbox" name="event_cover_image" checked="checked"/>'; } else { html = html + '<input type="checkbox" name="event_cover_image"/>'; }
+		html = html + 'Event Cover Image';
+		html = html + '</label>';
+		html = html + '</div>';
+		html = html + '<input type="hidden" name="event_id" value="' + eventid + '"/>';
+		html = html + '<input type="hidden" name="photo_id" value="' + photoid + '"/>';
+		html = html + '</form>';
+		html = html + '</td>';
+		html = html + '</tr>';
+		html = html + '</table>';
+		$('#admin_event_photo_body').html(html);
+		$("#admin_event_photo").modal('show');
+
+		return false;
+	});
+	$('#event-photo-save-form-button').on('click', function() {
+		$('#photo-form').submit();
 	});
 
     });

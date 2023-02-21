@@ -1,8 +1,29 @@
 import datetime, pytz, json, urllib.request, re, sys, os
 import Fred as fred
+from django.core.cache import cache
 from viewer.models import *
 from django.conf import settings
 from geopy import distance
+
+def get_location_name(lat, lon):
+	cache_key = "loc_" + str(lat) + "," + str(lon)
+	ret = cache.get(cache_key)
+	if ret is None:
+		ret = ''
+	try:
+		mapbox_key = settings.MAPBOX_API_KEY
+	except:
+		return ""
+	url = "https://api.mapbox.com/geocoding/v5/mapbox.places/" + str(lon) + "," + str(lat) + ".json?access_token=" + mapbox_key
+	r = urllib.request.urlopen(url)
+	data = json.loads(r.read())
+	if 'features' in data:
+		if len(data['features']) > 0:
+			if 'text' in data['features'][0]:
+				ret = data['features'][0]['text']
+	if len(ret) > 0:
+		cache.set(cache_key, ret, timeout=86400)
+	return ret
 
 def journey_similarity(event1, event2):
 
@@ -55,6 +76,24 @@ def convert_to_degrees(value):
 		s = 0.0
 
 	return d + (m / 60.0) + (s / 3600.0)
+
+def getposition(dt, loc_manager=None):
+
+	address = settings.LOCATION_MANAGER_URL
+	if not(loc_manager is None):
+		address = loc_manager
+	if not('://' in address):
+		address = 'http://' + address
+
+	id = dt.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S")
+	url = address + "/position/" + id + "?format=json"
+	data = {}
+	with urllib.request.urlopen(url) as h:
+		try:
+			data = json.loads(h.read().decode())
+		except:
+			data = {}
+	return data
 
 def getgeoline(dts, dte, loc_manager=None):
 
