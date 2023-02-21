@@ -827,8 +827,9 @@ def photo_json(request, uid):
 		eid = request.POST['event_id']
 		cache_key = 'event_' + str(eid)
 		set_cover = False
-		if request.POST['event_cover_image'] == 'on':
-			set_cover = True
+		if 'event_cover_image' in request.POST:
+			if request.POST['event_cover_image'] == 'on':
+				set_cover = True
 		if uid != pid:
 			raise Http404()
 		photo = get_object_or_404(Photo, pk=pid)
@@ -836,7 +837,8 @@ def photo_json(request, uid):
 		if set_cover:
 			event.cover_photo = photo
 		else:
-			event.cover_photo = None
+			if event.cover_photo == photo:
+				event.cover_photo = None
 		event.save()
 		photo.caption = caption
 		photo.save()
