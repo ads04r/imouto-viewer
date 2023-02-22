@@ -14,7 +14,7 @@ chardet==3.0.4
 charset-normalizer==2.1.1
 clang==6.0.0.2
 cryptography==39.0.1
-cvxopt==1.1.8
+cvxopt==1.2.7
 cycler==0.10.0
 dateparser==1.0.0
 Django==3.2.16
