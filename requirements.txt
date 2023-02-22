@@ -53,7 +53,7 @@ netaddr==0.8.0
 numpy==1.21.6
 oauthlib==3.1.0
 olefile==0.46
-opencv-python==4.1.1.26
+opencv-python==4.7.0.68
 packaging==21.0
 photocollage==1.4.4
 piexif==1.1.3
