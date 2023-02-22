@@ -31,7 +31,7 @@ ExifRead==2.1.2
 fitparse==1.2.0
 fpdf==1.7.2
 Fred-Frechet==1.9.25
-future==0.18.2
+future==0.18.3
 geographiclib==1.50
 geopy==1.20.0
 gpsphoto==2.2.3
