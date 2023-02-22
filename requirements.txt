@@ -8,7 +8,7 @@ backports.zoneinfo==0.2.1
 beautifulsoup4==4.11.1
 bs4==0.0.1
 caldav==1.0.1
-certifi==2018.8.24
+certifi==2022.12.7
 cffi==1.15.1
 chardet==3.0.4
 charset-normalizer==2.1.1
