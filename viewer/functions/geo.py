@@ -37,7 +37,17 @@ def journey_similarity(event1, event2):
 	d2 = event2.distance()
 	ddiff = abs(d1 - d2)
 	if ddiff > 5:
-		return 100
+		return 100.0
+	p1 = (ec1[0][0], ec1[0][1])
+	p2 = (ec2[0][0], ec2[0][1])
+	p3 = (ec1[-1][0], ec1[-1][1])
+	p4 = (ec2[-1][0], ec2[-1][1])
+	start_dist = distance.distance(p1, p2).miles
+	end_dist = distance.distance(p3, p4).miles
+	if start_dist > 1.5:
+		return 100.0
+	if end_dist > 1.5:
+		return 100.0
 
 	c1 = fred.Curve(ec1)
 	c2 = fred.Curve(ec2)
