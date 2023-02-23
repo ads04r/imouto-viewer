@@ -14,7 +14,7 @@ def get_location_name(lat, lon):
 		mapbox_key = settings.MAPBOX_API_KEY
 	except:
 		return ""
-	url = "https://api.mapbox.com/geocoding/v5/mapbox.places/" + str(lon) + "," + str(lat) + ".json?access_token=" + mapbox_key
+	url = "https://api.mapbox.com/geocoding/v5/mapbox.places/" + str(lon) + "," + str(lat) + ".json?language=en&access_token=" + mapbox_key
 	r = urllib.request.urlopen(url)
 	data = json.loads(r.read())
 	if 'features' in data:
