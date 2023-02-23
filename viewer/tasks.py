@@ -37,7 +37,7 @@ def regenerate_similar_events(event_id):
 	e1 = Event.objects.get(id=event_id)
 	EventSimilarity.objects.filter(event1=e1).delete()
 	EventSimilarity.objects.filter(event2=e1).delete()
-	events = Event.objects.exclude(workout_categories=None)
+	events = Event.objects.filter(type='journey')
 	for e2 in events:
 		if e1 == e2:
 			continue
@@ -59,9 +59,9 @@ def regenerate_similar_events(event_id):
 
 @background(schedule=0, queue='process')
 def generate_similar_events(max_events=10):
-	events = Event.objects.filter(similar_from=None, similar_to=None).exclude(workout_categories=None)[0:max_events]
+	events = Event.objects.filter(similar_from=None, similar_to=None, type='journey')[0:max_events]
 	if events.count() == 0:
-		events = Event.objects.filter(similar_from=None, similar_to=None, type='journey')[0:max_events]
+		events = Event.objects.filter(type='journey').order_by('updated_time')[0:max_events]
 	for e1 in events:
 		regenerate_similar_events(e1.pk)
 
