@@ -9,9 +9,17 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
-import os
-from .settings_local import *
-from .settings_data import *
+import os, sys
+try:
+    from .settings_local import *
+except ModuleNotFoundError:
+    sys.stderr.write("Cannot file file settings_local.py. Please ensure it is created (use the settings_local_template.py if necessary) before continuing.\n")
+    sys.exit(1)
+try:
+    from .settings_data import *
+except ModuleNotFoundError:
+    sys.stderr.write("Cannot file file settings_data.py. Please ensure it is created (use the settings_data_template.py if necessary) before continuing.\n")
+    sys.exit(1)
 
 # Application definition
 
