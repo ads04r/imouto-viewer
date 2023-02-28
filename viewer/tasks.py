@@ -15,7 +15,6 @@ from .reporting import generate_report_travel, generate_report_photos, generate_
 def photo_collage_upload_location(instance, filename):
 	return 'collages/photo_collage_' + str(instance.pk) + '.jpg'
 
-
 @background(schedule=0, queue='process')
 def precache_photo_thumbnails(limit=200):
 
@@ -31,7 +30,7 @@ def precache_photo_thumbnail(photo_id):
 	except:
 		pass
 
-@background(schedule=0, queue='process')
+@background(schedule=0, queue='datacrunching')
 def regenerate_similar_events(event_id):
 
 	e1 = Event.objects.get(id=event_id)
@@ -57,7 +56,7 @@ def regenerate_similar_events(event_id):
 		except:
 			pass
 
-@background(schedule=0, queue='process')
+@background(schedule=0, queue='datacrunching')
 def generate_similar_events(max_events=10):
 	events = Event.objects.filter(similar_from=None, similar_to=None, type='journey')[0:max_events]
 	if events.count() == 0:
