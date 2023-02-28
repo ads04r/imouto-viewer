@@ -748,6 +748,12 @@ function dayScreen(id)
             map.invalidateSize();
         });
 
+        $("#event-save-form-button").on('click', function()
+        {
+            $("form#event-edit").submit();
+            return false;
+        })
+
 	activateImageEditor();
 
     });

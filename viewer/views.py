@@ -346,6 +346,7 @@ def day(request, ds):
 		context['stats']['weight'].append({"time": weight.start_time, "weight": (float(weight.value) / 1000)})
 	if dte < dt:
 		context['stats']['next'] = (dts + datetime.timedelta(days=1)).strftime("%Y%m%d")
+	context['form'] = EventForm()
 	return render(request, 'viewer/day.html', context)
 
 def day_music(request, ds):

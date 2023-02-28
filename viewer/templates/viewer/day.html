@@ -45,6 +45,7 @@
                               <a class="btn btn-app" data-toggle="modal" data-target="#day_locevent_add" aria-hidden="true" href="#loc"><i class="fa fa-map-marker"></i>Location Event</a>
                               <a class="btn btn-app" data-toggle="modal" data-target="#day_journeyevent_add" aria-hidden="true" href="#loc"><i class="fa fa-road"></i>Journey Event</a>
                               {% if appointments.count > 0 %}<a class="btn btn-app" data-toggle="modal" data-target="#day_appointmentevent_add" aria-hidden="true" href="#loc"><i class="fa fa-calendar"></i>Calendar Event</a>{% endif %}
+                              <a class="btn btn-app" data-toggle="modal" data-target="#admin_event_add" aria-hidden="true" href="#"><i class="fa fa-cog"></i>Manual Event</a>
 
                       </div>
                     </div>
@@ -279,3 +280,4 @@
 </div>
 
 {% include 'viewer/imageeditor.html' %}
+{% include 'viewer/eventeditor.html' %}
