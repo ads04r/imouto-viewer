@@ -50,8 +50,13 @@ def dashboard(request):
 	if ret is None:
 		data = generate_dashboard()
 		context = {'type':'view', 'data':data}
-		ret = render(request, 'viewer/dashboard.html', context)
-		cache.set(key, ret, timeout=86400)
+		if len(data) == 0:
+			ret = render(request, 'viewer/setup.html', context)
+		elif 'error' in data:
+			ret = render(request, 'viewer/dashboard_error.html', context)
+		else:
+			ret = render(request, 'viewer/dashboard.html', context)
+			cache.set(key, ret, timeout=86400)
 	return ret
 
 def imouto_json_serializer(data):
@@ -76,6 +81,8 @@ def onthisday(request, format='html'):
 	data = cache.get(key)
 	if data is None:
 		data = generate_onthisday()
+		if len(data) == 0:
+			return render(request, 'viewer/setup.html', {})
 		cache.set(key, data, timeout=86400)
 	context = {'type':'view', 'data':data}
 	return render(request, 'viewer/onthisday.html', context)
@@ -92,7 +99,10 @@ def report_queue(request):
 	return response
 
 def timeline(request):
-	dt = Event.objects.order_by('-start_time')[0].start_time
+	try:
+		dt = Event.objects.order_by('-start_time')[0].start_time
+	except:
+		return render(request, 'viewer/setup.html', {})
 	ds = dt.strftime("%Y%m%d")
 	form = QuickEventForm()
 	context = {'type':'view', 'data':{'current': ds}, 'form':form}
