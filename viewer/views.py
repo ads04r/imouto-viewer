@@ -1,4 +1,4 @@
-from django.http import HttpResponse, Http404, HttpResponseRedirect
+from django.http import HttpResponse, Http404, HttpResponseRedirect, HttpResponseNotAllowed
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
@@ -6,7 +6,6 @@ from django.db.models import Q, F, DurationField, ExpressionWrapper, Max
 from django.db.models.functions import Cast
 from django.db.models.fields import DateField
 from django.conf import settings
-from rest_framework.exceptions import MethodNotAllowed
 from background_task.models import Task
 from haystack.query import SearchQuerySet
 from viewer.tasks import generate_photo_collages
@@ -30,7 +29,7 @@ def index(request):
 
 def upload_file(request):
 	if request.method != 'POST':
-		raise MethodNotAllowed(str(request.method))
+		return HttpResponseNotAllowed(['POST'])
 	url = settings.LOCATION_MANAGER_URL + '/import'
 	files = {'uploaded_file': request.FILES['uploadformfile']}
 	data = {'file_source': request.POST['uploadformfilesource']}
@@ -456,7 +455,7 @@ def day_events(request, ds):
 def day_locevents(request, ds):
 
 	if request.method != 'POST':
-		raise MethodNotAllowed(str(request.method))
+		return HttpResponseNotAllowed(['POST'])
 	if len(ds) != 8:
 		raise Http404()
 	y = int(ds[0:4])
@@ -558,7 +557,7 @@ def event(request, eid):
 
 def event_addjourney(request):
 	if request.method != 'POST':
-		raise MethodNotAllowed(str(request.method))
+		return HttpResponseNotAllowed(['POST'])
 	vals = request.POST['join_events'].split('_')
 	if len(vals) != 2:
 		raise Http404()
@@ -580,7 +579,7 @@ def event_addjourney(request):
 
 def event_addappointmentevent(request):
 	if request.method != 'POST':
-		raise MethodNotAllowed(str(request.method))
+		return HttpResponseNotAllowed(['POST'])
 	try:
 		c = CalendarAppointment.objects.get(id=request.POST['add_appointment_event'])
 	except:
