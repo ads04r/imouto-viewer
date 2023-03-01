@@ -147,10 +147,6 @@ def generate_dashboard():
 	except:
 		return {'error': 'USER_DATE_OF_BIRTH must be set.'}
 	try:
-		user_home = settings.USER_HOME_LOCATION
-	except:
-		user_home = None
-	try:
 		last_contact = RemoteInteraction.objects.all().order_by('-time')[0].time
 	except:
 		return {}

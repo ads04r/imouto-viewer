@@ -57,7 +57,10 @@ def journey_similarity(event1, event2):
 
 def distance_waffle(dist_value):
 
-	home = Location.objects.get(pk=settings.USER_HOME_LOCATION)
+	try:
+		home = Location.objects.get(pk=settings.USER_HOME_LOCATION)
+	except:
+		return ""
 	homeloc = (home.lat, home.lon)
 	ret = {"dist": 0.0}
 	for city in settings.CITY_LOCATIONS:
