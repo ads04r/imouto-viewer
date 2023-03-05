@@ -149,7 +149,10 @@ def generate_dashboard():
 	try:
 		last_contact = RemoteInteraction.objects.all().order_by('-time')[0].time
 	except:
-		return {}
+		try:
+			last_contact = Event.objects.all().order_by('-end_time')[0].end_time
+		except:
+			return {}
 	user_heart_max = int(220.0 - user_age)
 	user_heart_low = int((220.0 - user_age) * 0.5)
 	user_heart_high = int((220.0 - user_age) * 0.7)
@@ -223,8 +226,11 @@ def generate_dashboard():
 	except:
 		stats['events'] = 0
 
-	last_record = DataReading.objects.all().order_by('-end_time')[0].end_time
-	
+	try:
+		last_record = DataReading.objects.all().order_by('-end_time')[0].end_time
+	except:
+		last_record = last_contact
+
 	stepdata = []
 	total_steps = 0
 	for i in range(0, 7):
