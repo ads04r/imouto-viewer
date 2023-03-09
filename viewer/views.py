@@ -141,9 +141,12 @@ def health(request, pageid):
 		expression = F('end_time') - F('start_time')
 		wrapped_expression = ExpressionWrapper(expression, DurationField())
 		context['data'] = {'stats': [], 'sleeps': []}
-		for days in [7, 28, 365]:
-			context['data']['stats'].append({'label': 'week', 'graph': get_sleep_history(days), 'best_sleep': DataReading.objects.filter(type='sleep', value='2', start_time__gte=(dt - datetime.timedelta(days=days))).annotate(length=wrapped_expression).order_by('-length')[0].start_time, 'earliest_waketime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(start_time)'}).order_by('time')[0].start_time, 'latest_waketime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(start_time)'}).order_by('-time')[0].start_time, 'earliest_bedtime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(end_time)'}).order_by('time')[0].end_time, 'latest_bedtime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(end_time)'}).order_by('-time')[0].end_time})
-		context['data']['midpoint'] = context['data']['stats'][2]['latest_waketime']
+		try:
+			for days in [7, 28, 365]:
+				context['data']['stats'].append({'label': 'week', 'graph': get_sleep_history(days), 'best_sleep': DataReading.objects.filter(type='sleep', value='2', start_time__gte=(dt - datetime.timedelta(days=days))).annotate(length=wrapped_expression).order_by('-length')[0].start_time, 'earliest_waketime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(start_time)'}).order_by('time')[0].start_time, 'latest_waketime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(start_time)'}).order_by('-time')[0].start_time, 'earliest_bedtime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(end_time)'}).order_by('time')[0].end_time, 'latest_bedtime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(end_time)'}).order_by('-time')[0].end_time})
+			context['data']['midpoint'] = context['data']['stats'][2]['latest_waketime']
+		except:
+			pass
 		return render(request, 'viewer/health_sleep.html', context)
 	if pageid == 'distance':
 		return render(request, 'viewer/health_distance.html', context)
@@ -962,3 +965,12 @@ def locman_process(request):
 	r.raise_for_status()
 	response = HttpResponse(r.text, content_type='application/json')
 	return response
+
+def create_first_event(request):
+	if Event.objects.count() == 0:
+		dt = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+		event = Event(start_time=dt, end_time=dt, type='event', caption='Installed Imouto Viewer')
+		event.description = "Congratulations on creating your first event!\n\nNext you'll want to start investigating the ways of importing your life into Imouto. As a good place to start, try importing a GPX or FIT file from a GPS watch using the '[Upload](./#files)' feature on the Viewer."
+		event.save()
+		return HttpResponseRedirect('./#event_' + str(event.pk))
+	return HttpResponseRedirect('./')
