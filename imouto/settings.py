@@ -13,12 +13,12 @@ import os, sys
 try:
     from .settings_local import *
 except ModuleNotFoundError:
-    sys.stderr.write("Cannot file file settings_local.py. Please ensure it is created (use the settings_local_template.py if necessary) before continuing.\n")
+    sys.stderr.write("Cannot find file settings_local.py. Please ensure it is created (use the settings_local_template.py if necessary) before continuing.\n")
     sys.exit(1)
 try:
     from .settings_data import *
 except ModuleNotFoundError:
-    sys.stderr.write("Cannot file file settings_data.py. Please ensure it is created (use the settings_data_template.py if necessary) before continuing.\n")
+    sys.stderr.write("Cannot find file settings_data.py. Please ensure it is created (use the settings_data_template.py if necessary) before continuing.\n")
     sys.exit(1)
 
 # Application definition
@@ -28,7 +28,6 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'rest_framework',
     'background_task',
     'haystack',
     'colorfield',

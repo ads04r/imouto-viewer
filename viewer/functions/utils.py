@@ -141,10 +141,18 @@ def generate_dashboard():
 
 	stats = {}
 
-	last_contact = RemoteInteraction.objects.all().order_by('-time')[0].time
-	user_dob = settings.USER_DATE_OF_BIRTH
-	user_home = settings.USER_HOME_LOCATION
-	user_age = (datetime.datetime.now().date() - user_dob).total_seconds() / (86400 * 365.25)
+	try:
+		user_dob = settings.USER_DATE_OF_BIRTH
+		user_age = (datetime.datetime.now().date() - user_dob).total_seconds() / (86400 * 365.25)
+	except:
+		return {'error': 'USER_DATE_OF_BIRTH must be set.'}
+	try:
+		last_contact = RemoteInteraction.objects.all().order_by('-time')[0].time
+	except:
+		try:
+			last_contact = Event.objects.all().order_by('-end_time')[0].end_time
+		except:
+			return {}
 	user_heart_max = int(220.0 - user_age)
 	user_heart_low = int((220.0 - user_age) * 0.5)
 	user_heart_high = int((220.0 - user_age) * 0.7)
@@ -218,8 +226,11 @@ def generate_dashboard():
 	except:
 		stats['events'] = 0
 
-	last_record = DataReading.objects.all().order_by('-end_time')[0].end_time
-	
+	try:
+		last_record = DataReading.objects.all().order_by('-end_time')[0].end_time
+	except:
+		last_record = last_contact
+
 	stepdata = []
 	total_steps = 0
 	for i in range(0, 7):

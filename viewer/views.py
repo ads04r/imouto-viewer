@@ -1,4 +1,4 @@
-from django.http import HttpResponse, Http404, HttpResponseRedirect
+from django.http import HttpResponse, Http404, HttpResponseRedirect, HttpResponseNotAllowed
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
@@ -6,7 +6,6 @@ from django.db.models import Q, F, DurationField, ExpressionWrapper, Max
 from django.db.models.functions import Cast
 from django.db.models.fields import DateField
 from django.conf import settings
-from rest_framework.exceptions import MethodNotAllowed
 from background_task.models import Task
 from haystack.query import SearchQuerySet
 from viewer.tasks import generate_photo_collages
@@ -30,7 +29,7 @@ def index(request):
 
 def upload_file(request):
 	if request.method != 'POST':
-		raise MethodNotAllowed(str(request.method))
+		return HttpResponseNotAllowed(['POST'])
 	url = settings.LOCATION_MANAGER_URL + '/import'
 	files = {'uploaded_file': request.FILES['uploadformfile']}
 	data = {'file_source': request.POST['uploadformfilesource']}
@@ -51,8 +50,13 @@ def dashboard(request):
 	if ret is None:
 		data = generate_dashboard()
 		context = {'type':'view', 'data':data}
-		ret = render(request, 'viewer/dashboard.html', context)
-		cache.set(key, ret, timeout=86400)
+		if len(data) == 0:
+			ret = render(request, 'viewer/setup.html', context)
+		elif 'error' in data:
+			ret = render(request, 'viewer/dashboard_error.html', context)
+		else:
+			ret = render(request, 'viewer/dashboard.html', context)
+			cache.set(key, ret, timeout=86400)
 	return ret
 
 def imouto_json_serializer(data):
@@ -77,6 +81,8 @@ def onthisday(request, format='html'):
 	data = cache.get(key)
 	if data is None:
 		data = generate_onthisday()
+		if len(data) == 0:
+			return render(request, 'viewer/setup.html', {})
 		cache.set(key, data, timeout=86400)
 	context = {'type':'view', 'data':data}
 	return render(request, 'viewer/onthisday.html', context)
@@ -93,7 +99,10 @@ def report_queue(request):
 	return response
 
 def timeline(request):
-	dt = Event.objects.order_by('-start_time')[0].start_time
+	try:
+		dt = Event.objects.order_by('-start_time')[0].start_time
+	except:
+		return render(request, 'viewer/setup.html', {})
 	ds = dt.strftime("%Y%m%d")
 	form = QuickEventForm()
 	context = {'type':'view', 'data':{'current': ds}, 'form':form}
@@ -132,9 +141,12 @@ def health(request, pageid):
 		expression = F('end_time') - F('start_time')
 		wrapped_expression = ExpressionWrapper(expression, DurationField())
 		context['data'] = {'stats': [], 'sleeps': []}
-		for days in [7, 28, 365]:
-			context['data']['stats'].append({'label': 'week', 'graph': get_sleep_history(days), 'best_sleep': DataReading.objects.filter(type='sleep', value='2', start_time__gte=(dt - datetime.timedelta(days=days))).annotate(length=wrapped_expression).order_by('-length')[0].start_time, 'earliest_waketime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(start_time)'}).order_by('time')[0].start_time, 'latest_waketime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(start_time)'}).order_by('-time')[0].start_time, 'earliest_bedtime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(end_time)'}).order_by('time')[0].end_time, 'latest_bedtime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(end_time)'}).order_by('-time')[0].end_time})
-		context['data']['midpoint'] = context['data']['stats'][2]['latest_waketime']
+		try:
+			for days in [7, 28, 365]:
+				context['data']['stats'].append({'label': 'week', 'graph': get_sleep_history(days), 'best_sleep': DataReading.objects.filter(type='sleep', value='2', start_time__gte=(dt - datetime.timedelta(days=days))).annotate(length=wrapped_expression).order_by('-length')[0].start_time, 'earliest_waketime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(start_time)'}).order_by('time')[0].start_time, 'latest_waketime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(start_time)'}).order_by('-time')[0].start_time, 'earliest_bedtime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(end_time)'}).order_by('time')[0].end_time, 'latest_bedtime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(end_time)'}).order_by('-time')[0].end_time})
+			context['data']['midpoint'] = context['data']['stats'][2]['latest_waketime']
+		except:
+			pass
 		return render(request, 'viewer/health_sleep.html', context)
 	if pageid == 'distance':
 		return render(request, 'viewer/health_distance.html', context)
@@ -456,7 +468,7 @@ def day_events(request, ds):
 def day_locevents(request, ds):
 
 	if request.method != 'POST':
-		raise MethodNotAllowed(str(request.method))
+		return HttpResponseNotAllowed(['POST'])
 	if len(ds) != 8:
 		raise Http404()
 	y = int(ds[0:4])
@@ -558,7 +570,7 @@ def event(request, eid):
 
 def event_addjourney(request):
 	if request.method != 'POST':
-		raise MethodNotAllowed(str(request.method))
+		return HttpResponseNotAllowed(['POST'])
 	vals = request.POST['join_events'].split('_')
 	if len(vals) != 2:
 		raise Http404()
@@ -580,7 +592,7 @@ def event_addjourney(request):
 
 def event_addappointmentevent(request):
 	if request.method != 'POST':
-		raise MethodNotAllowed(str(request.method))
+		return HttpResponseNotAllowed(['POST'])
 	try:
 		c = CalendarAppointment.objects.get(id=request.POST['add_appointment_event'])
 	except:
@@ -953,3 +965,12 @@ def locman_process(request):
 	r.raise_for_status()
 	response = HttpResponse(r.text, content_type='application/json')
 	return response
+
+def create_first_event(request):
+	if Event.objects.count() == 0:
+		dt = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+		event = Event(start_time=dt, end_time=dt, type='event', caption='Installed Imouto Viewer')
+		event.description = "Congratulations on creating your first event!\n\nNext you'll want to start investigating the ways of importing your life into Imouto. As a good place to start, try importing a GPX or FIT file from a GPS watch using the '[Upload](./#files)' feature on the Viewer."
+		event.save()
+		return HttpResponseRedirect('./#event_' + str(event.pk))
+	return HttpResponseRedirect('./')

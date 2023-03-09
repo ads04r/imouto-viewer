@@ -30,10 +30,7 @@ class Command(BaseCommand):
 			  ('fullcalendar/fullcalendar.css', 'https://cdn.jsdelivr.net/npm/fullcalendar@2.3.1/dist/fullcalendar.css'),
 			  ('fullcalendar/fullcalendar.min.css', 'https://cdn.jsdelivr.net/npm/fullcalendar@2.3.1/dist/fullcalendar.min.css')]
 
-		path = ''
-		if hasattr(settings, 'STATIC_ROOT'):
-			if settings.STATIC_ROOT != '':
-				path = settings.STATIC_ROOT
+		path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'static')
 
 		if path == '':
 			sys.stderr.write(self.style.ERROR("Cannot download files - unknown STATIC_ROOT.\n"))

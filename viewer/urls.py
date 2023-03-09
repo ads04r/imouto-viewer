@@ -60,4 +60,5 @@ urlpatterns = [
     path('health/<pageid>.html', views.health),
     path('import', views.locman_import),
     path('process', views.locman_process),
+    path('create-first-event', views.create_first_event),
 ]
