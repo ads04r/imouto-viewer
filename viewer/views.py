@@ -334,6 +334,8 @@ def day(request, ds):
 	last_event = None
 	for event in Event.objects.filter(end_time__gte=dts, start_time__lte=dte).exclude(type='life_event').order_by('start_time'):
 		events.append(event)
+		if event.type == 'journey':
+			continue
 		if not(last_event is None):
 			potential_joins.append([str(last_event.pk) + '_' + str(event.pk), str(last_event.caption) + ' to ' + str(event.caption)])
 		last_event = event
@@ -572,6 +574,8 @@ def event_addjourney(request):
 	if request.method != 'POST':
 		return HttpResponseNotAllowed(['POST'])
 	vals = request.POST['join_events'].split('_')
+	catid = str(request.POST['workout_type'])
+
 	if len(vals) != 2:
 		raise Http404()
 	try:
@@ -586,6 +590,9 @@ def event_addjourney(request):
 	event.elevation = getelevation(event.start_time, event.end_time)
 	event.speed = getspeed(event.start_time, event.end_time)
 	event.caption = event_from.caption + ' to ' + event_to.caption
+	if len(catid) > 0:
+		for category in EventWorkoutCategory.objects.filter(id=catid):
+			event.workout_categories.add(category)
 	event.save()
 	ds = event.start_time.strftime("%Y%m%d")
 	return HttpResponseRedirect('../#day_' + str(ds))
