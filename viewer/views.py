@@ -344,7 +344,7 @@ def day(request, ds):
 	dss = dts.strftime('%A, %-d %B %Y')
 	events = sorted(events, key=lambda x: x.start_time if x.__class__.__name__ == 'Event' else (x['time'] if isinstance(x, (dict)) else x.time))
 	appointments = CalendarAppointment.objects.filter(end_time__gte=dts, start_time__lte=dte).values('id', 'eventid', 'caption')
-	context = {'type':'view', 'caption': dss, 'events':events, 'stats': {}, 'potential_joins': potential_joins, 'appointments': appointments}
+	context = {'type':'view', 'caption': dss, 'events':events, 'stats': {}, 'potential_joins': potential_joins, 'appointments': appointments, 'categories':EventWorkoutCategory.objects.all()}
 	wakes = DataReading.objects.filter(type='awake', start_time__lt=dte, end_time__gt=dts).order_by('start_time')
 	wakecount = wakes.count()
 	if wakecount > 0:
