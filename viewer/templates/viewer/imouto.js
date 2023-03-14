@@ -153,9 +153,13 @@ function updateUploadQueue()
 			var filename = item.parameters[0][0];
 			var source = item.parameters[0][1];
 			var path = filename.split('/');
+			var running = item.running;
+			var error = item.has_error;
 
 			html = html + '<div class="post">';
 			html = html + '<div class="user-block">';
+			if(running){ html = html + '<span class="pull-right"><span class="badge" style="background-color: #007F00;">RUNNING</span></span>'; }
+			if(error){ html = html + '<span class="pull-right"><span class="badge" style="background-color: #FF0000;">ERROR</span></span>'; }
 			html = html + '<span class="username no-image">' + path[path.length - 1] + ' [' + source + ']</span>';
 			html = html + '<span class="description no-image">' + dt.toLocaleString() + '</span>';
 			html = html + '</div>';
