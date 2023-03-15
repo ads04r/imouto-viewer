@@ -906,6 +906,8 @@ def search(request):
 
 	for searchresult in sq:
 		event = searchresult.object
+		if event is None:
+			continue
 		description = event.description[0:50]
 		if len(description) == 50:
 			description = description[0:(description.rfind(' '))]
