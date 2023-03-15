@@ -55,7 +55,6 @@ urlpatterns = [
     path('photo/<uid>.jpg', views.photo_full),
     path('photo/<uid>.json', views.photo_json),
     path('search.json', views.search),
-    path('add-people-to-event', views.eventpeople),
     path('upload_file', views.upload_file),
     path('health/<pageid>.html', views.health),
     path('import', views.locman_import),
