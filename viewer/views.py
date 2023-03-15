@@ -518,6 +518,18 @@ def event(request, eid):
 				event.geo = getgeoline(event.start_time, event.end_time)
 				event.elevation = getelevation(event.start_time, event.end_time)
 				event.speed = getspeed(event.start_time, event.end_time)
+			try:
+				peoples = str(request.POST['people'])
+			except:
+				peoples = ''
+			if peoples == '':
+				people = []
+			else:
+				people = peoples.split("|")
+			event.people.clear()
+			for id in people:
+				for person in Person.objects.filter(uid=id):
+					event.people.add(person)
 			event.tags.clear()
 			try:
 				tags = str(request.POST['event_tags']).split(',')
@@ -660,24 +672,6 @@ def reportdelete(request, rid):
 	ret = data.delete()
 	response = HttpResponse(json.dumps(ret), content_type='application/json')
 	return response
-
-@csrf_exempt
-def eventpeople(request):
-	cache.delete('dashboard')
-	if request.method != 'POST':
-		raise Http404()
-	eid = request.POST['id']
-	pids = request.POST['people'].split('|')
-	data = get_object_or_404(Event, pk=eid)
-	people = []
-	for pid in pids:
-		people.append(get_object_or_404(Person, uid=pid))
-	data.people.clear()
-	for person in people:
-		data.people.add(person)
-		key = 'person_' + str(person.uid) + '_' + datetime.date.today().strftime("%Y%m%d")
-		cache.delete(key)
-	return HttpResponseRedirect('./#event_' + str(data.id))
 
 def eventjson(request):
 	dss = request.GET.get('start', '')

@@ -378,7 +378,6 @@
                 <div class="box box-primary">
                     <div class="box-body">
                         <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#admin_event_edit" aria-hidden="true">Edit Event</button>
-                        <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#admin_event_people" aria-hidden="true">Edit People</button>
                         <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#admin_event_delete" aria-hidden="true">Delete</button>
                     </div>
                 </div>
@@ -491,6 +490,7 @@
                     <div role="tabpanel">
                         <ul class="nav nav-tabs">
                             <li class="active"><a href="#label" data-toggle="tab">Event</a></li>
+                            <li><a href="#event-people" data-toggle="tab">People</a></li>
                             <li><a href="#link" data-toggle="tab">Narrative</a></li>
                         </ul>
                     </div>
@@ -521,6 +521,28 @@
                                 </tr>
                               </table>
                         
+                        </div>
+                        <div class="tab-pane" id="event-people">
+
+		<div class="input-group input-group-sm">
+
+			<select id="person_add" class="form-control">
+{% for person in people %}
+				<option value="{{ person.uid }}">{{ person.full_name }}</option>
+{% endfor %}
+			</select>
+			<span class="input-group-btn"><button class="btn btn-success btn-flat" type="button" id="person_add_submit">Add</button></span>
+
+		</div>
+
+		<div id="event_people_list" class="list-group list-group-unbordered">
+{% for item in data.people.all %}
+                        
+                        <div class="person_delete list-group-item" data-id="{{ item.uid }}">{{ item.full_name }} <small class="pull-right"><a href="#" class="delete_person" data-id="{{ item.uid }}">Delete</a></small></div>
+
+{% endfor %}
+		</div>
+
                         </div>
                         <div class="tab-pane" id="link">
 
@@ -557,38 +579,6 @@
     </div>
 </div>
 
-<div class="modal fade nav-tabs-custom" id="admin_event_people" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-body">
 
-		<div class="input-group input-group-sm">
-
-			<select id="person_add" class="form-control">
-{% for person in people %}
-				<option value="{{ person.uid }}">{{ person.full_name }}</option>
-{% endfor %}
-			</select>
-			<span class="input-group-btn"><button class="btn btn-success btn-flat" type="button" id="person_add_submit">Add</button></span>
-
-		</div>
-
-		<div id="event_people_list">
-{% for item in data.people.all %}
-                        
-                        <div class="person_delete" data-id="{{ item.uid }}">{{ item.full_name }} <small><a href="#" class="delete_person" data-id="{{ item.uid }}">Delete</a></small></div>
-
-{% endfor %}
-		</div>
-
-
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="event-people-save-form-button">Save</button>
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 {% include 'viewer/imageeditor.html' %}

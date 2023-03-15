@@ -1609,6 +1609,12 @@ function eventScreen(id)
         initialiseGraphics();
         $("#event-save-form-button").on('click', function()
         {
+            var data = [];
+            $('.person_delete').each(function() {
+                data.push($(this).data('id'));
+            });
+            var html = '<input type="hidden" id="people" name="people" value="' + data.join('|') + '"/>';
+            $("form#event-edit").append(html);
             $("form#event-edit").submit();
             return false;
         });
@@ -1616,23 +1622,16 @@ function eventScreen(id)
 	{
 		var id = $('#person_add').val();
 		var label = $('#person_add').find("option[value='" + id + "']").text();
-		var html = '<div class="person_delete" data-id="' + id + '">';
+		var html = '<div class="person_delete list-group-item" data-id="' + id + '">';
 		html = html + label + ' ';
-		html = html + '<small><a class="delete_person" href="#" data-id="' + id + '">Delete</a></small>'
+		html = html + '<small class="pull-right"><a class="delete_person" href="#" data-id="' + id + '">Delete</a></small>'
 		html = html + '</div>';
+console.log(html);
 		$('#event_people_list').append(html);
 		$('.delete_person').off('click');
 		$('.delete_person').on('click', function() { return eventPeopleDeleteName($(this).data('id')); });
 	});
 	$('.delete_person').on('click', function() { return eventPeopleDeleteName($(this).data('id')); });
-	$('#event-people-save-form-button').on('click', function() {
-		var data = [];
-		$('.person_delete').each(function() {
-			data.push($(this).data('id'));
-		});
-		$('<form method="POST" action="./add-people-to-event"><input type="hidden" id="id" name="id" value="' + id + '"/><input type="hidden" id="people" name="people" value="' + data.join('|') + '"/></form>').appendTo('body').submit();
-		return false;
-	});
 	activateImageEditor();
     });
 }
