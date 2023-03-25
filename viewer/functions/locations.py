@@ -29,6 +29,7 @@ def create_location_events(minlength=300):
 	ret = []
 	while dts < dte:
 		url = settings.LOCATION_MANAGER_URL + '/event/' + dts.strftime("%Y-%m-%d")
+		dt_check = dts.replace(hour=0, minute=0, second=0)
 		dts = dts + datetime.timedelta(days=1)
 
 		r = requests.get(url)
@@ -50,7 +51,7 @@ def create_location_events(minlength=300):
 			dist = distance.distance((item['lat'], item['lon']), (loc.lat, loc.lon)).km * 1000
 			dur = (end_time - start_time).total_seconds()
 
-			if start_time < dts:
+			if start_time < dt_check:
 				continue
 			if dist > 50:
 				continue
@@ -59,7 +60,7 @@ def create_location_events(minlength=300):
 
 			caption = event_label(start_time, end_time)
 			if caption == '':
-				caption = location.label
+				caption = loc.label
 
 			ev = Event(caption=caption, location=loc, start_time=start_time, end_time=end_time, type='loc_prox')
 			ret.append(ev)
