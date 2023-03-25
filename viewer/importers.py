@@ -19,7 +19,7 @@ from viewer.functions.monica import get_monica_contact_data, get_last_monica_act
 from viewer.functions.people import find_person_by_picasaid as find_person
 from viewer.functions.geo import convert_to_degrees
 from viewer.models import *
-from viewer.tasks import precache_photo_thumbnail
+from viewer.tasks import precache_photo_thumbnail, generate_location_events
 
 def upload_file(temp_file, file_source, format=''):
 
@@ -29,6 +29,7 @@ def upload_file(temp_file, file_source, format=''):
 	else:
 		r = requests.post(url, data={'file_source': file_source, 'file_format': format}, files={'uploaded_file': (temp_file, open(temp_file, 'rb'))})
 	if r.status_code == 200:
+		generate_location_events()
 		return True
 	return False
 
@@ -420,7 +421,7 @@ def import_carddav(url, auth, countrycode='44'):
 
 			if not(pobj.image):
 				if 'photo' in person.contents:
-					with NamedTemporaryFile(mode='w', delete=False) as tf:
+					with NamedTemporaryFile(mode='wb', delete=False) as tf:
 						tf.write(person.contents['photo'][0].value)
 						pobj.image.save('/' + str(pobj.uid) + '.jpg', File(open(tf.name, 'rb')))
 						pobj.save()

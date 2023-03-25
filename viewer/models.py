@@ -115,6 +115,13 @@ class Location(models.Model):
 	wikipedia = models.URLField(blank=True, null=True)
 	image = models.ImageField(blank=True, null=True, upload_to=location_thumbnail_upload_location)
 	weather_location = models.ForeignKey(WeatherLocation, on_delete=models.CASCADE, null=True, blank=True)
+	@property
+	def is_home(self):
+		try:
+			home = settings.USER_HOME_LOCATION
+		except:
+			home = -1
+		return (self.pk == home)
 	def to_dict(self):
 		ret = {'id': self.uid, 'label': self.label, 'full_label': self.full_label, 'lat': self.lat, 'lon': self.lon}
 		if not(self.description is None):

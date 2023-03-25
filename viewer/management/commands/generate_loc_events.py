@@ -3,7 +3,7 @@ from django.core.cache import cache
 from django.conf import settings
 from viewer.models import Event, Location
 from viewer.functions.people import bubble_event_people
-from viewer.functions.locations import generate_location_events
+from viewer.functions.locations import create_location_events
 import os, sys, datetime, pytz, csv, socket, json, urllib, re, random, sys, urllib.request
 
 class Command(BaseCommand):
@@ -18,7 +18,7 @@ class Command(BaseCommand):
 
 		min_duration = int(kwargs['minlength'])
 
-		for ev in generate_location_events(min_duration):
+		for ev in create_location_events(min_duration):
 			dtlen = (ev.end_time - ev.start_time).total_seconds()
 			sys.stderr.write(self.style.SUCCESS(str(ev.start_time) + " - " + str(ev.location) + " " + str(int(dtlen / 60)) + '\n'))
 

@@ -1,4 +1,4 @@
-import datetime, pytz, json
+import datetime, pytz, json, requests
 from background_task.models import Task
 from django.db.models import Sum, Count, F, ExpressionWrapper, DurationField, fields
 from django.conf import settings
@@ -25,6 +25,21 @@ def __display_timeline_event(event):
 						if (float(event.distance()) < 1):
 							return False
 	return True
+
+def get_location_manager_report_queue():
+
+	ret = []
+	url = settings.LOCATION_MANAGER_URL + '/process'
+	r = requests.get(url)
+	data = json.loads(r.text)
+	if 'tasks' in data:
+		ret = ret + data['tasks']
+	url = settings.LOCATION_MANAGER_URL + '/import'
+	r = requests.get(url)
+	data = json.loads(r.text)
+	if 'tasks' in data:
+		ret = ret + data['tasks']
+	return ret
 
 def get_report_queue():
 

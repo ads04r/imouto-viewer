@@ -7,13 +7,25 @@ from tempfile import NamedTemporaryFile
 import datetime, pytz, os, random
 
 from .models import LifeReport, Event, EventSimilarity
+from background_task.models import Task
 from .functions.utils import *
+from .functions.locations import create_location_events
 from .functions.geo import journey_similarity
 from .report_styles import DefaultReport, ModernReport
 from .reporting import generate_report_travel, generate_report_photos, generate_report_people, generate_report_comms, generate_report_music, generate_report_movies
 
 def photo_collage_upload_location(instance, filename):
 	return 'collages/photo_collage_' + str(instance.pk) + '.jpg'
+
+@background(schedule=0, queue='process')
+def generate_location_events(min_duration=300):
+
+	if Task.objects.filter(queue='process', task_name__icontains='tasks.generate_location_events').count() > 1:
+		return # If there's already an instance of this task running or queued, don't start another.
+	if len(get_location_manager_report_queue()) > 0:
+		generate_location_events(min_duration=min_duration, schedule=60) # If there are tasks in the location manager, hold back until they finish
+		return
+	create_location_events(min_duration)
 
 @background(schedule=0, queue='process')
 def precache_photo_thumbnails(limit=200):

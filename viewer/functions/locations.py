@@ -1,4 +1,4 @@
-import datetime, pytz, json, urllib.request, re, sys, os
+import datetime, pytz, json, re, sys, os, requests
 from viewer.models import *
 from viewer.functions.calendar import event_label
 from django.conf import settings
@@ -18,84 +18,52 @@ def nearest_location(lat, lon):
 			ret = loc
 	return ret
 
-def generate_location_events(minlength):
+def create_location_events(minlength=300):
 
-	url = settings.LOCATION_MANAGER_URL + '/process'
-	r = urllib.request.urlopen(url)
-	data = json.loads(r.read())
-	dts = Event.objects.filter(type='loc_prox').exclude(caption='Home').order_by('-start_time')[0].start_time.replace(hour=0, minute=0, second=0)
-	dte1 = datetime.datetime.fromtimestamp(int(data['stats']['last_calculated_position'])).replace(tzinfo=pytz.UTC)
-	dte2 = Event.objects.all().order_by('-end_time')[0].end_time
-	if dte1 > dte2:
-		dte = dte1
-	else:
-		dte = dte2
-	min_duration = int(minlength)
-
+	try:
+		home_id = settings.USER_HOME_LOCATION
+	except:
+		home_id = -1
+	dts = Event.objects.filter(type='loc_prox').exclude(location__id=home_id).order_by('-start_time')[0].start_time
+	dte = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, tzinfo=pytz.UTC) + datetime.timedelta(days=1)
 	ret = []
+	while dts < dte:
+		url = settings.LOCATION_MANAGER_URL + '/event/' + dts.strftime("%Y-%m-%d")
+		dts = dts + datetime.timedelta(days=1)
 
-	duration = int(((dte - dts).total_seconds()) / (60 * 60 * 24))
-	mils = re.compile(r"\.([0-9]+)")
-
-	for i in range(0, duration + 1):
-		dt = dts + datetime.timedelta(days=i)
-		dtt = dt + datetime.timedelta(days=1)
-		url = settings.LOCATION_MANAGER_URL + "/route/" + dt.strftime("%Y%m%d") + '040000' + dtt.strftime("%Y%m%d") + "040000?format=json"
-		data = []
-		with urllib.request.urlopen(url) as h:
-			data = json.loads(h.read().decode())
-		if not('geo' in data):
-			continue
-		if not('bbox' in data['geo']):
-			continue
-
-		lat1 = data['geo']['bbox'][1]
-		lat2 = data['geo']['bbox'][3]
-		lon1 = data['geo']['bbox'][0]
-		lon2 = data['geo']['bbox'][2]
-		if lat1 > lat2:
-			lat1 = data['geo']['bbox'][3]
-			lat2 = data['geo']['bbox'][1]
-		if lon1 > lon2:
-			lon1 = data['geo']['bbox'][2]
-			lon2 = data['geo']['bbox'][0]
-		for location in Location.objects.filter(lon__gte=lon1, lon__lte=lon2, lat__gte=lat1, lat__lte=lat2):
-
-			if not(location.destruction_time is None):
-				if location.destruction_time < dt:
-					continue
-
-			url = settings.LOCATION_MANAGER_URL + "/event/" + dt.strftime("%Y-%m-%d") + "/" + str(location.lat) + "/" + str(location.lon) + "?format=json"
-
-			data = []
-			try:
-				with urllib.request.urlopen(url) as h:
-					data = json.loads(h.read().decode())
-			except:
-				sys.stderr.write("Reading " + url + " failed\n")
-				data = []
-			if len(data) == 0:
+		r = requests.get(url)
+		data = json.loads(r.text)
+		last_item = ''
+		for item in data:
+			if item['timestart'] == last_item:
 				continue
-			for item in data:
-				dtstart = datetime.datetime.strptime(mils.sub("", item['timestart']), "%Y-%m-%dT%H:%M:%S%z")
-				dtend = datetime.datetime.strptime(mils.sub("", item['timeend']), "%Y-%m-%dT%H:%M:%S%z")
-				dtlen = (dtend - dtstart).total_seconds()
-				if dtlen < min_duration:
-					continue
-				if location.label == 'Home':
-					continue
-				if Event.objects.filter(start_time__lte=dtstart, end_time__gte=dtend).count() > 0:
-					continue
-				if Event.objects.filter(start_time__lte=dtend, end_time__gte=dtstart).exclude(type='journey').count() > 0:
-					continue
+			last_item = item['timestart']
 
-				caption = event_label(dtstart, dtend)
-				if caption == '':
-					caption = location.label
+			loc = nearest_location(item['lat'], item['lon'])
+			if loc == None:
+				continue
+			if loc.pk == home_id:
+				continue
 
-				ev = Event(caption=caption, location=location, start_time=dtstart, end_time=dtend, type='loc_prox')
-				ret.append(ev)
-				ev.save()
+			start_time = parser.parse(item['timestart'])
+			end_time = parser.parse(item['timeend'])
+			dist = distance.distance((item['lat'], item['lon']), (loc.lat, loc.lon)).km * 1000
+			dur = (end_time - start_time).total_seconds()
+
+			if start_time < dts:
+				continue
+			if dist > 50:
+				continue
+			if dur < minlength:
+				continue
+
+			caption = event_label(start_time, end_time)
+			if caption == '':
+				caption = location.label
+
+			ev = Event(caption=caption, location=loc, start_time=start_time, end_time=end_time, type='loc_prox')
+			ret.append(ev)
+			ev.save()
 
 	return ret
 
@@ -129,8 +97,9 @@ def get_possible_location_events(date, lat, lon):
 
 	ds = date.strftime("%Y-%m-%d")
 	url = settings.LOCATION_MANAGER_URL + '/event/' + ds + '/' + str(lat) + '/' + str(lon)
-	r = urllib.request.urlopen(url)
-	data = json.loads(r.read())
+	r = requests.get(url)
+	data = json.loads(r.text)
+
 	ret = []
 
 	for item in data:
