@@ -49,7 +49,7 @@
                             <div class="post">
                                 <div class="user-block">
                                     <span class="username no-image">{{ event }}<a class="pull-right btn btn-primary btn-xs eventlink" href="#event_{{ event.id }}">View Event</a></span>
-                                    <span class="description no-image">{{ event.start_time }}{% if event.location %} | {{ event.length_string }}{% endif %}</span>
+                                    <span class="description no-image">{{ event.start_time|date:"D jS M Y, g:ia" }}{% if event.location %} | {{ event.length_string }}{% endif %}</span>
                                 </div>
 
                                 {% if event.description %}<p>{{ event.description }}</p>{% endif %}
@@ -102,6 +102,8 @@
                     </div>
                 </div>
 
+{% if data.events.count > 1 %}
+
                 <div class="box box-primary">
                     <div class="box-body">
 			<canvas class="donut-chart" data-data="{{ data.weekdays.values|escape }}" data-labels="{{ data.weekdays.json|escape }}"></canvas>
@@ -118,8 +120,11 @@
 	                </div>
 
 {% endif %}
+
                     </div>
                 </div>
+
+{% endif %}
 
             </div>
 

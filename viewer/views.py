@@ -51,11 +51,11 @@ def dashboard(request):
 		data = generate_dashboard()
 		context = {'type':'view', 'data':data}
 		if len(data) == 0:
-			ret = render(request, 'viewer/setup.html', context)
+			ret = render(request, 'viewer/pages/setup.html', context)
 		elif 'error' in data:
-			ret = render(request, 'viewer/dashboard_error.html', context)
+			ret = render(request, 'viewer/pages/dashboard_error.html', context)
 		else:
-			ret = render(request, 'viewer/dashboard.html', context)
+			ret = render(request, 'viewer/pages/dashboard.html', context)
 			cache.set(key, ret, timeout=86400)
 	return ret
 
@@ -82,16 +82,16 @@ def onthisday(request, format='html'):
 	if data is None:
 		data = generate_onthisday()
 		if len(data) == 0:
-			return render(request, 'viewer/setup.html', {})
+			return render(request, 'viewer/pages/setup.html', {})
 		cache.set(key, data, timeout=86400)
 	context = {'type':'view', 'data':data}
-	return render(request, 'viewer/onthisday.html', context)
+	return render(request, 'viewer/pages/onthisday.html', context)
 
 def importer(request):
 	url = settings.LOCATION_MANAGER_URL + '/import'
 	r = requests.get(url=url)
 	context = {'progress': r.json()}
-	return render(request, 'viewer/import.html', context)
+	return render(request, 'viewer/pages/import.html', context)
 
 def report_queue(request):
 	data = get_report_queue()
@@ -102,11 +102,11 @@ def timeline(request):
 	try:
 		dt = Event.objects.order_by('-start_time')[0].start_time
 	except:
-		return render(request, 'viewer/setup.html', {})
+		return render(request, 'viewer/pages/setup.html', {})
 	ds = dt.strftime("%Y%m%d")
 	form = QuickEventForm()
 	context = {'type':'view', 'data':{'current': ds}, 'form':form}
-	return render(request, 'viewer/timeline.html', context)
+	return render(request, 'viewer/pages/timeline.html', context)
 
 def health_data(datatypes):
 	item = {'date': ''}
@@ -135,7 +135,7 @@ def health_data(datatypes):
 def health(request, pageid):
 	context = {'type':'view', 'page': pageid, 'data':[]}
 	if pageid == 'heart':
-		return render(request, 'viewer/health_heart.html', context)
+		return render(request, 'viewer/pages/health_heart.html', context)
 	if pageid == 'sleep':
 		dt = datetime.datetime.now().replace(hour=0, minute=0, second=0, tzinfo=pytz.UTC)
 		expression = F('end_time') - F('start_time')
@@ -147,13 +147,13 @@ def health(request, pageid):
 			context['data']['midpoint'] = context['data']['stats'][2]['latest_waketime']
 		except:
 			pass
-		return render(request, 'viewer/health_sleep.html', context)
+		return render(request, 'viewer/pages/health_sleep.html', context)
 	if pageid == 'distance':
-		return render(request, 'viewer/health_distance.html', context)
+		return render(request, 'viewer/pages/health_distance.html', context)
 	if pageid == 'schedule':
 		dt = datetime.datetime.now().replace(hour=0, minute=0, second=0, tzinfo=pytz.UTC)
 		context['events'] = Event.objects.filter(start_time__gte=(dt - datetime.timedelta(days=28))).exclude(workout_categories=None).order_by('-start_time')[0:10]
-		return render(request, 'viewer/health_schedule.html', context)
+		return render(request, 'viewer/pages/health_schedule.html', context)
 	if pageid == 'blood':
 		if request.method == 'POST':
 			ret = json.loads(request.body)
@@ -165,7 +165,7 @@ def health(request, pageid):
 			response = HttpResponse(json.dumps(ret), content_type='application/json')
 			return response
 		context['data'] = health_data(['bp_sys', 'bp_dia'])
-		return render(request, 'viewer/health_bp.html', context)
+		return render(request, 'viewer/pages/health_bp.html', context)
 	if pageid == 'weight':
 		context['data'] = health_data(['weight', 'fat', 'muscle', 'water'])
 		context['graphs'] = {}
@@ -179,7 +179,7 @@ def health(request, pageid):
 					continue
 				item.append({'x': pdt, 'y': (float(point.value) / 1000)})
 			context['graphs'][i['label']] = json.dumps(item)
-		return render(request, 'viewer/health_weight.html', context)
+		return render(request, 'viewer/pages/health_weight.html', context)
 	if pageid == 'mentalhealth':
 		if request.method == 'POST':
 			ret = json.loads(request.body)
@@ -197,8 +197,8 @@ def health(request, pageid):
 			if 'hads-d' in entry:
 				item['depression'] = entry['hads-d']
 			context['data'].append(item)
-		return render(request, 'viewer/health_mentalhealth.html', context)
-	return render(request, 'viewer/health.html', context)
+		return render(request, 'viewer/pages/health_mentalhealth.html', context)
+	return render(request, 'viewer/pages/health.html', context)
 
 def timelineitem(request, ds):
 	dsyear = int(ds[0:4])
@@ -213,7 +213,7 @@ def timelineitem(request, ds):
 	dsn = dtn.strftime("%Y%m%d")
 
 	context = {'type':'view', 'data':{'label': dtq.strftime("%A %-d %B"), 'id': dsq, 'next': dsn, 'events': events}}
-	return render(request, 'viewer/timeline_event.html', context)
+	return render(request, 'viewer/pages/timeline_event.html', context)
 
 def reports(request):
 	if request.method == 'POST':
@@ -260,7 +260,7 @@ def reports(request):
 	if hasattr(settings, 'MOONSHINE_URL'):
 		if settings.MOONSHINE_URL != '':
 			context['settings']['moonshine_url'] = settings.MOONSHINE_URL
-	return render(request, 'viewer/reports.html', context)
+	return render(request, 'viewer/pages/reports.html', context)
 
 def events(request):
 	if request.method == 'POST':
@@ -305,19 +305,19 @@ def events(request):
 	data['life'] = Event.objects.filter(type='life_event').order_by('-start_time')
 	form = EventForm()
 	context = {'type':'view', 'data':data, 'form':form, 'categories':EventWorkoutCategory.objects.all()}
-	return render(request, 'viewer/calendar.html', context)
+	return render(request, 'viewer/pages/calendar.html', context)
 
 def tags(request):
 
 	data = EventTag.objects.annotate(num_events=Count('events')).order_by('-num_events')
 	context = {'type':'tag', 'data':data}
-	return render(request, 'viewer/tags.html', context)
+	return render(request, 'viewer/pages/tags.html', context)
 
 def tag(request, id):
 
 	data = get_object_or_404(EventTag, id=id)
 	context = {'type':'tag', 'data':data}
-	return render(request, 'viewer/tag.html', context)
+	return render(request, 'viewer/pages/tag.html', context)
 
 def day(request, ds):
 
@@ -361,7 +361,7 @@ def day(request, ds):
 	if dte < dt:
 		context['stats']['next'] = (dts + datetime.timedelta(days=1)).strftime("%Y%m%d")
 	context['form'] = EventForm()
-	return render(request, 'viewer/day.html', context)
+	return render(request, 'viewer/pages/day.html', context)
 
 def day_music(request, ds):
 
@@ -577,9 +577,9 @@ def event(request, eid):
 			cache.set(cache_key + '_music', music, 86400)
 	if music:
 		context['music'] = music
-	template = 'viewer/event.html'
+	template = 'viewer/pages/event.html'
 	if data.type=='life_event':
-		template = 'viewer/lifeevent.html'
+		template = 'viewer/pages/lifeevent.html'
 	return render(request, template, context)
 
 def event_addjourney(request):
@@ -730,7 +730,7 @@ def places(request):
 	else:
 		form = LocationForm()
 	context = {'type':'place', 'data':data, 'form':form}
-	return render(request, 'viewer/places.html', context)
+	return render(request, 'viewer/pages/places.html', context)
 
 def place(request, uid):
 	key = 'place_' + str(uid) + '_' + datetime.date.today().strftime("%Y%m%d")
@@ -738,7 +738,7 @@ def place(request, uid):
 	if ret is None:
 		data = get_object_or_404(Location, uid=uid)
 		context = {'type':'place', 'data':data}
-		ret = render(request, 'viewer/place.html', context)
+		ret = render(request, 'viewer/pages/place.html', context)
 		cache.set(key, ret, timeout=86400)
 	return ret
 
@@ -773,7 +773,7 @@ def people(request):
 			data['calls'].append([person, number['messages']])
 	data['all'] = Person.objects.annotate(days=Count(Cast('event__start_time', DateField()), distinct=True)).annotate(last_seen=Max('event__start_time')).order_by('given_name', 'family_name')
 	context = {'type':'person', 'data':data}
-	ret = render(request, 'viewer/people.html', context)
+	ret = render(request, 'viewer/pages/people.html', context)
 	return ret
 
 def person(request, uid):
@@ -782,14 +782,14 @@ def person(request, uid):
 	if ret is None:
 		data = get_object_or_404(Person, uid=uid)
 		context = {'type':'person', 'data':data, 'properties':explode_properties(data)}
-		ret = render(request, 'viewer/person.html', context)
+		ret = render(request, 'viewer/pages/person.html', context)
 		cache.set(key, ret, timeout=86400)
 	return ret
 
 def report(request, id):
 	data = get_object_or_404(LifeReport, id=id)
 	context = {'type':'report', 'data':data}
-	return render(request, 'viewer/report.html', context)
+	return render(request, 'viewer/pages/report.html', context)
 
 def report_graph(request, id):
 	data = get_object_or_404(LifeReportGraph, id=id)
