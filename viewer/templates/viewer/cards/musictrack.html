@@ -1,0 +1,15 @@
+{% load static %}
+
+        <div class="callout callout-info">
+          <table>
+            <td valign="top"><i class="fa fa-music"></i>&nbsp;</td>
+            <td valign="top">
+		{{ event.title }}
+		<br>
+		{% for artist in event.artists %}
+			<small class="muted">{{ artist.name }}</small> 
+		{% endfor %}
+	    </td>
+          </table>
+        </div>
+
