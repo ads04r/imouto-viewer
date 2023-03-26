@@ -1,29 +1,6 @@
 {% load static %}
 
-<!-- timeline time label -->
-
-    <li class="time-label">
-        <span class="bg-blue"><a href="#day_{{ data.id }}">{{ data.label }}</a></span>
-    </li>
-
-<!-- /.timeline-label -->
-    
-    {% for event in data.events %}
-
-    <!-- timeline item -->
-    <li id="li_event_{{ event.pk }}">
-
-        {% if event.type == 'journey' %}<i class="fa fa-road bg-green"></i>{% endif %}
-        {% if event.type == 'photo' %}<i class="fa fa-camera bg-orange"></i>{% endif %}
-        {% if event.type == 'loc_prox' %}<i class="fa fa-map-marker bg-blue"></i>{% endif %}
-        {% if event.type == 'event' %}<i class="fa fa-calendar bg-white"></i>{% endif %}
-        {% if event.type == 'sleepover' %}<i class="fa fa-moon-o bg-black"></i>{% endif %}
         
-        <div class="timeline-item">
-            <span class="time"><i class="fa fa-clock-o"></i> {{ event.start_time|date:"g:ia" }}</span>
-            
-            <h3 class="timeline-header no-border">{{ event }}</h3>
-            <div class="timeline-body">
             {% if event.geo == '' %}
                 {% if event.location %}
                     {% if event.location.image %}
@@ -64,26 +41,3 @@
                     {% endif %}
                     
                 </div>
-            </div>
-            <div class="timeline-footer">
-                <span>
-                    <a class="btn btn-primary btn-xs eventlink" href="#event_{{ event.pk }}">Read more</a>
-                </span>
-                <span class="pull-right">
-                    <a class="btn btn-secondary btn-xs eventedit" href="#" data-event-id="{{ event.pk }}" data-event-type="{{ event.type }}" data-event-label="{{ event.caption }}" data-event-description="{{ event.description }}">Quick Edit</a>
-                    <a class="btn btn-danger btn-xs eventdelete" href="#" data-event-id="{{ event.pk }}">Delete</a>
-                </span>
-            </div>
-        </div>
-    </li>
-    <!-- END timeline item -->
-
-    {% endfor %}
-    
-    <ul class="timeline timeline-inverse" id="imouto-timeline">
-        <li>
-            <i class="fa fa-clock-o bg-gray" id="next-load" data-next="{{ data.next }}"></i>
-        </li>
-    </ul>
-
-

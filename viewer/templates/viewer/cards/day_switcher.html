@@ -1,0 +1,18 @@
+{% load static %}
+
+                <div class="box box-primary" id="day_event_{{ event.pk }}">
+                    <div class="box-body">
+                      <div class="day-stats"></div>
+                      <div class="text-center">
+                        <div class="btn-group">
+                            <a href="#day_{{ stats.prev }}" class="btn btn-default">Previous</a>
+{% if stats.next %}
+                            <a href="#day_{{ stats.next }}" class="btn btn-default">Next</a>
+{% else %}
+                            <a href="#day_{{ stats.next }}" class="btn btn-default disabled">Next</a>
+{% endif %}
+                        </div>
+                      </div>
+                    </div>
+                </div>
+

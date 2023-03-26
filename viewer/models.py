@@ -216,7 +216,7 @@ class Location(models.Model):
 			ret = datetime.timedelta(hours=0)
 		if ret is None:
 			ret = datetime.timedelta(hours=0)
-		return ret
+		return datetime.timedelta(seconds=int(ret.total_seconds()))
 	def weekdays(self):
 		ret = {'days': [], 'values': []}
 		d = ['', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
