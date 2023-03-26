@@ -82,13 +82,6 @@
     border-radius: 3px;
 }
 
-.timeline-gallery img
-{
-    margin-top: 5px;
-    margin-right: 5px;
-    border: solid 1px #000000;
-}
-
 .post .user-block span.no-image
 {
     margin-left: 0px !important;
@@ -122,3 +115,10 @@
 .info-box-content { overflow-x: hidden; }
 .info-box-number { white-space: nowrap; }
 .imitation-search-item { display: block; padding-top: 10px; padding-right: 15px; padding-bottom: 10px; padding-left: 15px; }
+
+.event_image_select img
+{
+    margin-top: 5px;
+    margin-right: 5px;
+    border: solid 1px #000000;
+}
