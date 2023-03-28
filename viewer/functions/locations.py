@@ -62,9 +62,14 @@ def create_location_events(minlength=300):
 			if caption == '':
 				caption = loc.label
 
-			ev = Event(caption=caption, location=loc, start_time=start_time, end_time=end_time, type='loc_prox')
-			ret.append(ev)
-			ev.save()
+			try:
+				ev = Event.objects.get(location=loc, start_time=start_time, end_time=end_time, type='loc_prox')
+			except:
+				ev = None
+			if ev is None:
+				ev = Event(caption=caption, location=loc, start_time=start_time, end_time=end_time, type='loc_prox')
+				ret.append(ev)
+				ev.save()
 
 	return ret
 
