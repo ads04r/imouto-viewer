@@ -63,7 +63,7 @@ def create_location_events(minlength=300):
 				caption = loc.label
 
 			try:
-				ev = Event.objects.get(location=loc, start_time=start_time, end_time=end_time, type='loc_prox')
+				ev = Event.objects.get(start_time=start_time, end_time=end_time, type='loc_prox')
 			except:
 				ev = None
 			if ev is None:
