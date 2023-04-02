@@ -707,6 +707,7 @@ class Event(models.Model):
 		self.save()
 	def subevents(self):
 		return Event.objects.filter(start_time__gte=self.start_time, end_time__lte=self.end_time).exclude(id=self.id).order_by('start_time')
+
 	def refresh_geo(self):
 		id = self.start_time.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S") + self.end_time.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S")
 		url = settings.LOCATION_MANAGER_URL + "/route/" + id + "?format=json"
@@ -718,6 +719,9 @@ class Event(models.Model):
 			if 'geometry' in data['geo']:
 				if 'coordinates' in data['geo']['geometry']:
 					if len(data['geo']['geometry']['coordinates']) > 0:
+						ret = json.dumps(data['geo'])
+				if 'geometries' in data['geo']['geometry']:
+					if len(data['geo']['geometry']['geometries']) > 0:
 						ret = json.dumps(data['geo'])
 		self.geo = ret
 		self.save()
@@ -1630,3 +1634,4 @@ class CalendarAppointment(models.Model):
 		app_label = 'viewer'
 		verbose_name = 'calendar appointment'
 		verbose_name_plural = 'calendar appointments'
+
