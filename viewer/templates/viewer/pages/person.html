@@ -36,12 +36,12 @@
                     <strong><i class="fa fa-handshake-o margin-r-5"></i> First met</strong>
                     <p class="text-muted">{{ data.get_stats.first_met|date:"F Y" }}</p>
 
-{% if data.birthday %}
+{% if data.next_birthday %}
 
                     <hr>
                     
                     <strong><i class="fa fa-birthday-cake margin-r-5"></i> Birthday</strong>
-                    <p class="text-muted">{{ data.birthday|date:"jS F" }}</p>
+                    <p class="text-muted">{{ data.next_birthday|date:"jS F" }}</p>
 
 {% endif %}
 {% if data.home != None %}
