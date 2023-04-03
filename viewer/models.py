@@ -260,7 +260,6 @@ class Person(models.Model):
 	given_name = models.CharField(null=True, blank=True, max_length=128)
 	family_name = models.CharField(null=True, blank=True, max_length=128)
 	nickname = models.CharField(null=True, blank=True, max_length=128)
-	birthday = models.DateField(null=True, blank=True)
 	wikipedia = models.URLField(blank=True, null=True)
 	image = models.ImageField(blank=True, null=True, upload_to=user_thumbnail_upload_location)
 	def to_dict(self):
@@ -277,6 +276,32 @@ class Person(models.Model):
 		if ((label == '') or (label is None)):
 			label = self.full_name()
 		return label
+	@property
+	def birthday(self):
+		bd = self.get_property('birthday')
+		if len(bd) == 0:
+			return None
+		try:
+			ret = datetime.datetime.strptime(bd[0], '%Y-%m-%d').date()
+		except:
+			ret = None
+		return ret
+	@property
+	def next_birthday(self):
+		bd = self.get_property('birthday')
+		if len(bd) == 0:
+			return None
+		now = datetime.datetime.now().date()
+		dt = datetime.datetime.strptime(str(now.year) + bd[0][4:], '%Y-%m-%d').date()
+		while dt < now:
+			dt = dt.replace(year=dt.year + 1)
+		return dt
+	@property
+	def age(self):
+		bd = self.birthday
+		if bd is None:
+			return None
+		return self.next_birthday.year - bd.year - 1
 	def full_name(self):
 		label = str(self.given_name) + ' ' + str(self.family_name)
 		label = label.strip()
