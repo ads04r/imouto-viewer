@@ -137,7 +137,7 @@
                                     </div>
                                     <div class="product-info">
                                         <a class="product-title personlink" href="#person_{{ item.0.uid }}">
-                                            {{ item.0.full_name }}</a> <i>({{ item.2 }})</i>
+                                            {{ item.0.full_name }}</a> {% if item.2 %}<i>({{ item.2 }})</i>{% endif %}
                                         <span class="product-description">
                                             {{ item.1|date:"l jS F" }}</span>
                                     </div>

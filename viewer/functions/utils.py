@@ -336,13 +336,11 @@ def generate_dashboard():
 
 	birthdays = []
 	dtd = datetime.datetime.now().date()
-	for person in Person.objects.exclude(birthday=None).order_by('birthday__month', 'birthday__day'):
-		dtp = person.birthday.replace(year=dtd.year)
-		if dtp < dtd:
-			dtp = person.birthday.replace(year=(dtd.year + 1))
+	for pp in PersonProperty.objects.filter(key='birthday'):
+		dtp = pp.person.next_birthday
 		ttb = (dtp - dtd).days
 		if ttb <= 14:
-			birthdays.append([person, dtp, (dtp.year - person.birthday.year)])
+			birthdays.append([pp.person, dtp, pp.person.age])
 
 	ret = {'stats': stats, 'birthdays': birthdays, 'steps': json.dumps(stepdata), 'sleep': json.dumps(sleepdata), 'contact': contactdata, 'people': peopledata, 'places': locationdata, 'walks': walkdata}
 	if len(tags) > 0:
