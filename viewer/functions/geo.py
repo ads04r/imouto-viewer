@@ -126,6 +126,9 @@ def getgeoline(dts, dte, loc_manager=None):
 			if 'coordinates' in data['geo']['geometry']:
 				if len(data['geo']['geometry']['coordinates']) > 0:
 					return json.dumps(data['geo'])
+			if 'geometries' in data['geo']['geometry']:
+				if len(data['geo']['geometry']['geometries']) > 0:
+					return json.dumps(data['geo'])
 	return ""
 
 def getelevation(dts, dte, loc_manager=None):
