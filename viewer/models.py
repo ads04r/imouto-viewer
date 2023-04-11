@@ -647,9 +647,10 @@ class Event(models.Model):
 		if self.geo:
 			ret['geo'] = self.geo
 		else:
-			self.refresh_geo()
-			if self.geo:
-				ret['geo'] = self.geo
+			if self.type == 'journey':
+				self.refresh_geo()
+				if self.geo:
+					ret['geo'] = self.geo
 		if self.description:
 			if self.description != '':
 				ret['description'] = self.description
@@ -1065,6 +1066,32 @@ class LifeReport(models.Model):
 	options = models.TextField(default='{}')
 	def __format_date(self, dt):
 		return dt.strftime("%a %-d %b") + ' ' + (dt.strftime("%I:%M%p").lower().lstrip('0'))
+	def categories(self):
+		ret = []
+		for prop in LifeReportProperties.objects.filter(report=self):
+			propkey = str(prop.category)
+			if propkey == '':
+				propkey = 'misc'
+			if propkey in ret:
+				continue
+			ret.append(propkey)
+		for graph in LifeReportGraph.objects.filter(report=self):
+			propkey = str(graph.category)
+			if propkey == '':
+				propkey = 'misc'
+			if propkey in ret:
+				continue
+			ret.append(propkey)
+		for chart in LifeReportGraph.objects.filter(report=self):
+			propkey = str(chart.category)
+			if propkey == '':
+				propkey = 'misc'
+			if propkey in ret:
+				continue
+			ret.append(propkey)
+		if not('misc' in ret):
+			ret.append('misc')
+		return ret
 	def countries(self):
 		return LocationCountry.objects.filter(locations__in=self.locations.all()).distinct()
 	def refresh_events(self):
@@ -1537,6 +1564,7 @@ class LifeReportGraph(models.Model):
 class LifeReportChart(models.Model):
 	report = models.ForeignKey(LifeReport, on_delete=models.CASCADE, related_name='charts')
 	text = models.CharField(max_length=128)
+	category = models.SlugField(max_length=32, default='')
 	data = models.TextField(default='[]')
 	description = models.TextField(null=True, blank=True)
 	def to_dict(self):

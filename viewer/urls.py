@@ -15,6 +15,7 @@ urlpatterns = [
     path('reports.json', views.reports_json),
     path('report_queue.json', views.report_queue),
     path('reports/<id>.html', views.report),
+    path('reports/<id>/<page>.html', views.report),
     path('reports/<id>.json', views.report_json),
     path('reports/<id>.pdf', views.report_pdf),
     path('reports/<id>.txt', views.report_words),
