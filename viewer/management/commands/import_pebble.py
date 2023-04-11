@@ -131,17 +131,6 @@ class Command(BaseCommand):
 					joins.append([prev.pk, cur.pk])
 				prev = cur
 
-#				for j in joins:
-#					try:
-#						item = DataReading.objects.get(pk=j[0])
-#						dead = DataReading.objects.get(pk=j[1])
-#					except:
-#						continue
-#					item.end_time = dead.end_time
-#					item.save()
-#					print(dead)
-#					dead.delete()
-
 		# This bit counts steps and adds them as DataReadings
 
 		if db_type == 'pebble':
