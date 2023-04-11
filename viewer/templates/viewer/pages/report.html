@@ -17,127 +17,156 @@
 
     <div class="container-fluid">
 
+        <div class="row">
+
+            <div class="col-xs-12 col-sm-6 col-md-4">
+                <div class="box box-primary">
+                    <div class="box-body box-profile">
+			<h3 class="profile username text-center">{{ data.year }}</h3>
+			<p class="text-muted text-center">{{ data.label }}</p>
+			<ul class="list-group list-group-unbordered">
+				<li class="list-group-item"><b>Date created</b><small class="pull-right">{{ data.created_date }}</small></li>
+				<li class="list-group-item"><b>Life Events</b><small class="pull-right">{{ data.life_events.count }}</small></li>
+				<li class="list-group-item"><b>Diary Entries</b><small class="pull-right">{{ data.diary_entries.count }}</small></li>
+			</ul>
+                    </div>
+                </div>
+                <div class="box box-primary box-solid">
+		    <div class="box-header with-border"><h3 class="box-title">Categories</h3></div>
+                    <div class="box-body no-padding">
+			<ul class="nav nav-pills nav-stacked">
+
+{% for category in data.categories %}
+
+				{% if page == category %}<li class="active"><a>{{ category }}</a></li>{% else %}<li><a href="#report_{{ data.pk }}_{{ category }}">{{ category }}</a></li>{% endif %}
+
+{% endfor %}
+
+			</ul>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="col-xs-12 col-sm-6 col-md-8">
+
 {% if data.geo != '' %}
 
-        <div class="row">
-
-            <div class="col-xs-12 col-sm-12 col-md-12">
-                <div class="box box-primary">
-                    <div class="box-body">
+            <div class="nav-tabs-custom">
+                <ul class="nav nav-tabs">
+                    <li class="active"><a href="#report-tab-places" data-toggle="tab">Places</a></li>
+                    <li><a href="#report-tab-people" data-toggle="tab">People</a></li>
+                </ul>
+                <div class="tab-content">
+                    <div class="active tab-pane" id="report-tab-places">
                         <div id="map{{ data.pk }}" class="eventmap" data-geojson="{{ data.geo }}"></div>
                     </div>
+                    <div class="tab-pane" id="report-tab-people">
+{% for person in data.people.all %}
+
+         	      {% if person.image %}<a href="#person_{{ person.uid }}"><img class="img-circle img-bordered-sm" src="people/{{ person.uid }}_thumb.jpg" alt="{{ person }}" height="50" width="50"></a>{% endif %}
+
+{% endfor %}
+                    </div>
                 </div>
             </div>
-
-        </div>
 
 {% endif %}
 
-{% if data.properties.count > 0 %}
+	        <div class="row">
 
-        <div class="row">
+{% for property in data.properties.all %}{% if property.category == page %}
 
-{% for property in data.properties.all %}
-
-            <div class="col-xs-12 col-sm-6 col-md-3">
-                <div class="info-box bg-blue">
-                    <span class="info-box-icon"><i class="fa fa-{{ property.icon }}"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">{{ property.key }}</span>
-                        <span class="info-box-number">{{ property.value }}</span>
-                        {% if property.description %}<span class="progress-description">{{ property.description }}</span>{% endif %}
+                    <div class="col-xs-12 col-sm-12 col-md-6">
+	                <div class="info-box bg-blue">
+	                    <span class="info-box-icon"><i class="fa fa-{{ property.icon }}"></i></span>
+	                    <div class="info-box-content">
+	                        <span class="info-box-text">{{ property.key }}</span>
+	                        <span class="info-box-number">{{ property.value }}</span>
+	                        {% if property.description %}<span class="progress-description">{{ property.description }}</span>{% endif %}
+	                    </div>
+	                </div>
                     </div>
-                </div>
-            </div>
 
-{% endfor %}
+{% endif %}{% endfor %}
 
-        </div>
+		</div>
 
-{% endif %}
+	        <div class="row">
 
-{% if data.graphs.count > 0 or data.charts.count > 0 %}
+{% for graph in data.graphs.all %}{% if graph.category == page %}
 
-        <div class="row">
+	            <div class="col-xs-12 col-sm-12 col-md-6">
+	                <div class="box box-primary">
+	                    <div class="box-header with-border">
+	                        <h3 class="box-title">{{ graph.key }}</h3>
+	                    </div>
+	                    <div class="box-body">
 
-{% for graph in data.graphs.all %}
+				<canvas class="report-graph" data-type="{{ graph.type }}" data-data="{{ graph.data }}"/>
 
-            <div class="col-xs-12 col-sm-6 col-md-4">
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title">{{ graph.key }}</h3>
-                    </div>
-                    <div class="box-body">
+	                    </div>
+	                </div>
+	            </div>
 
-			<canvas class="report-graph" data-type="{{ graph.type }}" data-data="{{ graph.data }}"/>
+{% endif %}{% endfor %}
+{% for chart in data.charts.all %}{% if chart.category == page %}
 
-                    </div>
-                </div>
-            </div>
+	            <div class="col-xs-12 col-sm-12 col-md-12">
+	                <div class="box box-primary">
+	                    <div class="box-header with-border">
+	                        <h3 class="box-title">{{ chart.text }}</h3>
+	                    </div>
+	                    <div class="box-body no-padding">
 
-{% endfor %}
-
-{% for chart in data.charts.all %}
-
-            <div class="col-xs-12 col-sm-6 col-md-4">
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title">{{ chart.text }}</h3>
-                    </div>
-                    <div class="box-body no-padding">
-
-			<table class="table table-condensed">
+				<table class="table table-condensed">
 	{% for item in chart.to_dict %}
 
-				<tr>
-					<td>{{ forloop.counter }}</td>
-					<td>{{ item.text }}</td>
-					<td>{{ item.value }}</td>
-				</tr>
+					<tr>
+						<td>{{ forloop.counter }}</td>
+						<td>{{ item.text }}</td>
+						<td>{{ item.value }}</td>
+					</tr>
 
 	{% endfor %}
-			</table>
+				</table>
 
-                    </div>
-                </div>
-            </div>
+	                    </div>
+	                </div>
+	            </div>
 
-{% endfor %}
+{% endif %}{% endfor %}
 
-        </div>
+		</div>
 
-{% endif %}
 
-        <div class="row">
-            <div class="col-xs-12 col-sm-12 col-md-12">
+	        <div class="row">
+	            <div class="col-xs-12 col-sm-12 col-md-12">
 
 {% for event in data.life_events %}
 
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title">{{ event.caption }}</h3>
-			<span class="pull-right"><a href="#event_{{ event.id }}" class="btn btn-xs btn-primary">View Event</a></span>
-                    </div>
-                    <div class="box-body">
+	                <div class="box box-primary">
+	                    <div class="box-header with-border">
+	                        <h3 class="box-title">{{ event.caption }}</h3>
+				<span class="pull-right"><a href="#event_{{ event.id }}" class="btn btn-xs btn-primary">View Event</a></span>
+	                    </div>
+	                    <div class="box-body">
+				{% if event.cover_photo %}<img width="100" height="100" src="photo/{{ event.cover_photo.id }}_thumb.jpg" class="pull-right img-circle img-bordered"/>{% endif %}
+				{{ event.description_html|safe }}
 
-			{{ event.description_html|safe }}
-
-                    </div>
-                </div>
+	                    </div>
+	                </div>
 
 {% endfor %}
 
-            </div>
-        </div>
+	            </div>
+	        </div>
+
+	</div>
 
         <div class="row">
             <div class="col-xs-12">
 
-{% for person in data.people.all %}
-
-               {% if person.image %}<a href="#person_{{ person.uid }}"><img class="img-circle img-bordered-sm" src="people/{{ person.uid }}_thumb.jpg" alt="{{ person }}" height="50" width="50"></a>{% endif %}
-
-{% endfor %}
 
 <br><br>
 

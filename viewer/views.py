@@ -786,9 +786,11 @@ def person(request, uid):
 		cache.set(key, ret, timeout=86400)
 	return ret
 
-def report(request, id):
+def report(request, id, page='misc'):
 	data = get_object_or_404(LifeReport, id=id)
-	context = {'type':'report', 'data':data}
+	context = {'type':'report', 'data':data, 'page':page}
+	if context['page'] == 'misc':
+		context['page'] = ''
 	return render(request, 'viewer/pages/report.html', context)
 
 def report_graph(request, id):

@@ -340,9 +340,11 @@ function reportsScreen()
     });
 }
 
-function reportScreen(id)
+function reportScreen(id, page='misc')
 {
-    $(".content-wrapper").load("./reports/" + id + ".html", function(response, status, xhr){
+    var url = "./reports/" + id + ".html";
+    if(page.length > 0) { url = "./reports/" + id + "/" + page + ".html"; }
+    $(".content-wrapper").load(url, function(response, status, xhr){
         if(status == 'error') { errorPage(xhr); return false; }
         $('.report-graph').each(function() {
             var canvas = $(this);
@@ -1734,7 +1736,7 @@ function pageRefresh()
     if(page.startsWith('event_')) { eventScreen(page.replace('event_', '')); }
     if(page.startsWith('place_')) { placeScreen(page.replace('place_', '')); }
     if(page.startsWith('person_')) { personScreen(page.replace('person_', '')); }
-    if(page.startsWith('report_')) { reportScreen(page.replace('report_', '')); }
+    if(page.startsWith('report_')) { var parse = page.replace('report_', '').split('_'); reportScreen(parse[0], parse[1]); }
                             
     if(page.startsWith('health-')) { healthReportScreen(page.replace('health-', '')); }
 

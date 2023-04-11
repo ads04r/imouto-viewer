@@ -60,7 +60,7 @@ def generate_report_photos(report, dts, dte):
 	if len(chart_data) > 10:
 		chart_data = chart_data[0:10]
 	if len(chart_data) > 0:
-		chart = LifeReportChart(text='Most Photographed Locations', data=json.dumps(chart_data), report=report)
+		chart = LifeReportChart(text='Most Photographed Locations', category='photos', data=json.dumps(chart_data), report=report)
 		chart.save()
 
 	if options['peoplestats']:
@@ -73,7 +73,7 @@ def generate_report_photos(report, dts, dte):
 		if len(chart_data) > 10:
 			chart_data = chart_data[0:10]
 		if len(chart_data) > 0:
-			chart = LifeReportChart(text='Most Photographed People', data=json.dumps(chart_data), report=report)
+			chart = LifeReportChart(text='Most Photographed People', category='photos', data=json.dumps(chart_data), report=report)
 			chart.save()
 
 	tz = pytz.timezone(settings.TIME_ZONE)
@@ -165,7 +165,7 @@ def generate_report_music(report, dts, dte, moonshine_url=''):
 							item['image'] = image
 						chart_data.append(item)
 					if len(chart_data) > 0:
-						chart = LifeReportChart(text='Most Played Artists', data=json.dumps(chart_data), report=report)
+						chart = LifeReportChart(text='Most Played Artists', category='music', data=json.dumps(chart_data), report=report)
 						chart.save()
 			if 'play_count' in music_data:
 				prop = report.addproperty(key='Tracks played', value=str(music_data['play_count']), category='music')
@@ -227,7 +227,7 @@ def generate_report_movies(report, username=''):
 
 		if len(chart_data) > 2:
 			chart_data.reverse()
-			chart = LifeReportChart(text=title, data=json.dumps(chart_data), report=report)
+			chart = LifeReportChart(text=title, category='movies', data=json.dumps(chart_data), report=report)
 			chart.save()
 
 	tz = pytz.timezone(settings.TIME_ZONE)
