@@ -1171,16 +1171,32 @@ function activateImageEditor()
 	});
 }
 
+function mapPoint(p, l)
+{
+	if(p.properties.label){ l.bindPopup('<p>' + p.properties.label + '</p>', {closeButton: false}); }
+}
+
+function checkGeometryForPoints(g, layer)
+{
+	if(g.type == 'GeometryCollection'){
+		var l = g.geometries.length;
+		for(var i = 0; i < l; i++) {
+			checkGeometryForPoints(g.geometries[i], layer);
+		}
+	}
+	if(g.type == 'Point') { mapPoint(g, layer); }
+}
+
 function makeMap()
 {
     $('.eventmap').each(function()
     {
         var id = $(this).attr('id');
         var data = $(this).data('geojson');
-        
+
         $(this).data('geojson', '');
         if(data == '') { return true; }
-                    
+
             var bb = L.latLngBounds(L.latLng(data.bbox[1], data.bbox[0]), L.latLng(data.bbox[3], data.bbox[2]));
             if($(this).hasClass('reportmap'))
             {
@@ -1188,7 +1204,7 @@ function makeMap()
             } else {
                 var map = L.map(id);
             }
-            L.geoJSON(data).addTo(map);
+            L.geoJSON(data, {onEachFeature: function(f, l){checkGeometryForPoints(f.geometry, l);}}).addTo(map);
             L.tileLayer('{{ tiles }}', {
                 attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
                 maxZoom: 16, minZoom: 2
