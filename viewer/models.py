@@ -2,6 +2,7 @@ from django.db import models
 from django.core.files import File
 from django.db.models import Count, Avg, Transform, Field, IntegerField, F, ExpressionWrapper
 from django.db.models.fields import DurationField
+from django.contrib.staticfiles import finders
 from django.conf import settings
 from django.utils.html import strip_tags
 from colorfield.fields import ColorField
@@ -339,7 +340,14 @@ class Person(models.Model):
 		im = Image.open(self.image.path)
 		return im
 	def thumbnail(self, size):
-		im = Image.open(self.image.path)
+		try:
+			im = Image.open(self.image.path)
+		except:
+			unknown = finders.find('viewer/graphics/unknown_person.jpg')
+			if os.path.exists(unknown):
+				im = Image.open(unknown)
+			else:
+				return None
 		bbox = im.getbbox()
 		w = bbox[2]
 		h = bbox[3]
