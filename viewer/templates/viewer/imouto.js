@@ -1173,7 +1173,7 @@ function activateImageEditor()
 
 function mapPoint(p, l)
 {
-	if(p.properties.label){ l.bindPopup('<p>' + p.properties.label + '</p>', {closeButton: false}); }
+	if(p.properties){if(p.properties.label){ l.bindPopup('<p>' + p.properties.label + '</p>', {closeButton: false}); }}
 }
 
 function checkGeometryForPoints(g, layer)
