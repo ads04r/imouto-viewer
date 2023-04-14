@@ -341,6 +341,7 @@ def generate_dashboard():
 		ttb = (dtp - dtd).days
 		if ttb <= 14:
 			birthdays.append([pp.person, dtp, pp.person.age])
+	birthdays = sorted(birthdays, key=lambda p: p[1])
 
 	ret = {'stats': stats, 'birthdays': birthdays, 'steps': json.dumps(stepdata), 'sleep': json.dumps(sleepdata), 'contact': contactdata, 'people': peopledata, 'places': locationdata, 'walks': walkdata}
 	if len(tags) > 0:
