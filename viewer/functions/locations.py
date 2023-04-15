@@ -114,3 +114,23 @@ def get_possible_location_events(date, lat, lon):
 		ret.append({'start_time': parser.parse(item['timestart']), 'end_time': parser.parse(item['timeend'])})
 
 	return ret
+
+def distance_waffle(dist_value):
+
+	try:
+		home = Location.objects.get(pk=settings.USER_HOME_LOCATION)
+	except:
+		return ""
+	homeloc = (home.lat, home.lon)
+	ret = {"dist": 0.0}
+	for city in settings.CITY_LOCATIONS:
+		pos = (float(city['lat']), float(city['lon']))
+		dist = distance.distance(homeloc, pos).miles
+		if dist > dist_value:
+			continue
+		if dist < ret['dist']:
+			continue
+		ret = {"city": city, "dist": dist}
+	return "Further than the distance to " + (", ".join([ret['city']['capital'], ret['city']['country']])) + " (" + str(int(ret['dist'])) + " miles)"
+
+
