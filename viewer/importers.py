@@ -1,4 +1,4 @@
-import django, os, csv, socket, json, urllib, urllib.request, re, random, glob, sys, exifread, vobject, io, base64, imaplib, email, email.header, email.parser, email.message, requests
+import django, os, csv, socket, json, re, random, glob, sys, exifread, vobject, io, base64, imaplib, email, email.header, email.parser, email.message, requests
 import datetime, pytz, pymysql, math
 from django.conf import settings
 from xml.dom import minidom
@@ -699,9 +699,12 @@ def import_photo_file(filepath, tzinfo=pytz.UTC):
 		if photo:
 			if photo.time:
 				ds = photo.time.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S")
-				url = settings.LOCATION_MANAGER_URL + '/position/' + ds
-				r = urllib.request.urlopen(url)
-				data = json.loads(r.read())
+				try:
+					url = settings.LOCATION_MANAGER_URL + '/position/' + ds
+					r = requests.get(url)
+					data = json.loads(r.text)
+				except:
+					data = {'explicit': False}
 				if data['explicit'] == True:
 					photo.lat = data['lat']
 					photo.lon = data['lon']
