@@ -340,7 +340,10 @@ def generate_dashboard():
 		dtp = pp.person.next_birthday
 		ttb = (dtp - dtd).days
 		if ttb <= 14:
-			birthdays.append([pp.person, dtp, pp.person.age])
+			person_age = pp.person.age
+			if not(person_age is None):
+				person_age = person_age + 1
+			birthdays.append([pp.person, dtp, person_age])
 	birthdays = sorted(birthdays, key=lambda p: p[1])
 
 	ret = {'stats': stats, 'birthdays': birthdays, 'steps': json.dumps(stepdata), 'sleep': json.dumps(sleepdata), 'contact': contactdata, 'people': peopledata, 'places': locationdata, 'walks': walkdata}
