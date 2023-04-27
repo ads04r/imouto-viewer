@@ -538,7 +538,7 @@
 		<div id="event_people_list" class="list-group list-group-unbordered">
 {% for item in data.people.all %}
                         
-                        <div class="person_delete list-group-item" data-id="{{ item.uid }}">{{ item.full_name }} <small class="pull-right"><a href="#" class="delete_person" data-id="{{ item.uid }}">Delete</a></small></div>
+                        <div class="person_delete list-group-item" data-id="{{ item.uid }}"><img style="margin-right: 1em;" width="32" height="32" src="people/{{ item.uid }}_thumb.jpg"/>{{ item.full_name }} <small class="pull-right"><a href="#" class="delete_person btn btn-danger btn-sm" data-id="{{ item.uid }}">Delete</a></small></div>
 
 {% endfor %}
 		</div>

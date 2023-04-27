@@ -1641,8 +1641,9 @@ function eventScreen(id)
 		var id = $('#person_add').val();
 		var label = $('#person_add').find("option[value='" + id + "']").text();
 		var html = '<div class="person_delete list-group-item" data-id="' + id + '">';
+		html = html + '<img style="margin-right: 1em;" width="32" height="32" src="people/' + id + '_thumb.jpg"/>';
 		html = html + label + ' ';
-		html = html + '<small class="pull-right"><a class="delete_person" href="#" data-id="' + id + '">Delete</a></small>'
+		html = html + '<small class="pull-right"><a class="delete_person btn btn-danger btn-sm" href="#" data-id="' + id + '">Delete</a></small>'
 		html = html + '</div>';
 console.log(html);
 		$('#event_people_list').append(html);
