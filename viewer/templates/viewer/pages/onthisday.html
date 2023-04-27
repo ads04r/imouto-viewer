@@ -73,12 +73,12 @@
                         <div class="timeline-people-row">
                     {% for person in year.people %}
                         {% if person.image %}
-                            <a href="#person_{{ person.uid }}"><img class="img-circle" src="people/{{ person.uid }}_thumb.jpg" width="50" height="50" alt="{{ person.full_name }}"></a>
+                            <a href="#person_{{ person.uid }}"><img src="people/{{ person.uid }}_thumb.jpg" width="50" height="50" alt="{{ person.full_name }}"></a>
                         {% endif %}
                     {% endfor %}
                     {% for person in year.people %}
                         {% if person.image == None %}
-                            <a href="#person_{{ person.uid }}"><img class="img-circle" src="{% static "viewer/graphics/unknown_person.jpg" %}" width="50" height="50" alt="{{ person.full_name }}"></a>
+                            <a href="#person_{{ person.uid }}"><img src="{% static "viewer/graphics/unknown_person.jpg" %}" width="50" height="50" alt="{{ person.full_name }}"></a>
                         {% endif %}
                     {% endfor %}
                         </div>

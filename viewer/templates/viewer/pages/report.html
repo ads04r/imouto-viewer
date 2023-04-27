@@ -64,7 +64,7 @@
                     <div class="tab-pane" id="report-tab-people">
 {% for person in data.people.all %}
 
-         	      {% if person.image %}<a href="#person_{{ person.uid }}"><img class="img-circle img-bordered-sm" src="people/{{ person.uid }}_thumb.jpg" alt="{{ person }}" height="50" width="50"></a>{% endif %}
+         	      {% if person.image %}<a href="#person_{{ person.uid }}"><img src="people/{{ person.uid }}_thumb.jpg" alt="{{ person }}" height="50" width="50"></a>{% endif %}
 
 {% endfor %}
                     </div>
@@ -151,7 +151,7 @@
 				<span class="pull-right"><a href="#event_{{ event.id }}" class="btn btn-xs btn-primary">View Event</a></span>
 	                    </div>
 	                    <div class="box-body">
-				{% if event.cover_photo %}<img width="100" height="100" src="photo/{{ event.cover_photo.id }}_thumb.jpg" class="pull-right img-circle img-bordered"/>{% endif %}
+				{% if event.cover_photo %}<img width="100" height="100" src="photo/{{ event.cover_photo.id }}_thumb.jpg" class="pull-right img-bordered"/>{% endif %}
 				{{ event.description_html|safe }}
 
 	                    </div>

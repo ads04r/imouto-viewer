@@ -82,7 +82,7 @@
 
 {% for person in event.people.all %}
 
-                            {% if person.image %}<a href="#person_{{ person.uid }}"><img class="img-circle img-bordered-sm" src="people/{{ person.uid }}_thumb.jpg" alt="{{ person }}" height="50" width="50"></a>{% endif %}
+                            {% if person.image %}<a href="#person_{{ person.uid }}"><img src="people/{{ person.uid }}_thumb.jpg" alt="{{ person }}" height="50" width="50"></a>{% endif %}
 
 {% endfor %}
 
@@ -98,7 +98,7 @@
 
                         <div class="post">
                             <div class="user-block">
-                                {% if data.image %}<img class="img-circle img-bordered-sm" src="people/{{ data.uid }}_thumb.jpg" alt="Profile picture">{% endif %}
+                                {% if data.image %}<img src="people/{{ data.uid }}_thumb.jpg" alt="Profile picture">{% endif %}
                                 <span class="username">{{ msg.time }}</span>
                                 <span class="description">{{ msg.type }} | {{ msg.address }} | {% if msg.incoming %}Incoming{% else %}Outgoing{% endif %}</span>
                             </div>
@@ -114,7 +114,7 @@
 
                         <div class="post">
                             <div class="user-block">
-                                {% if place.image %}<img class="img-circle img-bordered-sm" src="places/{{ place.uid }}_thumb.jpg" alt="Location image">{% endif %}
+                                {% if place.image %}<img src="places/{{ place.uid }}_thumb.jpg" alt="Location image">{% endif %}
                                 <span class="username"><a href="#place_{{ place.uid }}">{{ place.label }}</a></span>
                                 <span class="description">{{ place.address }}</span>
                             </div>

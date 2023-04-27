@@ -41,7 +41,7 @@
 
 {% for person in event.people.all %}
 
-                            {% if person.image %}<a href="#person_{{ person.uid }}"><img class="img-circle img-bordered-sm" src="people/{{ person.uid }}_thumb.jpg" alt="{{ person }}" height="50" width="50"></a>{% endif %}
+                            {% if person.image %}<a href="#person_{{ person.uid }}"><img src="people/{{ person.uid }}_thumb.jpg" alt="{{ person }}" height="50" width="50"></a>{% endif %}
 
 {% endfor %}
 

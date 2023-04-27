@@ -10,9 +10,9 @@
 	                <div class="box box-primary">
 	                    <div class="box-body">
 				{% if event.person.image %}
-					<img class="img-circle pull-right" width="50" height="50" src="people/{{ event.person.uid }}_thumb.jpg"/>
+					<img class="pull-right" width="50" height="50" src="people/{{ event.person.uid }}_thumb.jpg"/>
 				{% else %}
-					<img class="img-circle pull-right" width="50" height="50" src="{% static "viewer/graphics/unknown_person.jpg" %}"/>
+					<img class="pull-right" width="50" height="50" src="{% static "viewer/graphics/unknown_person.jpg" %}"/>
 				{% endif %}
 				<div class="d-flex flex-row justify-content-start">
 					<span><i class="fa fa-mobile"></i>&nbsp;</span>

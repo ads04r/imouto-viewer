@@ -4,7 +4,7 @@
             {% if event.geo == '' %}
                 {% if event.location %}
                     {% if event.location.image %}
-                        <img class="pull-right img-circle" src="places/{{ event.location.uid }}_thumb.jpg">
+                        <img class="pull-right" src="places/{{ event.location.uid }}_thumb.jpg">
                     {% endif %}
                 {% endif %}
             {% else %}
@@ -21,12 +21,12 @@
                     <div class="timeline-people-row">
                     {% for person in event.people.all %}
                         {% if person.image %}
-                        <a href="#person_{{ person.uid }}"><img class="img-circle" src="people/{{ person.uid }}_thumb.jpg" width="50" height="50" alt="{{ person.full_name }}"></a>
+                        <a href="#person_{{ person.uid }}"><img src="people/{{ person.uid }}_thumb.jpg" width="50" height="50" alt="{{ person.full_name }}"></a>
                         {% endif %}
                     {% endfor %}
                     {% for person in event.people.all %}
                         {% if person.image == None %}
-                        <a href="#person_{{ person.uid }}"><img class="img-circle" src="{% static "viewer/graphics/unknown_person.jpg" %}" width="50" height="50" alt="{{ person.full_name }}"></a>
+                        <a href="#person_{{ person.uid }}"><img src="{% static "viewer/graphics/unknown_person.jpg" %}" width="50" height="50" alt="{{ person.full_name }}"></a>
                         {% endif %}
                     {% endfor %}
                     </div>
