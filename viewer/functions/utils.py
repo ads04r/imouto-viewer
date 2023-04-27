@@ -346,7 +346,17 @@ def generate_dashboard():
 			birthdays.append([pp.person, dtp, person_age])
 	birthdays = sorted(birthdays, key=lambda p: p[1])
 
-	ret = {'stats': stats, 'birthdays': birthdays, 'steps': json.dumps(stepdata), 'sleep': json.dumps(sleepdata), 'contact': contactdata, 'people': peopledata, 'places': locationdata, 'walks': walkdata}
+	workouts = []
+	dts = last_record - datetime.timedelta(days=7)
+	dte = last_record
+	for category in EventWorkoutCategory.objects.all():
+		v = 0.0
+		for event in Event.objects.filter(end_time__gte=dts, start_time__lte=dte, workout_categories=category):
+			v = v + event.distance()
+		if v > 0:
+			workouts.append({'id': category.pk, 'label': str(category), 'distance': v})
+
+	ret = {'stats': stats, 'birthdays': birthdays, 'workouts': workouts, 'steps': json.dumps(stepdata), 'sleep': json.dumps(sleepdata), 'contact': contactdata, 'people': peopledata, 'places': locationdata, 'walks': walkdata}
 	if len(tags) > 0:
 		ret['tags'] = tags
 	if len(heartdata) > 0:

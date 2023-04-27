@@ -86,6 +86,23 @@
                     </div>
                 </div>
 {% endif %}
+{% if data.workouts %}
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Exercise</h3>
+                    </div>
+                    <div class="box-body no-padding">
+			<table class="table table-condensed">
+{% for category in data.workouts %}
+				<tr>
+					<td>{{ category.label }}</td>
+					<td>{{ category.distance }} miles</td>
+				</tr>
+{% endfor %}
+			</table>
+                    </div>
+                </div>
+{% endif %}
                 <div class="box box-primary">
                     <div class="box-header with-border">
                         <h3 class="box-title">Steps</h3>
