@@ -70,7 +70,11 @@
                     </div>
                     <div class="box-body">
 
-{% include 'viewer/cards/event.html' %}
+		{% if event.type == 'sleepover' %}
+		{% include 'viewer/cards/sleep.html' %}
+		{% else %}
+		{% include 'viewer/cards/event.html' %}
+		{% endif %}
 
                     </div>
                     <div class="box-footer">

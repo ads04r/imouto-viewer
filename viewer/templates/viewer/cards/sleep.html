@@ -1,0 +1,14 @@
+{% load static %}
+
+        
+                {% if event.location %}
+                    {% if event.location.image %}
+                        <img class="pull-right" src="places/{{ event.location.uid }}_thumb.jpg">
+                    {% endif %}
+                {% endif %}
+
+                <div{% if event.location %}{% if event.location.image %} style="margin-right: 120px;"{% endif %}{% endif %}>
+                
+                    <p>Sleep event.</p> 
+                    
+                </div>
