@@ -26,7 +26,11 @@
             <h3 class="timeline-header no-border">{{ event }}</h3>
             <div class="timeline-body">
 
-{% include 'viewer/cards/event.html' %}
+                {% if event.type == 'sleepover' %}
+                {% include 'viewer/cards/sleep.html' %}
+                {% else %}
+                {% include 'viewer/cards/event.html' %}
+                {% endif %}
 
             </div>
             <div class="timeline-footer">
