@@ -318,6 +318,12 @@ def tag(request, id):
 	context = {'type':'tag', 'data':data}
 	return render(request, 'viewer/pages/tag.html', context)
 
+def workout(request, id):
+
+	data = get_object_or_404(EventWorkoutCategory, id=id)
+	context = {'type':'workout', 'data':data}
+	return render(request, 'viewer/pages/workout.html', context)
+
 def day(request, ds):
 
 	if len(ds) != 8:

@@ -12,6 +12,7 @@ from wordcloud import WordCloud, STOPWORDS
 from configparser import ConfigParser
 from staticmap import StaticMap, Line
 from xml.dom import minidom
+from dateutil import parser
 
 from viewer.health import parse_sleep, max_heart_rate
 from viewer.staticcharts import generate_pie_chart, generate_donut_chart
@@ -1654,9 +1655,19 @@ class EventWorkoutCategory(models.Model):
 		stat.value = str(value)
 		stat.save()
 		return stat
+	def __get_stat(self, stat):
+		try:
+			v = self.stats.get(label=stat).value
+		except:
+			v = self.recalculate_stats().get(label=stat).value
+		ret = parser.parse(v)
+		return ret
 	@property
 	def tags(self):
 		return EventTag.objects.filter(events__workout_categories=self).distinct().exclude(id='')
+	@property
+	def events_sorted(self):
+		return self.events.order_by('-start_time')
 	def stats_as_dict(self):
 		ret = {}
 		for stat in self.stats.all():
@@ -1670,6 +1681,12 @@ class EventWorkoutCategory(models.Model):
 			self.__set_stat('first_event', events[0].start_time)
 			self.__set_stat('last_event', events[c - 1].start_time)
 		return self.stats
+	@property
+	def last_event(self):
+		return self.__get_stat('last_event')
+	@property
+	def first_event(self):
+		return self.__get_stat('first_event')
 	def __str__(self):
 		r = self.id
 		if len(self.label) > 0:

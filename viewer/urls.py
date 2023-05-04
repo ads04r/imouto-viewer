@@ -32,6 +32,7 @@ urlpatterns = [
     path('days/<ds>/locevents.json', views.day_locevents),
     path('tags.html', views.tags),
     path('tags/<id>.html', views.tag),
+    path('workout/<id>.html', views.workout),
     path('events.html', views.events),
     path('events.json', views.eventjson),
     path('events/<eid>.html', views.event),

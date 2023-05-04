@@ -1,0 +1,74 @@
+{% load static %}
+
+<section class="content-header">
+    <h1>
+        {{ data.label }}
+        <small>Workout Type</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="#tags">Workouts</a></li>
+        <li>{{ data.label }}</li>
+    </ol>
+</section>
+
+<section class="content">
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-12 col-sm-6 col-md-4">
+
+
+                <div class="box box-primary" id="day_event_{{ event.pk }}">
+                    <div class="box-body box-profile">
+
+                        <h3 class="profile-username text-center">{{ data.label }}</h3>
+                        <p class="text-muted text-center">Workout Category</p>
+                        <ul class="list-group list-group-unbordered">
+                            <li class="list-group-item"><b>Events</b> <span class="pull-right">{{ data.events.count }}</span></li>
+                            <li class="list-group-item"><b>Last Event</b> <span class="pull-right">{{ data.last_event|date:"jS F Y" }}</span></li>
+                            <li class="list-group-item"><b>First Event</b> <span class="pull-right">{{ data.first_event|date:"jS F Y" }}</span></li>
+                        </ul>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xs-12 col-sm-6 col-md-8">
+                <div class="box box-primary" id="day_event_{{ event.pk }}">
+                    <div class="box-body">
+
+{% for event in data.events_sorted %}
+
+			<div class="post clearfix">
+{% if event.cover_photo %}
+				<div class="user-block">
+					<img class="img-bordered-sm" src="photo/{{ event.cover_photo.pk }}_thumb.jpg"/>
+					<span class="username">{{ event.caption }}</span>
+					<span class="description">{{ event.start_time }}</span>
+				</div>
+{% else %}
+				<div class="user-block">
+					<span class="username no-image">{{ event.caption }}</span>
+					<span class="description no-image">{{ event.start_time }}</span>
+				</div>
+{% endif %}
+				<div style="margin-bottom: 1em">
+					{% if event.description %}{{ event.description_html|safe }}{% endif %}
+					<p>{% for tag in event.tags.all %}<a href="#tag_{{ tag.id }}"><span class="badge" style="background-color: {{ tag.colour }}">{{ tag.id }}</span></a> {% endfor %}</p>
+					<div class="pull-right">
+						<a class="btn btn-primary" href="#event_{{ event.id }}">View Event</a>
+					</div>
+				</div>
+			</div>
+
+{% endfor %}
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</section>
+

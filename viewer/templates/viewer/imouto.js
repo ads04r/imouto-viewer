@@ -1617,6 +1617,14 @@ function tagScreen(id)
     });
 }
 
+function workoutScreen(id)
+{
+    $(".content-wrapper").load("./workout/" + id + ".html", function(response, status, xhr)
+    {
+        if(status == 'error') { errorPage(xhr); return false; }
+    });
+}
+
 function eventScreen(id)
 {
     $(".content-wrapper").load("./events/" + id + ".html", function(response, status, xhr)
@@ -1753,6 +1761,7 @@ function pageRefresh()
     if(page.startsWith('event_')) { eventScreen(page.replace('event_', '')); }
     if(page.startsWith('place_')) { placeScreen(page.replace('place_', '')); }
     if(page.startsWith('person_')) { personScreen(page.replace('person_', '')); }
+    if(page.startsWith('workout_')) { workoutScreen(page.replace('workout_', '')); }
     if(page.startsWith('report_')) { var parse = page.replace('report_', '').split('_'); reportScreen(parse[0], parse[1]); }
                             
     if(page.startsWith('health-')) { healthReportScreen(page.replace('health-', '')); }
