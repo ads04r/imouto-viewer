@@ -1,0 +1,34 @@
+<div class="modal fade nav-tabs-custom" id="admin_workout_edit" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+                <form id="workout-edit" action="events.html" method="POST" enctype="multipart/form-data">{% csrf_token %}
+
+
+                </form>
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="workout-save-form-button">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade nav-tabs-custom" id="admin_workout_delete" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+		<p id="workout-delete-warning"></p><p id="workout-delete-subwarning" class="muted"></p>
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" id="workout-delete-button">Delete</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

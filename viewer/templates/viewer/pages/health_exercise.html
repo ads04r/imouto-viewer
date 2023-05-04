@@ -28,7 +28,7 @@
 					<p>{% for tag in category.tags %}<a href="#tag_{{ tag.id }}"><span class="badge" style="background-color: {{ tag.colour }}">{{ tag.id }}</span></a> {% endfor %}</p>
 					<div class="pull-right">
 						<a class="btn btn-primary" href="#workout_{{ category.id }}">More Information</a>
-						<a class="btn btn-danger cmd-delete-exercise" data-id="{{ category.id }}" data-label="{{ category.label }}" href="#">Delete Exercise</a>
+						<a class="btn btn-danger cmd-delete-exercise" data-id="{{ category.id }}" data-label="{{ category.label }}" data-events="{{ category.events.count }}" href="#">Delete Exercise</a>
 					</div>
 				</div>
 			</div>
@@ -42,7 +42,7 @@
                     <div class="box-body">
 			<div class="pull-right">
 
-				<a class="btn btn-success cmd-create-exercise" href="#">New Exercise</a>
+				<button type="button" class="btn btn-success" data-toggle="modal" data-target="#admin_workout_edit" aria-hidden="true">New Exercise</button>
 
 			</div>
                     </div>
@@ -51,3 +51,4 @@
      </div>
 </section>
 
+{% include 'viewer/cards/workouteditor.html' %}

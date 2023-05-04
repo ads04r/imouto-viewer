@@ -581,6 +581,21 @@ function healthReportScreen(page)
 {
     $(".content-wrapper").load("./health/" + page + ".html", function(response, status, xhr){
         if(status == 'error') { errorPage(xhr); return false; }
+	if(page == 'exercise')
+	{
+		$('.cmd-delete-exercise').on('click', function(e)
+		{
+			var id = $(this).data('id');
+			var label = $(this).data('label');
+			var events = parseInt($(this).data('events'));
+
+			$('#workout-delete-warning').html('Are you sure you want to delete "' + label + '"?');
+			$('#workout-delete-subwarning').html('<small>This workout type contains ' + events + ' events.</small>');
+			$("#admin_workout_delete").modal('show');
+
+			return false;
+		});
+	}
         if(page == 'heart')
         {
             var dt = new Date();
