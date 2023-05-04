@@ -1646,6 +1646,30 @@ class EventWorkoutCategory(models.Model):
 	label = models.CharField(max_length=32, default='')
 	comment = models.TextField(null=True, blank=True)
 	icon = models.SlugField(max_length=64, default='calendar')
+	def __set_stat(self, key, value):
+		try:
+			stat = self.stats.get(label=key)
+		except:
+			stat = EventWorkoutCategoryStat(label=key, category=self)
+		stat.value = str(value)
+		stat.save()
+		return stat
+	@property
+	def tags(self):
+		return EventTag.objects.filter(events__workout_categories=self).distinct().exclude(id='')
+	def stats_as_dict(self):
+		ret = {}
+		for stat in self.stats.all():
+			ret[stat.label] = stat.value
+		return ret
+	def recalculate_stats(self):
+		c = self.events.count()
+		self.__set_stat('count', c)
+		if c > 0:
+			events = self.events.all().order_by('start_time')
+			self.__set_stat('first_event', events[0].start_time)
+			self.__set_stat('last_event', events[c - 1].start_time)
+		return self.stats
 	def __str__(self):
 		r = self.id
 		if len(self.label) > 0:
@@ -1655,6 +1679,17 @@ class EventWorkoutCategory(models.Model):
 		app_label = 'viewer'
 		verbose_name = 'workout category'
 		verbose_name_plural = 'workout categories'
+
+class EventWorkoutCategoryStat(models.Model):
+	category = models.ForeignKey(EventWorkoutCategory, related_name='stats', on_delete=models.CASCADE)
+	label = models.SlugField(max_length=32)
+	value = models.CharField(max_length=255)
+	def __str__(self):
+		return str(self.category) + ' ' + str(self.label)
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'workout category statistic'
+		verbose_name_plural = 'workout category statistics'
 
 class EventTag(models.Model):
 	events = models.ManyToManyField(Event, related_name='tags')

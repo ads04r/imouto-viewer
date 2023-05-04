@@ -354,7 +354,7 @@ def generate_dashboard():
 		for event in Event.objects.filter(end_time__gte=dts, start_time__lte=dte, workout_categories=category):
 			v = v + event.distance()
 		if v > 0:
-			workouts.append({'id': category.pk, 'label': str(category), 'distance': v})
+			workouts.append({'id': category.pk, 'label': str(category), 'distance': int(v)})
 
 	ret = {'stats': stats, 'birthdays': birthdays, 'workouts': workouts, 'steps': json.dumps(stepdata), 'sleep': json.dumps(sleepdata), 'contact': contactdata, 'people': peopledata, 'places': locationdata, 'walks': walkdata}
 	if len(tags) > 0:

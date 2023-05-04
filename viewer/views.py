@@ -150,10 +150,9 @@ def health(request, pageid):
 		return render(request, 'viewer/pages/health_sleep.html', context)
 	if pageid == 'distance':
 		return render(request, 'viewer/pages/health_distance.html', context)
-	if pageid == 'schedule':
-		dt = datetime.datetime.now().replace(hour=0, minute=0, second=0, tzinfo=pytz.UTC)
-		context['events'] = Event.objects.filter(start_time__gte=(dt - datetime.timedelta(days=28))).exclude(workout_categories=None).order_by('-start_time')[0:10]
-		return render(request, 'viewer/pages/health_schedule.html', context)
+	if pageid == 'exercise':
+		context['data'] = EventWorkoutCategory.objects.all()
+		return render(request, 'viewer/pages/health_exercise.html', context)
 	if pageid == 'blood':
 		if request.method == 'POST':
 			ret = json.loads(request.body)

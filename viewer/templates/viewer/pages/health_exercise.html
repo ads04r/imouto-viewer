@@ -1,0 +1,44 @@
+{% load static %}
+
+<section class="content-header">
+    <h1>
+        Exercise
+        <small>Health</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="#events">Health</a></li>
+        <li>Exercise</li>
+    </ol>
+</section>
+
+<section class="content">
+
+                <div class="box box-primary">
+                    <div class="box-body">
+
+{% for category in data %}
+
+			<div class="post clearfix">
+				<div class="user-block">
+					<span class="username no-image">{{ category.label }}</span>
+					<span class="description no-image">{{ category.events.count }} events</span>
+				</div>
+				<div style="margin-bottom: 1em">
+					{% if category.comment %}<p>{{ category.comment }}</p>{% endif %}
+					<p>{% for tag in category.tags %}<a href="#tag_{{ tag.id }}"><span class="badge" style="background-color: {{ tag.colour }}">{{ tag.id }}</span></a> {% endfor %}</p>
+					<div class="pull-right">
+						<a class="btn btn-primary" href="#category_{{ category.id }}">Events</a>
+					</div>
+				</div>
+			</div>
+
+{% endfor %}
+
+                    </div>
+                </div>
+
+
+
+     </div>
+</section>
+
