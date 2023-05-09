@@ -9,7 +9,7 @@ charset-normalizer==3.0.1
 contourpy==1.0.7
 cvxopt==1.2.7
 cycler==0.11.0
-Django==3.2.18
+Django==3.2.19
 django-adminlte2==0.4.1
 django-background-tasks==1.2.5
 django-colorfield==0.4.5
