@@ -33,6 +33,7 @@ urlpatterns = [
     path('tags.html', views.tags),
     path('tags/<id>.html', views.tag),
     path('workout/<id>.html', views.workout),
+    path('workout/<id>/delete', views.workoutdelete),
     path('events.html', views.events),
     path('events.json', views.eventjson),
     path('events/<eid>.html', views.event),

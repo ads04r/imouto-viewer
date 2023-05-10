@@ -3,8 +3,20 @@
         <div class="modal-content">
             <div class="modal-body">
 
-                <form id="workout-edit" action="events.html" method="POST" enctype="multipart/form-data">{% csrf_token %}
+                <form id="workout-edit" action="health/exercise.html" method="POST" enctype="multipart/form-data">{% csrf_token %}
 
+                              <table class="table table-hover">
+
+{% for field in form %}
+
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                </tr>
+
+{% endfor %}
+
+                              </table>
 
                 </form>
                 
@@ -23,7 +35,7 @@
             <div class="modal-body">
 
 		<p id="workout-delete-warning"></p><p id="workout-delete-subwarning" class="muted"></p>
-                
+
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" id="workout-delete-button">Delete</button>

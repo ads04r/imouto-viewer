@@ -588,12 +588,30 @@ function healthReportScreen(page)
 			var id = $(this).data('id');
 			var label = $(this).data('label');
 			var events = parseInt($(this).data('events'));
+		        var url="workout/" + id + "/delete";
 
 			$('#workout-delete-warning').html('Are you sure you want to delete "' + label + '"?');
 			$('#workout-delete-subwarning').html('<small>This workout type contains ' + events + ' events.</small>');
 			$("#admin_workout_delete").modal('show');
 
+		        $("#workout-delete-button").on('click', function()
+		        {
+
+		            $.ajax({
+		                url: url,
+		                dataType: 'json',
+		                method: 'POST',
+		                success: function(data) { window.location.reload(false); }
+		            });
+
+		        });
+
 			return false;
+		});
+
+		$('#workout-save-form-button').on('click', function(e)
+		{
+	            $("#workout-edit").submit();
 		});
 	}
         if(page == 'heart')
