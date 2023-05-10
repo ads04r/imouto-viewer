@@ -1,5 +1,5 @@
 from django.forms import ModelForm, ImageField, TextInput, Textarea, Select
-from viewer.models import Location, Event, LifeReport
+from viewer.models import Location, Event, LifeReport, EventWorkoutCategory
 from django.db.models import Sum, Count
 import datetime, pytz
 
@@ -21,6 +21,15 @@ class LocationForm(ModelForm):
 			'creation_time': TextInput(attrs={'class': 'form-control'}),
 			'destruction_time': TextInput(attrs={'class': 'form-control'}),
 			'country': Select(attrs={'class': 'form-control'}),
+		}
+
+class WorkoutCategoryForm(ModelForm):
+	class Meta:
+		model = EventWorkoutCategory
+		fields = ['label', 'comment']
+		widgets = {
+			'label': TextInput(attrs={'class': 'form-control'}),
+			'comment': Textarea(attrs={'class': 'form-control'}),
 		}
 
 class QuickEventForm(ModelForm):

@@ -95,7 +95,7 @@
 			<table class="table table-condensed">
 {% for category in data.workouts %}
 				<tr>
-					<td>{{ category.label }}</td>
+					<td><a href="#workout_{{ category.id }}">{{ category.label }}</a></td>
 					<td>{{ category.distance }} miles</td>
 				</tr>
 {% endfor %}

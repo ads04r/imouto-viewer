@@ -5,6 +5,7 @@ from django.core.cache import cache
 from django.db.models import Q, F, DurationField, ExpressionWrapper, Max
 from django.db.models.functions import Cast
 from django.db.models.fields import DateField
+from django.utils.text import slugify
 from django.conf import settings
 from background_task.models import Task
 from haystack.query import SearchQuerySet
@@ -151,8 +152,30 @@ def health(request, pageid):
 	if pageid == 'distance':
 		return render(request, 'viewer/pages/health_distance.html', context)
 	if pageid == 'exercise':
-		context['data'] = EventWorkoutCategory.objects.all()
-		return render(request, 'viewer/pages/health_exercise.html', context)
+		if request.method == 'POST':
+			form = WorkoutCategoryForm(request.POST)
+			if form.is_valid():
+				cache.delete('dashboard')
+				if 'id' in request.POST:
+					id = str(request.POST['id'])
+				else:
+					id = ''
+				label = str(request.POST['label'])
+				comment = str(request.POST['comment'])
+
+				if id == '':
+					data = EventWorkoutCategory(id=slugify(label.lower()))
+				else:
+					data = get_object_or_404(EventWorkoutCategory, id=id)
+				data.label = label
+				data.comment = comment
+				data.save()
+
+				return HttpResponseRedirect('../#workout_' + str(data.id))
+		else:
+			context['data'] = EventWorkoutCategory.objects.all()
+			context['form'] = WorkoutCategoryForm()
+			return render(request, 'viewer/pages/health_exercise.html', context)
 	if pageid == 'blood':
 		if request.method == 'POST':
 			ret = json.loads(request.body)
@@ -317,6 +340,22 @@ def tag(request, id):
 	data = get_object_or_404(EventTag, id=id)
 	context = {'type':'tag', 'data':data}
 	return render(request, 'viewer/pages/tag.html', context)
+
+def workout(request, id):
+
+	data = get_object_or_404(EventWorkoutCategory, id=id)
+	context = {'type':'workout', 'data':data}
+	return render(request, 'viewer/pages/workout.html', context)
+
+@csrf_exempt
+def workoutdelete(request, id):
+	cache.delete('dashboard')
+	if request.method != 'POST':
+		raise Http404()
+	data = get_object_or_404(EventWorkoutCategory, id=id)
+	ret = data.delete()
+	response = HttpResponse(json.dumps(ret), content_type='application/json')
+	return response
 
 def day(request, ds):
 

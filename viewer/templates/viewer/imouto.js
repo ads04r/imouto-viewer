@@ -581,6 +581,39 @@ function healthReportScreen(page)
 {
     $(".content-wrapper").load("./health/" + page + ".html", function(response, status, xhr){
         if(status == 'error') { errorPage(xhr); return false; }
+	if(page == 'exercise')
+	{
+		$('.cmd-delete-exercise').on('click', function(e)
+		{
+			var id = $(this).data('id');
+			var label = $(this).data('label');
+			var events = parseInt($(this).data('events'));
+		        var url="workout/" + id + "/delete";
+
+			$('#workout-delete-warning').html('Are you sure you want to delete "' + label + '"?');
+			$('#workout-delete-subwarning').html('<small>This workout type contains ' + events + ' events.</small>');
+			$("#admin_workout_delete").modal('show');
+
+		        $("#workout-delete-button").on('click', function()
+		        {
+
+		            $.ajax({
+		                url: url,
+		                dataType: 'json',
+		                method: 'POST',
+		                success: function(data) { window.location.reload(false); }
+		            });
+
+		        });
+
+			return false;
+		});
+
+		$('#workout-save-form-button').on('click', function(e)
+		{
+	            $("#workout-edit").submit();
+		});
+	}
         if(page == 'heart')
         {
             var dt = new Date();
@@ -1617,6 +1650,14 @@ function tagScreen(id)
     });
 }
 
+function workoutScreen(id)
+{
+    $(".content-wrapper").load("./workout/" + id + ".html", function(response, status, xhr)
+    {
+        if(status == 'error') { errorPage(xhr); return false; }
+    });
+}
+
 function eventScreen(id)
 {
     $(".content-wrapper").load("./events/" + id + ".html", function(response, status, xhr)
@@ -1753,6 +1794,7 @@ function pageRefresh()
     if(page.startsWith('event_')) { eventScreen(page.replace('event_', '')); }
     if(page.startsWith('place_')) { placeScreen(page.replace('place_', '')); }
     if(page.startsWith('person_')) { personScreen(page.replace('person_', '')); }
+    if(page.startsWith('workout_')) { workoutScreen(page.replace('workout_', '')); }
     if(page.startsWith('report_')) { var parse = page.replace('report_', '').split('_'); reportScreen(parse[0], parse[1]); }
                             
     if(page.startsWith('health-')) { healthReportScreen(page.replace('health-', '')); }
