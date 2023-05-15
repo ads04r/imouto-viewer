@@ -22,8 +22,6 @@ function clearTimers()
 
 function errorPage(e)
 {
-    console.log(e);
-
     var err = e.responseText;
     err = err.replace(/^.*<table>/, '<table>');
     err = err.replace(/<\/table>.*$/, '</table>');
@@ -1204,20 +1202,34 @@ function activateImageEditor()
 	});
 }
 
-function mapPoint(p, l)
-{
-	if(p.properties){if(p.properties.label){ l.bindPopup('<p>' + p.properties.label + '</p>', {closeButton: false}); }}
-}
-
-function checkGeometryForPoints(g, layer)
+function buildRouteMap(g, m)
 {
 	if(g.type == 'GeometryCollection'){
 		var l = g.geometries.length;
 		for(var i = 0; i < l; i++) {
-			checkGeometryForPoints(g.geometries[i], layer);
+			buildRouteMap(g.geometries[i], m);
 		}
 	}
-	if(g.type == 'Point') { mapPoint(g, layer); }
+	if(g.type == 'MultiLineString')
+	{
+		var l = L.geoJSON(g);
+		l.addTo(m);
+	}
+	if(g.type == 'Point')
+	{
+		if(g.properties.label)
+		{
+			var p = L.popup({closeButton: false});
+			var l = L.geoJSON(g);
+			p.setContent('<p class="map-bubble-text">' + g.properties.label + '</p>');
+			l.bindPopup(p).addTo(m);
+		}
+		else
+		{
+			var l = L.geoJSON(g);
+			l.addTo(m);
+		}
+	}
 }
 
 function makeMap()
@@ -1237,7 +1249,7 @@ function makeMap()
             } else {
                 var map = L.map(id);
             }
-            L.geoJSON(data, {onEachFeature: function(f, l){checkGeometryForPoints(f.geometry, l);}}).addTo(map);
+            L.geoJSON(data, {onEachFeature: function(f, l){buildRouteMap(f.geometry, map);}});
             L.tileLayer('{{ tiles }}', {
                 attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
                 maxZoom: 16, minZoom: 2
@@ -1686,7 +1698,6 @@ function eventScreen(id)
 		html = html + label + ' ';
 		html = html + '<small class="pull-right"><a class="delete_person btn btn-danger btn-sm" href="#" data-id="' + id + '">Delete</a></small>'
 		html = html + '</div>';
-console.log(html);
 		$('#event_people_list').append(html);
 		$('.delete_person').off('click');
 		$('.delete_person').on('click', function() { return eventPeopleDeleteName($(this).data('id')); });
