@@ -1217,7 +1217,7 @@ function buildRouteMap(g, m)
 	}
 	if(g.type == 'Point')
 	{
-		if(g.properties.label)
+		if(g.properties && g.properties.label)
 		{
 			var p = L.popup({closeButton: false});
 			var l = L.geoJSON(g);
