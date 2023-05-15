@@ -78,7 +78,7 @@ class WeatherReading(models.Model):
 	humidity = models.IntegerField(blank=True, null=True)
 	visibility = models.IntegerField(blank=True, null=True)
 	def __str__(self):
-		return str(self.time) + ' at ' + self.location
+		return str(self.time) + ' at ' + str(self.location)
 	class Meta:
 		app_label = 'viewer'
 		verbose_name = 'weather reading'
