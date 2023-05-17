@@ -1,4 +1,4 @@
-var map;
+{% load static %}var map;
 var quiz;
 var quiz_score_a;
 var quiz_score_d;
@@ -1220,8 +1220,27 @@ function buildRouteMap(g, m)
 		if(g.properties && g.properties.label)
 		{
 			var p = L.popup({closeButton: false});
-			var l = L.geoJSON(g);
-			p.setContent('<p class="map-bubble-text">' + g.properties.label + '</p>');
+			if(g.properties.type == 'stop')
+			{
+				var redMarker = L.icon({
+					iconUrl: '{% static 'viewer/graphics/marker-icon-smlred.png' %}',
+					shadowUrl: '{% static 'libraries/leaflet/images/marker-shadow.png' %}',
+					iconSize: [25, 41],
+					shadowSize: [41, 41],
+					iconAnchor: [13, 40],
+					shadowAnchor: [13, 40],
+					popupAnchor: [0, -20]
+				});
+				var l = L.geoJSON(g, {
+					pointToLayer: function(f, l) {
+						return new L.marker(l, { icon: redMarker });
+					}
+				});
+				p.setContent('<p class="map-bubble-text"><i class="fa fa-pause"></i>&nbsp;' + g.properties.label + '</p>');
+			} else {
+				var l = L.geoJSON(g);
+				p.setContent('<p class="map-bubble-text">' + g.properties.label + '</p>');
+			}
 			l.bindPopup(p).addTo(m);
 		}
 		else
