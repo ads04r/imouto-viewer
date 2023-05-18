@@ -35,7 +35,15 @@ def get_location_name(lat, lon):
 	return ret
 
 def journey_similarity(event1, event2):
+	"""
+	Uses the Fred library to compute the similarity between the routes of two journey events.
 
+	:param event1: The first event to be compared.
+	:param event2: The second event to be compared.
+	:return: A value between 0 (routes are identical) and 100 (routes couldn't be more different)
+	:rtype: float
+
+	"""
 	ec1 = event1.coordinates()
 	ec2 = event2.coordinates()
 	if len(ec1) == 0:
@@ -65,7 +73,14 @@ def journey_similarity(event1, event2):
 	return diff
 
 def convert_to_degrees(value):
+	"""
+	Converts a value in degrees, minutes and seconds into decimal degrees.
 
+	:param value: The value to convert, as exported from an image file using the exifread function.
+	:return: A value representing degrees in decimal form.
+	:rtype: float
+
+	"""
 	try:
 		d = float(value.values[0].num) / float(value.values[0].den)
 	except:
@@ -82,7 +97,15 @@ def convert_to_degrees(value):
 	return d + (m / 60.0) + (s / 3600.0)
 
 def getposition(dt, loc_manager=None):
+	"""
+	Queries the location manager for the user's position at a particular time.
 
+	:param dt: A Python datetime representing the time being queried.
+	:param loc_manager: (Optional) The URL of an Imouto Location Manager server. If omitted, we use the LOCATION_MANAGER_URL setting.
+	:return: The raw output from the location manager, which should be a dict containing values for lat, lon, speed, etc.
+	:rtype: dict
+
+	"""
 	address = settings.LOCATION_MANAGER_URL
 	if not(loc_manager is None):
 		address = loc_manager
@@ -100,7 +123,16 @@ def getposition(dt, loc_manager=None):
 	return data
 
 def getgeoline(dts, dte, loc_manager=None):
+	"""
+	Queries the location manager for the user's route between two times.
 
+	:param dts: A Python datetime representing the start of the time period being queried.
+	:param dte: A Python datetime representing the end of the time period being queried.
+	:param loc_manager: (Optional) The URL of an Imouto Location Manager server. If omitted, we use the LOCATION_MANAGER_URL setting.
+	:return: The raw output from the location manager, which should be a dict containing GeoJSON polyline, among other things.
+	:rtype: dict
+
+	"""
 	address = settings.LOCATION_MANAGER_URL
 	if not(loc_manager is None):
 		address = loc_manager
@@ -123,7 +155,16 @@ def getgeoline(dts, dte, loc_manager=None):
 	return ""
 
 def getelevation(dts, dte, loc_manager=None):
+	"""
+	Queries the location manager for the user's elevation between two times.
 
+	:param dts: A Python datetime representing the start of the time period being queried.
+	:param dte: A Python datetime representing the end of the time period being queried.
+	:param loc_manager: (Optional) The URL of an Imouto Location Manager server. If omitted, we use the LOCATION_MANAGER_URL setting.
+	:return: A list containing a sequence of two-element {x, y} dicts, useful for drawing an elevation graph.
+	:rtype: list
+
+	"""
 	address = settings.LOCATION_MANAGER_URL
 	if not(loc_manager is None):
 		address = loc_manager
@@ -141,7 +182,16 @@ def getelevation(dts, dte, loc_manager=None):
 	return ""
 
 def getspeed(dts, dte, loc_manager=None):
+	"""
+	Queries the location manager for the user's speed between two times.
 
+	:param dts: A Python datetime representing the start of the time period being queried.
+	:param dte: A Python datetime representing the end of the time period being queried.
+	:param loc_manager: (Optional) The URL of an Imouto Location Manager server. If omitted, we use the LOCATION_MANAGER_URL setting.
+	:return: A list containing a sequence of two-element {x, y} dicts, useful for drawing a graph with speed on the y-axis and time on the x-axis.
+	:rtype: list
+
+	"""
 	address = settings.LOCATION_MANAGER_URL
 	if not(loc_manager is None):
 		address = loc_manager
