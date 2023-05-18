@@ -6,6 +6,15 @@ from django.conf import settings
 from geopy import distance
 
 def get_location_name(lat, lon):
+	"""
+	Given a query point, returns a human-readable name for the location.
+
+	:param lat: The latitude of the query point.
+	:param lon: The longitude of the query point.
+	:return: A string containing a name for the location.
+	:rtype: str
+
+	"""
 	cache_key = "loc_" + str(lat) + "," + str(lon)
 	ret = cache.get(cache_key)
 	if ret is None:
