@@ -121,7 +121,7 @@ def import_monica_contact_mappings(countrycode='44'):
 		if item[1] != 'email':
 			continue
 		try:
-			prop = PersonProperty.objects.get(key=item[1], value=item[2])
+			prop = PersonProperty.objects.get(key='email', value=item[2])
 		except:
 			prop = None
 		if prop is None:
@@ -138,12 +138,12 @@ def import_monica_contact_mappings(countrycode='44'):
 		if num.startswith('0'):
 			num = '+' + countrycode + num[1:]
 		try:
-			prop = PersonProperty.objects.get(key=item[1], value=num)
+			prop = PersonProperty.objects.get(key='phone', value=num)
 		except:
 			prop = None
 		if prop is None:
 			try:
-				prop = PersonProperty.objects.get('mobile', value=num)
+				prop = PersonProperty.objects.get(key='mobile', value=num)
 			except:
 				prop = None
 		if prop is None:

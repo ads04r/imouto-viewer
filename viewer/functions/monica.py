@@ -13,6 +13,88 @@ def __find_person_by_monica_hash(hash):
 			return item
 	return []
 
+def get_people_without_monica_hash(since=None):
+	if since is None:
+		if Event.objects.count() > 0:
+			dt = Event.objects.order_by('start_time')[0].start_time
+		else:
+			dt = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.UTC)
+	else:
+		dt = since
+	people = Person.objects.filter(personevent__event__start_time__gte=dt).distinct()
+	people = people.exclude(properties__key='monicahash').distinct()
+	return people
+
+def get_monica_genders():
+	try:
+		url = settings.MONICA_URL.lstrip('/') + '/genders'
+	except AttributeError:
+		url = ''
+	try:
+		token = settings.MONICA_PERSONAL_TOKEN
+	except AttributeError:
+		token = ''
+	if url == '':
+		return []
+	if token == '':
+		return []
+
+	r = requests.request("GET", url, headers={'Authorization': 'Bearer ' + token})
+	ret = json.loads(r.text)
+	if 'data' in ret:
+		return ret['data']
+	return []
+
+def create_monica_person(person):
+
+	gender_id = -1
+	for gender in get_monica_genders():
+		if gender['type'].upper() == 'O':
+			gender_id = gender['id']
+			break
+	if gender_id < 0:
+		return ''
+	try:
+		url = settings.MONICA_URL.lstrip('/') + '/contacts'
+	except AttributeError:
+		url = ''
+	try:
+		token = settings.MONICA_PERSONAL_TOKEN
+	except AttributeError:
+		token = ''
+	if url == '':
+		return ''
+	if token == '':
+		return ''
+
+	data = {'first_name': None, 'last_name': None, 'nickname': None, 'gender_id': gender_id, 'is_deceased': False, 'is_deceased_date_known': False, 'birthdate_is_age_based': False}
+	if person.given_name:
+		data['first_name'] = person.given_name
+	if person.family_name:
+		data['last_name'] = person.family_name
+	if person.nickname:
+		data['nickname'] = person.nickname
+	if data['first_name'] is None:
+		data['first_name'] = data['nickname']
+	if data['first_name'] is None:
+		data['first_name'] = ''
+	if person.next_birthday:
+		data['is_birthdate_known'] = True
+		data['birthdate_day'] = person.next_birthday.day
+		data['birthdate_month'] = person.next_birthday.month
+		if person.birthday:
+			data['birthdate_year'] = person.birthday.year
+	else:
+		data['is_birthdate_known'] = False
+	r = requests.request("POST", url, headers={'Authorization': 'Bearer ' + token}, json=data)
+	ret = json.loads(r.text)
+	if 'data' in ret:
+		if 'hash_id' in ret['data']:
+			pp = PersonProperty(person=person, key='monicahash', value=ret['data']['hash_id'])
+			pp.save()
+			return ret['data']['hash_id']
+	return ''
+
 def create_monica_call(content, person, date, incoming=False):
 
 	hashes = person.get_property('monicahash')

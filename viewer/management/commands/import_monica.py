@@ -29,4 +29,4 @@ class Command(BaseCommand):
 				sys.stderr.write(self.style.SUCCESS("Exported event on " + event.start_time.strftime("%Y-%m-%d") + ":" + str(event) + "\n"))
 		if 'calls' in operations:
 			for call in export_monica_calls():
-				sys.stderr.write(self.style.SUCCESS("Exported call on " + call.start_time.strftime("%Y-%m-%d") + ":" + str(call.address) + "\n"))
+				sys.stderr.write(self.style.SUCCESS("Exported call on " + call.time.strftime("%Y-%m-%d") + ":" + str(call.address) + "\n"))
