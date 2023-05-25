@@ -5,7 +5,14 @@ from django.conf import settings
 from dateutil import parser
 
 def __find_person_by_monica_hash(hash):
+	"""
+	Given a Monica hash ID, returns the corresponding data stored in the Monica instance.
 
+	:param hash: A string representing the person being queried.
+	:return: Data from the API of the Monica instance, with no sanitisation. Otherwise an empty list.
+	:rtype: list
+
+	"""
 	for item in get_monica_contact_data():
 		if not('hash_id' in item):
 			continue
@@ -14,6 +21,14 @@ def __find_person_by_monica_hash(hash):
 	return []
 
 def get_people_without_monica_hash(since=None):
+	"""
+	Returns all people known to Imouto that are not linked to people within the Monica instance.
+
+	:param since: A Python datetime, the function will only return people met after this date.
+	:return: A QuerySet of Person objects.
+	:rtype: QuerySet
+
+	"""
 	if since is None:
 		if Event.objects.count() > 0:
 			dt = Event.objects.order_by('start_time')[0].start_time
@@ -26,6 +41,13 @@ def get_people_without_monica_hash(since=None):
 	return people
 
 def get_monica_genders():
+	"""
+	Returns all the gender information contained within the Monica instance.
+
+	:return: Data from the API of the Monica instance, with no sanitisation. Otherwise an empty list.
+	:rtype: list
+
+	"""
 	try:
 		url = settings.MONICA_URL.lstrip('/') + '/genders'
 	except AttributeError:
@@ -46,7 +68,14 @@ def get_monica_genders():
 	return []
 
 def create_monica_person(person):
+	"""
+	Given a Person object from the Imouto data, creates the person within a Monica instance, and updates the Person object to contain a link to the new item.
 
+	:param person: An Imouto Person object.
+	:return: The hash ID of the new person record created in the Monica instance. Empty string on failure.
+	:rtype: str
+
+	"""
 	gender_id = -1
 	for gender in get_monica_genders():
 		if gender['type'].upper() == 'O':
