@@ -102,6 +102,10 @@ class LocationCountry(models.Model):
 		verbose_name_plural = 'countries'
 
 class Location(models.Model):
+	"""This is a class representing a named location significant to the user. It does not need to be validated by any
+	authority, but must have a name, a latitude and longitude, and a country (represented by the LocationCountry class)
+	It may optionally have other properties, such as an address, phone number, Wikipedia article or photo depiction.
+	"""
 	uid = models.SlugField(unique=True, max_length=32)
 	label = models.CharField(max_length=100)
 	full_label = models.CharField(max_length=200, default='')
@@ -258,6 +262,10 @@ class LocationProperty(models.Model):
 		]
 
 class Person(models.Model):
+	""" This is a class representing a person significant to the user. It must have some kind
+	of name, but everything else is pretty much optional. The class can store information such
+	as date of birth, photo, home location or, if they are famous enough, their Wikipedia article.
+	"""
 	uid = models.SlugField(primary_key=True, max_length=32)
 	given_name = models.CharField(null=True, blank=True, max_length=128)
 	family_name = models.CharField(null=True, blank=True, max_length=128)
@@ -404,6 +412,11 @@ class Person(models.Model):
 		]
 
 class Photo(models.Model):
+	""" A class representing a photo taken by the user. The photos may be simply displayed by
+	Imouto's UI, or used for analysis. For example, if the user uses Picasa or Digikam and
+	tags their friends' faces in their photos, then it may be inferred that events during which
+	the photos were taken involved those people.
+	"""
 	file = models.FileField(max_length=255)
 	time = models.DateTimeField(null=True, blank=True)
 	lat = models.FloatField(null=True, blank=True)
@@ -636,6 +649,11 @@ class DataReading(models.Model):
 		]
 
 class Event(models.Model):
+	"""A class representing an event in the life of the user. This is very vague and can mean
+	pretty much anything. The intention is for people using Imouto as a health tracker would
+	use events for exercise periods, people doing general lifelogging would use them for journeys
+	or visits to places. They could also just be imported calendar appointments. You do you.
+	"""
 	start_time = models.DateTimeField()
 	end_time = models.DateTimeField()
 	created_time = models.DateTimeField(auto_now_add=True)
@@ -1061,6 +1079,12 @@ class MediaEvent(models.Model):
 	time = models.DateTimeField()
 
 class LifeReport(models.Model):
+	"""This class represents a yearly life report, inspired by the work of Nicholas Felton.
+	It is intended to be created semi-automatically; statistical information created
+	through data analysis before being augmented with specific information that only a
+	human can add, for example, favourite movie of the year. Once the report has been
+	created, a background process may be used to generate a PDF file.
+	"""
 	label = models.CharField(max_length=128)
 	year = models.IntegerField()
 	style = models.SlugField(max_length=32, default='default')
