@@ -5,6 +5,17 @@ from django.conf import settings
 from geopy import distance
 from dateutil import parser
 
+def home_location():
+	"""
+	Return the user's home location from settings (as a Location object, rather than the primary key as an integer)
+	:return: The home location, or None if not set
+	:rtype: Location
+	"""
+	try:
+		return Location.objects.get(pk=settings.USER_HOME_LOCATION)
+	except:
+		return None
+
 def nearest_location(lat, lon):
 	"""
 	Return the nearest known location to the query position given.

@@ -1,0 +1,32 @@
+<div class="modal fade nav-tabs-custom" id="day_journeyevent_add" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+	<form action="events/add_journey" method="POST">
+            <div class="modal-body">
+
+		<label for="join_events">Join events:</label>
+		<select class="form-control" id="join_events" name="join_events">
+{% for join in potential_joins %}
+			<option value="{{ join.0 }}">{{ join.1 }}</option>
+{% endfor %}
+		</select>
+
+		<label for="id_journey_workout_type">Workout type:</label>
+		<select id="id_journey_workout_type" class="form-control" name="workout_type">
+                                      <option selected="selected" value="">---------</option>
+{% for category in categories %}
+                                      <option value="{{ category.id }}">{{ category.label }}</option>
+{% endfor %}
+                </select>
+{% csrf_token %}
+                
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+	</form>
+        </div>
+    </div>
+</div>
+

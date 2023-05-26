@@ -214,8 +214,8 @@ function onLocEventMapClick(e)
             for(i = 0; i < data.length; i++) {
                 item = data[i];
                 html = html + '<tr class="loceventadd">'
-                html = html + '<td data-start="' + item.start_time + '" data-end="' + item.end_time + '" data-text="' + item.text + '">' + item.display_text + '</td>';
-                html = html + '<td class="pull-right"><a data-text="' + item.text + '" data-location="' + item.location + '" data-start="' + item.start_time + '" data-end="' + item.end_time + '" class="btn btn-success btn-xs addlocationevent" href="#">Add Event</a></td>';
+                html = html + '<td data-start="' + item.start_time + '" data-end="' + item.end_time + '" data-text="' + item.text + '" style="width: 100%;">' + item.display_text + '</td>';
+                html = html + '<td class="pull-right"><input data-text="' + item.text + '" data-location="' + item.location + '" data-start="' + item.start_time + '" data-end="' + item.end_time + '" class="locationeventselect" type="checkbox"/></td>';
                 html = html + '</tr>';
             }
             if(html == '')
@@ -225,28 +225,33 @@ function onLocEventMapClick(e)
                 html = '<div class="table-responsive"><table class="table no-margin">' + html + '</table></div>'
             }
             canvas.html(html);
-            $('.addlocationevent').on('click', function() {
-                var url = 'events.html';
-                var form = new FormData();
-                var dss = $(this).data('start');
-                var dse = $(this).data('end');
-		var location = $(this).data('location');
-		var caption = $(this).data('text');
-                form.append('type', 'loc_prox');
-                form.append('csrfmiddlewaretoken', csrf);
-                form.append('start_time', dss);
-                form.append('end_time', dse);
-                form.append('workout_type', '');
-                form.append('caption', caption);
-                form.append('location', location);
-                form.append('description', '');
+            $('#addlocationevent').off('click');
+            $('#addlocationevent').on('click', function() {
+                var canvas = $('#location_event_select');
+                var url = 'days/' + canvas.data('date') + '/createlocevents.json';
+                var jsondata = [];
+                $('tr.loceventadd').each(function()
+		{
+			var item = {};
+			var c = $(this).find("input.locationeventselect");
+			item['start'] = c.data('start');
+			item['end'] = c.data('end');
+			item['text'] = c.data('text');
+			item['location'] = c.data('location');
+			item['value'] = c.prop('checked');
+	                jsondata.push(item);
+		});
                 $.ajax({
                     url: url,
-                    processData: false,
-                    contentType: false,
-                    data: form,
+                    dataType: 'json',
+                    contentType: 'application/json',
+                    data: JSON.stringify(jsondata),
                     method: 'POST',
-                    success: function() { window.location.reload(false); }
+                    success: function(data)
+			{
+				if(data.length == 0) { alert("Please select one or more events to create."); return false; }
+				window.location.reload(false);
+			}
                 });
                 return false;
             });
@@ -768,8 +773,8 @@ function dayScreen(id)
         daySummary(id);
         makeMap();
 
-        var lat = 50.9;
-        var lon = -1.4;
+        var lat = {{ home.lat }};
+        var lon = {{ home.lon }};
         var map = L.map('mapselect', {center: [lat, lon], zoom: 13});
         L.tileLayer('{{ tiles }}', {
             attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',

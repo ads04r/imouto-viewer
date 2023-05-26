@@ -17,7 +17,7 @@ from .models import *
 from .forms import *
 
 from .functions.moonshine import get_moonshine_tracks
-from .functions.locations import nearest_location, join_location_events, get_possible_location_events
+from .functions.locations import home_location, nearest_location, join_location_events, get_possible_location_events
 from .functions.people import explode_properties
 from .functions.geo import getgeoline, getelevation, getspeed
 from .functions.health import get_heart_information, get_sleep_history, get_sleep_information
@@ -39,7 +39,7 @@ def upload_file(request):
 	return HttpResponseRedirect('./#files')
 
 def script(request):
-	context = {'tiles': 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'}
+	context = {'tiles': 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', 'home': home_location()}
 	if hasattr(settings, 'MAP_TILES'):
 		if settings.MAP_TILES != '':
 			context['tiles'] = str(settings.MAP_TILES)
@@ -502,6 +502,33 @@ def day_events(request, ds):
 		data.append(event.to_dict())
 
 	response = HttpResponse(json.dumps(data), content_type='application/json')
+	return response
+
+@csrf_exempt
+def day_loceventscreate(request, ds):
+
+	if request.method != 'POST':
+		return HttpResponseNotAllowed(['POST'])
+	if len(ds) != 8:
+		raise Http404()
+	y = int(ds[0:4])
+	m = int(ds[4:6])
+	d = int(ds[6:])
+	dt = datetime.date(y, m, d)
+	data = json.loads(request.body)
+	ret = []
+	for item in data:
+		dts = datetime.datetime.strptime(item['start'], "%Y-%m-%d %H:%M:%S").replace(tzinfo=pytz.UTC)
+		dte = datetime.datetime.strptime(item['end'], "%Y-%m-%d %H:%M:%S").replace(tzinfo=pytz.UTC)
+		loc = None
+		if item['value']:
+			if 'location' in item:
+				if item['location'] > 0:
+					loc = Location.objects.get(id=item['location'])
+			event = Event(type='loc_prox', caption=item['text'], location=loc, start_time=dts, end_time=dte)
+			event.save()
+			ret.append(event.id)
+	response = HttpResponse(json.dumps(ret), content_type='application/json')
 	return response
 
 @csrf_exempt
