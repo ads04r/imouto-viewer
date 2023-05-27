@@ -47,21 +47,4 @@
     </div>
 </div>
 
-
-<div class="modal fade nav-tabs-custom" id="timeline_event_delete" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-body">
-
-                <p>Are you sure you want to permanently delete this event?</p>
-                
-                <form id="timeline-event-delete">
-                    <input type="hidden" id="delete-id" name="delete-id" value="" />
-                </form>
-            
-                <button type="button" id="event-delete-button" class="btn btn-danger timeline-event-delete-form-button">Delete</button>
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-            </div>
-        </div>
-    </div>
-</div>
+{% include 'viewer/cards/eventdelete.html' %}
