@@ -1225,24 +1225,38 @@ function buildRouteMap(g, m)
 		if(g.properties && g.properties.label)
 		{
 			var p = L.popup({closeButton: false});
-			if(g.properties.type == 'stop')
-			{
-				var redMarker = L.icon({
-					iconUrl: '{% static 'viewer/graphics/marker-icon-smlred.png' %}',
-					shadowUrl: '{% static 'libraries/leaflet/images/marker-shadow.png' %}',
-					iconSize: [25, 41],
-					shadowSize: [41, 41],
-					iconAnchor: [13, 40],
-					shadowAnchor: [13, 40],
-					popupAnchor: [0, -20]
-				});
+			switch(g.properties.type) {
+			case 'stop':
 				var l = L.geoJSON(g, {
 					pointToLayer: function(f, l) {
-						return new L.marker(l, { icon: redMarker });
+						return new L.marker(l, { icon: L.icon({
+							iconUrl: '{% static 'viewer/graphics/marker-icon-smlred.png' %}',
+							shadowUrl: '{% static 'libraries/leaflet/images/marker-shadow.png' %}',
+							iconSize: [25, 41],
+							shadowSize: [41, 41],
+							iconAnchor: [13, 40],
+							shadowAnchor: [13, 40],
+							popupAnchor: [0, -20]
+						})})
 					}
 				});
 				p.setContent('<p class="map-bubble-text"><i class="fa fa-pause"></i>&nbsp;' + g.properties.label + '</p>');
-			} else {
+				break;
+			case 'poi':
+				var l = L.geoJSON(g, {
+					pointToLayer: function(f, l) {
+
+						return new L.circle(l, {
+						    color: '#3C8DBC',
+						    fillColor: '#ABC1D8',
+						    fillOpacity: 0.5,
+						    radius: 32
+						})
+					}
+				});
+				p.setContent('<p class="map-bubble-text"><i class="fa fa-map-pin"></i>&nbsp;' + g.properties.label + '</p>');
+				break;
+			default:
 				var l = L.geoJSON(g);
 				p.setContent('<p class="map-bubble-text">' + g.properties.label + '</p>');
 			}
