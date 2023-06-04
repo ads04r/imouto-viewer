@@ -38,15 +38,32 @@ class Command(BaseCommand):
 			os.remove(file)
 			sys.exit(1)
 
-		last_event_1 = Event.objects.filter(type='journey', caption__endswith='km walk').order_by('-start_time')[0]
-		last_event_2 = Event.objects.filter(type='journey', caption='Walk').order_by('-start_time')[0]
+		last_events = []
+		try:
+			last_events.append(Event.objects.filter(type='journey', caption__endswith='km walk').order_by('-start_time')[0])
+		except IndexError:
+			pass
+		try:
+			last_events.append(Event.objects.filter(type='journey', caption='Walk').order_by('-start_time')[0])
+		except IndexError:
+			pass
+			last_events.append(Event.objects.filter(type='journey', caption__startswith='Walking in ').order_by('-start_time')[0])
+		except IndexError:
+			pass
+		try:
+			last_events.append(Event.objects.filter(workout_categories__id='walking').order_by('-start_time')[0])
+		except IndexError:
+			pass
+		try:
+			last_events.append(Event.objects.filter(workout_categories__id='walk').order_by('-start_time')[0])
+		except IndexError:
+			pass
 		last_entry = DataReading.objects.filter(type='pebble-app-activity').order_by('-start_time')[0]
 		last_step = DataReading.objects.filter(type='step-count').order_by('-start_time')[0]
-
-		if last_event_1.start_time > last_event_2.start_time:
-			last_event = last_event_1
+		if len(last_events) == 0:
+			last_event = Event.objects.order_by('-start_time')[0] # There should be at least one event. If not, we have bigger problems.
 		else:
-			last_event = last_event_2
+			last_event = sorted(last_events, reverse=True, key=lambda x: x.start_time)[0]
 
 		c = conn.cursor()
 
