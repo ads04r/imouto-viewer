@@ -44,6 +44,7 @@ def export_monica_calls(from_date=None):
 	dts = datetime.datetime(dtsd.year, dtsd.month, dtsd.day, 0, 0, 0, tzinfo=tz)
 	dte = datetime.datetime(now.year, now.month, now.day, 0, 0, 0, tzinfo=tz) - datetime.timedelta(seconds=1)
 	ret = []
+
 	for call in RemoteInteraction.objects.filter(type='phone-call', time__gte=dts, time__lte=dte).order_by('time'):
 		if 'incoming call, rejected' in call.message:
 			continue
@@ -56,6 +57,11 @@ def export_monica_calls(from_date=None):
 		if prop is None:
 			try:
 				prop = PersonProperty.objects.get(value=call.address, key='mobile')
+			except:
+				prop = None
+		if prop is None:
+			try:
+				prop = PersonProperty.objects.get(value=call.address, key='email')
 			except:
 				prop = None
 		if prop is None:
@@ -563,6 +569,8 @@ def import_calls_from_imap(host, username, password, inbox='INBOX', countrycode=
 				continue
 
 			number = str(headers['X-smssync-address']).replace(' ', '')
+			if len(number) == 0:
+				continue
 			if number[0] == '0':
 				number = '+' + countrycode + number[1:]
 			if body.endswith('(outgoing call)'):

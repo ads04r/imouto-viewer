@@ -52,7 +52,7 @@ class Command(BaseCommand):
 				sys.stderr.write(self.style.SUCCESS("No new call logs on server.\n"))
 			if mode == 'sms':
 				sys.stderr.write(self.style.SUCCESS("No new messages on server.\n"))
-			sys.exit(0)
+			return
 
 		if mode == 'phone':
 			sys.stderr.write(self.style.SUCCESS("Successfully imported " + str(ct) + " call log(s).\n"))
