@@ -53,6 +53,7 @@ sqlparse==0.4.4
 staticmap==0.5.5
 TatSu==5.8.3
 tzdata==2022.7
+tzfpy==0.15.0
 tzlocal==4.2
 urllib3==1.26.14
 vobject==0.9.6.1

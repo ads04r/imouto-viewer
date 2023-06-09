@@ -364,40 +364,43 @@ def day(request, ds):
 	y = int(ds[0:4])
 	m = int(ds[4:6])
 	d = int(ds[6:])
-	dts = datetime.datetime(y, m, d, 4, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
-	dte = dts + datetime.timedelta(seconds=86400)
-	dt = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+	dt = datetime.date(y, m, d)
+	try:
+		day = Day.objects.get(date=dt)
+	except:
+		day = Day(date=dt)
+		day.save()
+
 	events = []
 	potential_joins = []
 	last_event = None
-	for event in Event.objects.filter(end_time__gte=dts, start_time__lte=dte).exclude(type='life_event').order_by('start_time'):
+	for event in day.events:
 		events.append(event)
 		if event.type == 'journey':
 			continue
 		if not(last_event is None):
 			potential_joins.append([str(last_event.pk) + '_' + str(event.pk), str(last_event.caption) + ' to ' + str(event.caption)])
 		last_event = event
-	for tweet in RemoteInteraction.objects.filter(time__gte=dts, time__lte=dte, type='microblogpost', address='').order_by('time'):
+	for tweet in day.tweets:
 		events.append(tweet)
-	for sms in RemoteInteraction.objects.filter(time__gte=dts, time__lte=dte, type='sms').order_by('time'):
+	for sms in day.sms:
 		events.append(sms)
-	dss = dts.strftime('%A, %-d %B %Y')
+	dss = str(day)
 	events = sorted(events, key=lambda x: x.start_time if x.__class__.__name__ == 'Event' else (x['time'] if isinstance(x, (dict)) else x.time))
-	appointments = CalendarAppointment.objects.filter(end_time__gte=dts, start_time__lte=dte).values('id', 'eventid', 'caption')
+	appointments = day.calendar
 	context = {'type':'view', 'caption': dss, 'events':events, 'stats': {}, 'potential_joins': potential_joins, 'appointments': appointments, 'categories':EventWorkoutCategory.objects.all()}
-	wakes = DataReading.objects.filter(type='awake', start_time__lt=dte, end_time__gt=dts).order_by('start_time')
-	wakecount = wakes.count()
-	if wakecount > 0:
-		context['stats']['wake_time'] = wakes[0].start_time
-		context['stats']['sleep_time'] = wakes[(wakecount - 1)].end_time
-	context['stats']['prev'] = (dts - datetime.timedelta(days=1)).strftime("%Y%m%d")
-	context['stats']['cur'] = dts.strftime("%Y%m%d")
-	for weight in DataReading.objects.filter(end_time__gte=dts, start_time__lte=dte, type='weight'):
+	if day.wake_time:
+		context['stats']['wake_time'] = day.wake_time
+	if day.bed_time:
+		context['stats']['sleep_time'] = day.bed_time
+	context['stats']['prev'] = day.yesterday.date.strftime("%Y%m%d")
+	context['stats']['cur'] = day.date.strftime("%Y%m%d")
+	for weight in day.data_readings('weight'):
 		if not('weight' in context['stats']):
 			context['stats']['weight'] = []
 		context['stats']['weight'].append({"time": weight.start_time, "weight": (float(weight.value) / 1000)})
-	if dte < dt:
-		context['stats']['next'] = (dts + datetime.timedelta(days=1)).strftime("%Y%m%d")
+	if not(day.today):
+		context['stats']['next'] = day.tomorrow.date.strftime("%Y%m%d")
 	context['form'] = EventForm()
 	return render(request, 'viewer/pages/day.html', context)
 
@@ -425,11 +428,15 @@ def day_weight(request, ds):
 	y = int(ds[0:4])
 	m = int(ds[4:6])
 	d = int(ds[6:])
-	dts = datetime.datetime(y, m, d, 4, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
-	dte = dts + datetime.timedelta(seconds=86400)
-	dt = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+	dt = datetime.date(y, m, d)
+	try:
+		day = Day.objects.get(date=dt)
+	except:
+		day = Day(date=dt)
+		day.save()
+
 	data = []
-	for weight in DataReading.objects.filter(end_time__gte=dts, start_time__lte=dte, type='weight'):
+	for weight in day.data_readings('weight'):
 		data.append({"time": weight.start_time.astimezone(tz=pytz.timezone(settings.TIME_ZONE)).strftime("%H:%M"), "date": weight.start_time.strftime("%Y-%m-%dT%H:%M:%S%z"), "weight": (float(weight.value) / 1000)})
 
 	response = HttpResponse(json.dumps(data), content_type='application/json')
@@ -468,17 +475,15 @@ def day_people(request, ds):
 	y = int(ds[0:4])
 	m = int(ds[4:6])
 	d = int(ds[6:])
-	dts = datetime.datetime(y, m, d, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
-	dte = datetime.datetime(y, m, d, 23, 59, 59, tzinfo=pytz.timezone(settings.TIME_ZONE))
+	dt = datetime.date(y, m, d)
+	try:
+		day = Day.objects.get(date=dt)
+	except:
+		day = Day(date=dt)
+		day.save()
+
 	data = []
-	people = []
-	for event in Event.objects.filter(end_time__gte=dts, start_time__lte=dte).exclude(type='life_event').order_by('start_time'):
-		for person in event.people.all():
-			if person.uid in people:
-				continue
-			people.append(person.uid)
-	for uid in people:
-		person = Person.objects.get(uid=uid)
+	for person in day.people:
 		info = person.to_dict()
 		info['image'] = False
 		if person.image:
@@ -495,10 +500,15 @@ def day_events(request, ds):
 	y = int(ds[0:4])
 	m = int(ds[4:6])
 	d = int(ds[6:])
-	dts = datetime.datetime(y, m, d, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
-	dte = datetime.datetime(y, m, d, 23, 59, 59, tzinfo=pytz.timezone(settings.TIME_ZONE))
+	dt = datetime.date(y, m, d)
+	try:
+		day = Day.objects.get(date=dt)
+	except:
+		day = Day(date=dt)
+		day.save()
+
 	data = []
-	for event in Event.objects.filter(end_time__gte=dts, start_time__lte=dte).exclude(type='life_event').order_by('start_time'):
+	for event in day.events:
 		data.append(event.to_dict())
 
 	response = HttpResponse(json.dumps(data), content_type='application/json')

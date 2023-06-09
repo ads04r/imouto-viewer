@@ -1,9 +1,11 @@
 from django.db import models
 from django.core.files import File
 from django.db.models import Count, Avg, Transform, Field, IntegerField, F, ExpressionWrapper
+from django.db.models.signals import pre_save
 from django.db.models.fields import DurationField
 from django.contrib.staticfiles import finders
 from django.conf import settings
+from django.dispatch import receiver
 from django.utils.html import strip_tags
 from colorfield.fields import ColorField
 from PIL import Image, ImageDraw
@@ -13,6 +15,7 @@ from configparser import ConfigParser
 from staticmap import StaticMap, Line
 from xml.dom import minidom
 from dateutil import parser
+from tzfpy import get_tz
 
 from viewer.health import parse_sleep, max_heart_rate
 from viewer.staticcharts import generate_pie_chart, generate_donut_chart
@@ -27,6 +30,23 @@ class WeekdayLookup(Transform):
 	@property
 	def output_field(self):
 		return IntegerField()
+
+def create_or_get_day(query_date):
+
+	dt = None
+	if isinstance(query_date, datetime.datetime):
+		dt = query_date.date()
+	if isinstance(query_date, datetime.date):
+		dt = query_date
+	if dt > datetime.datetime.now().date():
+		return None
+	try:
+		ret = Day.objects.get(date=dt)
+	except:
+		ret = Day(date=dt)
+		ret.save()
+
+	return ret
 
 def user_thumbnail_upload_location(instance, filename):
 	return 'people/' + str(instance.pk) + '/' + filename
@@ -832,6 +852,15 @@ class Event(models.Model):
 	@property
 	def length(self):
 		return((self.end_time - self.start_time).total_seconds())
+	@property
+	def days(self):
+		ds = self.start_time.date()
+		de = self.end_time.date()
+		dt = ds
+		while dt<=de:
+			create_or_get_day(dt)
+			dt = dt + datetime.timedelta(days=1)
+		return Day.objects.filter(date__gte=ds, date__lte=de).order_by('date')
 	def length_string(self, value=0):
 		s = value
 		if s == 0:
@@ -1772,3 +1801,89 @@ class CalendarAppointment(models.Model):
 		verbose_name = 'calendar appointment'
 		verbose_name_plural = 'calendar appointments'
 
+class Day(models.Model):
+	"""This class represents a day. This is necessary because a day may not begin
+	and end at midnight. I personally often go to bed after midnight, and if you
+	travel across timezones then a day may start at different times (UTC) to
+	the times they start at home. This class is also a crafty way of caching
+	certain health data.
+	"""
+	date = models.DateField(primary_key=True)
+	wake_time = models.DateTimeField(null=True, blank=True)
+	bed_time = models.DateTimeField(null=True, blank=True)
+	max_heart_rate = models.IntegerField(null=True, blank=True)
+	optimal_heart_time = models.IntegerField(default=0)
+	timezone_str = models.CharField(max_length=32, default='UTC')
+
+	@property
+	def today(self):
+		return (datetime.datetime.now().date() == self.date)
+	@property
+	def tomorrow(self):
+		return create_or_get_day(self.date + datetime.timedelta(days=1))
+	@property
+	def yesterday(self):
+		return create_or_get_day(self.date - datetime.timedelta(days=1))
+	@property
+	def timezone(self):
+		return pytz.timezone(self.timezone_str)
+	@property
+	def people(self):
+		return Person.objects.filter(event__in=self.events).distinct()
+	@property
+	def events(self):
+		d = self.date
+		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
+		dte = dts + datetime.timedelta(seconds=86400)
+		return Event.objects.filter(end_time__gte=dts, start_time__lte=dte).exclude(type='life_event').order_by('start_time')
+	@property
+	def calendar(self):
+		d = self.date
+		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
+		dte = dts + datetime.timedelta(seconds=86400)
+		return CalendarAppointment.objects.filter(end_time__gte=dts, start_time__lte=dte).values('id', 'eventid', 'caption')
+	@property
+	def tweets(self):
+		d = self.date
+		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
+		dte = dts + datetime.timedelta(seconds=86400)
+		return RemoteInteraction.objects.filter(time__gte=dts, time__lte=dte, type='microblogpost', address='').order_by('time')
+	@property
+	def sms(self):
+		d = self.date
+		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
+		dte = dts + datetime.timedelta(seconds=86400)
+		return RemoteInteraction.objects.filter(time__gte=dts, time__lte=dte, type='sms').order_by('time')
+
+	def data_readings(self, type):
+		d = self.date
+		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
+		dte = dts + datetime.timedelta(seconds=86400)
+		return DataReading.objects.filter(end_time__gte=dts, start_time__lte=dte, type=type)
+
+	def refresh(self, save=True):
+
+		self.timezone_str = settings.TIME_ZONE
+
+		d = self.date
+		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
+		dte = dts + datetime.timedelta(seconds=86400)
+		wakes = DataReading.objects.filter(type='awake', start_time__lt=dte, end_time__gt=dts).order_by('start_time')
+		wakecount = wakes.count()
+		if wakecount > 0:
+			self.wake_time = wakes[0].start_time
+			self.bed_time = wakes[(wakecount - 1)].end_time
+		if save:
+			self.save()
+
+	def __str__(self):
+		return(self.date.strftime('%A, %-d %B %Y'))
+
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'day'
+		verbose_name_plural = 'days'
+
+@receiver(pre_save, sender=Day)
+def save_day_trigger(sender, instance, **kwargs):
+	instance.refresh(save=False)
