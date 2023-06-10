@@ -388,19 +388,7 @@ def day(request, ds):
 	dss = str(day)
 	events = sorted(events, key=lambda x: x.start_time if x.__class__.__name__ == 'Event' else (x['time'] if isinstance(x, (dict)) else x.time))
 	appointments = day.calendar
-	context = {'type':'view', 'caption': dss, 'events':events, 'stats': {}, 'potential_joins': potential_joins, 'appointments': appointments, 'categories':EventWorkoutCategory.objects.all()}
-	if day.wake_time:
-		context['stats']['wake_time'] = day.wake_time
-	if day.bed_time:
-		context['stats']['sleep_time'] = day.bed_time
-	context['stats']['prev'] = day.yesterday.date.strftime("%Y%m%d")
-	context['stats']['cur'] = day.date.strftime("%Y%m%d")
-	for weight in day.data_readings('weight'):
-		if not('weight' in context['stats']):
-			context['stats']['weight'] = []
-		context['stats']['weight'].append({"time": weight.start_time, "weight": (float(weight.value) / 1000)})
-	if not(day.today):
-		context['stats']['next'] = day.tomorrow.date.strftime("%Y%m%d")
+	context = {'type':'view', 'caption': dss, 'events':events, 'day': day, 'potential_joins': potential_joins, 'appointments': appointments, 'categories':EventWorkoutCategory.objects.all()}
 	context['form'] = EventForm()
 	return render(request, 'viewer/pages/day.html', context)
 

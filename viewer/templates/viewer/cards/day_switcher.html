@@ -5,11 +5,11 @@
                       <div class="day-stats"></div>
                       <div class="text-center">
                         <div class="btn-group">
-                            <a href="#day_{{ stats.prev }}" class="btn btn-default">Previous</a>
-{% if stats.next %}
-                            <a href="#day_{{ stats.next }}" class="btn btn-default">Next</a>
+                            <a href="#{{ day.yesterday.slug }}" class="btn btn-default">Previous</a>
+{% if day.today %}
+                            <a href="#" class="btn btn-default disabled">Next</a>
 {% else %}
-                            <a href="#day_{{ stats.next }}" class="btn btn-default disabled">Next</a>
+                            <a href="#{{ day.tomorrow.slug }}" class="btn btn-default">Next</a>
 {% endif %}
                         </div>
                       </div>

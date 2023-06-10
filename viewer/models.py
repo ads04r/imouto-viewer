@@ -1819,6 +1819,9 @@ class Day(models.Model):
 	def today(self):
 		return (datetime.datetime.now().date() == self.date)
 	@property
+	def slug(self):
+		return("day_" + self.date.strftime('%Y%m%d'))
+	@property
 	def tomorrow(self):
 		return create_or_get_day(self.date + datetime.timedelta(days=1))
 	@property
@@ -1863,16 +1866,32 @@ class Day(models.Model):
 
 	def refresh(self, save=True):
 
-		self.timezone_str = settings.TIME_ZONE
-
 		d = self.date
+		self.timezone_str = settings.TIME_ZONE
+		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
+		dte = dts + datetime.timedelta(seconds=86400)
+
+		id = dts.strftime("%Y%m%d%H%M%S") + dte.strftime("%Y%m%d%H%M%S")
+		url = settings.LOCATION_MANAGER_URL + "/bbox/" + id + "?format=json"
+		data = []
+		with urllib.request.urlopen(url) as h:
+			data = json.loads(h.read().decode())
+		if len(data) == 4:
+			try:
+				tz1 = get_tz(data[0], data[1])
+				tz2 = get_tz(data[2], data[3])
+				if tz1 == tz2:
+					self.timezone_str = tz1
+			except:
+				pass # Leave at local time if we have an issue
+
 		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
 		dte = dts + datetime.timedelta(seconds=86400)
 		wakes = DataReading.objects.filter(type='awake', start_time__lt=dte, end_time__gt=dts).order_by('start_time')
 		wakecount = wakes.count()
 		if wakecount > 0:
-			self.wake_time = wakes[0].start_time
-			self.bed_time = wakes[(wakecount - 1)].end_time
+			self.wake_time = wakes[0].start_time.astimezone(self.timezone)
+			self.bed_time = wakes[(wakecount - 1)].end_time.astimezone(self.timezone)
 		if save:
 			self.save()
 
