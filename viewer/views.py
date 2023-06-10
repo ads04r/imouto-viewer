@@ -20,7 +20,7 @@ from .functions.moonshine import get_moonshine_tracks
 from .functions.locations import home_location, nearest_location, join_location_events, get_possible_location_events
 from .functions.people import explode_properties
 from .functions.geo import getgeoline, getelevation, getspeed
-from .functions.health import get_heart_information, get_sleep_history, get_sleep_information
+from .functions.health import get_heart_information, get_sleep_history
 from .functions.utils import get_report_queue, get_timeline_events, generate_onthisday, generate_dashboard
 from .functions.calendar import event_label
 
@@ -451,7 +451,12 @@ def day_sleep(request, ds):
 	m = int(ds[4:6])
 	d = int(ds[6:])
 	dt = datetime.date(y, m, d)
-	data = get_sleep_information(dt)
+	try:
+		day = Day.objects.get(date=dt)
+	except:
+		day = Day(date=dt)
+		day.save()
+	data = day.get_sleep_information()
 
 	response = HttpResponse(json.dumps(data), content_type='application/json')
 	return response

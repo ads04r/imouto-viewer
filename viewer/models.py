@@ -1864,6 +1864,50 @@ class Day(models.Model):
 		dte = dts + datetime.timedelta(seconds=86400)
 		return DataReading.objects.filter(end_time__gte=dts, start_time__lte=dte, type=type)
 
+	def get_sleep_information(self):
+		d = self.date
+		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
+		dte = dts + datetime.timedelta(seconds=86400)
+		dts_now = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+		dts_prev = dts - datetime.timedelta(days=1)
+		dts_next = dts + datetime.timedelta(days=1)
+
+		expression = F('end_time') - F('start_time')
+		wrapped_expression = ExpressionWrapper(expression, DurationField())
+
+		data = {'date': dts.strftime("%a %-d %b %Y")}
+		awake_set = DataReading.objects.filter(type='awake', start_time__gte=dts).annotate(length=wrapped_expression).filter(length__gte=datetime.timedelta(minutes=60)).order_by('start_time')
+		event_count = awake_set.count()
+		if event_count >= 1:
+			awake = awake_set[0]
+			data['wake_up'] = awake.start_time.astimezone(self.timezone).strftime("%Y-%m-%d %H:%M:%S %z")
+			data['bedtime'] = awake.end_time.astimezone(self.timezone).strftime("%Y-%m-%d %H:%M:%S %z")
+			data['wake_up_local'] = awake.start_time.astimezone(self.timezone).strftime("%I:%M%p").lstrip("0").lower()
+			data['bedtime_local'] = awake.end_time.astimezone(self.timezone).strftime("%I:%M%p").lstrip("0").lower()
+			data['length'] = awake.length.total_seconds()
+			try:
+				tomorrow = DataReading.objects.filter(type='awake', start_time__gt=dte).order_by('start_time')[0].start_time
+				data['tomorrow'] = tomorrow.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%Y-%m-%d %H:%M:%S %z")
+			except IndexError:
+				tomorrow = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+			if event_count >= 2:
+				sleep_data = []
+				for sleep_info in DataReading.objects.filter(type='sleep', start_time__gt=awake.start_time, end_time__lte=tomorrow).order_by('start_time'):
+					sleep_data.append(sleep_info)
+				if len(sleep_data) > 0:
+					data['sleep'] = parse_sleep(sleep_data)
+			else:
+				sleep_data = []
+				for sleep_info in DataReading.objects.filter(type='sleep', start_time__gt=awake.start_time).order_by('start_time'):
+					sleep_data.append(sleep_info)
+				if len(sleep_data) > 0:
+					data['sleep'] = parse_sleep(sleep_data)
+		data['prev'] = dts_prev.strftime("%Y%m%d")
+		if dts_next < dts_now:
+			data['next'] = dts_next.strftime("%Y%m%d")
+
+		return data
+
 	def refresh(self, save=True):
 
 		d = self.date
