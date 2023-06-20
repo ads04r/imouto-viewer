@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.files import File
-from django.db.models import Count, Avg, Transform, Field, IntegerField, F, ExpressionWrapper
+from django.db.models import Count, Avg, Max, Transform, Field, IntegerField, F, ExpressionWrapper
 from django.db.models.signals import pre_save
 from django.db.models.fields import DurationField
 from django.contrib.staticfiles import finders
@@ -1864,47 +1864,33 @@ class Day(models.Model):
 		dte = dts + datetime.timedelta(seconds=86400)
 		return DataReading.objects.filter(end_time__gte=dts, start_time__lte=dte, type=type)
 
+	def get_heart_information(self):
+		return {}
+
+#{'date': 'Mon 12 Jun 2023', 'heart': {'abs_max_rate': 177, 'day_max_rate': 82, 'heartzonetime': [86400, 0, 0]}, 'prev': '20230611', 'next': '20230613'}
+
 	def get_sleep_information(self):
 		d = self.date
 		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
-		dte = dts + datetime.timedelta(seconds=86400)
-		dts_now = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
-		dts_prev = dts - datetime.timedelta(days=1)
-		dts_next = dts + datetime.timedelta(days=1)
-
-		expression = F('end_time') - F('start_time')
-		wrapped_expression = ExpressionWrapper(expression, DurationField())
-
 		data = {'date': dts.strftime("%a %-d %b %Y")}
-		awake_set = DataReading.objects.filter(type='awake', start_time__gte=dts).annotate(length=wrapped_expression).filter(length__gte=datetime.timedelta(minutes=60)).order_by('start_time')
-		event_count = awake_set.count()
-		if event_count >= 1:
-			awake = awake_set[0]
-			data['wake_up'] = awake.start_time.astimezone(self.timezone).strftime("%Y-%m-%d %H:%M:%S %z")
-			data['bedtime'] = awake.end_time.astimezone(self.timezone).strftime("%Y-%m-%d %H:%M:%S %z")
-			data['wake_up_local'] = awake.start_time.astimezone(self.timezone).strftime("%I:%M%p").lstrip("0").lower()
-			data['bedtime_local'] = awake.end_time.astimezone(self.timezone).strftime("%I:%M%p").lstrip("0").lower()
-			data['length'] = awake.length.total_seconds()
-			try:
-				tomorrow = DataReading.objects.filter(type='awake', start_time__gt=dte).order_by('start_time')[0].start_time
-				data['tomorrow'] = tomorrow.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%Y-%m-%d %H:%M:%S %z")
-			except IndexError:
-				tomorrow = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
-			if event_count >= 2:
-				sleep_data = []
-				for sleep_info in DataReading.objects.filter(type='sleep', start_time__gt=awake.start_time, end_time__lte=tomorrow).order_by('start_time'):
-					sleep_data.append(sleep_info)
-				if len(sleep_data) > 0:
-					data['sleep'] = parse_sleep(sleep_data)
-			else:
-				sleep_data = []
-				for sleep_info in DataReading.objects.filter(type='sleep', start_time__gt=awake.start_time).order_by('start_time'):
-					sleep_data.append(sleep_info)
-				if len(sleep_data) > 0:
-					data['sleep'] = parse_sleep(sleep_data)
-		data['prev'] = dts_prev.strftime("%Y%m%d")
-		if dts_next < dts_now:
-			data['next'] = dts_next.strftime("%Y%m%d")
+		data['wake_up'] = self.wake_time.astimezone(self.timezone).strftime("%Y-%m-%d %H:%M:%S %z")
+		data['bedtime'] = self.bed_time.astimezone(self.timezone).strftime("%Y-%m-%d %H:%M:%S %z")
+		data['wake_up_local'] = self.wake_time.astimezone(self.timezone).strftime("%I:%M%p").lstrip("0").lower()
+		data['bedtime_local'] = self.bed_time.astimezone(self.timezone).strftime("%I:%M%p").lstrip("0").lower()
+		data['length'] = (self.bed_time - self.wake_time).total_seconds()
+		data['tomorrow'] = self.tomorrow.wake_time.strftime("%Y-%m-%d %H:%M:%S %z")
+		sleep_data = []
+		if self.today:
+			for sleep_info in DataReading.objects.filter(type='sleep', start_time__gt=self.wake_time).order_by('start_time'):
+				sleep_data.append(sleep_info)
+		else:
+			for sleep_info in DataReading.objects.filter(type='sleep', start_time__gt=self.wake_time, end_time__lte=self.tomorrow.wake_time).order_by('start_time'):
+				sleep_data.append(sleep_info)
+		if len(sleep_data) > 0:
+			data['sleep'] = parse_sleep(sleep_data)
+		data['prev'] = self.yesterday.date.strftime('%Y%m%d')
+		if not(self.today):
+			data['next'] = self.tomorrow.date.strftime('%Y%m%d')
 
 		return data
 
@@ -1934,8 +1920,16 @@ class Day(models.Model):
 		wakes = DataReading.objects.filter(type='awake', start_time__lt=dte, end_time__gt=dts).order_by('start_time')
 		wakecount = wakes.count()
 		if wakecount > 0:
-			self.wake_time = wakes[0].start_time.astimezone(self.timezone)
-			self.bed_time = wakes[(wakecount - 1)].end_time.astimezone(self.timezone)
+			main_wake = None
+			for wake in wakes:
+				if main_wake is None:
+					main_wake = wake
+					continue
+				if main_wake.length() < wake.length():
+					main_wake = wake
+			self.wake_time = main_wake.start_time.astimezone(self.timezone)
+			self.bed_time = main_wake.end_time.astimezone(self.timezone)
+		self.max_heart_rate = self.data_readings('heart-rate').aggregate(max_hr=Max('value'))['max_hr']
 		if save:
 			self.save()
 

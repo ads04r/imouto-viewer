@@ -554,7 +554,7 @@ def day_locevents(request, ds):
 	epoch = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.UTC)
 	loc = nearest_location(data['lat'], data['lon'])
 	for item in get_possible_location_events(dt, data['lat'], data['lon']):
-		result = {"start_time": item['start_time'].strftime("%Y-%m-%d %H:%M:%S"), "end_time": item['end_time'].strftime("%Y-%m-%d %H:%M:%S")}
+		result = {"start_time": item['start_time'].astimezone(pytz.UTC).strftime("%Y-%m-%d %H:%M:%S"), "end_time": item['end_time'].astimezone(pytz.UTC).strftime("%Y-%m-%d %H:%M:%S")}
 		result['display_text'] = (item['start_time'].strftime("%-I:%M%p") + ' to ' + item['end_time'].strftime("%-I:%M%p")).lower()
 		result['text'] = result['display_text']
 		if not(loc is None):

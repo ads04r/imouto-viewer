@@ -195,7 +195,8 @@ function onLocEventMapClick(e)
     var lat = Math.round(e.latlng.lat * RES) / RES;
     var lon = Math.round(e.latlng.lng * RES) / RES;
     var canvas = $('#location_event_select');
-    var url = 'days/' + canvas.data('date') + '/locevents.json';
+    var slug = canvas.data('date').replace('day_', '')
+    var url = 'days/' + slug + '/locevents.json';
     var data = {}
     var csrf = $('input[name="csrfmiddlewaretoken"]').val();
 
@@ -228,7 +229,7 @@ function onLocEventMapClick(e)
             $('#addlocationevent').off('click');
             $('#addlocationevent').on('click', function() {
                 var canvas = $('#location_event_select');
-                var url = 'days/' + canvas.data('date') + '/createlocevents.json';
+                var url = 'days/' + slug + '/createlocevents.json';
                 var jsondata = [];
                 $('tr.loceventadd').each(function()
 		{
