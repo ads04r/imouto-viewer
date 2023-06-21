@@ -20,6 +20,7 @@ from tzfpy import get_tz
 from viewer.health import parse_sleep, max_heart_rate
 from viewer.staticcharts import generate_pie_chart, generate_donut_chart
 from viewer.functions.geo import getposition, get_location_name
+from viewer.functions.health import get_heart_graph
 
 import random, datetime, pytz, json, markdown, re, os, urllib.request
 
@@ -1864,20 +1865,69 @@ class Day(models.Model):
 		dte = dts + datetime.timedelta(seconds=86400)
 		return DataReading.objects.filter(end_time__gte=dts, start_time__lte=dte, type=type)
 
-	def get_heart_information(self):
-		return {}
+	def get_heart_information(self, graph=True):
+		d = self.date
+		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
+		dte = dts + datetime.timedelta(days=1)
+		if self.wake_time:
+			dts = self.wake_time
+		if self.bed_time:
+			dte = self.bed_time
 
-#{'date': 'Mon 12 Jun 2023', 'heart': {'abs_max_rate': 177, 'day_max_rate': 82, 'heartzonetime': [86400, 0, 0]}, 'prev': '20230611', 'next': '20230613'}
+		data = {'date': dts.strftime("%a %-d %b %Y"), 'heart': {}}
+
+		data['prev'] = self.yesterday.date.strftime('%Y%m%d')
+		if not(self.today):
+			data['next'] = self.tomorrow.date.strftime('%Y%m%d')
+
+		max_rate = self.max_heart_rate
+		zone_1 = int(float(max_rate) * 0.5)
+		zone_2 = int(float(max_rate) * 0.7)
+
+		data['heart']['abs_max_rate'] = max_rate
+
+		max = 0
+		zone = [0, 0, 0]
+		for event in Event.objects.filter(end_time__gte=dts, start_time__lte=dte):
+			if event.cached_health:
+				health = event.health()
+				if 'heartmax' in health:
+					if health['heartmax'] > max:
+						max = health['heartmax']
+				if 'heartzonetime' in health:
+					zone[0] = zone[0] + health['heartzonetime'][0]
+					zone[1] = zone[1] + health['heartzonetime'][1]
+					zone[2] = zone[2] + health['heartzonetime'][2]
+		if max > 0:
+			total_heart_time = zone[0] + zone[1] + zone[2]
+			if ((total_heart_time > 0) & (total_heart_time < 86400)):
+				zone[0] = zone[0] + (86400 - total_heart_time)
+			data['heart']['day_max_rate'] = max
+			data['heart']['heartzonetime'] = zone
+			if graph:
+				data['heart']['graph'] = get_heart_graph(dt)
+		else:
+			del data['heart']
+
+		return data
+
+#{'date': 'Mon 12 Jun 2023', 'heart': {'abs_max_rate': 160, 'day_max_rate': 90, 'heartzonetime': [86400, 0, 0]}, 'prev': '20230611', 'next': '20230613'}
 
 	def get_sleep_information(self):
 		d = self.date
 		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
+		dte = dts + datetime.timedelta(days=1)
+		if self.wake_time:
+			dts = self.wake_time
+		if self.bed_time:
+			dte = self.bed_time
+
 		data = {'date': dts.strftime("%a %-d %b %Y")}
-		data['wake_up'] = self.wake_time.astimezone(self.timezone).strftime("%Y-%m-%d %H:%M:%S %z")
-		data['bedtime'] = self.bed_time.astimezone(self.timezone).strftime("%Y-%m-%d %H:%M:%S %z")
-		data['wake_up_local'] = self.wake_time.astimezone(self.timezone).strftime("%I:%M%p").lstrip("0").lower()
-		data['bedtime_local'] = self.bed_time.astimezone(self.timezone).strftime("%I:%M%p").lstrip("0").lower()
-		data['length'] = (self.bed_time - self.wake_time).total_seconds()
+		data['wake_up'] = dts.astimezone(self.timezone).strftime("%Y-%m-%d %H:%M:%S %z")
+		data['bedtime'] = dte.astimezone(self.timezone).strftime("%Y-%m-%d %H:%M:%S %z")
+		data['wake_up_local'] = dts.astimezone(self.timezone).strftime("%I:%M%p").lstrip("0").lower()
+		data['bedtime_local'] = dte.astimezone(self.timezone).strftime("%I:%M%p").lstrip("0").lower()
+		data['length'] = (dte - dts).total_seconds()
 		data['tomorrow'] = self.tomorrow.wake_time.strftime("%Y-%m-%d %H:%M:%S %z")
 		sleep_data = []
 		if self.today:
@@ -1930,6 +1980,9 @@ class Day(models.Model):
 			self.wake_time = main_wake.start_time.astimezone(self.timezone)
 			self.bed_time = main_wake.end_time.astimezone(self.timezone)
 		self.max_heart_rate = self.data_readings('heart-rate').aggregate(max_hr=Max('value'))['max_hr']
+		heart_data = self.get_heart_information(False)
+		if 'heart' in heart_data:
+			self.optimal_heart_time = heart_data['heart']['heartzonetime'][1]
 		if save:
 			self.save()
 

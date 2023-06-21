@@ -68,51 +68,6 @@ def get_heart_graph(dt):
 
 	return(ret)
 
-def get_heart_information(dt, graph=True):
-
-	dts = datetime.datetime(dt.year, dt.month, dt.day, 4, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
-	dte = dts + datetime.timedelta(days=1)
-	dts_now = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
-	dts_prev = dts - datetime.timedelta(days=1)
-	dts_next = dts + datetime.timedelta(days=1)
-
-	data = {'date': dts.strftime("%a %-d %b %Y"), 'heart': {}}
-
-	data['prev'] = dts_prev.strftime("%Y%m%d")
-	if dts_next < dts_now:
-		data['next'] = dts_next.strftime("%Y%m%d")
-
-	max_rate = 220 - int(((dts_now.date() - settings.USER_DATE_OF_BIRTH).days) / 365.25)
-	zone_1 = int(float(max_rate) * 0.5)
-	zone_2 = int(float(max_rate) * 0.7)
-
-	data['heart']['abs_max_rate'] = max_rate
-
-	max = 0
-	zone = [0, 0, 0]
-	for event in Event.objects.filter(end_time__gte=dts, start_time__lte=dte):
-		if event.cached_health:
-			health = event.health()
-			if 'heartmax' in health:
-				if health['heartmax'] > max:
-					max = health['heartmax']
-			if 'heartzonetime' in health:
-				zone[0] = zone[0] + health['heartzonetime'][0]
-				zone[1] = zone[1] + health['heartzonetime'][1]
-				zone[2] = zone[2] + health['heartzonetime'][2]
-	if max > 0:
-		total_heart_time = zone[0] + zone[1] + zone[2]
-		if ((total_heart_time > 0) & (total_heart_time < 86400)):
-			zone[0] = zone[0] + (86400 - total_heart_time)
-		data['heart']['day_max_rate'] = max
-		data['heart']['heartzonetime'] = zone
-		if graph:
-			data['heart']['graph'] = get_heart_graph(dt)
-	else:
-		del data['heart']
-
-	return data
-
 def get_sleep_history(days):
 
 	dte = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC).astimezone(pytz.timezone(settings.TIME_ZONE)).replace(hour=0, minute=0, second=0)
