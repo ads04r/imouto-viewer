@@ -20,7 +20,6 @@ from tzfpy import get_tz
 from viewer.health import parse_sleep, max_heart_rate
 from viewer.staticcharts import generate_pie_chart, generate_donut_chart
 from viewer.functions.geo import getposition, get_location_name
-from viewer.functions.health import get_heart_graph
 
 import random, datetime, pytz, json, markdown, re, os, urllib.request
 
@@ -1876,42 +1875,71 @@ class Day(models.Model):
 
 		data = {'date': dts.strftime("%a %-d %b %Y"), 'heart': {}}
 
-		data['prev'] = self.yesterday.date.strftime('%Y%m%d')
+		data['prev'] = (self.date - datetime.timedelta(days=1)).strftime('%Y%m%d')
 		if not(self.today):
-			data['next'] = self.tomorrow.date.strftime('%Y%m%d')
+			data['next'] = (self.date + datetime.timedelta(days=1)).strftime('%Y%m%d')
 
-		max_rate = self.max_heart_rate
-		zone_1 = int(float(max_rate) * 0.5)
-		zone_2 = int(float(max_rate) * 0.7)
+		max_rate = float(max_heart_rate(dts))
+		zone_1 = int(max_rate * 0.5)
+		zone_2 = int(max_rate * 0.5)
 
 		data['heart']['abs_max_rate'] = max_rate
 
 		max = 0
 		zone = [0, 0, 0]
-		for event in Event.objects.filter(end_time__gte=dts, start_time__lte=dte):
-			if event.cached_health:
-				health = event.health()
-				if 'heartmax' in health:
-					if health['heartmax'] > max:
-						max = health['heartmax']
-				if 'heartzonetime' in health:
-					zone[0] = zone[0] + health['heartzonetime'][0]
-					zone[1] = zone[1] + health['heartzonetime'][1]
-					zone[2] = zone[2] + health['heartzonetime'][2]
-		if max > 0:
-			total_heart_time = zone[0] + zone[1] + zone[2]
-			if ((total_heart_time > 0) & (total_heart_time < 86400)):
-				zone[0] = zone[0] + (86400 - total_heart_time)
-			data['heart']['day_max_rate'] = max
-			data['heart']['heartzonetime'] = zone
-			if graph:
-				data['heart']['graph'] = get_heart_graph(dt)
-		else:
-			del data['heart']
+		for dr in self.data_readings('heart-rate').filter(value__gte=zone_2):
+			zone[2] = zone[2] + int((dr.end_time - dr.start_time).total_seconds())
+		for dr in self.data_readings('heart-rate').filter(value__gte=zone_1):
+			zone[1] = zone[1] + int((dr.end_time - dr.start_time).total_seconds())
+		zone[1] = zone[1] - zone[2]
+		zone[0] = int((dte - dts).total_seconds()) - (zone[1] + zone[2])
+		data['heart']['day_max_rate'] = self.max_heart_rate
+		data['heart']['heartzonetime'] = zone
+		if graph:
+			data['heart']['graph'] = self.get_heart_graph()
 
 		return data
 
-#{'date': 'Mon 12 Jun 2023', 'heart': {'abs_max_rate': 160, 'day_max_rate': 90, 'heartzonetime': [86400, 0, 0]}, 'prev': '20230611', 'next': '20230613'}
+	def get_heart_graph(self):
+		"""
+		Returns the stored heart rate values for an entire day, for the purpose of drawing a graph.
+
+		:return: A list of two-value lists consisting of graph co-ordinates, with time on the x-axis and heart rate in bpm on the y-axis.
+		:rtype: list
+		"""
+		d = self.date
+		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
+		dte = dts + datetime.timedelta(days=1)
+		if self.wake_time:
+			dts = self.wake_time
+		if self.bed_time:
+			dte = self.bed_time
+
+		last = None
+		values = {}
+		for item in DataReading.objects.filter(start_time__lt=dte, end_time__gte=dts, type='heart-rate').order_by('start_time'):
+			dtx = int((item.start_time - dts).total_seconds() / 60)
+			if dtx in values:
+				if item.value < values[dtx]:
+					continue
+			values[dtx] = item.value
+		ret = []
+		for x in range(0, 1440):
+			dtx = dts + datetime.timedelta(minutes=x)
+			if x in values:
+				y = values[x]
+				if not(last is None):
+					td = (dtx - last).total_seconds()
+					if td > 600:
+						item = {'x': (last + datetime.timedelta(minutes=1)).strftime("%Y-%m-%dT%H:%M:%S"), 'y': 0}
+						ret.append(item)
+						item = {'x': (dtx - datetime.timedelta(minutes=1)).strftime("%Y-%m-%dT%H:%M:%S"), 'y': 0}
+						ret.append(item)
+				item = {'x': dtx.strftime("%Y-%m-%dT%H:%M:%S"), 'y': y}
+				last = dtx
+				ret.append(item)
+
+		return(ret)
 
 	def get_sleep_information(self):
 		d = self.date
