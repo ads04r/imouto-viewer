@@ -452,11 +452,7 @@ def day_sleep(request, ds):
 	m = int(ds[4:6])
 	d = int(ds[6:])
 	dt = datetime.date(y, m, d)
-	try:
-		day = Day.objects.get(date=dt)
-	except:
-		day = Day(date=dt)
-		day.save()
+	day = create_or_get_day(dt)
 	data = day.get_sleep_information()
 
 	response = HttpResponse(json.dumps(data), content_type='application/json')

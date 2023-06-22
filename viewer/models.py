@@ -1811,9 +1811,9 @@ class Day(models.Model):
 	date = models.DateField(primary_key=True)
 	wake_time = models.DateTimeField(null=True, blank=True)
 	bed_time = models.DateTimeField(null=True, blank=True)
-	max_heart_rate = models.IntegerField(null=True, blank=True)
-	optimal_heart_time = models.IntegerField(default=0)
 	timezone_str = models.CharField(max_length=32, default='UTC')
+	cached_heart = models.TextField(null=True, blank=True)
+	cached_sleep = models.TextField(null=True, blank=True)
 
 	@property
 	def today(self):
@@ -1858,6 +1858,22 @@ class Day(models.Model):
 		dte = dts + datetime.timedelta(seconds=86400)
 		return RemoteInteraction.objects.filter(time__gte=dts, time__lte=dte, type='sms').order_by('time')
 
+	@property
+	def max_heart_rate(self):
+		data = self.get_heart_information(False)
+		if 'heart' in data:
+			if 'day_max_rate' in data['heart']:
+				return data['heart']['day_max_rate']
+		return 0
+
+	@property
+	def optimal_heart_time(self):
+		data = self.get_heart_information(False)
+		if 'heart' in data:
+			if 'heartzonetime' in data['heart']:
+				return data['heart']['heartzonetime'][1]
+		return 0
+
 	def data_readings(self, type):
 		d = self.date
 		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
@@ -1865,6 +1881,10 @@ class Day(models.Model):
 		return DataReading.objects.filter(end_time__gte=dts, start_time__lte=dte, type=type)
 
 	def get_heart_information(self, graph=True):
+
+		if not(self.cached_heart is None):
+			return json.loads(self.cached_heart)
+
 		d = self.date
 		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
 		dte = dts + datetime.timedelta(days=1)
@@ -1887,16 +1907,21 @@ class Day(models.Model):
 
 		max = 0
 		zone = [0, 0, 0]
-		for dr in self.data_readings('heart-rate').filter(value__gte=zone_2):
+		readings = self.data_readings('heart-rate')
+		for dr in readings.filter(value__gte=zone_2):
 			zone[2] = zone[2] + int((dr.end_time - dr.start_time).total_seconds())
-		for dr in self.data_readings('heart-rate').filter(value__gte=zone_1):
+		for dr in readings.filter(value__gte=zone_1):
 			zone[1] = zone[1] + int((dr.end_time - dr.start_time).total_seconds())
-		zone[1] = zone[1] - zone[2]
+		zone[2] = zone[1] - zone[2]
 		zone[0] = int((dte - dts).total_seconds()) - (zone[1] + zone[2])
-		data['heart']['day_max_rate'] = self.max_heart_rate
+		data['heart']['day_max_rate'] = readings.aggregate(m=Max('value'))['m']
+		if data['heart']['day_max_rate'] is None:
+			data['heart']['day_max_rate'] = 0
 		data['heart']['heartzonetime'] = zone
 		if graph:
 			data['heart']['graph'] = self.get_heart_graph()
+			self.cached_heart = json.dumps(data)
+			self.save()
 
 		return data
 
@@ -1942,6 +1967,10 @@ class Day(models.Model):
 		return(ret)
 
 	def get_sleep_information(self):
+
+		if not(self.cached_sleep is None):
+			return json.loads(self.cached_sleep)
+
 		d = self.date
 		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
 		dte = dts + datetime.timedelta(days=1)
@@ -1956,9 +1985,12 @@ class Day(models.Model):
 		data['wake_up_local'] = dts.astimezone(self.timezone).strftime("%I:%M%p").lstrip("0").lower()
 		data['bedtime_local'] = dte.astimezone(self.timezone).strftime("%I:%M%p").lstrip("0").lower()
 		data['length'] = (dte - dts).total_seconds()
-		data['tomorrow'] = self.tomorrow.wake_time.strftime("%Y-%m-%d %H:%M:%S %z")
+		if self.tomorrow.wake_time is None:
+			data['tomorrow'] = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone).strftime("%Y-%m-%d %H:%M:%S %z")
+		else:
+			data['tomorrow'] = self.tomorrow.wake_time.strftime("%Y-%m-%d %H:%M:%S %z")
 		sleep_data = []
-		if self.today:
+		if self.today or self.tomorrow.today:
 			for sleep_info in DataReading.objects.filter(type='sleep', start_time__gt=self.wake_time).order_by('start_time'):
 				sleep_data.append(sleep_info)
 		else:
@@ -1969,6 +2001,9 @@ class Day(models.Model):
 		data['prev'] = self.yesterday.date.strftime('%Y%m%d')
 		if not(self.today):
 			data['next'] = self.tomorrow.date.strftime('%Y%m%d')
+
+		self.cached_sleep = json.dumps(data)
+		self.save()
 
 		return data
 
@@ -2007,11 +2042,10 @@ class Day(models.Model):
 					main_wake = wake
 			self.wake_time = main_wake.start_time.astimezone(self.timezone)
 			self.bed_time = main_wake.end_time.astimezone(self.timezone)
-		self.max_heart_rate = self.data_readings('heart-rate').aggregate(max_hr=Max('value'))['max_hr']
-		heart_data = self.get_heart_information(False)
-		if 'heart' in heart_data:
-			self.optimal_heart_time = heart_data['heart']['heartzonetime'][1]
+
 		if save:
+			self.cached_heart = None
+			self.cached_sleep = None
 			self.save()
 
 	def __str__(self):
