@@ -12,6 +12,8 @@ media
 static/*
 importers
 docs
+build_docs
+commit_docs
 nohup.out
 
 -static/viewer
