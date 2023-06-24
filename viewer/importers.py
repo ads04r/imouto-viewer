@@ -321,10 +321,17 @@ def import_fit(parseable_fit_input):
 			data[-1] = lastitem
 		data.append(newitem)
 
+	days = []
 	for item in data:
 
 		dts = item['date']
 		dte = item['date'] + datetime.timedelta(seconds=item['length'])
+		dtsd = dts.date()
+		dted = dte.date()
+		if not(dtsd in days):
+			days.append(dtsd)
+		if not(dted in days):
+			days.append(dted)
 
 		if 'heart' in item:
 			if not(item['heart'] is None):
@@ -341,6 +348,9 @@ def import_fit(parseable_fit_input):
 				except:
 					event = DataReading(start_time=dts, end_time=dte, type='cadence', value=item['cadence'])
 					event.save()
+
+	for dt in days:
+		Day.objects.filter(date=dt).delete()
 
 def import_carddav(url, auth, countrycode='44'):
 
