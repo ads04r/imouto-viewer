@@ -10,7 +10,12 @@ def max_heart_rate(self, at_time=None):
 	age = int(((dt - datetime.datetime(settings.USER_DATE_OF_BIRTH.year, settings.USER_DATE_OF_BIRTH.month, settings.USER_DATE_OF_BIRTH.day, 0, 0, 0, tzinfo=dt.tzinfo)).days) / 365.25)
 	return (220 - age)
 
-def parse_sleep(sleep):
+def parse_sleep(sleep, timezone=None):
+
+	if timezone is None:
+		tz = pytz.timezone(settings.TIME_ZONE)
+	else:
+		tz = timezone
 
 	time_from = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
 	time_to = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.UTC)
@@ -64,5 +69,5 @@ def parse_sleep(sleep):
 	if time_from > time_to:
 		return {'data': ret}
 
-	return {'start': time_from.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%Y-%m-%dT%H:%M:%S%z"), 'end': time_to.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%Y-%m-%dT%H:%M:%S%z"), 'start_friendly': time_from.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%I:%M%p").lower().lstrip('0'), 'end_friendly': time_to.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%I:%M%p").lower().lstrip('0'), 'data': ret}
+	return {'start': time_from.astimezone(tz).strftime("%Y-%m-%dT%H:%M:%S%z"), 'end': time_to.astimezone(tz).strftime("%Y-%m-%dT%H:%M:%S%z"), 'start_friendly': time_from.astimezone(tz).strftime("%I:%M%p").lower().lstrip('0'), 'end_friendly': time_to.astimezone(tz).strftime("%I:%M%p").lower().lstrip('0'), 'data': ret}
 

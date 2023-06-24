@@ -4,7 +4,6 @@ from django.db.models import Sum, Count, F, ExpressionWrapper, DurationField, fi
 from django.conf import settings
 
 from viewer.models import *
-from viewer.functions.health import get_heart_information
 
 def __display_timeline_event(event):
 
@@ -283,7 +282,8 @@ def generate_dashboard():
 
 		for i in range(0, 7):
 			dtbase = last_record - datetime.timedelta(days=(7 - i))
-			info = get_heart_information(dtbase, False)
+			day = create_or_get_day(dtbase.date())
+			info = day.get_heart_information(False)
 			try:
 				zone = info['heart']['heartzonetime']
 			except:

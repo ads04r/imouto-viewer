@@ -68,51 +68,6 @@ def get_heart_graph(dt):
 
 	return(ret)
 
-def get_heart_information(dt, graph=True):
-
-	dts = datetime.datetime(dt.year, dt.month, dt.day, 4, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
-	dte = dts + datetime.timedelta(days=1)
-	dts_now = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
-	dts_prev = dts - datetime.timedelta(days=1)
-	dts_next = dts + datetime.timedelta(days=1)
-
-	data = {'date': dts.strftime("%a %-d %b %Y"), 'heart': {}}
-
-	data['prev'] = dts_prev.strftime("%Y%m%d")
-	if dts_next < dts_now:
-		data['next'] = dts_next.strftime("%Y%m%d")
-
-	max_rate = 220 - int(((dts_now.date() - settings.USER_DATE_OF_BIRTH).days) / 365.25)
-	zone_1 = int(float(max_rate) * 0.5)
-	zone_2 = int(float(max_rate) * 0.7)
-
-	data['heart']['abs_max_rate'] = max_rate
-
-	max = 0
-	zone = [0, 0, 0]
-	for event in Event.objects.filter(end_time__gte=dts, start_time__lte=dte):
-		if event.cached_health:
-			health = event.health()
-			if 'heartmax' in health:
-				if health['heartmax'] > max:
-					max = health['heartmax']
-			if 'heartzonetime' in health:
-				zone[0] = zone[0] + health['heartzonetime'][0]
-				zone[1] = zone[1] + health['heartzonetime'][1]
-				zone[2] = zone[2] + health['heartzonetime'][2]
-	if max > 0:
-		total_heart_time = zone[0] + zone[1] + zone[2]
-		if ((total_heart_time > 0) & (total_heart_time < 86400)):
-			zone[0] = zone[0] + (86400 - total_heart_time)
-		data['heart']['day_max_rate'] = max
-		data['heart']['heartzonetime'] = zone
-		if graph:
-			data['heart']['graph'] = get_heart_graph(dt)
-	else:
-		del data['heart']
-
-	return data
-
 def get_sleep_history(days):
 
 	dte = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC).astimezone(pytz.timezone(settings.TIME_ZONE)).replace(hour=0, minute=0, second=0)
@@ -135,46 +90,3 @@ def get_sleep_history(days):
 			ret[1].append(sleep_secs)
 	return ret
 
-def get_sleep_information(dt):
-
-	dts = datetime.datetime(dt.year, dt.month, dt.day, 4, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
-	dte = datetime.datetime(dt.year, dt.month, dt.day, 23, 59, 59, tzinfo=pytz.timezone(settings.TIME_ZONE))
-	dts_now = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
-	dts_prev = dts - datetime.timedelta(days=1)
-	dts_next = dts + datetime.timedelta(days=1)
-
-	expression = F('end_time') - F('start_time')
-	wrapped_expression = ExpressionWrapper(expression, DurationField())
-
-	data = {'date': dts.strftime("%a %-d %b %Y")}
-	awake_set = DataReading.objects.filter(type='awake', start_time__gte=dts).annotate(length=wrapped_expression).filter(length__gte=datetime.timedelta(minutes=60)).order_by('start_time')
-	event_count = awake_set.count()
-	if event_count >= 1:
-		awake = awake_set[0]
-		data['wake_up'] = awake.start_time.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%Y-%m-%d %H:%M:%S %z")
-		data['bedtime'] = awake.end_time.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%Y-%m-%d %H:%M:%S %z")
-		data['wake_up_local'] = awake.start_time.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%I:%M%p").lstrip("0").lower()
-		data['bedtime_local'] = awake.end_time.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%I:%M%p").lstrip("0").lower()
-		data['length'] = awake.length.total_seconds()
-		try:
-			tomorrow = DataReading.objects.filter(type='awake', start_time__gt=dte).order_by('start_time')[0].start_time
-			data['tomorrow'] = tomorrow.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%Y-%m-%d %H:%M:%S %z")
-		except IndexError:
-			tomorrow = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
-		if event_count >= 2:
-			sleep_data = []
-			for sleep_info in DataReading.objects.filter(type='sleep', start_time__gt=awake.start_time, end_time__lte=tomorrow).order_by('start_time'):
-				sleep_data.append(sleep_info)
-			if len(sleep_data) > 0:
-				data['sleep'] = parse_sleep(sleep_data)
-		else:
-			sleep_data = []
-			for sleep_info in DataReading.objects.filter(type='sleep', start_time__gt=awake.start_time).order_by('start_time'):
-				sleep_data.append(sleep_info)
-			if len(sleep_data) > 0:
-				data['sleep'] = parse_sleep(sleep_data)
-	data['prev'] = dts_prev.strftime("%Y%m%d")
-	if dts_next < dts_now:
-		data['next'] = dts_next.strftime("%Y%m%d")
-
-	return data
