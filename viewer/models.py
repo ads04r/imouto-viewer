@@ -2005,7 +2005,11 @@ class Day(models.Model):
 			for sleep_info in DataReading.objects.filter(type='sleep', start_time__gt=dts).order_by('start_time'):
 				sleep_data.append(sleep_info)
 		else:
-			for sleep_info in DataReading.objects.filter(type='sleep', start_time__gt=dts, end_time__lte=self.tomorrow.wake_time).order_by('start_time'):
+			dtee = dts + datetime.timedelta(seconds=86400)
+			if self.tomorrow:
+				if self.tomorrow.wake_time:
+					dtee = self.tomorrow.wake_time
+			for sleep_info in DataReading.objects.filter(type='sleep', start_time__gt=dts, end_time__lte=dtee).order_by('start_time'):
 				sleep_data.append(sleep_info)
 		if len(sleep_data) > 0:
 			data['sleep'] = parse_sleep(sleep_data)
