@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.files import File
-from django.db.models import Count, Avg, Max, Transform, Field, IntegerField, F, ExpressionWrapper
+from django.db.models import Count, Avg, Max, Sum, Transform, Field, IntegerField, F, ExpressionWrapper
 from django.db.models.signals import pre_save
 from django.db.models.fields import DurationField
 from django.contrib.staticfiles import finders
@@ -861,6 +861,20 @@ class Event(models.Model):
 			create_or_get_day(dt)
 			dt = dt + datetime.timedelta(days=1)
 		return Day.objects.filter(date__gte=ds, date__lte=de).order_by('date')
+	@property
+	def timezone(self):
+		days = self.days
+		if days.count() == 0:
+			return pytz.timezone(settings.TIME_ZONE)
+		if days.count() == 1:
+			return days[0].timezone
+		ret = days[0].timezone
+		for d in days:
+			if d.timezone==ret:
+				continue
+			return pytz.timezone(settings.TIME_ZONE)
+		return ret
+
 	def length_string(self, value=0):
 		s = value
 		if s == 0:
@@ -1036,7 +1050,7 @@ class Event(models.Model):
 		if elev_max > -99999.99:
 			ret['elevmax'] = int(elev_max)
 		if len(sleep) > 0:
-			ret['sleep'] = parse_sleep(sleep)
+			ret['sleep'] = parse_sleep(sleep, self.timezone)
 		if step_count > 0:
 			ret['steps'] = step_count
 		if speed_count > 0:
@@ -1874,10 +1888,18 @@ class Day(models.Model):
 				return data['heart']['heartzonetime'][1]
 		return 0
 
+	@property
+	def steps(self):
+		dts, dte = self.__calculate_wake_time()
+		obj = DataReading.objects.filter(type='step-count').filter(start_time__gte=dts, end_time__lt=dte).aggregate(steps=Sum('value'))
+		try:
+			ret = int(obj['value__sum'])
+		except:
+			ret = 0
+		return ret
+
 	def data_readings(self, type):
-		d = self.date
-		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
-		dte = dts + datetime.timedelta(seconds=86400)
+		dts, dte = self.__calculate_wake_time()
 		return DataReading.objects.filter(end_time__gte=dts, start_time__lte=dte, type=type)
 
 	def get_heart_information(self, graph=True):
@@ -1885,14 +1907,7 @@ class Day(models.Model):
 		if not(self.cached_heart is None):
 			return json.loads(self.cached_heart)
 
-		d = self.date
-		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
-		dte = dts + datetime.timedelta(days=1)
-		if self.wake_time:
-			dts = self.wake_time
-		if self.bed_time:
-			dte = self.bed_time
-
+		dts, dte = self.__calculate_wake_time()
 		data = {'date': dts.strftime("%a %-d %b %Y"), 'heart': {}}
 
 		data['prev'] = (self.date - datetime.timedelta(days=1)).strftime('%Y%m%d')
@@ -1932,13 +1947,7 @@ class Day(models.Model):
 		:return: A list of two-value lists consisting of graph co-ordinates, with time on the x-axis and heart rate in bpm on the y-axis.
 		:rtype: list
 		"""
-		d = self.date
-		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
-		dte = dts + datetime.timedelta(days=1)
-		if self.wake_time:
-			dts = self.wake_time
-		if self.bed_time:
-			dte = self.bed_time
+		dts, dte = self.__calculate_wake_time()
 
 		last = None
 		values = {}
@@ -1968,16 +1977,9 @@ class Day(models.Model):
 
 	def get_sleep_information(self):
 
-		if not(self.cached_sleep is None):
-			return json.loads(self.cached_sleep)
 
-		d = self.date
-		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
-		dte = dts + datetime.timedelta(days=1)
-		if self.wake_time:
-			dts = self.wake_time
-		if self.bed_time:
-			dte = self.bed_time
+		dts, dte = self.__calculate_wake_time()
+		sleep_data = []
 
 		data = {'date': dts.strftime("%a %-d %b %Y")}
 		data['wake_up'] = dts.astimezone(self.timezone).strftime("%Y-%m-%d %H:%M:%S %z")
@@ -1985,34 +1987,63 @@ class Day(models.Model):
 		data['wake_up_local'] = dts.astimezone(self.timezone).strftime("%I:%M%p").lstrip("0").lower()
 		data['bedtime_local'] = dte.astimezone(self.timezone).strftime("%I:%M%p").lstrip("0").lower()
 		data['length'] = (dte - dts).total_seconds()
-		if self.tomorrow.wake_time is None:
-			data['tomorrow'] = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone).strftime("%Y-%m-%d %H:%M:%S %z")
-		else:
-			data['tomorrow'] = self.tomorrow.wake_time.strftime("%Y-%m-%d %H:%M:%S %z")
-		sleep_data = []
-		if self.today or self.tomorrow.today:
-			for sleep_info in DataReading.objects.filter(type='sleep', start_time__gt=self.wake_time).order_by('start_time'):
-				sleep_data.append(sleep_info)
-		else:
-			for sleep_info in DataReading.objects.filter(type='sleep', start_time__gt=self.wake_time, end_time__lte=self.tomorrow.wake_time).order_by('start_time'):
-				sleep_data.append(sleep_info)
-		if len(sleep_data) > 0:
-			data['sleep'] = parse_sleep(sleep_data)
 		data['prev'] = self.yesterday.date.strftime('%Y%m%d')
 		if not(self.today):
 			data['next'] = self.tomorrow.date.strftime('%Y%m%d')
 
-		self.cached_sleep = json.dumps(data)
-		self.save()
+		if not(self.cached_sleep is None):
+			data['sleep'] = json.loads(self.cached_sleep)
+			if 'sleep' in data:
+				if 'end' in data['sleep']:
+					data['tomorrow'] = data['sleep']['end']
+			self.wake_time = dts
+			self.bed_time = dte
+			self.save()
+			return data
+
+		if self.today or self.tomorrow.today:
+			for sleep_info in DataReading.objects.filter(type='sleep', start_time__gt=dts).order_by('start_time'):
+				sleep_data.append(sleep_info)
+		else:
+			for sleep_info in DataReading.objects.filter(type='sleep', start_time__gt=dts, end_time__lte=self.tomorrow.wake_time).order_by('start_time'):
+				sleep_data.append(sleep_info)
+		if len(sleep_data) > 0:
+			data['sleep'] = parse_sleep(sleep_data)
+			if 'end' in data['sleep']:
+				data['tomorrow'] = data['sleep']['end']
+			self.cached_sleep = json.dumps(data['sleep'])
+
+		if not(self.today):
+			self.wake_time = dts
+			self.bed_time = dte
+			self.save()
 
 		return data
+
+	def __calculate_wake_time(self):
+
+		d = self.date
+		dts = datetime.datetime(d.year, d.month, d.day, 0, 0, 0, tzinfo=self.timezone)
+		dte = dts + datetime.timedelta(seconds=86400)
+		wakes = DataReading.objects.filter(type='awake', start_time__gte=dts, start_time__lt=dte).order_by('start_time')
+		wakecount = wakes.count()
+		if wakecount > 0:
+			main_wake = None
+			for wake in wakes:
+				if main_wake is None:
+					main_wake = wake
+					continue
+				if main_wake.length() < wake.length():
+					main_wake = wake
+			return main_wake.start_time.astimezone(self.timezone), main_wake.end_time.astimezone(self.timezone)
+		else:
+			return dts.astimezone(self.timezone), dte.astimezone(self.timezone)
 
 	def refresh(self, save=True):
 
 		d = self.date
 		self.timezone_str = settings.TIME_ZONE
-		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
-		dte = dts + datetime.timedelta(seconds=86400)
+		dts, dte = self.__calculate_wake_time()
 
 		id = dts.strftime("%Y%m%d%H%M%S") + dte.strftime("%Y%m%d%H%M%S")
 		url = settings.LOCATION_MANAGER_URL + "/bbox/" + id + "?format=json"
@@ -2028,20 +2059,9 @@ class Day(models.Model):
 			except:
 				pass # Leave at local time if we have an issue
 
-		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
-		dte = dts + datetime.timedelta(seconds=86400)
-		wakes = DataReading.objects.filter(type='awake', start_time__lt=dte, end_time__gt=dts).order_by('start_time')
-		wakecount = wakes.count()
-		if wakecount > 0:
-			main_wake = None
-			for wake in wakes:
-				if main_wake is None:
-					main_wake = wake
-					continue
-				if main_wake.length() < wake.length():
-					main_wake = wake
-			self.wake_time = main_wake.start_time.astimezone(self.timezone)
-			self.bed_time = main_wake.end_time.astimezone(self.timezone)
+		if not(self.today):
+			self.wake_time = dts
+			self.bed_time = dte
 
 		if save:
 			self.cached_heart = None
