@@ -77,6 +77,29 @@ def dashboard_json(request):
 	response = HttpResponse(json.dumps(data, default=imouto_json_serializer), content_type='application/json')
 	return response
 
+@csrf_exempt
+def mood(request):
+	if request.method != 'POST':
+		raise Http404()
+	data = json.loads(request.body)
+	if not('mood' in data):
+		raise Http404()
+	m = 0
+	if data['mood'] == 'unhappy':
+		m = 1
+	if data['mood'] == 'neutral':
+		m = 3
+	if data['mood'] == 'happy':
+		m = 5
+	if m == 0:
+		raise Http404()
+	dt = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC).astimezone(pytz.timezone(settings.TIME_ZONE))
+	entry = DataReading(start_time=dt, end_time=dt, type='mood', value=m)
+	entry.save()
+	ret = {"date": dt, "mood": m, "created": entry.pk}
+	response = HttpResponse(json.dumps(ret, default=imouto_json_serializer), content_type='application/json')
+	return response
+
 def onthisday(request, format='html'):
 	key = 'onthisday_' + datetime.date.today().strftime("%Y%m%d")
 	data = cache.get(key)

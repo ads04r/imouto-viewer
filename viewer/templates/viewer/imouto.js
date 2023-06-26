@@ -1860,7 +1860,16 @@ $(document).ready(function()
 {
     $(".mood-select").on('click', function() {
         var m = $(this).data('mood');
-        console.log(m);
+        var url = "mood";
+        var data = {'mood': m}
+        $.ajax({
+            url: url,
+            dataType: 'json',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            method: 'POST',
+            success: function(data) { console.log(data); }
+        });
     });
     $(window).bind('hashchange', function(e) { pageRefresh(); });
     pageRefresh();
