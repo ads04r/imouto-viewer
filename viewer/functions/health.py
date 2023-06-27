@@ -69,7 +69,13 @@ def get_heart_graph(dt):
 	return(ret)
 
 def get_sleep_history(days):
+	"""
+	Returns the stored wake hitsory for the last [n] days.
 
+	:param days: The number of days worth of history to return.
+	:return: A list containing two sub-lists, one for wake-up times and one for bed times.
+	:rtype: list
+	"""
 	dte = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC).astimezone(pytz.timezone(settings.TIME_ZONE)).replace(hour=0, minute=0, second=0)
 	dts = dte - datetime.timedelta(days=days)
 	data = DataReading.objects.filter(start_time__gte=dts, type='awake').order_by('start_time')
