@@ -1827,7 +1827,7 @@ function pageRefresh()
     }, 500));
     $(".content-wrapper").html(loading);
     $(".control-sidebar").removeClass('control-sidebar-open');
-    
+
     if(page == '') { homeScreen(); return true; }
     if(page == 'timeline') { timelineScreen(); return true; }
     if(page == 'files') { uploadScreen(); return true; }
@@ -1838,7 +1838,7 @@ function pageRefresh()
     if(page == 'people') { peopleScreen(); return true; }
     if(page == 'places') { placesScreen(); return true; }
     if(page == 'tags') { tagsScreen(); return true; }
-                                        
+
     if(page.startsWith('day_')) { dayScreen(page.replace('day_', '')); }
     if(page.startsWith('tag_')) { tagScreen(page.replace('tag_', '')); }
     if(page.startsWith('event_')) { eventScreen(page.replace('event_', '')); }
@@ -1846,7 +1846,7 @@ function pageRefresh()
     if(page.startsWith('person_')) { personScreen(page.replace('person_', '')); }
     if(page.startsWith('workout_')) { workoutScreen(page.replace('workout_', '')); }
     if(page.startsWith('report_')) { var parse = page.replace('report_', '').split('_'); reportScreen(parse[0], parse[1]); }
-                            
+
     if(page.startsWith('health-')) { healthReportScreen(page.replace('health-', '')); }
 
     if(page.startsWith('events_'))
@@ -1858,6 +1858,19 @@ function pageRefresh()
 
 $(document).ready(function()
 {
+    $(".mood-select").on('click', function() {
+        var m = $(this).data('mood');
+        var url = "mood";
+        var data = {'mood': m}
+        $.ajax({
+            url: url,
+            dataType: 'json',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            method: 'POST',
+            success: function(data) { console.log(data); }
+        });
+    });
     $(window).bind('hashchange', function(e) { pageRefresh(); });
     pageRefresh();
 });

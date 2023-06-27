@@ -2,6 +2,21 @@
 
 {% block header_dropdowns %}
 
+<li class="dropdown notifications-menu">
+<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+<i class="fa fa-smile-o"></i>
+</a>
+<ul class="dropdown-menu">
+<li class="header">How are you?</li>
+<li>
+<div class="btn-group">
+	<button class="btn btn-success mood-select" data-mood="happy" type="button"><i class="fa fa-smile-o"></i></button>
+	<button class="btn btn-warning mood-select" data-mood="neutral" type="button"><i class="fa fa-meh-o"></i></button>
+	<button class="btn btn-danger mood-select" data-mood="unhappy" type="button"><i class="fa fa-frown-o"></i></button>
+</div></li>
+</ul>
+</li>
+
 <li>
     <a href="#" data-toggle="control-sidebar"><i class="fa fa-search"></i></a>
 </li>
