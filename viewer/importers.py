@@ -22,7 +22,16 @@ from viewer.models import *
 from viewer.tasks import precache_photo_thumbnail, generate_location_events
 
 def upload_file(temp_file, file_source, format=''):
+	"""
+	Uploads a file to the configured location manager. When calling this function you need to pass a string
+	representing the source of the data (eg 'handheld_gps', 'fitness_tracker', 'phone').
 
+	:param temp_file: The path of the file being sent.
+	:param file_source: A string representing the source of the data.
+	:param format: Currently unused.
+	:return: True if the upload was successful, False if not.
+	:rtype: bool
+	"""
 	url = str(settings.LOCATION_MANAGER_URL).rstrip('/') + '/import'
 	if format == '':
 		r = requests.post(url, data={'file_source': file_source}, files={'uploaded_file': (temp_file, open(temp_file, 'rb'))})
@@ -34,7 +43,6 @@ def upload_file(temp_file, file_source, format=''):
 	return False
 
 def export_monica_calls(from_date=None):
-
 	dtsd = from_date
 	now = datetime.datetime.now()
 	tz = pytz.timezone(settings.TIME_ZONE)
@@ -78,7 +86,6 @@ def export_monica_calls(from_date=None):
 	return ret
 
 def export_monica_events(from_date=None):
-
 	dtsd = from_date
 	now = datetime.datetime.now()
 	tz = pytz.timezone(settings.TIME_ZONE)
@@ -98,7 +105,6 @@ def export_monica_events(from_date=None):
 	return ret
 
 def export_monica_thumbnails():
-
 	ret = []
 	for prop in PersonProperty.objects.filter(key='monicahash'):
 		person = prop.person
@@ -115,7 +121,6 @@ def export_monica_thumbnails():
 	return ret
 
 def import_monica_contact_mappings(countrycode='44'):
-
 	items = []
 	ret = []
 	for item in get_monica_contact_data():
@@ -162,7 +167,18 @@ def import_monica_contact_mappings(countrycode='44'):
 	return ret
 
 def import_home_assistant_readings(entity_id, reading_type, days=7):
+	"""
+	Imports data from a Home Assistant log directly into Imouto Viewer as DataReading objects. This
+	function checks for existing data from a previous import, so the function may be called
+	repeatedly without filling up the readings table with duplicated data. This function requires
+	the settings HOME_ASSISTANT_URL and HOME_ASSISTANT_TOKEN to be set.
 
+	:param entity_id: The entity ID within Home Assistant whose data you would like to import (eg light.kitchen_light)
+	:param reading_type: The reading type to be used within Imouto Viewer. This can be anything you like but should be unique to this entity.
+	:param days: The number of days worth of data to import.
+	:return: A list of the newly imported DataEntry objects, an empty list if nothing was done.
+	:rtype: list
+	"""
 	dte = datetime.datetime.utcnow()
 	dts = dte - datetime.timedelta(days=days)
 	try:
@@ -199,7 +215,18 @@ def import_home_assistant_readings(entity_id, reading_type, days=7):
 	return ret
 
 def import_home_assistant_events(entity_id, event_type, days=1):
+	"""
+	Imports data from a Home Assistant log directly into Imouto Viewer as Event objects. This
+	function checks for existing data from a previous import, so the function may be called
+	repeatedly without filling up the events table with duplicated data. This function requires
+	the settings HOME_ASSISTANT_URL and HOME_ASSISTANT_TOKEN to be set.
 
+	:param entity_id: The entity ID within Home Assistant whose data you would like to import (eg light.kitchen_light)
+	:param reading_type: The reading type to be used within Imouto Viewer. This can be anything you like but should be unique to this entity.
+	:param days: The number of days worth of data to import.
+	:return: A list of the newly imported Event objects, an empty list if nothing was done.
+	:rtype: list
+	"""
 	dte = datetime.datetime.utcnow()
 	dts = dte - datetime.timedelta(days=days)
 	name = ''
@@ -244,7 +271,18 @@ def import_home_assistant_events(entity_id, event_type, days=1):
 	return ret
 
 def import_home_assistant_presence(uid, entity_id, days=7):
+	"""
+	Imports presence data from a Home Assistant log and augments Imouto Event objects with this accordingly. If a
+	person has a 'presence' entity ID in Home Assistant and a Person entry in Imouto Viewer, this function can
+	be used to map them together. It looks for all Events within the specified timespan (defaults to the last
+	7 days) that take place at the user's home location, and adds the relevant person to each event.
 
+	:param uid: The uid of the Person object in Imouto Viewer that corresponds to the relevant person.
+	:param entity_id: The entity_id of the presence entity in Home Assistant that corresponds to the relevant person.
+	:param days: The number of past days in which to search for presence events.
+	:return: A list of the Event objects modified by the calling of the function. Empty list if there are none.
+	:rtype: list
+	"""
 	dte = datetime.datetime.utcnow()
 	dts = dte - datetime.timedelta(days=days)
 	try:
@@ -287,7 +325,11 @@ def import_home_assistant_presence(uid, entity_id, days=7):
 	return ret
 
 def import_fit(parseable_fit_input):
+	"""
+	Reads data in ANT-FIT format, typically used by Garmin fitness trackers, and generates DataValues based on the information contained within.
 
+	:param parseable_fit_input: A path to an ANT-FIT file.
+	"""
 	data = []
 	fit = FitFile(parseable_fit_input)
 	tz = pytz.UTC
@@ -353,7 +395,13 @@ def import_fit(parseable_fit_input):
 		Day.objects.filter(date=dt).delete()
 
 def import_carddav(url, auth, countrycode='44'):
+	"""
+	Imports CardDAV data from a web URL, and creates or augments Person objects accordingly.
 
+	:param url: The URL from which to retrieve the CardDAV data.
+	:param auth: The authentication (sent directly to the requests library) required to read the file, if necessary.
+	:param countrycode: This is the dialling code for the country in which the user is based. It's a dirty hack for standardising UK phone numbers to avoid duplicates; it causes the function to attempt to deduplicate if set to '44', or do nothing if set to anything else.
+	"""
 	r = request("GET", url, auth=auth)
 	cards = r.text.split('BEGIN:VCARD')
 	people = []
@@ -464,7 +512,18 @@ def import_carddav(url, auth, countrycode='44'):
 						pp.save()
 
 def import_sms_from_imap(host, username, password, inbox='INBOX', countrycode='44'):
+	"""
+	For users using the Android app 'SMS Backup+', this function gets the user's text messages that have been stored on
+	an IMAP mail server by the app and imports them into Imouto Viewer as RemoteInteraction objects.
 
+	:param host: The host name or IP address of the IMAP server.
+	:param username: The username needed to log into the IMAP server.
+	:param password: The password needed to log into the IMAP server.
+	:param inbox: The name of the inbox in which to search for new messages.
+	:param countrycode: This is the dialling code for the country in which the user is based. It's a dirty hack for standardising UK phone numbers to avoid duplicates; it causes the function to attempt to deduplicate if set to '44', or do nothing if set to anything else.
+	:return: The number of new messages imported.
+	:rtype: int
+	"""
 	minmsg = RemoteInteraction.objects.filter(type='sms').order_by('-time')[0]
 	mindt = minmsg.time
 	minds = mindt.strftime("%-d-%b-%Y")
@@ -529,7 +588,18 @@ def import_sms_from_imap(host, username, password, inbox='INBOX', countrycode='4
 	return ct
 
 def import_calls_from_imap(host, username, password, inbox='INBOX', countrycode='44'):
+	"""
+	For users using the Android app 'SMS Backup+', this function gets the user's phone call history that has been stored on
+	an IMAP mail server by the app and imports them into Imouto Viewer as RemoteInteraction objects.
 
+	:param host: The host name or IP address of the IMAP server.
+	:param username: The username needed to log into the IMAP server.
+	:param password: The password needed to log into the IMAP server.
+	:param inbox: The name of the inbox in which to search for new messages.
+	:param countrycode: This is the dialling code for the country in which the user is based. It's a dirty hack for standardising UK phone numbers to avoid duplicates; it causes the function to attempt to deduplicate if set to '44', or do nothing if set to anything else.
+	:return: The number of new messages imported.
+	:rtype: int
+	"""
 	try:
 		minmsg = RemoteInteraction.objects.filter(type='phone-call').order_by('-time')[0]
 	except:
@@ -619,7 +689,15 @@ def __parse_scale_csv(filepath):
 	return(ret)
 
 def import_openscale(filepath):
+	"""
+	For users of the Android app OpenScale, this function takes a file exported by the app and
+	imports it into the Imouto Viewer database as DataReading objects for weight, fat percentage,
+	muscle percentage and water readings.
 
+	:param filepath: The path of the file to be imported.
+	:return: A list of lists representing the data that has been imported.
+	:rtype: list
+	"""
 	tz = pytz.timezone(settings.TIME_ZONE)
 	ret = []
 
@@ -669,7 +747,15 @@ def import_openscale(filepath):
 	return ret
 
 def import_photo_file(filepath, tzinfo=pytz.UTC):
+	"""
+	Imports a photo into the lifelog data as a Photo object. During import, the function attempts to
+	annotate the photo based on EXIF data, and existing data within Imouto if available.
 
+	:param filepath: The path of the photo to import.
+	:param tzinfo: A pytz timezone object relating to the timezone in which the photo was taken, as older cameras (such as mine!) don't store this information.
+	:return: Returns the new Photo object created by the function call.
+	:rtype: Photo
+	"""
 	path = os.path.abspath(filepath)
 
 	try:
@@ -731,7 +817,14 @@ def import_photo_file(filepath, tzinfo=pytz.UTC):
 	return photo
 
 def import_picasa_faces(picasafile):
+	"""
+	Tags the photos within Imouto Viewer with person data from Google Picasa. Takes a Picasa sidecar file,
+	attempts to match it up with photos and people already in Imouto Viewer, and links them accordingly.
 
+	:param picasafile: The path of the Picasa sidecar file from which to read.
+	:return: The number of new tags created.
+	:rtype: int
+	"""
 	contacts = {}
 	faces = {}
 	path = os.path.dirname(picasafile)
@@ -785,77 +878,16 @@ def import_picasa_faces(picasafile):
 				event.people.add(person)
 	return ret
 
-def import_autographer_event_people(picasafile):
-
-	contacts = {}
-	faces = {}
-	items = []
-	path = os.path.dirname(picasafile)
-	full_path = os.path.abspath(path)
-	ret = []
-	if os.path.exists(picasafile):
-		lf = ''
-		with open(picasafile) as f:
-			lines = f.readlines()
-		for liner in lines:
-			line = liner.strip()
-			if line == '':
-				continue
-			if ((line[0] == '[') & (line[-1:] == ']')):
-				lf = line.lstrip('[').rstrip(']')
-			if lf == 'Contacts2':
-				parse = line.replace(';', '').split('=')
-				if len(parse) == 2:
-					contacts[parse[0]] = find_person(parse[0], parse[1])
-			if ((line[0:6] == 'faces=') & (lf != '')):
-				item = []
-				for segment in line[6:].split(';'):
-					structure = segment.split(',')
-					if not(lf in faces):
-						faces[lf] = []
-					faces[lf].append(structure[1])
-
-	for filename in faces.keys():
-		if len(filename) == 0:
-			continue
-		if not(filename.lower().endswith('.jpg')):
-			continue
-		parse = filename.lower().replace('.jpg', '').split('_')
-		if len(parse) != 4:
-			continue
-		if not(parse[3].endswith('e')):
-			continue
-		parse[3] = parse[3][0:-1]
-		if len(parse[2]) != 8:
-			continue
-		if len(parse[3]) != 6:
-			continue
-		dt = datetime.datetime(int(parse[2][0:4]), int(parse[2][4:6]), int(parse[2][6:8]), int(parse[3][0:2]), int(parse[3][2:4]), int(parse[3][4:6]), tzinfo=pytz.timezone(settings.TIME_ZONE))
-		item = {'date': dt, 'people': [], 'events': []}
-		for face in faces[filename]:
-			person = find_person(face)
-			if person is None:
-				continue
-			item['people'].append(person)
-		for event in Event.objects.filter(start_time__lte=dt, end_time__gte=dt):
-			item['events'].append(event)
-		if len(item['people']) == 0:
-			continue
-		if len(item['events']) == 0:
-			continue
-		items.append(item)
-
-	for item in items:
-		for event in item['events']:
-			for person in item['people']:
-				event.people.add(person)
-			if not(event in ret):
-				ret.append(event)
-
-	return ret
-
 def import_photo_directory(path, tzinfo=pytz.UTC):
+	"""
+	Scans a local directory for photos and calls import_photo_file for every photo file found. If it
+	finds a Picasa sidecar file, it imports that too by calling import_picasa_faces.
 
+	:param filepath: The path of the directory to scan.
+	:param tzinfo: A pytz timezone object relating to the timezone in which the photos were taken, as older cameras (such as mine!) don't store this information.
+	:return: A list of the new Photo objects created with this function call.
+	:rtype: list
+	"""
 	full_path = os.path.abspath(path)
 	ret = []
 
@@ -914,7 +946,13 @@ def import_photo_directory(path, tzinfo=pytz.UTC):
 	return ret
 
 def import_calendar_feed(url):
+	"""
+	Imports CalDAV data from a web URL, and creates or augments CalendarFeed and CalendarAppointment objects accordingly.
 
+	:param url: The URL from which to retrieve the CardDAV data.
+	:return: A list of new CalendarAppointment objects created by this function call.
+	:rtype: list
+	"""
 	try:
 		feed = CalendarFeed.objects.get(url=url)
 	except:

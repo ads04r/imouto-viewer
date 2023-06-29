@@ -112,6 +112,12 @@ class LocationCountry(models.Model):
 	def __str__(self):
 		return str(self.label)
 	def to_dict(self):
+		"""
+		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.
+
+		:return: The properties of the object as a dict
+		:rtype: dict
+		"""
 		ret = {'iso': [self.a2, self.a3], "label": str(self.label)}
 		if self.wikipedia:
 			ret['wikipedia'] = str(self.wikipedia)
@@ -143,12 +149,24 @@ class Location(models.Model):
 	weather_location = models.ForeignKey(WeatherLocation, on_delete=models.CASCADE, null=True, blank=True)
 	@property
 	def is_home(self):
+		"""
+		Determines if this Location is the user's home or not. Always returns False if USER_HOME_LOCATION is not set in settings.py
+
+		:return: True if this location is the user's home location, False if not.
+		:rtype: bool
+		"""
 		try:
 			home = settings.USER_HOME_LOCATION
 		except:
 			home = -1
 		return (self.pk == home)
 	def to_dict(self):
+		"""
+		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.
+
+		:return: The properties of the object as a dict
+		:rtype: dict
+		"""
 		ret = {'id': self.uid, 'label': self.label, 'full_label': self.full_label, 'lat': self.lat, 'lon': self.lon}
 		if not(self.description is None):
 			if self.description != '':
@@ -161,6 +179,12 @@ class Location(models.Model):
 				ret['url'] = self.url
 		return ret
 	def people(self):
+		"""
+		Returns a list of people who have been encountered at this location in the past.
+
+		:return: A list of Person objects.
+		:rtype: list
+		"""
 		ret = []
 		for event in self.events.all():
 			for person in event.people.all():
@@ -293,6 +317,12 @@ class Person(models.Model):
 	wikipedia = models.URLField(blank=True, null=True)
 	image = models.ImageField(blank=True, null=True, upload_to=user_thumbnail_upload_location)
 	def to_dict(self):
+		"""
+		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.
+
+		:return: The properties of the object as a dict
+		:rtype: dict
+		"""
 		ret = {'id': self.uid, 'name': self.name(), 'full_name': self.full_name()}
 		if not(self.birthday is None):
 			if self.birthday:
@@ -447,6 +477,12 @@ class Photo(models.Model):
 	cached_thumbnail = models.ImageField(blank=True, null=True, upload_to=photo_thumbnail_upload_location)
 	face_count = models.IntegerField(null=True, blank=True)
 	def to_dict(self):
+		"""
+		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.
+
+		:return: The properties of the object as a dict
+		:rtype: dict
+		"""
 		ret = {}
 		ret['lat'] = self.lat
 		ret['lon'] = self.lon
@@ -675,21 +711,37 @@ class Event(models.Model):
 	or visits to places. They could also just be imported calendar appointments. You do you.
 	"""
 	start_time = models.DateTimeField()
+	"""The start time of the Event, a datetime."""
 	end_time = models.DateTimeField()
+	"""The end time of the Event, a datetime."""
 	created_time = models.DateTimeField(auto_now_add=True)
+	"""A datetime representing the time this Event object was created."""
 	updated_time = models.DateTimeField(auto_now=True)
+	"""A datetime representing the time this Event object was last modified."""
 	type = models.SlugField(max_length=32)
+	"""The type of this Event. This is a string and can be anything you like, although certain values (eg journey, loc_prox, life_event) are treated differently by the UI."""
 	caption = models.CharField(max_length=255, default='', blank=True)
+	"""A human-readable caption for the Event, could also be described as the title or summary."""
 	description = models.TextField(default='', blank=True)
+	"""A human-readable description of the Event. This can be anything, but should provide some narrative or additional information to remembering what happened during this Event."""
 	people = models.ManyToManyField(Person, through='PersonEvent')
+	"""A many-to-many field of Person objects. It stores the people encountered during this Event."""
 	location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name="events", null=True, blank=True)
+	"""The Location in which this Event took place."""
 	geo = models.TextField(default='', blank=True)
 	cached_health = models.TextField(default='', blank=True)
 	cached_staticmap = models.ImageField(blank=True, null=True, upload_to=event_staticmap_upload_location)
 	elevation = models.TextField(default='', blank=True)
 	speed = models.TextField(default='', blank=True)
 	cover_photo = models.ForeignKey(Photo, null=True,  blank=True, on_delete=models.SET_NULL)
+	"""The Photo object that best illustrates this Event."""
 	def to_dict(self):
+		"""
+		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.
+
+		:return: The properties of the object as a dict
+		:rtype: dict
+		"""
 		ret = {'id': self.pk, 'caption': self.caption, 'start_time': self.start_time.strftime("%Y-%m-%d %H:%M:%S %z"), 'end_time': self.end_time.strftime("%Y-%m-%d %H:%M:%S %z"), 'people': [], 'photos': [], 'geo': {}}
 		if self.geo:
 			ret['geo'] = self.geo
@@ -1200,6 +1252,12 @@ class LifeReport(models.Model):
 				continue
 			self.events.add(event)
 	def to_dict(self):
+		"""
+		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.
+
+		:return: The properties of the object as a dict
+		:rtype: dict
+		"""
 		if self.cached_dict:
 			return json.loads(self.cached_dict)
 		ret = {'id': self.pk, 'label': self.label, 'year': self.year, 'stats': [], 'created_date': self.created_date.strftime("%Y-%m-%d %H:%M:%S %z"), 'modified_date': self.modified_date.strftime("%Y-%m-%d %H:%M:%S %z"), 'style': self.style, 'type': 'year', 'people': [], 'places': [], 'countries': [], 'life_events': [], 'events': []}
@@ -1583,6 +1641,12 @@ class LifeReportProperties(models.Model):
 	def __str__(self):
 		return str(self.report) + ' - ' + self.key
 	def to_dict(self):
+		"""
+		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.
+
+		:return: The properties of the object as a dict
+		:rtype: dict
+		"""
 		return {'category': self.category, 'key': self.key, 'value': self.value, 'icon': self.icon, 'description': self.description}
 	class Meta:
 		app_label = 'viewer'
@@ -1622,6 +1686,12 @@ class LifeReportGraph(models.Model):
 			self.save()
 		return ret
 	def to_dict(self):
+		"""
+		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.
+
+		:return: The properties of the object as a dict
+		:rtype: dict
+		"""
 		if not self.cached_image:
 			im = self.image()
 		return {'category': self.category, 'name': self.key, 'image': self.cached_image.path}
@@ -1644,6 +1714,12 @@ class LifeReportChart(models.Model):
 	data = models.TextField(default='[]')
 	description = models.TextField(null=True, blank=True)
 	def to_dict(self):
+		"""
+		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.
+
+		:return: The properties of the object as a dict
+		:rtype: dict
+		"""
 		return json.loads(self.data)
 	def __str__(self):
 		return str(self.report) + ' - ' + self.text
@@ -1831,42 +1907,102 @@ class Day(models.Model):
 
 	@property
 	def today(self):
+		"""
+		Determines if this day represents today in real time.
+
+		:return: True if this Day object represents the current day, False if not.
+		:rtype: bool
+		"""
 		return (datetime.datetime.now().date() == self.date)
 	@property
 	def slug(self):
+		"""
+		The unique 'slug id' for this Day object, as would be displayed after the '#' in the URL bar.
+
+		:return: 'day', followed by an underscore, followed by the date in YYYYMMDD format.
+		:rtype: str
+		"""
 		return("day_" + self.date.strftime('%Y%m%d'))
 	@property
 	def tomorrow(self):
+		"""
+		Returns the Day object representing the day after the one represented by this Day object.
+
+		:return: A Day object if not today, None otherwise.
+		:rtype: Day
+		"""
 		return create_or_get_day(self.date + datetime.timedelta(days=1))
 	@property
 	def yesterday(self):
+		"""
+		Returns the Day object representing the day before the one represented by this Day object.
+
+		:return: A Day object, or None if the data doesn't go back far enough.
+		:rtype: Day
+		"""
 		return create_or_get_day(self.date - datetime.timedelta(days=1))
 	@property
 	def timezone(self):
+		"""
+		Returns the relevant time zone for this particular day (ie it would normally be the same as settings.TIME_ZONE, but the user may be travelling abroad.)
+
+		:return: A pytz timezone value.
+		:rtype: Timezone
+		"""
 		return pytz.timezone(self.timezone_str)
 	@property
 	def people(self):
+		"""
+		All the people encountered on this particular day.
+
+		:return: A QuerySet of Person objects
+		:rtype: QuerySet(Person)
+		"""
 		return Person.objects.filter(event__in=self.events).distinct()
 	@property
 	def events(self):
+		"""
+		Every described event on this particular day.
+
+		:return: A QuerySet of Event objects
+		:rtype: QuerySet(Event)
+		"""
 		d = self.date
 		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
 		dte = dts + datetime.timedelta(seconds=86400)
 		return Event.objects.filter(end_time__gte=dts, start_time__lte=dte).exclude(type='life_event').order_by('start_time')
 	@property
 	def calendar(self):
+		"""
+		Every calendar appointment scheduled on this particular day.
+
+		:return: A QuerySet of CalendarAppointment objects
+		:rtype: QuerySet(CalendarAppointment)
+		"""
 		d = self.date
 		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
 		dte = dts + datetime.timedelta(seconds=86400)
 		return CalendarAppointment.objects.filter(end_time__gte=dts, start_time__lte=dte).values('id', 'eventid', 'caption')
 	@property
 	def tweets(self):
+		"""
+		Every microblogpost (typically tweets, could be toots) made on this particular day.
+
+		:return: A QuerySet of RemoteInteraction objects
+		:rtype: QuerySet(RemoteInteraction)
+		"""
 		d = self.date
 		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
 		dte = dts + datetime.timedelta(seconds=86400)
 		return RemoteInteraction.objects.filter(time__gte=dts, time__lte=dte, type='microblogpost', address='').order_by('time')
 	@property
 	def sms(self):
+		"""
+		Every SMS message sent or received on this particular day.
+
+		:return: A QuerySet of RemoteInteraction objects
+		:rtype: QuerySet(RemoteInteraction)
+		"""
 		d = self.date
 		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
 		dte = dts + datetime.timedelta(seconds=86400)
@@ -1874,6 +2010,12 @@ class Day(models.Model):
 
 	@property
 	def max_heart_rate(self):
+		"""
+		The highest heart rate experienced on this particular day, according to the stored data. Returns 0 if no data is available.
+
+		:return: The maximum heart rate in beats per minute.
+		:rtype: int
+		"""
 		data = self.get_heart_information(False)
 		if 'heart' in data:
 			if 'day_max_rate' in data['heart']:
@@ -1882,6 +2024,12 @@ class Day(models.Model):
 
 	@property
 	def optimal_heart_time(self):
+		"""
+		The time spent in the 'optimal' heart rate (ie between 50% and 70% of maximum) on this particular day, according to the stored data. Returns 0 if no data is available.
+
+		:return: The total number of seconds.
+		:rtype: int
+		"""
 		data = self.get_heart_information(False)
 		if 'heart' in data:
 			if 'heartzonetime' in data['heart']:
@@ -1890,6 +2038,12 @@ class Day(models.Model):
 
 	@property
 	def steps(self):
+		"""
+		The number of steps taken during this particular day, according to the stored data.
+
+		:return: The number of steps.
+		:rtype: int
+		"""
 		dts, dte = self.__calculate_wake_time()
 		obj = DataReading.objects.filter(type='step-count').filter(start_time__gte=dts, end_time__lt=dte).aggregate(steps=Sum('value'))
 		try:
@@ -1899,11 +2053,24 @@ class Day(models.Model):
 		return ret
 
 	def data_readings(self, type):
+		"""
+		Returns all DataReading object of the type specified, logged on this particular day.
+
+		:param type: The type of readings to return.
+		:return: A QuerySet of DataReading objects.
+		:rtype: QuerySet(DataReading)
+		"""
 		dts, dte = self.__calculate_wake_time()
 		return DataReading.objects.filter(end_time__gte=dts, start_time__lte=dte, type=type)
 
 	def get_heart_information(self, graph=True):
+		"""
+		Returns a summary of the stored heart rate data for the day in question.
 
+		:param graph: True if you want the function to return the heart graph, False if you just want the summary data.
+		:return: A dict containing statistics about the heart data for this particular day.
+		:rtype: dict
+		"""
 		if not(self.cached_heart is None):
 			return json.loads(self.cached_heart)
 
@@ -1976,8 +2143,12 @@ class Day(models.Model):
 		return(ret)
 
 	def get_sleep_information(self):
+		"""
+		Returns a summary of the stored sleep data for the day in question.
 
-
+		:return: A dict containing statistics about the wake and sleep activity for this particular day.
+		:rtype: dict
+		"""
 		dts, dte = self.__calculate_wake_time()
 		sleep_data = []
 
@@ -2044,7 +2215,12 @@ class Day(models.Model):
 			return dts.astimezone(self.timezone), dte.astimezone(self.timezone)
 
 	def refresh(self, save=True):
+		"""
+		Refreshes the data in the object (regenerating stored properties like wake and sleep time).
+		Always called automatically on each Day object created, but may be called manually too.
 
+		:param save: If True, the object's save function is automatically called at the end of this function. If False, it is not.
+		"""
 		d = self.date
 		self.timezone_str = settings.TIME_ZONE
 		dts, dte = self.__calculate_wake_time()
