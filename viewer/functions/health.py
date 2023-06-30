@@ -1,9 +1,11 @@
 import datetime, time, pytz, sys, os
-from viewer.models import DataReading, Event
+from viewer.models import DataReading, Event, Day
 from viewer.health import parse_sleep
 from django.db.models import F, ExpressionWrapper, DurationField
 from django.core.cache import cache
 from django.conf import settings
+
+from viewer.models import create_or_get_day
 
 def get_heart_history(days):
 	"""
@@ -70,19 +72,22 @@ def get_heart_graph(dt):
 
 def get_sleep_history(days):
 	"""
-	Returns the stored wake hitsory for the last [n] days.
+	Returns the stored wake history for the last [n] days.
 
 	:param days: The number of days worth of history to return.
-	:return: A list containing two sub-lists, one for wake-up times and one for bed times.
+	:return: A list containing two sub-lists, one for wake-up times and one for bed times. Times are in seconds since midnight, because it makes graph-drawing easier.
 	:rtype: list
 	"""
-	dte = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC).astimezone(pytz.timezone(settings.TIME_ZONE)).replace(hour=0, minute=0, second=0)
+	dte = datetime.datetime.utcnow().date()
 	dts = dte - datetime.timedelta(days=days)
-	data = DataReading.objects.filter(start_time__gte=dts, type='awake').order_by('start_time')
 	ret = [[], []]
-	for item in data:
-		tts = item.start_time.astimezone(pytz.timezone(settings.TIME_ZONE))
-		tte = item.end_time.astimezone(pytz.timezone(settings.TIME_ZONE))
+
+	dt = dts
+	while dt < dte:
+		day = create_or_get_day(dt)
+		dt = dt + datetime.timedelta(days=1)
+		tts = day.wake_time
+		tte = day.bed_time
 		wake_secs = (tts - tts.replace(hour=0, minute=0, second=0)).total_seconds()
 		sleep_secs = (tte - tts).total_seconds() + wake_secs
 		if len(ret[0]) == 0:
