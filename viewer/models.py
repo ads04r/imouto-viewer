@@ -151,9 +151,6 @@ class Location(models.Model):
 	def is_home(self):
 		"""
 		Determines if this Location is the user's home or not. Always returns False if USER_HOME_LOCATION is not set in settings.py
-
-		:return: True if this location is the user's home location, False if not.
-		:rtype: bool
 		"""
 		try:
 			home = settings.USER_HOME_LOCATION
@@ -193,6 +190,12 @@ class Location(models.Model):
 				ret.append(person)
 		return ret
 	def geo(self):
+		"""
+		Useful for drawing straight onto a Leaflet map, this function returns the geographical location of the Location as a GeoJSON object.
+
+		:return: A GeoJSON object.
+		:rtype: dict
+		"""
 		point = {}
 		point['type'] = "Point"
 		point['coordinates'] = [self.lon, self.lat]
@@ -203,9 +206,21 @@ class Location(models.Model):
 		ret['geometry'] = point
 		return json.dumps(ret);
 	def photo(self):
+		"""
+		Returns an image of the Location as a Pillow Image object.
+
+		:return: An image of the location, if one exists
+		:rtype: Image
+		"""
 		im = Image.open(self.image.path)
 		return im
 	def allphotos(self):
+		"""
+		Returns all the Photo objects associated with this Location.
+
+		:return: A list of Photo objects
+		:rtype: list
+		"""
 		ret = []
 		for photo in Photo.objects.filter(location=self):
 			ret.append(photo)
@@ -214,6 +229,13 @@ class Location(models.Model):
 				ret.append(photo)
 		return ret
 	def thumbnail(self, size):
+		"""
+		Returns a thumbnail of the image of this Location, as a Pillow object.
+
+		:param size: The size (in pixels) of the returned object (always a square).
+		:return: A small image, as a Pillow object.
+		:rtype: Image
+		"""
 		im = Image.open(self.image.path)
 		bbox = im.getbbox()
 		w = bbox[2]
@@ -226,11 +248,24 @@ class Location(models.Model):
 		ret = ret.resize((size, size), 1)
 		return ret
 	def get_property(self, key):
+		"""
+		Takes a simple string as an argument, and returns a list of strings representing the values related to this Location via that property name.
+
+		:param key: A string representing a property.
+		:return: The value(s) of the specified property, as a list of strings.
+		:rtype: list
+		"""
 		ret = []
 		for prop in LocationProperty.objects.filter(location=self).filter(key=key):
 			ret.append(str(prop.value))
 		return ret
 	def get_properties(self):
+		"""
+		Gets all the valid property keys for this Location as a list of strings, which can each then be sent to `get_property` in order to get the relevant value(s).
+
+		:return: All the properties that have been assigned to this particular Location.
+		:rtype: list
+		"""
 		ret = []
 		for prop in LocationProperty.objects.filter(location=self):
 			value = str(prop.key)
@@ -239,6 +274,12 @@ class Location(models.Model):
 			ret.append(value)
 		return ret
 	def exists(self):
+		"""
+		Determines whether or not this Location currently exists (eg has been built, and has not been demolished.)
+
+		:return: True normally, False if the Location has not yet been built, or has been destroyed.
+		:rtype: bool
+		"""
 		dt = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
 		if((self.destruction_time is None) & (self.creation_time is None)):
 			return True
@@ -250,8 +291,20 @@ class Location(models.Model):
 				return False
 		return True
 	def tags(self):
+		"""
+		Returns all the EventTags that have been assigned to Events taking place within this Location.
+
+		:return: A queryset of EventTags
+		:rtype: Queryset(EventTag)
+		"""
 		return EventTag.objects.filter(events__location=self).distinct().exclude(id='')
 	def longest_event(self):
+		"""
+		Looks for the longest Event taking place in this Location and returns its duration.
+
+		:return: A timedelta, the duration of the longest Event object.
+		:rtype: datetime.timedelta
+		"""
 		duration = ExpressionWrapper(F('end_time') - F('start_time'), output_field=DurationField())
 		try:
 			ret = Event.objects.filter(location=self).exclude(type='life_event').annotate(duration=duration).order_by('-duration')[0].duration
@@ -259,6 +312,12 @@ class Location(models.Model):
 			ret = datetime.timedelta(hours=0)
 		return ret
 	def average_event(self):
+		"""
+		Calculates the mean average duration of all the Events that have taken place at this Location.
+
+		:return: A timedelta representing the mean average time
+		:rtype: datetime.timedelta
+		"""
 		duration = ExpressionWrapper(F('end_time') - F('start_time'), output_field=DurationField())
 		try:
 			ret = Event.objects.filter(location=self).exclude(type='life_event').annotate(duration=duration).aggregate(av=Avg('duration'))['av']
@@ -268,6 +327,12 @@ class Location(models.Model):
 			ret = datetime.timedelta(hours=0)
 		return datetime.timedelta(seconds=int(ret.total_seconds()))
 	def weekdays(self):
+		"""
+		Calculates the number of days spent in this particular Location, grouped by day of the week.
+
+		:return: A dict, for passing to Graph.js
+		:rtype: dict
+		"""
 		ret = {'days': [], 'values': []}
 		d = ['', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 		for item in Event.objects.filter(location=self).exclude(type='life_event').values('start_time__wd').annotate(ct=Count('start_time__wd')).order_by('start_time__wd'):
@@ -1909,63 +1974,42 @@ class Day(models.Model):
 	def today(self):
 		"""
 		Determines if this day represents today in real time.
-
-		:return: True if this Day object represents the current day, False if not.
-		:rtype: bool
 		"""
 		return (datetime.datetime.now().date() == self.date)
 	@property
 	def slug(self):
 		"""
 		The unique 'slug id' for this Day object, as would be displayed after the '#' in the URL bar.
-
-		:return: 'day', followed by an underscore, followed by the date in YYYYMMDD format.
-		:rtype: str
 		"""
 		return("day_" + self.date.strftime('%Y%m%d'))
 	@property
 	def tomorrow(self):
 		"""
 		Returns the Day object representing the day after the one represented by this Day object.
-
-		:return: A Day object if not today, None otherwise.
-		:rtype: Day
 		"""
 		return create_or_get_day(self.date + datetime.timedelta(days=1))
 	@property
 	def yesterday(self):
 		"""
 		Returns the Day object representing the day before the one represented by this Day object.
-
-		:return: A Day object, or None if the data doesn't go back far enough.
-		:rtype: Day
 		"""
 		return create_or_get_day(self.date - datetime.timedelta(days=1))
 	@property
 	def timezone(self):
 		"""
 		Returns the relevant time zone for this particular day (ie it would normally be the same as settings.TIME_ZONE, but the user may be travelling abroad.)
-
-		:return: A pytz timezone value.
-		:rtype: Timezone
 		"""
 		return pytz.timezone(self.timezone_str)
 	@property
 	def people(self):
 		"""
 		All the people encountered on this particular day.
-
-		:return: A QuerySet of Person objects
-		:rtype: QuerySet(Person)
 		"""
 		return Person.objects.filter(event__in=self.events).distinct()
 	@property
 	def events(self):
 		"""
 		Every described event on this particular day.
-
-		:return: A QuerySet of Event objects
-		:rtype: QuerySet(Event)
 		"""
 		d = self.date
 		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
@@ -1975,9 +2019,6 @@ class Day(models.Model):
 	def calendar(self):
 		"""
 		Every calendar appointment scheduled on this particular day.
-
-		:return: A QuerySet of CalendarAppointment objects
-		:rtype: QuerySet(CalendarAppointment)
 		"""
 		d = self.date
 		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
@@ -1987,9 +2028,6 @@ class Day(models.Model):
 	def tweets(self):
 		"""
 		Every microblogpost (typically tweets, could be toots) made on this particular day.
-
-		:return: A QuerySet of RemoteInteraction objects
-		:rtype: QuerySet(RemoteInteraction)
 		"""
 		d = self.date
 		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
@@ -1999,9 +2037,6 @@ class Day(models.Model):
 	def sms(self):
 		"""
 		Every SMS message sent or received on this particular day.
-
-		:return: A QuerySet of RemoteInteraction objects
-		:rtype: QuerySet(RemoteInteraction)
 		"""
 		d = self.date
 		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
@@ -2012,9 +2047,6 @@ class Day(models.Model):
 	def max_heart_rate(self):
 		"""
 		The highest heart rate experienced on this particular day, according to the stored data. Returns 0 if no data is available.
-
-		:return: The maximum heart rate in beats per minute.
-		:rtype: int
 		"""
 		data = self.get_heart_information(False)
 		if 'heart' in data:
@@ -2026,9 +2058,6 @@ class Day(models.Model):
 	def optimal_heart_time(self):
 		"""
 		The time spent in the 'optimal' heart rate (ie between 50% and 70% of maximum) on this particular day, according to the stored data. Returns 0 if no data is available.
-
-		:return: The total number of seconds.
-		:rtype: int
 		"""
 		data = self.get_heart_information(False)
 		if 'heart' in data:
@@ -2040,9 +2069,6 @@ class Day(models.Model):
 	def steps(self):
 		"""
 		The number of steps taken during this particular day, according to the stored data.
-
-		:return: The number of steps.
-		:rtype: int
 		"""
 		dts, dte = self.__calculate_wake_time()
 		obj = DataReading.objects.filter(type='step-count').filter(start_time__gte=dts, end_time__lt=dte).aggregate(steps=Sum('value'))
