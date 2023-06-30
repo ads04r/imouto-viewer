@@ -388,11 +388,8 @@ def day(request, ds):
 	m = int(ds[4:6])
 	d = int(ds[6:])
 	dt = datetime.date(y, m, d)
-	try:
-		day = Day.objects.get(date=dt)
-	except:
-		day = Day(date=dt)
-		day.save()
+	Day.objects.filter(date=dt).delete()
+	day = Day(date=dt)
 
 	events = []
 	potential_joins = []
