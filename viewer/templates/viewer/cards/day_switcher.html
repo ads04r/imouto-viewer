@@ -10,7 +10,7 @@
                         </div>
                       </div>
 {% else %}
-                      <div class="day-stats"></div>
+                      <div class="day-stats"{% if day.average_mood %} data-mood="{{ day.average_mood }}"{% endif %}></div>
                       <div class="text-center">
                         <div class="btn-group">
                             <a href="#{{ day.yesterday.slug }}" class="btn btn-default">Previous</a>

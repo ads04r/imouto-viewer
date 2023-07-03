@@ -2073,9 +2073,22 @@ class Day(models.Model):
 		dts, dte = self.__calculate_wake_time()
 		obj = DataReading.objects.filter(type='step-count').filter(start_time__gte=dts, end_time__lt=dte).aggregate(steps=Sum('value'))
 		try:
-			ret = int(obj['value__sum'])
+			ret = int(obj['steps'])
 		except:
 			ret = 0
+		return ret
+
+	@property
+	def average_mood(self):
+		"""
+		The average mood of the user during thie particular Day. Returns None if no mood data found.
+		"""
+		dts, dte = self.__calculate_wake_time()
+		obj = DataReading.objects.filter(type='mood').filter(start_time__gte=dts, end_time__lt=dte).aggregate(mood=Avg('value'))
+		try:
+			ret = int(float(obj['mood']) + 0.5)
+		except:
+			ret = None
 		return ret
 
 	def data_readings(self, type):

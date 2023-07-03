@@ -885,6 +885,7 @@ function daySummary(date)
             method: 'GET',
             success: function(data) {
 		var html = "";
+		var mood = $(".day-stats").data('mood');
 
 		if((data.wake_up_local) && (data.sleep)){
 			html = html + '<table class="table no-margin">';
@@ -896,6 +897,20 @@ function daySummary(date)
 				html = html + "<tr>";
 				html = html + "<td>Bedtime:</td>";
 				html = html + "<td>" + data.bedtime_local + "</td>";
+				html = html + "</tr>";
+			}
+			if(mood){
+				var mood_icon = 'smile-o';
+				if(mood <= 4) { mood_icon = 'meh-o'; }
+				if(mood <= 2) { mood_icon = 'frown-o'; }
+				html = html + "<tr>";
+				html = html + "<td>Mood:</td>";
+				html = html + "<td>";
+				for(var i = 0; i < mood; i++)
+				{
+					html = html + '<i class="fa fa-' + mood_icon + '"></i>&nbsp;';
+				}
+				html = html + "</td>";
 				html = html + "</tr>";
 			}
 			html = html + "</table>";
