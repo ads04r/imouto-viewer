@@ -2142,7 +2142,7 @@ class Day(models.Model):
 		if graph:
 			data['heart']['graph'] = self.get_heart_graph()
 			self.cached_heart = json.dumps(data)
-			self.save()
+			self.save(update_fields=['cached_heart'])
 
 		return data
 
@@ -2208,7 +2208,7 @@ class Day(models.Model):
 					data['tomorrow'] = data['sleep']['end']
 			self.wake_time = dts
 			self.bed_time = dte
-			self.save()
+			self.save(update_fields=['wake_time', 'bed_time'])
 			return data
 
 		if self.today or self.tomorrow.today:
@@ -2230,7 +2230,7 @@ class Day(models.Model):
 		if not(self.today):
 			self.wake_time = dts
 			self.bed_time = dte
-			self.save()
+			self.save(update_fields=['wake_time', 'bed_time', 'cached_sleep'])
 
 		return data
 
