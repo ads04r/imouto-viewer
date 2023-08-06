@@ -307,6 +307,11 @@ def reports(request):
 			context['settings']['moonshine_url'] = settings.MOONSHINE_URL
 	return render(request, 'viewer/pages/reports.html', context)
 
+def life_grid(request):
+
+	context = {'periods': LifePeriod.objects.order_by('start_time'), 'events': Event.objects.filter(type='life_event').order_by('start_time')}
+	return render(request, 'viewer/pages/life_grid.html', context)
+
 def events(request):
 	if request.method == 'POST':
 		cache.delete('dashboard')

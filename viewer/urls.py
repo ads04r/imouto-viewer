@@ -8,6 +8,7 @@ urlpatterns = [
     path('stats.html', views.dashboard),
     path('stats.json', views.dashboard_json),
     path('onthisday.html', views.onthisday),
+    path('life_grid.html', views.life_grid),
     path('upload.html', views.importer),
     path('timeline.html', views.timeline),
     path('timeline/<ds>.html', views.timelineitem),

@@ -66,6 +66,13 @@ function anniversaryScreen()
     });
 }
 
+function lifeGridScreen()
+{
+    $(".content-wrapper").load("./life_grid.html", function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
+    });
+}
+
 function uploadScreen()
 {
     $(".content-wrapper").load("./upload.html", function(response, status, xhr){
@@ -1848,6 +1855,7 @@ function pageRefresh()
     if(page == 'files') { uploadScreen(); return true; }
     if(page == 'reports') { reportsScreen(); return true; }
     if(page == 'onthisday') { anniversaryScreen(); return true; }
+    if(page == 'life-grid') { lifeGridScreen(); return true; }
 
     if(page == 'events') { eventsScreen(); return true; }
     if(page == 'people') { peopleScreen(); return true; }
