@@ -21,7 +21,7 @@ from .functions.locations import home_location, nearest_location, join_location_
 from .functions.people import explode_properties
 from .functions.geo import getgeoline, getelevation, getspeed
 from .functions.health import get_sleep_history
-from .functions.utils import get_report_queue, get_timeline_events, generate_onthisday, generate_dashboard
+from .functions.utils import get_report_queue, get_timeline_events, generate_onthisday, generate_dashboard, generate_life_grid
 from .functions.calendar import event_label
 
 def index(request):
@@ -309,7 +309,12 @@ def reports(request):
 
 def life_grid(request):
 
-	context = {'periods': LifePeriod.objects.order_by('start_time'), 'events': Event.objects.filter(type='life_event').order_by('start_time')}
+	dob = settings.USER_DATE_OF_BIRTH
+	now = datetime.datetime.now().date()
+	while dob.weekday() < 6:
+		dob = dob - datetime.timedelta(days=1)
+	weeks = int((now - dob).days / 7) + 1
+	context = {'start_date': dob, 'weeks': weeks, 'grid': generate_life_grid(dob, weeks)}
 	return render(request, 'viewer/pages/life_grid.html', context)
 
 def events(request):

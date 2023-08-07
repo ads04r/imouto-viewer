@@ -12,8 +12,34 @@
 <section class="content">
 
     <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12">
 
+                <div class="box box-primary">
+                    <div class="box-body">
 
+<table class="life_grid">
+{% for year in grid %}
+	<tr>
+	<th>Year {{ forloop.counter }}&nbsp;</th>
+	{% for week in year %}
+		{% if week.events|length > 0 %}
+		<td><i class="fa fa-square"></i></td>
+		{% else %}
+		<td><i class="fa fa-square-o"></i></td>
+		{% endif %}
+	{% endfor %}
+	</tr>
+{% endfor %}
+</table>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
     </div>
 
 </section>
+
+
