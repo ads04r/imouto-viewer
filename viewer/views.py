@@ -2,7 +2,7 @@ from django.http import HttpResponse, Http404, HttpResponseRedirect, HttpRespons
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
-from django.db.models import Q, F, DurationField, ExpressionWrapper, Max
+from django.db.models import Q, F, DurationField, ExpressionWrapper, Max, Count
 from django.db.models.functions import Cast
 from django.db.models.fields import DateField
 from django.utils.text import slugify
@@ -314,7 +314,7 @@ def life_grid(request):
 	while dob.weekday() < 6:
 		dob = dob - datetime.timedelta(days=1)
 	weeks = int((now - dob).days / 7) + 1
-	context = {'start_date': dob, 'weeks': weeks, 'grid': generate_life_grid(dob, weeks)}
+	context = {'start_date': dob, 'weeks': weeks, 'categories': list(LifePeriod.objects.values('type').annotate(count=Count('type')).order_by('-count')), 'grid': generate_life_grid(dob, weeks)}
 	return render(request, 'viewer/pages/life_grid.html', context)
 
 def events(request):

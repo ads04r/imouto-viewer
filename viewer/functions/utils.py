@@ -38,7 +38,9 @@ def generate_life_grid(start_date, weeks):
 			if len(year) > 0:
 				life.append(year)
 				year = []
-		item = {'start_time': dts, 'end_time': dte, 'events': Event.objects.filter(type='life_event', start_time__lte=dte, end_time__gte=dts), 'periods': LifePeriod.objects.filter(start_time__lte=dte, end_time__gte=dts)}
+		dtts = datetime.datetime(dts.year, dts.month, dts.day, 0, 0, 0, tzinfo=pytz.UTC)
+		dtte = datetime.datetime(dte.year, dte.month, dte.day, 23, 59, 59, tzinfo=pytz.UTC)
+		item = {'start_time': dts, 'end_time': dte, 'events': Event.objects.filter(type='life_event', start_time__lte=dtte, end_time__gte=dtts), 'periods': LifePeriod.objects.filter(start_time__lte=dtte, end_time__gte=dtts)}
 		year.append(item)
 	if len(year) > 0:
 		life.append(year)

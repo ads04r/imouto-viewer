@@ -122,3 +122,13 @@
     margin-right: 5px;
     border: solid 1px #000000;
 }
+
+.life_grid th {
+	font-size: small;
+	padding-right: 2em;
+}
+
+.life_grid td {
+	min-width: 1em;
+	border: 1px solid #000000;
+}

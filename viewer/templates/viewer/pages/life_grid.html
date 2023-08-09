@@ -17,17 +17,23 @@
 
                 <div class="box box-primary">
                     <div class="box-body">
+{% for category in categories %}
+
+			<div class="checkbox"><label><input class="life-grid-category" data-category="{{ category.type }}" type="checkbox"> {{ category.type }}</label></div>
+
+{% endfor %}
+                    </div>
+                </div>
+
+                <div class="box box-primary">
+                    <div class="box-body">
 
 <table class="life_grid">
 {% for year in grid %}
 	<tr>
 	<th>Year {{ forloop.counter }}&nbsp;</th>
 	{% for week in year %}
-		{% if week.events|length > 0 %}
-		<td><i class="fa fa-square"></i></td>
-		{% else %}
-		<td><i class="fa fa-square-o"></i></td>
-		{% endif %}
+		<td data-colours="{% for p in week.periods.all %}{{ p.type }}|{{ p.colour }},{% endfor %}" class="{% for cl in week.periods.all %}period-{{ cl.pk }} category-{{ cl.type }} {% endfor %}week-square">{% if week.events.count > 0 %}<a href="#event_{{ week.events.0.id }}"><i class="fa fa-square"></i></a>{% else %}&nbsp;{% endif %}</td>
 	{% endfor %}
 	</tr>
 {% endfor %}

@@ -70,6 +70,31 @@ function lifeGridScreen()
 {
     $(".content-wrapper").load("./life_grid.html", function(response, status, xhr){
         if(status == 'error') { errorPage(xhr); return false; }
+
+	$("input.life-grid-category").on('change', function(){
+		var c = $(this).data('category');
+		var checked = $(this).is(':checked');
+		$('td.category-' + c).each(function(){
+			var cols = $(this).data('colours').split(',');
+			var i;
+			for(i = 0; i < cols.length; i++)
+			{
+				var t = cols[i].split('|');
+				if(t.length == 2)
+				{
+					if(t[0] == c)
+					{
+						if(checked)
+						{
+							$(this).css('background-color', t[1]);
+						} else {
+							$(this).css('background-color', '');
+						}
+					}
+				}
+			}
+		});
+	});
     });
 }
 
