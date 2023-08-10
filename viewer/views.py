@@ -10,7 +10,7 @@ from django.conf import settings
 from background_task.models import Task
 from haystack.query import SearchQuerySet
 from viewer.tasks import generate_photo_collages
-import datetime, pytz, dateutil.parser, json, requests
+import datetime, pytz, dateutil.parser, json, requests, random
 
 from .tasks import *
 from .models import *
@@ -309,12 +309,28 @@ def reports(request):
 
 def life_grid(request):
 
+	if request.method == 'POST':
+
+		cache.delete('dashboard')
+
+		form = LifePeriodForm(request.POST)
+		if form.is_valid():
+
+			life_period = form.save(commit=False)
+			life_period.colour = ('#' + str("%06x" % random.randint(0, 0xFFFFFF)).upper())
+			life_period.save()
+
+			return HttpResponseRedirect('./#life-grid')
+		else:
+			raise Http404(form.errors)
+
 	dob = settings.USER_DATE_OF_BIRTH
 	now = datetime.datetime.now().date()
 	while dob.weekday() < 6:
 		dob = dob - datetime.timedelta(days=1)
 	weeks = int((now - dob).days / 7) + 1
-	context = {'start_date': dob, 'weeks': weeks, 'categories': list(LifePeriod.objects.values('type').annotate(count=Count('type')).order_by('-count')), 'grid': generate_life_grid(dob, weeks)}
+	form = LifePeriodForm()
+	context = {'start_date': dob, 'weeks': weeks, 'form': form, 'categories': list(LifePeriod.objects.values('type').annotate(count=Count('type')).order_by('-count')), 'grid': generate_life_grid(dob, weeks)}
 	return render(request, 'viewer/pages/life_grid.html', context)
 
 def events(request):

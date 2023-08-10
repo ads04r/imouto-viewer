@@ -1,5 +1,5 @@
-from django.forms import ModelForm, ImageField, TextInput, Textarea, Select
-from viewer.models import Location, Event, LifeReport, EventWorkoutCategory
+from django.forms import ModelForm, ImageField, TextInput, Textarea, Select, DateInput
+from viewer.models import Location, Event, LifeReport, EventWorkoutCategory, LifePeriod
 from django.db.models import Sum, Count
 import datetime, pytz
 
@@ -57,6 +57,21 @@ class EventForm(ModelForm):
 			'description': Textarea(attrs={'class': 'form-control'}),
 			'start_time': TextInput(attrs={'class': 'form-control'}),
 			'end_time': TextInput(attrs={'class': 'form-control'}),
+		}
+
+class LifePeriodForm(ModelForm):
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		now = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+	class Meta:
+		model = LifePeriod
+		fields = ['caption', 'type', 'description', 'start_time', 'end_time']
+		widgets = {
+			'caption': TextInput(attrs={'class': 'form-control'}),
+			'type': TextInput(attrs={'class': 'form-control'}),
+			'description': Textarea(attrs={'class': 'form-control'}),
+			'start_time': DateInput(attrs={'class': 'form-control'}),
+			'end_time': DateInput(attrs={'class': 'form-control'}),
 		}
 
 class CreateReportForm(ModelForm):

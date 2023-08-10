@@ -71,6 +71,10 @@ function lifeGridScreen()
     $(".content-wrapper").load("./life_grid.html", function(response, status, xhr){
         if(status == 'error') { errorPage(xhr); return false; }
 
+        $("#period-save-form-button").on('click', function(){
+            $("#period-edit").submit();
+        });
+
 	$("input.life-grid-category").on('change', function(){
 		var c = $(this).data('category');
 		var checked = $(this).is(':checked');
