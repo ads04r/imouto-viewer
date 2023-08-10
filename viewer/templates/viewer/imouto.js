@@ -66,6 +66,42 @@ function anniversaryScreen()
     });
 }
 
+function lifeGridScreen()
+{
+    $(".content-wrapper").load("./life_grid.html", function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
+
+        $("#period-save-form-button").on('click', function(){
+            $("#period-edit").submit();
+        });
+
+	$("input.life-grid-category").on('change', function(){
+		var c = $(this).data('category');
+		var checked = $(this).is(':checked');
+		$('td.category-' + c).each(function(){
+			var cols = $(this).data('colours').split(',');
+			var i;
+			for(i = 0; i < cols.length; i++)
+			{
+				var t = cols[i].split('|');
+				if(t.length == 2)
+				{
+					if(t[0] == c)
+					{
+						if(checked)
+						{
+							$(this).css('background-color', t[1]);
+						} else {
+							$(this).css('background-color', '');
+						}
+					}
+				}
+			}
+		});
+	});
+    });
+}
+
 function uploadScreen()
 {
     $(".content-wrapper").load("./upload.html", function(response, status, xhr){
@@ -1848,6 +1884,7 @@ function pageRefresh()
     if(page == 'files') { uploadScreen(); return true; }
     if(page == 'reports') { reportsScreen(); return true; }
     if(page == 'onthisday') { anniversaryScreen(); return true; }
+    if(page == 'life-grid') { lifeGridScreen(); return true; }
 
     if(page == 'events') { eventsScreen(); return true; }
     if(page == 'people') { peopleScreen(); return true; }

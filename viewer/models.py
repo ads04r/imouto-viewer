@@ -1205,6 +1205,35 @@ class Event(models.Model):
 			models.Index(fields=['type'])
 		]
 
+class LifePeriod(models.Model):
+	"""A LifePeriod is a period longer than an Event. It may be used for things such as
+	living in a particular town, attending a particular school or working in a particular
+	job."""
+	start_time = models.DateField()
+	"""The start time of the LifePeriod, a date object."""
+	end_time = models.DateField()
+	"""The end time of the LifePeriod, a date object."""
+	created_time = models.DateTimeField(auto_now_add=True)
+	"""A datetime representing the time this LifePeriod object was created."""
+	updated_time = models.DateTimeField(auto_now=True)
+	"""A datetime representing the time this LifePeriod object was last modified."""
+	caption = models.CharField(max_length=255, default='', blank=True)
+	"""A human-readable caption for the LifePeriod, could also be described as the title or summary."""
+	description = models.TextField(default='', blank=True)
+	"""A human-readable description of the LifePeriod. This can be anything, but should provide some narrative or additional information to remembering what happened during this LifePeriod."""
+	cover_photo = models.ForeignKey(Photo, null=True,  blank=True, on_delete=models.SET_NULL)
+	"""The Photo object that best illustrates this LifePeriod."""
+	colour = ColorField(default='#777777')
+	"""The colour in which this LifePeriod will be drawn on the life grid view"""
+	type = models.SlugField(max_length=32)
+	"""The type or category of this LifePeriod. This is a string and can be anything you like"""
+	def __str__(self):
+		return(self.caption)
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'life period'
+		verbose_name_plural = 'life periods'
+
 class PhotoCollage(models.Model):
 	image = models.ImageField(blank=True, null=True) # , upload_to=photo_collage_upload_location)
 	event = models.ForeignKey(Event, null=True, blank=True, on_delete=models.SET_NULL, related_name='photo_collages')

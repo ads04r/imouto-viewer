@@ -25,6 +25,27 @@ def __display_timeline_event(event):
 							return False
 	return True
 
+def generate_life_grid(start_date, weeks):
+
+	life = []
+	year = []
+	year_birthday = settings.USER_DATE_OF_BIRTH
+	for i in range(0, weeks):
+		dts = start_date + datetime.timedelta(days=(7 * i))
+		dte = dts + datetime.timedelta(days=6)
+		if ((dts <= year_birthday) & (year_birthday <= dte)):
+			year_birthday = year_birthday.replace(year=year_birthday.year + 1)
+			if len(year) > 0:
+				life.append(year)
+				year = []
+		dtts = datetime.datetime(dts.year, dts.month, dts.day, 0, 0, 0, tzinfo=pytz.UTC)
+		dtte = datetime.datetime(dte.year, dte.month, dte.day, 23, 59, 59, tzinfo=pytz.UTC)
+		item = {'start_time': dts, 'end_time': dte, 'events': Event.objects.filter(type='life_event', start_time__lte=dtte, end_time__gte=dtts), 'periods': LifePeriod.objects.filter(start_time__lte=dtte, end_time__gte=dtts)}
+		year.append(item)
+	if len(year) > 0:
+		life.append(year)
+	return life
+
 def get_location_manager_report_queue():
 
 	ret = []

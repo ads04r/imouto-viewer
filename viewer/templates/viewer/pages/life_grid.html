@@ -1,0 +1,52 @@
+{% load static %}
+
+<section class="content-header">
+    <h1>
+        Life Grid
+    </h1>
+    <ol class="breadcrumb">
+        <li>Life Grid</li>
+    </ol>
+</section>
+
+<section class="content">
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12">
+
+                <div class="box box-primary">
+                    <div class="box-body">
+
+<table class="life_grid">
+{% for year in grid %}
+	<tr>
+	<th>Year&nbsp;{{ forloop.counter }}</th>
+	{% for week in year %}
+		<td data-colours="{% for p in week.periods.all %}{{ p.type }}|{{ p.colour }},{% endfor %}" class="{% for cl in week.periods.all %}period-{{ cl.pk }} category-{{ cl.type }} {% endfor %}week-square">{% if week.events.count > 0 %}<a href="#event_{{ week.events.0.id }}"><i class="fa fa-square"></i></a>{% else %}&nbsp;{% endif %}</td>
+	{% endfor %}
+	</tr>
+{% endfor %}
+</table>
+
+{% for category in categories %}
+
+			<div class="checkbox"><label><input class="life-grid-category" data-category="{{ category.type }}" type="checkbox"> {{ category.type }}</label></div>
+
+{% endfor %}
+                    </div>
+                    <div class="box-footer">
+			<div class="pull-right">
+                        <a class="btn btn-success" data-toggle="modal" data-target="#life_period_add" aria-hidden="true">Add Period</a>
+			</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</section>
+
+
+{% include 'viewer/cards/periodeditor.html' %}

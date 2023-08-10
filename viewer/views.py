@@ -2,7 +2,7 @@ from django.http import HttpResponse, Http404, HttpResponseRedirect, HttpRespons
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
-from django.db.models import Q, F, DurationField, ExpressionWrapper, Max
+from django.db.models import Q, F, DurationField, ExpressionWrapper, Max, Count
 from django.db.models.functions import Cast
 from django.db.models.fields import DateField
 from django.utils.text import slugify
@@ -10,7 +10,7 @@ from django.conf import settings
 from background_task.models import Task
 from haystack.query import SearchQuerySet
 from viewer.tasks import generate_photo_collages
-import datetime, pytz, dateutil.parser, json, requests
+import datetime, pytz, dateutil.parser, json, requests, random
 
 from .tasks import *
 from .models import *
@@ -21,7 +21,7 @@ from .functions.locations import home_location, nearest_location, join_location_
 from .functions.people import explode_properties
 from .functions.geo import getgeoline, getelevation, getspeed
 from .functions.health import get_sleep_history
-from .functions.utils import get_report_queue, get_timeline_events, generate_onthisday, generate_dashboard
+from .functions.utils import get_report_queue, get_timeline_events, generate_onthisday, generate_dashboard, generate_life_grid
 from .functions.calendar import event_label
 
 def index(request):
@@ -306,6 +306,32 @@ def reports(request):
 		if settings.MOONSHINE_URL != '':
 			context['settings']['moonshine_url'] = settings.MOONSHINE_URL
 	return render(request, 'viewer/pages/reports.html', context)
+
+def life_grid(request):
+
+	if request.method == 'POST':
+
+		cache.delete('dashboard')
+
+		form = LifePeriodForm(request.POST)
+		if form.is_valid():
+
+			life_period = form.save(commit=False)
+			life_period.colour = ('#' + str("%06x" % random.randint(0, 0xFFFFFF)).upper())
+			life_period.save()
+
+			return HttpResponseRedirect('./#life-grid')
+		else:
+			raise Http404(form.errors)
+
+	dob = settings.USER_DATE_OF_BIRTH
+	now = datetime.datetime.now().date()
+	while dob.weekday() < 6:
+		dob = dob - datetime.timedelta(days=1)
+	weeks = int((now - dob).days / 7) + 1
+	form = LifePeriodForm()
+	context = {'start_date': dob, 'weeks': weeks, 'form': form, 'categories': list(LifePeriod.objects.values('type').annotate(count=Count('type')).order_by('-count')), 'grid': generate_life_grid(dob, weeks)}
+	return render(request, 'viewer/pages/life_grid.html', context)
 
 def events(request):
 	if request.method == 'POST':
