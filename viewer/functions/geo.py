@@ -34,6 +34,77 @@ def get_location_name(lat, lon):
 		cache.set(cache_key, ret, timeout=86400)
 	return ret
 
+def get_area_address(n, w, s, e):
+	"""
+	Given a query bounding box, returns the most specific human-readable address for the area, as a list.
+
+	:param n: The most northern latitude of the area.
+	:param w: The most westerly longitude of the area.
+	:param s: The most southern latitude of the area.
+	:param e: The most easterly longitude of the area.
+	:return: A list of strings containing an address for the area.
+	:rtype: list(str)
+
+	"""
+	cache_key = "loc_" + str(n) + "," + str(w) + "," + str(s) + "," + str(e)
+	ret = cache.get(cache_key)
+	if ret is None:
+		ret = []
+	if len(ret) > 0:
+		return ret
+	try:
+		mapbox_key = settings.MAPBOX_API_KEY
+	except:
+		return []
+	queries = [[w, n], [e, n], [w, s], [e, s]]
+	text = []
+	c = 50
+	for query in queries:
+		lon = query[0]
+		lat = query[1]
+		url = "https://api.mapbox.com/geocoding/v5/mapbox.places/" + str(lon) + "," + str(lat) + ".json?language=en&access_token=" + mapbox_key
+		r = urllib.request.urlopen(url)
+		data = json.loads(r.read())
+		addr = []
+		if 'features' in data:
+			if len(data['features']) > 0:
+				for f in reversed(data['features']):
+					if not('place_type') in f:
+						continue
+					if 'postcode' in f['place_type']:
+						continue
+					if not('text' in f):
+						continue
+					addr.append(f['text'])
+		l = len(addr)
+		if l > 0:
+			if l < c:
+				c = l
+			text.append(addr)
+	label = ''
+	ix = -1
+
+	for i in range(0, c):
+		check = []
+		for j in range(0, 4):
+			try:
+				item = text[j][i]
+			except:
+				item = ''
+			if item in check:
+				continue
+			check.append(item)
+		if len(check) == 1:
+			if i > ix:
+				ix = i
+
+	try:
+		ret = list(reversed(text[0][0:(ix + 1)]))
+	except:
+		ret = []
+	cache.set(cache_key, ret, timeout=86400)
+	return ret
+
 def get_area_name(n, w, s, e):
 	"""
 	Given a query bounding box, returns the most specific human-readable name for the area.
@@ -46,51 +117,10 @@ def get_area_name(n, w, s, e):
 	:rtype: str
 
 	"""
-	cache_key = "loc_" + str(n) + "," + str(w) + "," + str(s) + "," + str(e)
-	ret = cache.get(cache_key)
-	if ret is None:
-		ret = ''
-	try:
-		mapbox_key = settings.MAPBOX_API_KEY
-	except:
-		return ""
-	queries = [[w, n], [e, n], [w, s], [e, s]]
-	text = []
-	c = 50
-	for query in queries:
-		lon = query[0]
-		lat = query[1]
-		url = "https://api.mapbox.com/geocoding/v5/mapbox.places/" + str(lon) + "," + str(lat) + ".json?language=en&access_token=" + mapbox_key
-		r = urllib.request.urlopen(url)
-		data = json.loads(r.read())
-		ret = []
-		if 'features' in data:
-			if len(data['features']) > 0:
-				for f in reversed(data['features']):
-					if not('place_type') in f:
-						continue
-					if 'postcode' in f['place_type']:
-						continue
-					if not('text' in f):
-						continue
-					ret.append(f['text'])
-		l = len(ret)
-		if l > 0:
-			if l < c:
-				c = l
-			text.append(ret)
-	if len(text) > 0:
-		cache.set(cache_key, text, timeout=86400)
-	label = ''
-	for i in range(0, l):
-		check = []
-		for j in range(0, len(text)):
-			check.append(text[j].pop(0))
-		if all(x == check[0] for x in check):
-			label = check[0]
-			continue
-		break
-	return label
+	addr = get_area_address(n, w, s, e)
+	if len(addr) == 0:
+		return ''
+	return addr[0]
 
 def journey_similarity(event1, event2):
 	"""
