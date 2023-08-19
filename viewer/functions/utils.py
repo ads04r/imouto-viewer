@@ -358,6 +358,8 @@ def generate_dashboard():
 	birthdays = []
 	dtd = datetime.datetime.now().date()
 	for pp in PersonProperty.objects.filter(key='birthday'):
+		if not(pp.person.significant):
+			continue
 		dtp = pp.person.next_birthday
 		ttb = (dtp - dtd).days
 		if ttb <= 14:

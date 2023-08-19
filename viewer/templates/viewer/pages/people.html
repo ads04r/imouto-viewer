@@ -17,6 +17,7 @@
                 <div class="nav-tabs-custom">
                     <ul class="nav nav-tabs">
                         <li class="active"><a href="#tab-people-recent" data-toggle="tab">Summary</a></li>
+                        <li><a href="#tab-people-main" data-toggle="tab">Important People</a></li>
                         <li><a href="#tab-people-all" data-toggle="tab">All People</a></li>
                     </ul>
                     <div class="tab-content">
@@ -174,6 +175,32 @@
 				</div>
 			</div>
 			</div>
+                        </div>
+
+                        <div class="tab-pane" id="tab-people-main">
+                        <p>
+                            <ul class="products-list product-list-in-box">
+                                
+{% for person in data.all %}
+{% if person.significant %}
+                                
+                                <li class="item">
+                                    <div class="product-img">
+                                        {% if person.image %}<img src="people/{{ person.uid }}_thumb.jpg"/>{% endif %}
+                                    </div>
+                                    <div class="product-info">
+                                        <a class="product-title personlink" href="#person_{{ person.uid }}">
+                                            {{ person.full_name }}</a>
+                                        <span class="product-description">
+                                            Last met {{ person.last_seen|date:"l jS F Y" }}, {{ person.days }} encounters total.</span>
+                                    </div>
+                                </li>
+                                
+{% endif %}
+{% endfor %}
+                                
+                            </ul>
+                        </p>
                         </div>
 
                         <div class="tab-pane" id="tab-people-all">

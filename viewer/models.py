@@ -381,6 +381,7 @@ class Person(models.Model):
 	nickname = models.CharField(null=True, blank=True, max_length=128)
 	wikipedia = models.URLField(blank=True, null=True)
 	image = models.ImageField(blank=True, null=True, upload_to=user_thumbnail_upload_location)
+	significant = models.BooleanField(default=True)
 	def to_dict(self):
 		"""
 		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.
