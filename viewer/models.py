@@ -3,6 +3,7 @@ from django.core.files import File
 from django.db.models import Count, Avg, Max, Sum, Transform, Field, IntegerField, F, ExpressionWrapper
 from django.db.models.signals import pre_save
 from django.db.models.fields import DurationField
+from polymorphic.models import PolymorphicModel
 from django.contrib.staticfiles import finders
 from django.conf import settings
 from django.dispatch import receiver
@@ -20,6 +21,7 @@ from tzfpy import get_tz
 from viewer.health import parse_sleep, max_heart_rate
 from viewer.staticcharts import generate_pie_chart, generate_donut_chart
 from viewer.functions.geo import getposition, get_location_name
+from viewer.functions.location_manager import get_possible_location_events
 
 import random, datetime, pytz, json, markdown, re, os, urllib.request
 
@@ -1201,6 +1203,10 @@ class Event(models.Model):
 				if person in self.people.all():
 					continue
 				self.people.add(person)
+	def auto_tag(self):
+		for tag in AutoTag.objects.all():
+			if tag.eval(self):
+				self.tag(tag.tag.id)
 	@property
 	def similar(self):
 		return list(self.similar_to.filter(diff_value__lt=0.1).order_by('diff_value').values('event1', 'event1__caption', 'event1__start_time', 'diff_value'))
@@ -2367,6 +2373,94 @@ class Day(models.Model):
 		app_label = 'viewer'
 		verbose_name = 'day'
 		verbose_name_plural = 'days'
+
+class AutoTag(models.Model):
+	tag = models.ForeignKey(EventTag, null=False, on_delete=models.CASCADE, related_name='rules')
+	enabled = models.BooleanField(default=True)
+	def add_location_condition(self, lat, lon):
+		ret = TagLocationCondition(lat=lat, lon=lon, tag=self)
+		ret.save()
+		return ret
+	def add_type_condition(self, type):
+		ret = TagTypeCondition(type=type, tag=self)
+		ret.save()
+		return ret
+	def eval(self, event):
+		if not(self.enabled):
+			return False
+		for cond in self.conditions.all():
+			cond_eval = cond.eval(event)
+			if not(cond_eval):
+				return False
+		return True
+
+	def __str__(self):
+		return(str(self.tag))
+
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'autotag'
+		verbose_name_plural = 'autotags'
+
+class TagCondition(PolymorphicModel):
+	tag = models.ForeignKey(AutoTag, null=False, on_delete=models.CASCADE, related_name='conditions')
+	def eval(self, event):
+		return False
+
+	def __str__(self):
+		return(str(self.tag))
+
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'tag condition'
+		verbose_name_plural = 'tag conditions'
+
+class TagLocationCondition(TagCondition):
+	lat = models.FloatField()
+	lon = models.FloatField()
+	def eval(self, event):
+		for ev in get_possible_location_events(event.start_time.date(), self.lat, self.lon):
+			if ((ev['start_time'] > event.start_time) & (ev['end_time'] < event.end_time)):
+				return True
+		return False
+
+	def __str__(self):
+		return(str(self.tag))
+
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'tag location condition'
+		verbose_name_plural = 'tag location conditions'
+
+class TagTypeCondition(TagCondition):
+	type = models.SlugField(max_length=32)
+	def eval(self, event):
+		if event.type == self.type:
+			return True
+		return False
+
+	def __str__(self):
+		return(str(self.tag))
+
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'tag type condition'
+		verbose_name_plural = 'tag type conditions'
+
+class TagWorkoutCondition(TagCondition):
+	workout_category = models.ForeignKey(EventWorkoutCategory, null=False, on_delete=models.CASCADE)
+	def eval(self, event):
+		if self.workout_category in self.workout_categories.all()
+			return True
+		return False
+
+	def __str__(self):
+		return(str(self.tag))
+
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'tag workour condition'
+		verbose_name_plural = 'tag workout conditions'
 
 @receiver(pre_save, sender=Day)
 def save_day_trigger(sender, instance, **kwargs):

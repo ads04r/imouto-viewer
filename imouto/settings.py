@@ -24,6 +24,7 @@ except ModuleNotFoundError:
 # Application definition
 
 INSTALLED_APPS = [
+    'polymorphic',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',

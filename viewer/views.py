@@ -17,7 +17,8 @@ from .models import *
 from .forms import *
 
 from .functions.moonshine import get_moonshine_tracks
-from .functions.locations import home_location, nearest_location, join_location_events, get_possible_location_events
+from .functions.locations import home_location, nearest_location, join_location_events
+from .functions.location_manager import get_possible_location_events
 from .functions.people import explode_properties
 from .functions.geo import getgeoline, getelevation, getspeed
 from .functions.health import get_sleep_history
@@ -363,6 +364,7 @@ def events(request):
 					event.workout_categories.add(category)
 			event.save()
 			event.populate_people_from_photos()
+			event.auto_tag()
 
 			return HttpResponseRedirect('./#event_' + str(event.id))
 		else:
