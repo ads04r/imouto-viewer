@@ -835,6 +835,14 @@ def places(request):
 				#image.save()
 				post.image = request.FILES['uploaded_image']
 			post.save()
+			post.categories.clear()
+			try:
+				categories = str(request.POST['location_categories']).split(',')
+			except:
+				categproes = []
+			for category in categories:
+				post.add_category(category.strip())
+
 			return HttpResponseRedirect('./#place_' + str(id))
 		else:
 			raise Http404(form.errors)

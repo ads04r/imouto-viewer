@@ -298,6 +298,19 @@ class Location(models.Model):
 		:rtype: Queryset(EventTag)
 		"""
 		return EventTag.objects.filter(events__location=self).distinct().exclude(id='')
+	def add_category(self, catname):
+		"""
+		Adds a category to a Location, from a string value. The category is created if it doesn't exist.
+
+		:param tagname: The name of the category to add
+		"""
+		catid = str(catname)
+		try:
+			category = LocationCategory.objects.get(caption__iexact=catid)
+		except:
+			category = LocationCategory(caption=catid, colour=('#' + str("%06x" % random.randint(0, 0xFFFFFF)).upper()))
+			category.save()
+		self.categories.add(category)
 	def longest_event(self):
 		"""
 		Looks for the longest Event taking place in this Location and returns its duration.
