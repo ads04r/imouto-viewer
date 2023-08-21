@@ -2450,7 +2450,7 @@ class TagTypeCondition(TagCondition):
 class TagWorkoutCondition(TagCondition):
 	workout_category = models.ForeignKey(EventWorkoutCategory, null=False, on_delete=models.CASCADE)
 	def eval(self, event):
-		if self.workout_category in self.workout_categories.all()
+		if self.workout_category in self.workout_categories.all():
 			return True
 		return False
 
