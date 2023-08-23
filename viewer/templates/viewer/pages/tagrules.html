@@ -1,0 +1,78 @@
+{% load static %}
+
+<section class="content-header">
+    <h1>
+        {{ data.id }}
+        <small>Tag</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="#tags">Tags</a></li>
+        <li>{{ data.id }}</li>
+    </ol>
+</section>
+
+<section class="content">
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-12 col-sm-6 col-md-8">
+
+{% for rule in data.rules.all %}
+
+                <div class="box box-primary" id="day_event_{{ event.pk }}">
+                    <div class="box-body">
+
+{% for cond in rule.conditions.all %}
+
+			<div class="post">
+
+{% if cond.lat %}{% if cond.lon %}
+
+					<span class="pull-right"><img src="tagrules/{{ cond.pk }}.png" width="100" height="100"></span>
+
+{% endif %}{% endif %}
+					<h4><i class="fa fa-tag" style="color: {{cond.tag.tag.colour}};"></i> {{ cond.tag.tag }}</h4>
+					<div style="height: 60px;">
+						<p>{{ cond.description }}</p>
+						<a class="btn btn-danger btn-xs delete-autotag-condition" data-id="{{ cond.pk }}">Delete Condition</a>
+					</div>
+
+			</div>
+
+{% endfor %}			
+
+
+			<table class="table">
+			<tr class="form-row">
+				<td><label for="condition-type-select-{{ rule.pk }}">Add&nbsp;new&nbsp;condition: </label></td>
+				<td style="width: 100%;">
+					<select class="form-control" name="condition-type-select-{{ rule.pk }}" id="condition-type-select-{{ rule.pk }}">
+						<option value="type">Type condition</option>
+						<option value="workout">Workout category condition</option>
+						<option value="location">Location condition</option>
+					</select>
+				</td>
+				<td><a class="btn btn-success add-autotag-condition" data-rule-id="{{ rule.pk }}" aria-hidden="true">Add</a></td>
+			</tr>
+			</table>
+
+                    </div>
+                    <div class="box-footer">
+			{% if rule.enabled %}<span class="checkbox"><label><input class="tagrule-enable" data-tagrule="{{ rule.tag }}" type="checkbox" checked="checked"> Enabled</label>{% else %}<span class="checkbox"><label><input class="tagrule-enable" data-tagrule="{{ rule.tag }}" type="checkbox"> Enabled</label>{% endif %}
+			<span class="pull-right">
+				<a class="btn btn-danger delete-autotag" data-id="{{ rule.pk }}">Delete Rule</a>
+			</span></span>
+                    </div>
+                </div>
+
+{% endfor %}                        
+
+            </div>
+        </div>
+    </div>
+
+</section>
+
+{% include 'viewer/cards/tagruleconditioncreate-type.html' %}
+{% include 'viewer/cards/tagruleconditioncreate-workout.html' %}
+{% include 'viewer/cards/tagruleconditioncreate-location.html' %}

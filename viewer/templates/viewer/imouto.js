@@ -1075,8 +1075,8 @@ function placesScreen(id)
 
         if(status == 'error') { errorPage(xhr); return false; }
 
-        var lat = 50.9;
-        var lon = -1.4;
+        var lat = {{ home.lat }};
+        var lon = {{ home.lon }};
         var map = L.map('mapselect', {center: [lat, lon], zoom: 13});
         L.tileLayer('{{ tiles }}', {
             attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
@@ -1752,6 +1752,56 @@ function tagScreen(id)
     });
 }
 
+function tagRulesScreen(id)
+{
+    $(".content-wrapper").load("./tagrules/" + id + ".html", function(response, status, xhr)
+    {
+        if(status == 'error') { errorPage(xhr); return false; }
+	$('.add-autotag-condition').on('click', function()
+	{
+		var ruleid = $(this).data('rule-id');
+		var type = $("#condition-type-select-" + ruleid).val();
+		$(".ruleid-field").val(ruleid);
+		if(type == 'type') { $('#create-condition-type').modal('show'); }
+		if(type == 'workout') { $('#create-condition-workout').modal('show'); }
+		if(type == 'location') {
+			$('#create-condition-location').modal('show');
+		        //makeMap();
+
+			var lat = {{ home.lat }};
+			var lon = {{ home.lon }};
+			$('#condition-lat').val(lat);
+			$('#condition-lon').val(lon);
+		        var map = L.map('mapselect', {center: [lat, lon], zoom: 13});
+		        L.tileLayer('{{ tiles }}', {
+		            attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
+		            maxZoom: 16
+		        }).addTo(map);
+		        map.on('click', function(e){
+			    var RES = 100000;
+			    var lat = Math.round(e.latlng.lat * RES) / RES;
+			    var lon = Math.round(e.latlng.lng * RES) / RES;
+			    $('#condition-lat').val(lat);
+			    $('#condition-lon').val(lon);
+			});
+
+		        // The following block is required because we've foolishly put a leaflet map in a tab in a modal.
+		        $("#create-condition-location").on('shown.bs.modal', function() 
+		        {
+		            map.invalidateSize();
+		        });
+		}
+		return false;
+	});
+	$('.create-condition-button').on('click', function()
+	{
+		var formid = $(this).data('form');
+		$('#' + formid).submit();
+	});
+
+    });
+}
+
 function workoutScreen(id)
 {
     $(".content-wrapper").load("./workout/" + id + ".html", function(response, status, xhr)
@@ -1893,6 +1943,7 @@ function pageRefresh()
 
     if(page.startsWith('day_')) { dayScreen(page.replace('day_', '')); }
     if(page.startsWith('tag_')) { tagScreen(page.replace('tag_', '')); }
+    if(page.startsWith('tagrules_')) { tagRulesScreen(page.replace('tagrules_', '')); }
     if(page.startsWith('event_')) { eventScreen(page.replace('event_', '')); }
     if(page.startsWith('place_')) { placeScreen(page.replace('place_', '')); }
     if(page.startsWith('person_')) { personScreen(page.replace('person_', '')); }

@@ -13,7 +13,7 @@ from PIL import Image, ImageDraw
 from io import BytesIO
 from wordcloud import WordCloud, STOPWORDS
 from configparser import ConfigParser
-from staticmap import StaticMap, Line
+from staticmap import StaticMap, Line, CircleMarker
 from xml.dom import minidom
 from dateutil import parser
 from tzfpy import get_tz
@@ -73,6 +73,9 @@ def event_collage_upload_location(instance, filename):
 
 def event_staticmap_upload_location(instance, filename):
 	return 'events/event_staticmap_' + str(instance.id) + '.png'
+
+def tag_staticmap_upload_location(instance, filename):
+	return 'autotag/tag_staticmap_' + str(instance.pk) + '.png'
 
 class WeatherLocation(models.Model):
 	id = models.SlugField(max_length=32, primary_key=True)
@@ -1206,7 +1209,12 @@ class Event(models.Model):
 	def auto_tag(self):
 		for tag in AutoTag.objects.all():
 			if tag.eval(self):
-				self.tag(tag.tag.id)
+				self.tag(str(tag.tag))
+		if self.type == 'life_event':
+			for e in self.subevents():
+				for tag in e.tags.all():
+					self.tags.add(tag)
+
 	@property
 	def similar(self):
 		return list(self.similar_to.filter(diff_value__lt=0.1).order_by('diff_value').values('event1', 'event1__caption', 'event1__start_time', 'diff_value'))
@@ -2388,6 +2396,8 @@ class AutoTag(models.Model):
 	def eval(self, event):
 		if not(self.enabled):
 			return False
+		if self.conditions.count() == 0:
+			return False
 		for cond in self.conditions.all():
 			cond_eval = cond.eval(event)
 			if not(cond_eval):
@@ -2410,6 +2420,10 @@ class TagCondition(PolymorphicModel):
 	def __str__(self):
 		return(str(self.tag))
 
+	@property
+	def description(self):
+		return "A general condition"
+
 	class Meta:
 		app_label = 'viewer'
 		verbose_name = 'tag condition'
@@ -2418,11 +2432,45 @@ class TagCondition(PolymorphicModel):
 class TagLocationCondition(TagCondition):
 	lat = models.FloatField()
 	lon = models.FloatField()
+	cached_staticmap = models.ImageField(blank=True, null=True, upload_to=tag_staticmap_upload_location)
+	cached_locationtext = models.TextField(default='')
 	def eval(self, event):
 		for ev in get_possible_location_events(event.start_time.date(), self.lat, self.lon):
 			if ((ev['start_time'] > event.start_time) & (ev['end_time'] < event.end_time)):
 				return True
 		return False
+
+	@property
+	def description(self):
+		ret = self.location_text()
+		if ret == '':
+			ret = str(self.lat) + ',' + str(self.lon)
+		return "Location near: " + ret
+
+	def staticmap(self):
+		if self.cached_staticmap:
+			im = Image.open(self.cached_staticmap.path)
+			return im
+		m = StaticMap(320, 320, url_template=settings.MAP_TILES)
+		marker_outline = CircleMarker((self.lon, self.lat), 'white', 18)
+		marker = CircleMarker((self.lon, self.lat), '#3C8DBC', 12)
+		m.add_marker(marker_outline)
+		m.add_marker(marker)
+		im = m.render(zoom=17)
+		blob = BytesIO()
+		im.save(blob, 'PNG')
+		self.cached_staticmap.save(tag_staticmap_upload_location, File(blob), save=False)
+		self.save()
+		return im
+
+	def location_text(self):
+		if self.cached_locationtext != '':
+			return self.cached_locationtext
+		ret = get_location_name(self.lat, self.lon)
+		if ret != '':
+			self.cached_locationtext = ret
+			self.save()
+		return ret
 
 	def __str__(self):
 		return(str(self.tag))
@@ -2439,6 +2487,10 @@ class TagTypeCondition(TagCondition):
 			return True
 		return False
 
+	@property
+	def description(self):
+		return "Event type: " + str(self.type)
+
 	def __str__(self):
 		return(str(self.tag))
 
@@ -2450,9 +2502,13 @@ class TagTypeCondition(TagCondition):
 class TagWorkoutCondition(TagCondition):
 	workout_category = models.ForeignKey(EventWorkoutCategory, null=False, on_delete=models.CASCADE)
 	def eval(self, event):
-		if self.workout_category in self.workout_categories.all():
+		if self.workout_category in event.workout_categories.all():
 			return True
 		return False
+
+	@property
+	def description(self):
+		return "Workout category: " + str(self.workout_category)
 
 	def __str__(self):
 		return(str(self.tag))

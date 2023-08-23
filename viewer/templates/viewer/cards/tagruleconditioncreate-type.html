@@ -1,0 +1,37 @@
+<div class="modal fade nav-tabs-custom" id="create-condition-type" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+                <form id="create-time-condition" action="tagrules/{{ data.id }}.html" method="POST">
+		<table class="table">
+		<tr class="form-row">
+                    <td>
+                    <label for="cond-type">
+                        Type:
+                    </label>
+                    </td>
+                    <td style="width: 100%;">
+			<select class="form-control" id="cond-type" name="cond-type">
+{% for type in types %}
+				<option value="{{ type }}">{{ type }}</option>
+{% endfor %}
+			</select>
+                    </td>
+		</tr>
+		</table>
+		<input type="hidden" class="ruleid-field" name="ruleid" value=""/>
+{% csrf_token %}
+                </form>
+
+            </div>
+            
+            <div class="modal-footer">
+		<span class="pull-right">
+                <button type="button" class="btn btn-success create-condition-button" data-form="create-time-condition">Add</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+		</span>
+            </div>
+        </div>
+    </div>
+</div>

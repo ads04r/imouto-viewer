@@ -392,6 +392,48 @@ def tag(request, id):
 	context = {'type':'tag', 'data':data}
 	return render(request, 'viewer/pages/tag.html', context)
 
+def tagrules(request, id):
+
+	data = get_object_or_404(EventTag, id=id)
+	if request.method == 'POST':
+		ret = {}
+		for k in dict(request.POST).keys():
+			v = request.POST[str(k)]
+			if isinstance(v, list):
+				if len(v) == 0:
+					ret[k] = ''
+				else:
+					ret[k] = v[0]
+			else:
+				ret[k] = v
+		ret['tag'] = data.pk
+		try:
+			rule = AutoTag.objects.get(pk=ret['ruleid'])
+		except:
+			raise Http404()
+		if 'cond-type' in ret:
+			# It's a type
+			n = TagTypeCondition(tag=rule, type=ret['cond-type'])
+			n.save()
+			return HttpResponseRedirect('../#tagrules_' + str(ret['tag']))
+		if 'cond-workout' in ret:
+			# It's a workout
+			try:
+				workout = EventWorkoutCategory.objects.get(pk=ret['cond-workout'])
+			except:
+				raise Http404()
+			n = TagWorkoutCondition(tag=rule, workout_category=workout)
+			n.save()
+			return HttpResponseRedirect('../#tagrules_' + str(ret['tag']))
+		if(('condition-lat' in ret) & ('condition-lon' in ret)):
+			# It's a location
+			n = TagLocationCondition(tag=rule, lat=ret['condition-lat'], lon=ret['condition-lon'])
+			n.save()
+			return HttpResponseRedirect('../#tagrules_' + str(ret['tag']))
+		return HttpResponse(json.dumps(ret), content_type='application/json')
+	context = {'type':'tag', 'data':data, 'workout_categories':sorted([x['id'] for x in EventWorkoutCategory.objects.all().values('id')]), 'types':sorted([x['type'] for x in Event.objects.all().values('type').distinct()])}
+	return render(request, 'viewer/pages/tagrules.html', context)
+
 def workout(request, id):
 
 	data = get_object_or_404(EventWorkoutCategory, id=id)
@@ -575,6 +617,7 @@ def day_loceventscreate(request, ds):
 					loc = Location.objects.get(id=item['location'])
 			event = Event(type='loc_prox', caption=item['text'], location=loc, start_time=dts, end_time=dte)
 			event.save()
+			event.auto_tag()
 			ret.append(event.id)
 	response = HttpResponse(json.dumps(ret), content_type='application/json')
 	return response
@@ -661,6 +704,7 @@ def event(request, eid):
 			event.cached_health = ''
 			event.save()
 			event.populate_people_from_photos()
+			event.auto_tag()
 
 			cache.set(cache_key, data, 86400)
 			return HttpResponseRedirect('../#event_' + str(eid))
@@ -719,6 +763,7 @@ def event_addjourney(request):
 		for category in EventWorkoutCategory.objects.filter(id=catid):
 			event.workout_categories.add(category)
 	event.save()
+	event.auto_tag()
 	ds = event.start_time.strftime("%Y%m%d")
 	return HttpResponseRedirect('../#day_' + str(ds))
 
@@ -737,6 +782,7 @@ def event_addappointmentevent(request):
 			if c.description != 'None':
 				event.description = c.description
 		event.save()
+		event.auto_tag()
 		ds = event.start_time.strftime("%Y%m%d")
 		return HttpResponseRedirect('../#day_' + str(ds))
 
@@ -749,6 +795,13 @@ def event_staticmap(request, eid):
 		return HttpResponse(blob.getvalue(), content_type='image/png')
 	else:
 		raise Http404()
+
+def tagrule_staticmap(request, id):
+	data = get_object_or_404(TagCondition, id=id)
+	im = data.staticmap()
+	blob = BytesIO()
+	im.save(blob, 'PNG')
+	return HttpResponse(blob.getvalue(), content_type='image/png')
 
 def event_gpx(request, eid):
 	data = get_object_or_404(Event, id=eid)
@@ -977,6 +1030,7 @@ def photo_json(request, uid):
 			if event.cover_photo == photo:
 				event.cover_photo = None
 		event.save()
+		event.auto_tag()
 		photo.caption = caption
 		photo.save()
 		cache.delete(cache_key)

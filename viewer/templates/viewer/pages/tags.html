@@ -24,8 +24,12 @@
 
                         <div class="post">
                             <div class="user-block">
-                                <span class="username no-image"><i class="fa fa-tag" style="color: {{ tag.colour }};"></i>&nbsp;{{ tag.id }}<a class="pull-right btn btn-primary btn-xs eventlink" href="#tag_{{ tag.id }}">View Events</a></span>
-                                <span class="description no-image">{{ tag.num_events }} events</span>
+				<span class="pull-right">
+					<a class="btn btn-secondary btn-xs tagrulelink" href="#tagrules_{{ tag.id }}">View Rules</a>
+					<a class="btn btn-primary btn-xs eventlink" href="#tag_{{ tag.id }}">View Events</a>
+				</span>
+                                <span class="username no-image"><i class="fa fa-tag" style="color: {{ tag.colour }};"></i>&nbsp;{{ tag.id }}</span>
+                                <span class="description no-image">{{ tag.num_events }} events{% if tag.rules.count > 0 %} | {{ tag.rules.count }} rules{% endif %}</span>
                             </div>
 
                         </div>

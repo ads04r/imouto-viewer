@@ -1,0 +1,37 @@
+<div class="modal fade nav-tabs-custom" id="create-condition-workout" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+                <form id="create-workout-condition" method="POST" action="tagrules/{{ data.id }}.html">
+		<table class="table">
+		<tr class="form-row">
+                    <td>
+                    <label for="cond-workout">
+                        Category:
+                    </label>
+                    </td>
+                    <td style="width: 100%;">
+			<select class="form-control" id="cond-workout" name="cond-workout">
+{% for cat in workout_categories %}
+				<option value="{{ cat }}">{{ cat }}</option>
+{% endfor %}
+			</select>
+                    </td>
+		</tr>
+		</table>
+		<input type="hidden" name="ruleid" class="ruleid-field" value=""/>
+{% csrf_token %}
+                </form>
+
+            </div>
+            
+            <div class="modal-footer">
+		<span class="pull-right">
+                <button type="button" class="btn btn-success create-condition-button" data-form="create-workout-condition">Add</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+		</span>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,47 @@
+<div class="modal fade" id="create-condition-location" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+
+                              
+			<div id="mapselect" class="mapselect"></div>
+
+                <form id="create-location-condition" action="tagrules/{{ data.id }}.html" method="POST">
+		<table class="table">
+		<tr class="form-row">
+                    <td>
+                    <label for="cond-type">
+                        Latitude:
+                    </label>
+                    </td>
+                    <td style="width: 100%;">
+			<input class="form-control" name="condition-lat" id="condition-lat">
+                    </td>
+		</tr>
+		<tr class="form-row">
+                    <td>
+                    <label for="cond-type">
+                        Longitude:
+                    </label>
+                    </td>
+                    <td style="width: 100%;">
+			<input class="form-control" name="condition-lon" id="condition-lon">
+                    </td>
+		</tr>
+		</table>
+		<input type="hidden" name="ruleid" class="ruleid-field" value=""/>
+{% csrf_token %}
+                </form>
+                
+            </div>
+            <div class="modal-footer">
+		<span class="pull-right">
+                <button type="button" class="btn btn-success create-condition-button" data-form="create-location-condition">Add</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+		</span>
+            </div>
+        </div>
+    </div>
+</div>
+
