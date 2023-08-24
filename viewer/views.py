@@ -406,31 +406,67 @@ def tagrules(request, id):
 					ret[k] = v[0]
 			else:
 				ret[k] = v
-		ret['tag'] = data.pk
+		ret['tag'] = str(data.pk)
+		if 'create' in ret:
+			if ret['create'] == 'rule':
+				rule = AutoTag(tag=data)
+				rule.save()
+				return HttpResponseRedirect('../#tagrules_' + ret['tag'])
+			raise Http404()
+		if('tag-delete' in ret):
+			# We want to delete something
+			if ret['tag-delete'] == 'tag':
+				# An entire tag
+				try:
+					t = EventTag.objects.get(id=ret['tag'])
+				except:
+					raise Http404()
+				t.delete()
+				return HttpResponseRedirect('../#tags')
 		try:
 			rule = AutoTag.objects.get(pk=ret['ruleid'])
 		except:
 			raise Http404()
 		if 'cond-type' in ret:
-			# It's a type
+			# Add a type condition
 			n = TagTypeCondition(tag=rule, type=ret['cond-type'])
 			n.save()
-			return HttpResponseRedirect('../#tagrules_' + str(ret['tag']))
+			return HttpResponseRedirect('../#tagrules_' + ret['tag'])
 		if 'cond-workout' in ret:
-			# It's a workout
+			# Add a workout condition
 			try:
 				workout = EventWorkoutCategory.objects.get(pk=ret['cond-workout'])
 			except:
 				raise Http404()
 			n = TagWorkoutCondition(tag=rule, workout_category=workout)
 			n.save()
-			return HttpResponseRedirect('../#tagrules_' + str(ret['tag']))
+			return HttpResponseRedirect('../#tagrules_' + ret['tag'])
 		if(('condition-lat' in ret) & ('condition-lon' in ret)):
-			# It's a location
+			# Add a location condition
 			n = TagLocationCondition(tag=rule, lat=ret['condition-lat'], lon=ret['condition-lon'])
 			n.save()
-			return HttpResponseRedirect('../#tagrules_' + str(ret['tag']))
-		return HttpResponse(json.dumps(ret), content_type='application/json')
+			return HttpResponseRedirect('../#tagrules_' + ret['tag'])
+		if('rule-delete' in ret):
+			# We want to delete something
+			if ret['rule-delete'] == 'rule':
+				try:
+					t = AutoTag.objects.get(id=ret['ruleid'])
+				except:
+					raise Http404()
+				t.delete()
+				return HttpResponseRedirect('../#tagrules_' + ret['tag'])
+		if('cond-delete' in ret):
+			# We want to delete something
+			if ret['cond-delete'] == 'condition':
+				# A condition
+				try:
+					cond = TagCondition.objects.get(pk=ret['conditionid'], tag__pk=ret['ruleid'], tag__tag__pk=ret['tag'])
+				except:
+					raise Http404();
+				cond.delete()
+				return HttpResponseRedirect('../#tagrules_' + ret['tag'])
+			return HttpResponse(json.dumps(ret), content_type='application/json')
+		raise Http404()
 	context = {'type':'tag', 'data':data, 'workout_categories':sorted([x['id'] for x in EventWorkoutCategory.objects.all().values('id')]), 'types':sorted([x['type'] for x in Event.objects.all().values('type').distinct()])}
 	return render(request, 'viewer/pages/tagrules.html', context)
 

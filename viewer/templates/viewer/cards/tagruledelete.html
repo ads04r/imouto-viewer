@@ -1,0 +1,25 @@
+<div class="modal fade nav-tabs-custom" id="delete-autotag" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+		<p>Are you sure you want to delete this rule? All conditions within will also be deleted.</p>
+
+                <form id="delete-autotag-form" action="tagrules/{{ data.id }}.html" method="POST">
+		<input type="hidden" class="ruleid-field" name="ruleid" value=""/>
+		<input type="hidden" class="conditionid-field" name="conditionid" value=""/>
+		<input type="hidden" name="rule-delete" value="rule"/>
+{% csrf_token %}
+                </form>
+
+            </div>
+            
+            <div class="modal-footer">
+		<span class="pull-right">
+                <button type="button" class="btn btn-danger delete-autotag-button" data-form="delete-autotag-form">Delete</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+		</span>
+            </div>
+        </div>
+    </div>
+</div>

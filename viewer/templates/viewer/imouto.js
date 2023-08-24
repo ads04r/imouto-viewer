@@ -1749,6 +1749,26 @@ function tagScreen(id)
     $(".content-wrapper").load("./tags/" + id + ".html", function(response, status, xhr)
     {
         if(status == 'error') { errorPage(xhr); return false; }
+	$('.tag-add-rule').on('click', function()
+	{
+		var csrf = $('input[name="csrfmiddlewaretoken"]').val();
+
+		var form = document.createElement('form');
+		var i = document.createElement('input');
+		var ci = document.createElement('input');
+		form.method = "POST";
+		form.action = "tagrules/" + id + ".html";
+		i.name = "create";
+		i.value = "rule";
+		ci.name = "csrfmiddlewaretoken";
+		ci.value = csrf;
+		form.appendChild(i);
+		form.appendChild(ci);
+		document.body.appendChild(form);
+		form.submit();
+
+		return false;
+	});
     });
 }
 
@@ -1797,6 +1817,65 @@ function tagRulesScreen(id)
 	{
 		var formid = $(this).data('form');
 		$('#' + formid).submit();
+	});
+	$('.tag-delete-tag').on('click', function()
+	{
+		$('#delete-tag').modal('show');
+
+		return false;
+	});
+	$('.delete-autotag').on('click', function()
+	{
+		var ruleid = $(this).data('id');
+		$(".ruleid-field").val(ruleid);
+		$('#delete-autotag').modal('show');
+
+		return false;
+	});
+	$('.delete-autotag-condition').on('click', function()
+	{
+		var ruleid = $(this).data('ruleid');
+		var condid = $(this).data('condid');
+		$(".ruleid-field").val(ruleid);
+		$(".conditionid-field").val(condid);
+		$('#delete-condition').modal('show');
+
+		return false;
+	});
+	$('.delete-tag-button').on('click', function()
+	{
+		var formid = $(this).data('form');
+		$('#' + formid).submit();
+	});
+	$('.delete-autotag-button').on('click', function()
+	{
+		var formid = $(this).data('form');
+		$('#' + formid).submit();
+	});
+	$('.delete-condition-button').on('click', function()
+	{
+		var formid = $(this).data('form');
+		$('#' + formid).submit();
+	});
+	$('.tag-add-rule').on('click', function()
+	{
+		var csrf = $('input[name="csrfmiddlewaretoken"]').val();
+
+		var form = document.createElement('form');
+		var i = document.createElement('input');
+		var ci = document.createElement('input');
+		form.method = "POST";
+		form.action = "tagrules/" + id + ".html";
+		i.name = "create";
+		i.value = "rule";
+		ci.name = "csrfmiddlewaretoken";
+		ci.value = csrf;
+		form.appendChild(i);
+		form.appendChild(ci);
+		document.body.appendChild(form);
+		form.submit();
+
+		return false;
 	});
 
     });

@@ -1,0 +1,25 @@
+<div class="modal fade nav-tabs-custom" id="delete-condition" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+		<p>Are you sure you want to delete this condition?</p>
+
+                <form id="delete-condition-form" action="tagrules/{{ data.id }}.html" method="POST">
+		<input type="hidden" class="ruleid-field" name="ruleid" value=""/>
+		<input type="hidden" class="conditionid-field" name="conditionid" value=""/>
+		<input type="hidden" name="cond-delete" value="condition"/>
+{% csrf_token %}
+                </form>
+
+            </div>
+            
+            <div class="modal-footer">
+		<span class="pull-right">
+                <button type="button" class="btn btn-danger delete-condition-button" data-form="delete-condition-form">Delete</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+		</span>
+            </div>
+        </div>
+    </div>
+</div>

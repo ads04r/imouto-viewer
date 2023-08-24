@@ -1,0 +1,23 @@
+<div class="modal fade nav-tabs-custom" id="delete-tag" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+		<p>All rules and conditions will also be deleted along with the tag, and all events will be permanently disassociated. Are you <strong>absolutely sure</strong> you want to delete this tag?</p>
+
+                <form id="delete-tag-form" action="tagrules/{{ data.id }}.html" method="POST">
+		<input type="hidden" name="tag-delete" value="tag"/>
+{% csrf_token %}
+                </form>
+
+            </div>
+            
+            <div class="modal-footer">
+		<span class="pull-right">
+                <button type="button" class="btn btn-danger delete-tag-button" data-form="delete-tag-form">Delete</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+		</span>
+            </div>
+        </div>
+    </div>
+</div>
