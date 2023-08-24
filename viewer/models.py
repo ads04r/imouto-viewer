@@ -947,22 +947,31 @@ class Event(models.Model):
 		root.appendChild(xml)
 		if self.geo:
 			g = json.loads(self.geo)
+			geom = []
 			if 'geometry' in g:
 				if 'coordinates' in g['geometry']:
-					trk = root.createElement('trk')
-					for ptl in g['geometry']['coordinates']:
-						seg = root.createElement('trkseg')
-						for pt in ptl:
-							ptx = root.createElement('trkpt')
-							ptx.setAttribute('lat', str(pt[1]))
-							ptx.setAttribute('lon', str(pt[0]))
-							pdt = root.createElement('time')
-							pdt.appendChild(root.createTextNode(dt.strftime("%Y-%m-%d %H:%M:%S").replace(' ', 'T') + 'Z'))
-							dt = dt + datetime.timedelta(seconds=1)
-							ptx.appendChild(pdt)
-							seg.appendChild(ptx)
-						trk.appendChild(seg)
-					xml.appendChild(trk)
+					geom.append(g['geometry']['coordinates'])
+				if 'geometries' in g['geometry']:
+					for gg in g['geometry']['geometries']:
+						if 'coordinates' in gg:
+							geom.append(gg['coordinates'])
+			for g in geom:
+				trk = root.createElement('trk')
+				for ptl in g:
+					seg = root.createElement('trkseg')
+					if not(isinstance(ptl, list)):
+						continue
+					for pt in ptl:
+						ptx = root.createElement('trkpt')
+						ptx.setAttribute('lat', str(pt[1]))
+						ptx.setAttribute('lon', str(pt[0]))
+						pdt = root.createElement('time')
+						pdt.appendChild(root.createTextNode(dt.strftime("%Y-%m-%d %H:%M:%S").replace(' ', 'T') + 'Z'))
+						dt = dt + datetime.timedelta(seconds=1)
+						ptx.appendChild(pdt)
+						seg.appendChild(ptx)
+					trk.appendChild(seg)
+				xml.appendChild(trk)
 		return(root.toprettyxml(indent='\t'))
 	def coordinates(self):
 		dt = self.start_time
