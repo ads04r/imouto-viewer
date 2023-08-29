@@ -11,6 +11,7 @@ from viewer.models import Event, DataReading, EventWorkoutCategory
 from viewer.forms import WorkoutCategoryForm
 
 from viewer.functions.health import get_sleep_history
+from viewer.functions.utils import imouto_json_serializer
 
 def health_data(datatypes):
 	item = {'date': ''}

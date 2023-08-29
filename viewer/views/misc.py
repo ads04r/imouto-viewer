@@ -9,12 +9,6 @@ import datetime, pytz, dateutil.parser, json, requests, random
 
 from viewer.models import Location, Person, Event
 
-def imouto_json_serializer(data):
-	if isinstance(data, datetime.datetime):
-		return data.strftime("%Y-%m-%d %H:%M:%S %Z")
-	if isinstance(data, (Person, Location, Event)):
-		return data.to_dict()
-
 def upload_file(request):
 	if request.method != 'POST':
 		return HttpResponseNotAllowed(['POST'])

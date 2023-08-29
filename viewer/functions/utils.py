@@ -385,3 +385,9 @@ def generate_dashboard():
 	if len(heartdata) > 0:
 		ret['heart'] = json.dumps(heartdata)
 	return ret
+
+def imouto_json_serializer(data):
+	if isinstance(data, datetime.datetime):
+		return data.strftime("%Y-%m-%d %H:%M:%S %Z")
+	if isinstance(data, (Person, Location, Event)):
+		return data.to_dict()

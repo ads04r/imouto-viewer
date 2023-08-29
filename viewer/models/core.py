@@ -1,27 +1,523 @@
 from django.db import models
 from django.core.files import File
-from django.db.models import Count, F, Avg, Max, Sum, Transform, Field, IntegerField
+from django.db.models import Count, Avg, Max, Sum, Transform, Field, IntegerField, F, ExpressionWrapper
 from django.db.models.signals import pre_save
-from django.dispatch import receiver
+from django.db.models.fields import DurationField
+from polymorphic.models import PolymorphicModel
+from django.contrib.staticfiles import finders
 from django.conf import settings
+from django.dispatch import receiver
+from django.utils.html import strip_tags
 from colorfield.fields import ColorField
-from PIL import Image
+from PIL import Image, ImageDraw
 from io import BytesIO
+from wordcloud import WordCloud, STOPWORDS
 from configparser import ConfigParser
-from staticmap import StaticMap, Line
+from staticmap import StaticMap, Line, CircleMarker
 from xml.dom import minidom
 from dateutil import parser
 from tzfpy import get_tz
 
-from viewer.models.places import Location
-from viewer.models.people import Person, RemoteInteraction
-from viewer.models.misc import DataReading, CalendarAppointment
-
 from viewer.health import parse_sleep, max_heart_rate
-from viewer.functions.geo import get_location_name
+from viewer.staticcharts import generate_pie_chart, generate_donut_chart
+from viewer.functions.geo import getposition, get_location_name
+from viewer.functions.location_manager import get_possible_location_events
 from viewer.functions.file_uploads import *
 
 import random, datetime, pytz, json, markdown, re, os, urllib.request
+
+@Field.register_lookup
+class WeekdayLookup(Transform):
+	lookup_name = 'wd'
+	function = 'DAYOFWEEK'
+	@property
+	def output_field(self):
+		return IntegerField()
+
+def create_or_get_day(query_date):
+
+	dt = None
+	if isinstance(query_date, datetime.datetime):
+		dt = query_date.date()
+	if isinstance(query_date, datetime.date):
+		dt = query_date
+	if dt > datetime.datetime.now().date():
+		return None
+	try:
+		ret = Day.objects.get(date=dt)
+	except:
+		ret = Day(date=dt)
+		ret.save()
+
+	return ret
+
+class WeatherLocation(models.Model):
+	id = models.SlugField(max_length=32, primary_key=True)
+	lat = models.FloatField()
+	lon = models.FloatField()
+	api_id = models.SlugField(max_length=32, default='')
+	label = models.CharField(max_length=64)
+	def __str__(self):
+		return str(self.label)
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'weather location'
+		verbose_name_plural = 'weather locations'
+		indexes = [
+			models.Index(fields=['label'])
+		]
+
+class WeatherReading(models.Model):
+	time = models.DateTimeField()
+	location = models.ForeignKey(WeatherLocation, on_delete=models.CASCADE, related_name='readings')
+	description = models.CharField(max_length=128, blank=True, null=True)
+	temperature = models.FloatField(blank=True, null=True)
+	wind_speed = models.FloatField(blank=True, null=True)
+	wind_direction = models.IntegerField(blank=True, null=True)
+	humidity = models.IntegerField(blank=True, null=True)
+	visibility = models.IntegerField(blank=True, null=True)
+	def __str__(self):
+		return str(self.time) + ' at ' + str(self.location)
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'weather reading'
+		verbose_name_plural = 'weather readings'
+
+class LocationCountry(models.Model):
+	a2 = models.SlugField(primary_key=True, max_length=2)
+	a3 = models.SlugField(unique=True, max_length=3)
+	label = models.CharField(max_length=100)
+	wikipedia = models.URLField(blank=True, null=True)
+	def __str__(self):
+		return str(self.label)
+	def to_dict(self):
+		"""
+		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.
+
+		:return: The properties of the object as a dict
+		:rtype: dict
+		"""
+		ret = {'iso': [self.a2, self.a3], "label": str(self.label)}
+		if self.wikipedia:
+			ret['wikipedia'] = str(self.wikipedia)
+		return ret
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'country'
+		verbose_name_plural = 'countries'
+
+class Location(models.Model):
+	"""This is a class representing a named location significant to the user. It does not need to be validated by any
+	authority, but must have a name, a latitude and longitude, and a country (represented by the LocationCountry class)
+	It may optionally have other properties, such as an address, phone number, Wikipedia article or photo depiction.
+	"""
+	uid = models.SlugField(unique=True, max_length=32)
+	label = models.CharField(max_length=100)
+	full_label = models.CharField(max_length=200, default='')
+	description = models.TextField(blank=True, null=True)
+	lat = models.FloatField()
+	lon = models.FloatField()
+	country = models.ForeignKey(LocationCountry, related_name='locations', null=True, blank=True, on_delete=models.SET_NULL)
+	creation_time = models.DateTimeField(blank=True, null=True)
+	destruction_time = models.DateTimeField(blank=True, null=True)
+	address = models.TextField(blank=True, null=True)
+	phone = models.CharField(max_length=20, blank=True, null=True)
+	url = models.URLField(blank=True, null=True)
+	wikipedia = models.URLField(blank=True, null=True)
+	image = models.ImageField(blank=True, null=True, upload_to=location_thumbnail_upload_location)
+	weather_location = models.ForeignKey(WeatherLocation, on_delete=models.CASCADE, null=True, blank=True)
+	@property
+	def is_home(self):
+		"""
+		Determines if this Location is the user's home or not. Always returns False if USER_HOME_LOCATION is not set in settings.py
+		"""
+		try:
+			home = settings.USER_HOME_LOCATION
+		except:
+			home = -1
+		return (self.pk == home)
+	def to_dict(self):
+		"""
+		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.
+
+		:return: The properties of the object as a dict
+		:rtype: dict
+		"""
+		ret = {'id': self.uid, 'label': self.label, 'full_label': self.full_label, 'lat': self.lat, 'lon': self.lon}
+		if not(self.description is None):
+			if self.description != '':
+				ret['description'] = self.description
+		if not(self.address is None):
+			if self.address != '':
+				ret['address'] = self.address
+		if not(self.url is None):
+			if self.url != '':
+				ret['url'] = self.url
+		return ret
+	def people(self):
+		"""
+		Returns a list of people who have been encountered at this location in the past.
+
+		:return: A list of Person objects.
+		:rtype: list
+		"""
+		ret = []
+		for event in self.events.all():
+			for person in event.people.all():
+				if person in ret:
+					continue
+				ret.append(person)
+		return ret
+	def geo(self):
+		"""
+		Useful for drawing straight onto a Leaflet map, this function returns the geographical location of the Location as a GeoJSON object.
+
+		:return: A GeoJSON object.
+		:rtype: dict
+		"""
+		point = {}
+		point['type'] = "Point"
+		point['coordinates'] = [self.lon, self.lat]
+		ret = {}
+		ret['type'] = "Feature"
+		ret['bbox'] = [self.lon - 0.0025, self.lat - 0.0025, self.lon + 0.0025, self.lat + 0.0025]
+		ret['properties'] = {}
+		ret['geometry'] = point
+		return json.dumps(ret);
+	def photo(self):
+		"""
+		Returns an image of the Location as a Pillow Image object.
+
+		:return: An image of the location, if one exists
+		:rtype: Image
+		"""
+		im = Image.open(self.image.path)
+		return im
+	def allphotos(self):
+		"""
+		Returns all the Photo objects associated with this Location.
+
+		:return: A list of Photo objects
+		:rtype: list
+		"""
+		ret = []
+		for photo in Photo.objects.filter(location=self):
+			ret.append(photo)
+		for event in Event.objects.filter(location=self):
+			for photo in event.photos():
+				ret.append(photo)
+		return ret
+	def thumbnail(self, size):
+		"""
+		Returns a thumbnail of the image of this Location, as a Pillow object.
+
+		:param size: The size (in pixels) of the returned object (always a square).
+		:return: A small image, as a Pillow object.
+		:rtype: Image
+		"""
+		im = Image.open(self.image.path)
+		bbox = im.getbbox()
+		w = bbox[2]
+		h = bbox[3]
+		if h > w:
+			ret = im.crop((0, 0, w, w))
+		else:
+			x = int((w - h) / 2)
+			ret = im.crop((x, 0, x + h, h))
+		ret = ret.resize((size, size), 1)
+		return ret
+	def get_property(self, key):
+		"""
+		Takes a simple string as an argument, and returns a list of strings representing the values related to this Location via that property name.
+
+		:param key: A string representing a property.
+		:return: The value(s) of the specified property, as a list of strings.
+		:rtype: list
+		"""
+		ret = []
+		for prop in LocationProperty.objects.filter(location=self).filter(key=key):
+			ret.append(str(prop.value))
+		return ret
+	def get_properties(self):
+		"""
+		Gets all the valid property keys for this Location as a list of strings, which can each then be sent to `get_property` in order to get the relevant value(s).
+
+		:return: All the properties that have been assigned to this particular Location.
+		:rtype: list
+		"""
+		ret = []
+		for prop in LocationProperty.objects.filter(location=self):
+			value = str(prop.key)
+			if value in ret:
+				continue
+			ret.append(value)
+		return ret
+	def exists(self):
+		"""
+		Determines whether or not this Location currently exists (eg has been built, and has not been demolished.)
+
+		:return: True normally, False if the Location has not yet been built, or has been destroyed.
+		:rtype: bool
+		"""
+		dt = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+		if((self.destruction_time is None) & (self.creation_time is None)):
+			return True
+		if(not(self.destruction_time is None)):
+			if dt > self.destruction_time:
+				return False
+		if(not(self.creation_time is None)):
+			if dt < self.creation_time:
+				return False
+		return True
+	def tags(self):
+		"""
+		Returns all the EventTags that have been assigned to Events taking place within this Location.
+
+		:return: A queryset of EventTags
+		:rtype: Queryset(EventTag)
+		"""
+		return EventTag.objects.filter(events__location=self).distinct().exclude(id='')
+	def add_category(self, catname):
+		"""
+		Adds a category to a Location, from a string value. The category is created if it doesn't exist.
+
+		:param tagname: The name of the category to add
+		"""
+		catid = str(catname)
+		try:
+			category = LocationCategory.objects.get(caption__iexact=catid)
+		except:
+			category = LocationCategory(caption=catid, colour=('#' + str("%06x" % random.randint(0, 0xFFFFFF)).upper()))
+			category.save()
+		self.categories.add(category)
+	def longest_event(self):
+		"""
+		Looks for the longest Event taking place in this Location and returns its duration.
+
+		:return: A timedelta, the duration of the longest Event object.
+		:rtype: datetime.timedelta
+		"""
+		duration = ExpressionWrapper(F('end_time') - F('start_time'), output_field=DurationField())
+		try:
+			ret = Event.objects.filter(location=self).exclude(type='life_event').annotate(duration=duration).order_by('-duration')[0].duration
+		except:
+			ret = datetime.timedelta(hours=0)
+		return ret
+	def average_event(self):
+		"""
+		Calculates the mean average duration of all the Events that have taken place at this Location.
+
+		:return: A timedelta representing the mean average time
+		:rtype: datetime.timedelta
+		"""
+		duration = ExpressionWrapper(F('end_time') - F('start_time'), output_field=DurationField())
+		try:
+			ret = Event.objects.filter(location=self).exclude(type='life_event').annotate(duration=duration).aggregate(av=Avg('duration'))['av']
+		except:
+			ret = datetime.timedelta(hours=0)
+		if ret is None:
+			ret = datetime.timedelta(hours=0)
+		return datetime.timedelta(seconds=int(ret.total_seconds()))
+	def weekdays(self):
+		"""
+		Calculates the number of days spent in this particular Location, grouped by day of the week.
+
+		:return: A dict, for passing to Graph.js
+		:rtype: dict
+		"""
+		ret = {'days': [], 'values': []}
+		d = ['', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+		for item in Event.objects.filter(location=self).exclude(type='life_event').values('start_time__wd').annotate(ct=Count('start_time__wd')).order_by('start_time__wd'):
+			id = item['start_time__wd']
+			ret['days'].append(d[id])
+			ret['values'].append(item['ct'])
+		ret['json'] = json.dumps(ret['days'])
+		return ret
+	def __str__(self):
+		label = self.label
+		if self.full_label != '':
+			label = self.full_label
+		return label
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'location'
+		verbose_name_plural = 'locations'
+		indexes = [
+			models.Index(fields=['label']),
+			models.Index(fields=['full_label']),
+		]
+
+class LocationProperty(models.Model):
+	location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name="properties")
+	key = models.SlugField(max_length=32)
+	value = models.CharField(max_length=255)
+	def __str__(self):
+		return str(self.location) + ' - ' + self.key
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'location property'
+		verbose_name_plural = 'location properties'
+		indexes = [
+			models.Index(fields=['location']),
+			models.Index(fields=['key']),
+		]
+
+class Person(models.Model):
+	""" This is a class representing a person significant to the user. It must have some kind
+	of name, but everything else is pretty much optional. The class can store information such
+	as date of birth, photo, home location or, if they are famous enough, their Wikipedia article.
+	"""
+	uid = models.SlugField(primary_key=True, max_length=32)
+	given_name = models.CharField(null=True, blank=True, max_length=128)
+	family_name = models.CharField(null=True, blank=True, max_length=128)
+	nickname = models.CharField(null=True, blank=True, max_length=128)
+	wikipedia = models.URLField(blank=True, null=True)
+	image = models.ImageField(blank=True, null=True, upload_to=user_thumbnail_upload_location)
+	significant = models.BooleanField(default=True)
+	def to_dict(self):
+		"""
+		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.
+
+		:return: The properties of the object as a dict
+		:rtype: dict
+		"""
+		ret = {'id': self.uid, 'name': self.name(), 'full_name': self.full_name()}
+		if not(self.birthday is None):
+			if self.birthday:
+				ret['birthday'] = self.birthday.strftime("%Y-%m-%d")
+		home = self.home()
+		if not(home is None):
+			ret['home'] = home.to_dict()
+		return ret
+	def name(self):
+		label = self.nickname
+		if ((label == '') or (label is None)):
+			label = self.full_name()
+		return label
+	@property
+	def birthday(self):
+		bd = self.get_property('birthday')
+		if len(bd) == 0:
+			return None
+		try:
+			ret = datetime.datetime.strptime(bd[0], '%Y-%m-%d').date()
+		except:
+			ret = None
+		return ret
+	@property
+	def next_birthday(self):
+		bd = self.get_property('birthday')
+		if len(bd) == 0:
+			return None
+		now = datetime.datetime.now().date()
+		dt = datetime.datetime.strptime(str(now.year) + bd[0][4:], '%Y-%m-%d').date()
+		while dt < now:
+			dt = dt.replace(year=dt.year + 1)
+		return dt
+	@property
+	def age(self):
+		bd = self.birthday
+		if bd is None:
+			return None
+		return self.next_birthday.year - bd.year - 1
+	def full_name(self):
+		label = str(self.given_name) + ' ' + str(self.family_name)
+		label = label.strip()
+		if label == '':
+			label = self.nickname
+		return label
+	def home(self):
+		ret = None
+		dt = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+		for prop in PersonProperty.objects.filter(person=self).filter(key='livesat'):
+			value = int(str(prop.value))
+			try:
+				place = Location.objects.get(pk=value)
+			except:
+				continue
+			if not(place.creation_time is None):
+				if place.creation_time > dt:
+					continue
+			if not(place.destruction_time is None):
+				if place.destruction_time < dt:
+					continue
+			ret = place
+		return ret
+	def places(self):
+		ret = []
+		for event in Event.objects.filter(people=self):
+			loc = event.location
+			if loc is None:
+				continue
+			if loc in ret:
+				continue
+			ret.append(loc)
+		return ret
+	def photo(self):
+		im = Image.open(self.image.path)
+		return im
+	def thumbnail(self, size):
+		try:
+			im = Image.open(self.image.path)
+		except:
+			unknown = finders.find('viewer/graphics/unknown_person.jpg')
+			if os.path.exists(unknown):
+				im = Image.open(unknown)
+			else:
+				return None
+		bbox = im.getbbox()
+		w = bbox[2]
+		h = bbox[3]
+		if h > w:
+			ret = im.crop((0, 0, w, w))
+		else:
+			x = int((w - h) / 2)
+			ret = im.crop((x, 0, x + h, h))
+		ret = ret.resize((size, size), 1)
+		return ret
+	def messages(self):
+		ret = []
+		for phone in PersonProperty.objects.filter(person=self, key='mobile'):
+			for ri in RemoteInteraction.objects.filter(address=phone.value):
+				ret.append(ri)
+		return sorted(ret, key=lambda k: k.time, reverse=True)
+	def get_property(self, key):
+		ret = []
+		for prop in PersonProperty.objects.filter(person=self).filter(key=key):
+			ret.append(str(prop.value))
+		return ret
+	def get_properties(self):
+		ret = []
+		for prop in PersonProperty.objects.filter(person=self):
+			value = str(prop.key)
+			if value in ret:
+				continue
+			ret.append(value)
+		return ret
+	def get_stats(self):
+		ret = {'events': 0, 'photos': 0, 'places': 0}
+		ret['events'] = Event.objects.filter(people=self).count()
+		ret['photos'] = Photo.objects.filter(people=self).count()
+		ret['places'] = len(self.places())
+		try:
+			ret['first_met'] = Event.objects.filter(people=self).order_by('start_time')[0].start_time
+		except:
+			ret['first_met'] = None
+		return ret
+	def photos(self):
+		return Photo.objects.filter(people__in=[self]).order_by('-time')
+	def events(self):
+		return Event.objects.filter(people=self).order_by('-start_time')
+	def __str__(self):
+		return self.name()
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'person'
+		verbose_name_plural = 'people'
+		indexes = [
+			models.Index(fields=['nickname']),
+			models.Index(fields=['given_name', 'family_name']),
+		]
 
 class Photo(models.Model):
 	""" A class representing a photo taken by the user. The photos may be simply displayed by
@@ -200,6 +696,71 @@ class PersonPhoto(models.Model):
 		app_label = 'viewer'
 		verbose_name = 'person photo'
 		verbose_name_plural = 'person photos'
+
+class RemoteInteraction(models.Model):
+	type = models.SlugField(max_length=32)
+	time = models.DateTimeField()
+	address = models.CharField(max_length=128)
+	incoming = models.BooleanField()
+	title = models.CharField(max_length=255, default='', blank=True)
+	message = models.TextField(default='', blank=True)
+	def person(self):
+		address = self.address.replace(' ', '')
+		try:
+			person = PersonProperty.objects.get(value=address).person
+		except:
+			person = None
+		return person
+	def __str__(self):
+		if self.incoming:
+			label = 'Message from ' + str(self.address)
+		else:
+			label = 'Message to ' + str(self.address)
+		return label
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'remote interaction'
+		verbose_name_plural = 'remote interactions'
+		indexes = [
+			models.Index(fields=['type']),
+			models.Index(fields=['address']),
+			models.Index(fields=['time']),
+			models.Index(fields=['title']),
+		]
+
+class PersonProperty(models.Model):
+	person = models.ForeignKey(Person, on_delete=models.CASCADE, related_name="properties")
+	key = models.SlugField(max_length=32)
+	value = models.CharField(max_length=255)
+	def __str__(self):
+		return str(self.person) + ' - ' + self.key
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'person property'
+		verbose_name_plural = 'person properties'
+		indexes = [
+			models.Index(fields=['person']),
+			models.Index(fields=['key']),
+		]
+
+class DataReading(models.Model):
+	start_time = models.DateTimeField()
+	end_time = models.DateTimeField()
+	type = models.SlugField(max_length=32)
+	value = models.IntegerField()
+	def length(self):
+		return((self.end_time - self.start_time).total_seconds())
+	def __str__(self):
+		return str(self.type) + "/" + str(self.start_time.strftime("%Y-%m-%d %H:%M:%S"))
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'data reading'
+		verbose_name_plural = 'data readings'
+		indexes = [
+			models.Index(fields=['start_time']),
+			models.Index(fields=['end_time']),
+			models.Index(fields=['type']),
+		]
 
 class Event(models.Model):
 	"""A class representing an event in the life of the user. This is very vague and can mean
@@ -655,20 +1216,6 @@ class Event(models.Model):
 			models.Index(fields=['type'])
 		]
 
-class PhotoCollage(models.Model):
-	image = models.ImageField(blank=True, null=True)
-	event = models.ForeignKey(Event, null=True, blank=True, on_delete=models.SET_NULL, related_name='photo_collages')
-	photos = models.ManyToManyField(Photo, related_name='photo_collages')
-	def __str__(self):
-		if self.event is None:
-			return 'Unknown Event'
-		else:
-			return str(self.event.caption)
-	class Meta:
-		app_label = 'viewer'
-		verbose_name = 'photo collage'
-		verbose_name_plural = 'photo collages'
-
 class LifePeriod(models.Model):
 	"""A LifePeriod is a period longer than an Event. It may be used for things such as
 	living in a particular town, attending a particular school or working in a particular
@@ -698,6 +1245,20 @@ class LifePeriod(models.Model):
 		verbose_name = 'life period'
 		verbose_name_plural = 'life periods'
 
+class PhotoCollage(models.Model):
+	image = models.ImageField(blank=True, null=True) # , upload_to=photo_collage_upload_location)
+	event = models.ForeignKey(Event, null=True, blank=True, on_delete=models.SET_NULL, related_name='photo_collages')
+	photos = models.ManyToManyField(Photo, related_name='photo_collages')
+	def __str__(self):
+		if self.event is None:
+			return 'Unknown Event'
+		else:
+			return str(self.event.caption)
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'photo collage'
+		verbose_name_plural = 'photo collages'
+
 class PersonEvent(models.Model):
 	person = models.ForeignKey(Person, on_delete=models.CASCADE)
 	event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="events")
@@ -707,6 +1268,609 @@ class PersonEvent(models.Model):
 		app_label = 'viewer'
 		verbose_name = 'person event'
 		verbose_name_plural = 'person events'
+
+class Media(models.Model):
+	type = models.SlugField(max_length=16)
+	unique_id = models.SlugField(max_length=128)
+	label = models.CharField(max_length=255)
+
+class MediaEvent(models.Model):
+	media = models.ForeignKey(Media, on_delete=models.CASCADE, related_name="events")
+	time = models.DateTimeField()
+
+class LifeReport(models.Model):
+	"""This class represents a yearly life report, inspired by the work of Nicholas Felton.
+	It is intended to be created semi-automatically; statistical information created
+	through data analysis before being augmented with specific information that only a
+	human can add, for example, favourite movie of the year. Once the report has been
+	created, a background process may be used to generate a PDF file.
+	"""
+	label = models.CharField(max_length=128)
+	year = models.IntegerField()
+	style = models.SlugField(max_length=32, default='default')
+	people = models.ManyToManyField(Person, through='ReportPeople')
+	locations = models.ManyToManyField(Location, through='ReportLocations')
+	events = models.ManyToManyField(Event, through='ReportEvents')
+	created_date = models.DateTimeField(auto_now_add=True)
+	modified_date = models.DateTimeField(auto_now=True)
+	pdf = models.FileField(blank=True, null=True, upload_to=report_pdf_upload_location)
+	cached_wordcloud = models.ImageField(blank=True, null=True, upload_to=report_wordcloud_upload_location)
+	cached_dict = models.TextField(blank=True, null=True)
+	options = models.TextField(default='{}')
+	def __format_date(self, dt):
+		return dt.strftime("%a %-d %b") + ' ' + (dt.strftime("%I:%M%p").lower().lstrip('0'))
+	def categories(self):
+		ret = []
+		for prop in LifeReportProperties.objects.filter(report=self):
+			propkey = str(prop.category)
+			if propkey == '':
+				propkey = 'misc'
+			if propkey in ret:
+				continue
+			ret.append(propkey)
+		for graph in LifeReportGraph.objects.filter(report=self):
+			propkey = str(graph.category)
+			if propkey == '':
+				propkey = 'misc'
+			if propkey in ret:
+				continue
+			ret.append(propkey)
+		for chart in LifeReportGraph.objects.filter(report=self):
+			propkey = str(chart.category)
+			if propkey == '':
+				propkey = 'misc'
+			if propkey in ret:
+				continue
+			ret.append(propkey)
+		if not('misc' in ret):
+			ret.append('misc')
+		return ret
+	def countries(self):
+		return LocationCountry.objects.filter(locations__in=self.locations.all()).distinct()
+	def refresh_events(self):
+		tz = pytz.timezone(settings.TIME_ZONE)
+		dts = datetime.datetime(self.year, 1, 1, 0, 0, 0, tzinfo=tz)
+		dte = datetime.datetime(self.year, 12, 31, 23, 59, 59, tzinfo=tz)
+		subevents = []
+		self.events.clear()
+		self.cached_dict = None
+		self.save()
+		for event in Event.objects.filter(type='life_event', start_time__lte=dte, end_time__gte=dts).order_by('start_time'):
+			self.events.add(event)
+			if event.location:
+				self.locations.add(event.location)
+			for e in event.subevents():
+				if e in subevents:
+					continue
+				subevents.append(e)
+		for event in Event.objects.filter(start_time__lte=dte, end_time__gte=dts).order_by('start_time').exclude(type='life_event'):
+			if event.location:
+				self.locations.add(event.location)
+			if event in subevents:
+				continue
+			if event.photos().count() > 5:
+				self.events.add(event)
+				continue
+			if event.description is None:
+				continue
+			if event.description == '':
+				continue
+			self.events.add(event)
+	def to_dict(self):
+		"""
+		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.
+
+		:return: The properties of the object as a dict
+		:rtype: dict
+		"""
+		if self.cached_dict:
+			return json.loads(self.cached_dict)
+		ret = {'id': self.pk, 'label': self.label, 'year': self.year, 'stats': [], 'created_date': self.created_date.strftime("%Y-%m-%d %H:%M:%S %z"), 'modified_date': self.modified_date.strftime("%Y-%m-%d %H:%M:%S %z"), 'style': self.style, 'type': 'year', 'people': [], 'places': [], 'countries': [], 'life_events': [], 'events': []}
+		for personlink in ReportPeople.objects.filter(report=self):
+			person = personlink.person
+			persondata = person.to_dict()
+			if personlink.first_encounter:
+				persondata['first_encounter'] = personlink.first_encounter.strftime("%Y-%m-%d %H:%M:%S %z")
+			persondata['encounter_days'] = json.loads(personlink.day_list)
+			ret['people'].append(persondata)
+		for place in self.locations.all():
+			ret['places'].append(place.to_dict())
+		for event in self.events.filter(type='life_event').order_by('start_time'):
+			ret['life_events'].append(event.to_dict())
+		for event in self.events.exclude(type='life_event').order_by('start_time'):
+			ret['events'].append(event.to_dict())
+		for prop in LifeReportProperties.objects.filter(report=self).order_by('category'):
+			ret['stats'].append(prop.to_dict())
+		for country in self.countries():
+			ret['countries'].append(country.to_dict())
+		self.cached_dict = json.dumps(ret)
+		self.save()
+		return ret
+	def pages(self):
+		ret = []
+		done = []
+		photos_done = []
+		options = json.loads(self.options)
+		if not('reportdetail' in options):
+			options['reportdetail'] = 'minimal'
+		if not('peoplestats' in options):
+			options['peoplestats'] = False
+		if not('wordcloud' in options):
+			options['wordcloud'] = False
+		if not('maps' in options):
+			options['maps'] = False
+		year = self.year
+		months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+		title = str(year)
+		subtitle = str(self.label)
+		if title == subtitle:
+			subtitle = ''
+		ret.append({'type': 'title', 'image': None, 'title': title, 'subtitle': subtitle})
+		if options['wordcloud'] == True:
+			if self.cached_wordcloud:
+				ret.append({'type': 'image', 'image': self.cached_wordcloud.path})
+		if options['maps'] == False:
+			checked = []
+			for event in self.events.filter(type='life_event'):
+				for subevent in event.subevents():
+					checked.append(subevent.id)
+					if ((subevent.photos().count() < 5) & (subevent.description == '')):
+						done.append(subevent.id)
+					if ((subevent.photos().count() < 5) & (subevent.description is None)):
+						done.append(subevent.id)
+			for event in self.events.exclude(type='life_event'):
+				if event.id in checked:
+					continue
+				if ((event.photos().count() == 0) & (event.description == '')):
+					done.append(subevent.id)
+		for category in list(LifeReportProperties.objects.filter(report=self).values_list('category', flat=True).distinct()):
+			item = {'type': 'stats', 'title': category, 'data': []}
+			for prop in LifeReportProperties.objects.filter(report=self, category=category):
+				item['data'].append(prop.to_dict())
+			if len(item['data']) > 0:
+				ret.append(item)
+			item = {'type': 'grid', 'title': category, 'data': []}
+			for graph in LifeReportGraph.objects.filter(report=self, category=category):
+				item['data'].append(graph.to_dict())
+			if len(item['data']) > 0:
+				ret.append(item)
+		for chart in LifeReportChart.objects.filter(report=self):
+			if options['peoplestats'] == False:
+				if chart.text.lower() == 'people':
+					continue
+			item = {'type': 'chart', 'title': chart.text}
+			if chart.description:
+				if len(chart.description) > 0:
+					item['description'] = chart.description
+			item['data'] = json.loads(chart.data)
+			ret.append(item)
+
+		if options['peoplestats'] == True:
+			item = {'type': 'chart', 'title': "People", 'description': "Top 10 people encountered, ranked by the number of times met over the course of the year."}
+			item_data = []
+			for pl in ReportPeople.objects.filter(report=self):
+				value = {"text": pl.person.full_name(), "value": len(json.loads(pl.day_list))}
+				if pl.person.image:
+					value['image'] = pl.person.image.path
+				item_data.append(value)
+			item['data'] = sorted(item_data, reverse=True, key=lambda d: d['value'])
+			item['data'] = item['data'][0:10]
+			ret.append(item)
+
+		if options['reportdetail'] == 'standard':
+			page_count = len(ret)
+			for event in self.events.filter(type='life_event').order_by('start_time'):
+				if event.id in done:
+					continue
+				done.append(event.id)
+				item = {'type': 'feature', 'title': event.caption, 'description': event.description}
+				if event.cover_photo:
+					item['image'] = event.cover_photo.id
+				ret.append(item)
+				for pc in event.photo_collages.all():
+					new_photos = False
+					for photo in pc.photos.all():
+						if photo.id in photos_done:
+							continue
+						photos_done.append(photo.id)
+						new_photos = True
+					if new_photos:
+						if pc.image.size >= 1000:
+							ret.append({'type': 'image', 'text': event.caption, 'image': pc.image.path})
+				subevents = []
+				collages = []
+				for subevent in event.subevents().order_by('start_time'):
+					if subevent.id in done:
+						continue
+					done.append(subevent.id)
+					for pc in subevent.photo_collages.all():
+						new_photos = False
+						for photo in pc.photos.all():
+							if photo.id in photos_done:
+								continue
+							photos_done.append(photo.id)
+							new_photos = True
+						if new_photos:
+							if pc.image.size >= 1000:
+								collages.append([pc.event.caption, pc.image.path])
+					if ((subevent.description) or (subevent.cover_photo) or (subevent.cached_staticmap)):
+						item = {'title': subevent.caption, 'description': subevent.description, 'date': self.__format_date(subevent.start_time)}
+						if subevent.cover_photo:
+							item['image'] = subevent.cover_photo.id
+						elif subevent.cached_staticmap:
+							if options['maps'] == True:
+								item['image'] = subevent.cached_staticmap.path
+						if len(subevent.description) < 1000:
+							subevents.append(item)
+						else:
+							ret.append({'type': 'items', 'data': [item]})
+					if len(subevents) >= 3:
+						ret.append({'type': 'items', 'data': subevents})
+						subevents = []
+						for pc in collages:
+							ret.append({'type': 'image', 'text': pc[0], 'image': pc[1]})
+						collages = []
+				if len(subevents) > 0:
+					ret.append({'type': 'items', 'data': subevents})
+				for pc in collages:
+					ret.append({'type': 'image', 'text': pc[0], 'image': pc[1]})
+
+		if options['reportdetail'] == 'full':
+			for i in range(0, 12):
+				ret.append({'type': 'title', 'image': None, 'title': months[i]})
+				page_count = len(ret)
+				dts = datetime.datetime(year, (i + 1), 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
+				if i < 11:
+					dte = datetime.datetime(year, (i + 2), 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE)) - datetime.timedelta(seconds=1)
+				else:
+					dte = datetime.datetime((year + 1), 1, 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE)) - datetime.timedelta(seconds=1)
+				people = []
+				for person in Person.objects.filter(reports__report=self, reports__first_encounter__gte=dts, reports__first_encounter__lte=dte):
+					item = {'name': person.full_name()}
+					if person.image:
+						item['image'] = person.image.path
+					if not('image' in item):
+						continue # For now, just don't show anyone with no photo
+					people.append(item)
+				if len(people) > 0:
+					grid_max = len(people)
+					while grid_max > 16:
+						grid_max = int((float(grid_max) / 2) + 0.5)
+					while len(people) > 0:
+						if options['peoplestats'] == True:
+							ret.append({'type': 'grid', 'title': 'People', 'data': people[0:grid_max]})
+						people = people[grid_max:]
+				events = self.events.filter(end_time__gte=dts, start_time__lte=dte)
+				for event in events.filter(type='life_event').order_by('start_time'):
+					if event.id in done:
+						continue
+					done.append(event.id)
+					item = {'type': 'feature', 'title': event.caption, 'description': event.description}
+					if event.cover_photo:
+						item['image'] = event.cover_photo.id
+					ret.append(item)
+					for pc in event.photo_collages.all():
+						new_photos = False
+						for photo in pc.photos.all():
+							if photo.id in photos_done:
+								continue
+							photos_done.append(photo.id)
+							new_photos = True
+						if new_photos:
+							if pc.image.size >= 1000:
+								ret.append({'type': 'image', 'text': event.caption, 'image': pc.image.path})
+					subevents = []
+					collages = []
+					for subevent in event.subevents().order_by('start_time'):
+						if subevent.id in done:
+							continue
+						done.append(subevent.id)
+						for pc in subevent.photo_collages.all():
+							new_photos = False
+							for photo in pc.photos.all():
+								if photo.id in photos_done:
+									continue
+								photos_done.append(photo.id)
+								new_photos = True
+							if new_photos:
+								if pc.image.size >= 1000:
+									collages.append([pc.event.caption, pc.image.path])
+						if ((subevent.description) or (subevent.cover_photo) or (subevent.cached_staticmap)):
+							item = {'title': subevent.caption, 'description': subevent.description, 'date': self.__format_date(subevent.start_time)}
+							if subevent.cover_photo:
+								item['image'] = subevent.cover_photo.id
+							elif subevent.cached_staticmap:
+								if options['maps'] == True:
+									item['image'] = subevent.cached_staticmap.path
+							if len(subevent.description) < 1000:
+								subevents.append(item)
+							else:
+								ret.append({'type': 'items', 'data': [item]})
+						if len(subevents) >= 3:
+							ret.append({'type': 'items', 'data': subevents})
+							subevents = []
+							for pc in collages:
+								ret.append({'type': 'image', 'text': pc[0], 'image': pc[1]})
+							collages = []
+					if len(subevents) > 0:
+						ret.append({'type': 'items', 'data': subevents})
+					for pc in collages:
+						ret.append({'type': 'image', 'text': pc[0], 'image': pc[1]})
+				subevents = []
+				collages = []
+				for subevent in events.exclude(type='life_event').order_by('start_time'):
+					if subevent.id in done:
+						continue
+					done.append(subevent.id)
+					for pc in subevent.photo_collages.all():
+						new_photos = False
+						for photo in pc.photos.all():
+							if photo.id in photos_done:
+								continue
+							photos_done.append(photo.id)
+							new_photos = True
+						if new_photos:
+							if pc.image.size >= 1000:
+								collages.append([pc.event.caption, pc.image.path])
+					if ((subevent.description) or (subevent.cover_photo) or (subevent.cached_staticmap)):
+						item = {'title': subevent.caption, 'description': subevent.description, 'date': self.__format_date(subevent.start_time)}
+						if subevent.cover_photo:
+							item['image'] = subevent.cover_photo.id
+						elif subevent.cached_staticmap:
+							if options['maps'] == True:
+								item['image'] = subevent.cached_staticmap.path
+						if len(subevent.description) < 1000:
+							subevents.append(item)
+						else:
+							ret.append({'type': 'items', 'data': [item]})
+					if len(subevents) >= 3:
+						ret.append({'type': 'items', 'data': subevents})
+						subevents = []
+						for pc in collages:
+							ret.append({'type': 'image', 'text': pc[0], 'image': pc[1]})
+						collages = []
+				if len(subevents) > 0:
+					ret.append({'type': 'items', 'data': subevents})
+				for pc in collages:
+					ret.append({'type': 'image', 'text': pc[0], 'image': pc[1]})
+				if len(ret) == page_count:
+					# No new pages were added this month, we may as well get rid of the month title page
+					if page_count >= 1:
+						page_count = page_count - 1
+						ret = ret[0:page_count]
+		return ret
+	def words(self):
+		text = ''
+		for event in self.events.all():
+			text = text + event.description + ' '
+			for msg in event.messages():
+				if msg.incoming:
+					continue
+				if ((msg.type != 'sms') & (msg.type != 'microblogpost')):
+					continue
+				text = text + msg.message + ' '
+		text = re.sub('=[0-9A-F][0-9A-F]', '', text)
+		text = strip_tags(text)
+		text = text.strip()
+		ret = []
+		for word in text.split(' '):
+			if len(word) < 3:
+				continue
+			if word.startswith("I'"):
+				continue
+			if word.endswith("'s"):
+				word = word[:-2]
+			ret.append(word)
+		return ' '.join(ret)
+	def wordcloud(self):
+		if self.cached_wordcloud:
+			im = Image.open(self.cached_wordcloud.path)
+			return im
+		text = self.words()
+		stopwords = set()
+		for word in set(STOPWORDS):
+			stopwords.add(word)
+			stopwords.add(word.capitalize())
+		wc = WordCloud(width=2598, height=3543, background_color=None, mode='RGBA', max_words=500, stopwords=stopwords, font_path=settings.DEFAULT_FONT).generate(text)
+		im = wc.to_image()
+		blob = BytesIO()
+		im.save(blob, 'PNG')
+		self.cached_wordcloud.save(report_wordcloud_upload_location, File(blob), save=False)
+		self.save()
+		return im
+	def life_events(self):
+		return self.events.filter(type='life_event')
+	def diary_entries(self):
+		return self.events.exclude(type='life_event').exclude(description='').order_by('start_time')
+	def countries(self):
+		ret = LocationCountry.objects.none()
+		for data in self.locations.values('country').distinct():
+			if not('country' in data):
+				continue
+			ret = ret | LocationCountry.objects.filter(a2=str(data['country']))
+		return ret
+	def addproperty(self, key, value, category=""):
+		try:
+			ret = LifeReportProperties.objects.get(key=key, category=str(category), report=self)
+		except:
+			ret = LifeReportProperties(key=key, value='', category=str(category), report=self)
+		ret.value = str(value)
+		ret.save()
+		return ret
+	def geo(self):
+		features = []
+		minlat = 360.0
+		maxlat = -360.0
+		minlon = 360.0
+		maxlon = -360.0
+		for location in self.locations.all():
+			point = {}
+			point['type'] = "Point"
+			point['coordinates'] = [location.lon, location.lat]
+			if location.lon > maxlon:
+				maxlon = location.lon
+			if location.lon < minlon:
+				minlon = location.lon
+			if location.lat > maxlat:
+				maxlat = location.lat
+			if location.lat < minlat:
+				minlat = location.lat
+			feature = {}
+			properties = {}
+			properties['label'] = str(location)
+			if location.image:
+				properties['image'] = 'places/' + location.uid + '_thumb.jpg'
+			feature['type'] = 'Feature'
+			feature['geometry'] = point
+			feature['properties'] = properties
+			features.append(feature)
+		ret = {}
+		ret['type'] = "FeatureCollection"
+		ret['bbox'] = [minlon - 0.0025, minlat - 0.0025, maxlon + 0.0025, maxlat + 0.0025]
+		ret['features'] = features
+		return json.dumps(ret);
+	def __str__(self):
+		return self.label
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'life report'
+		verbose_name_plural = 'life reports'
+
+class LifeReportProperties(models.Model):
+	report = models.ForeignKey(LifeReport, on_delete=models.CASCADE, related_name='properties')
+	key = models.CharField(max_length=128)
+	value = models.CharField(max_length=255)
+	category = models.SlugField(max_length=32, default='')
+	icon = models.SlugField(max_length=64, default='bar-chart')
+	description = models.TextField(null=True, blank=True)
+	def __str__(self):
+		return str(self.report) + ' - ' + self.key
+	def to_dict(self):
+		"""
+		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.
+
+		:return: The properties of the object as a dict
+		:rtype: dict
+		"""
+		return {'category': self.category, 'key': self.key, 'value': self.value, 'icon': self.icon, 'description': self.description}
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'life report property'
+		verbose_name_plural = 'life report properties'
+		indexes = [
+			models.Index(fields=['report']),
+			models.Index(fields=['key']),
+		]
+
+class LifeReportGraph(models.Model):
+	report = models.ForeignKey(LifeReport, on_delete=models.CASCADE, related_name='graphs')
+	key = models.CharField(max_length=128)
+	data = models.TextField(default='', blank=True)
+	category = models.SlugField(max_length=32, default='')
+	type = models.SlugField(max_length=16, default='bar')
+	icon = models.SlugField(max_length=64, default='bar-chart')
+	cached_image = models.ImageField(blank=True, null=True, upload_to=report_graph_upload_location)
+	description = models.TextField(null=True, blank=True)
+	def image(self, w=640, h=640):
+		if ((w == 640) & (h == 640)):
+			if self.cached_image:
+				im = Image.open(self.cached_image)
+				return im
+		data = json.loads(self.data)
+		ret = None
+		if self.type == 'pie':
+			ret = generate_pie_chart(data, w, h)
+		if self.type == 'donut':
+			ret = generate_donut_chart(data, w, h)
+		if ret is None:
+			return False
+		if ((w == 640) & (h == 640)):
+			blob = BytesIO()
+			ret.save(blob, 'PNG')
+			self.cached_image.save(report_graph_upload_location, File(blob), save=False)
+			self.save()
+		return ret
+	def to_dict(self):
+		"""
+		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.
+
+		:return: The properties of the object as a dict
+		:rtype: dict
+		"""
+		if not self.cached_image:
+			im = self.image()
+		return {'category': self.category, 'name': self.key, 'image': self.cached_image.path}
+	def __str__(self):
+		return str(self.report) + ' - ' + self.key
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'life report graph'
+		verbose_name_plural = 'life report graphs'
+		indexes = [
+			models.Index(fields=['report']),
+			models.Index(fields=['type']),
+			models.Index(fields=['key']),
+		]
+
+class LifeReportChart(models.Model):
+	report = models.ForeignKey(LifeReport, on_delete=models.CASCADE, related_name='charts')
+	text = models.CharField(max_length=128)
+	category = models.SlugField(max_length=32, default='')
+	data = models.TextField(default='[]')
+	description = models.TextField(null=True, blank=True)
+	def to_dict(self):
+		"""
+		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.
+
+		:return: The properties of the object as a dict
+		:rtype: dict
+		"""
+		return json.loads(self.data)
+	def __str__(self):
+		return str(self.report) + ' - ' + self.text
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'life report chart'
+		verbose_name_plural = 'life report charts'
+		indexes = [
+			models.Index(fields=['report']),
+			models.Index(fields=['text']),
+		]
+
+class ReportPeople(models.Model):
+	report = models.ForeignKey(LifeReport, on_delete=models.CASCADE)
+	person = models.ForeignKey(Person, on_delete=models.CASCADE, related_name="reports")
+	first_encounter = models.DateTimeField(null=True)
+	day_list = models.TextField(default='[]')
+	comment = models.TextField(null=True, blank=True)
+	def __str__(self):
+		return str(self.person) + ' in ' + str(self.report)
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'report person'
+		verbose_name_plural = 'report people'
+
+class ReportLocations(models.Model):
+	report = models.ForeignKey(LifeReport, on_delete=models.CASCADE)
+	location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name="reports")
+	comment = models.TextField(null=True, blank=True)
+	def __str__(self):
+		return str(self.location) + ' in ' + str(self.report)
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'report location'
+		verbose_name_plural = 'report locations'
+
+class ReportEvents(models.Model):
+	report = models.ForeignKey(LifeReport, on_delete=models.CASCADE)
+	event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="reports")
+	comment = models.TextField(null=True, blank=True)
+	def __str__(self):
+		return str(self.event) + ' in ' + str(self.report)
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'report event'
+		verbose_name_plural = 'report events'
 
 class EventSimilarity(models.Model):
 	event1 = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="similar_from")
@@ -792,39 +1956,75 @@ class EventWorkoutCategoryStat(models.Model):
 		verbose_name = 'workout category statistic'
 		verbose_name_plural = 'workout category statistics'
 
-class Media(models.Model):
-	type = models.SlugField(max_length=16)
-	unique_id = models.SlugField(max_length=128)
-	label = models.CharField(max_length=255)
+class EventTag(models.Model):
+	events = models.ManyToManyField(Event, related_name='tags')
+	id = models.SlugField(max_length=32, primary_key=True)
+	comment = models.TextField(null=True, blank=True)
+	colour = ColorField(default='#777777')
+	def __str__(self):
+		return(self.id)
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'event tag'
+		verbose_name_plural = 'event tags'
 
-class MediaEvent(models.Model):
-	media = models.ForeignKey(Media, on_delete=models.CASCADE, related_name="events")
-	time = models.DateTimeField()
+class CalendarFeed(models.Model):
+	url = models.URLField()
+	def __str__(self):
+		return(str(self.url))
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'calendar'
+		verbose_name_plural = 'calendars'
 
-@Field.register_lookup
-class WeekdayLookup(Transform):
-	lookup_name = 'wd'
-	function = 'DAYOFWEEK'
-	@property
-	def output_field(self):
-		return IntegerField()
+class CalendarAppointment(models.Model):
+	eventid = models.SlugField(max_length=255, blank=True, default='', unique=True)
+	start_time = models.DateTimeField()
+	end_time = models.DateTimeField(null=True, blank=True)
+	all_day = models.BooleanField(default=False)
+	data = models.TextField(default='', blank=True)
+	location = models.ForeignKey(Location, on_delete=models.SET_NULL, related_name="appointments", null=True, blank=True)
+	caption = models.CharField(max_length=255, default='', blank=True)
+	description = models.TextField(default='', blank=True)
+	created_time = models.DateTimeField(auto_now_add=True)
+	updated_time = models.DateTimeField(auto_now=True)
+	calendar = models.ForeignKey(CalendarFeed, on_delete=models.CASCADE, related_name='events')
+	def __str__(self):
+		return(self.eventid)
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'calendar appointment'
+		verbose_name_plural = 'calendar appointments'
 
-def create_or_get_day(query_date):
+class PersonCategory(models.Model):
+	"""This class represents a category of people. It can be something simple
+	like 'work colleagues' and 'friends' or it can be more specific, such as
+	'people I met at an anime con in 1996'.
+	"""
+	caption = models.CharField(max_length=255, default='', blank=True)
+	people = models.ManyToManyField(Person, related_name='categories')
+	colour = ColorField(default='#777777')
+	def __str__(self):
+		return(self.caption)
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'person category'
+		verbose_name_plural = 'person categories'
 
-	dt = None
-	if isinstance(query_date, datetime.datetime):
-		dt = query_date.date()
-	if isinstance(query_date, datetime.date):
-		dt = query_date
-	if dt > datetime.datetime.now().date():
-		return None
-	try:
-		ret = Day.objects.get(date=dt)
-	except:
-		ret = Day(date=dt)
-		ret.save()
-
-	return ret
+class LocationCategory(models.Model):
+	"""This class represents a category of places. It should normally be used
+	for things like 'pub' and 'cinema' but can also be 'friends houses', etc.
+	"""
+	caption = models.CharField(max_length=255, default='', blank=True)
+	locations = models.ManyToManyField(Location, related_name='categories')
+	colour = ColorField(default='#777777')
+	parent = models.ForeignKey('self', on_delete=models.SET_NULL, related_name="children", null=True, blank=True)
+	def __str__(self):
+		return(self.caption)
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'location category'
+		verbose_name_plural = 'location categories'
 
 class Day(models.Model):
 	"""This class represents a day. This is necessary because a day may not begin
@@ -1164,6 +2364,142 @@ class Day(models.Model):
 		app_label = 'viewer'
 		verbose_name = 'day'
 		verbose_name_plural = 'days'
+
+class AutoTag(models.Model):
+	tag = models.ForeignKey(EventTag, null=False, on_delete=models.CASCADE, related_name='rules')
+	enabled = models.BooleanField(default=True)
+	def add_location_condition(self, lat, lon):
+		ret = TagLocationCondition(lat=lat, lon=lon, tag=self)
+		ret.save()
+		return ret
+	def add_type_condition(self, type):
+		ret = TagTypeCondition(type=type, tag=self)
+		ret.save()
+		return ret
+	def eval(self, event):
+		if not(self.enabled):
+			return False
+		if self.conditions.count() == 0:
+			return False
+		for cond in self.conditions.all():
+			cond_eval = cond.eval(event)
+			if not(cond_eval):
+				return False
+		return True
+
+	def __str__(self):
+		return(str(self.tag))
+
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'autotag'
+		verbose_name_plural = 'autotags'
+
+class TagCondition(PolymorphicModel):
+	tag = models.ForeignKey(AutoTag, null=False, on_delete=models.CASCADE, related_name='conditions')
+	def eval(self, event):
+		return False
+
+	def __str__(self):
+		return(str(self.tag))
+
+	@property
+	def description(self):
+		return "A general condition"
+
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'tag condition'
+		verbose_name_plural = 'tag conditions'
+
+class TagLocationCondition(TagCondition):
+	lat = models.FloatField()
+	lon = models.FloatField()
+	cached_staticmap = models.ImageField(blank=True, null=True, upload_to=tag_staticmap_upload_location)
+	cached_locationtext = models.TextField(default='')
+	def eval(self, event):
+		for ev in get_possible_location_events(event.start_time.date(), self.lat, self.lon):
+			if ((ev['start_time'] > event.start_time) & (ev['end_time'] < event.end_time)):
+				return True
+		return False
+
+	@property
+	def description(self):
+		ret = self.location_text()
+		if ret == '':
+			ret = str(self.lat) + ',' + str(self.lon)
+		return "Location near: " + ret
+
+	def staticmap(self):
+		if self.cached_staticmap:
+			im = Image.open(self.cached_staticmap.path)
+			return im
+		m = StaticMap(320, 320, url_template=settings.MAP_TILES)
+		marker_outline = CircleMarker((self.lon, self.lat), 'white', 18)
+		marker = CircleMarker((self.lon, self.lat), '#3C8DBC', 12)
+		m.add_marker(marker_outline)
+		m.add_marker(marker)
+		im = m.render(zoom=17)
+		blob = BytesIO()
+		im.save(blob, 'PNG')
+		self.cached_staticmap.save(tag_staticmap_upload_location, File(blob), save=False)
+		self.save()
+		return im
+
+	def location_text(self):
+		if self.cached_locationtext != '':
+			return self.cached_locationtext
+		ret = get_location_name(self.lat, self.lon)
+		if ret != '':
+			self.cached_locationtext = ret
+			self.save()
+		return ret
+
+	def __str__(self):
+		return(str(self.tag))
+
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'tag location condition'
+		verbose_name_plural = 'tag location conditions'
+
+class TagTypeCondition(TagCondition):
+	type = models.SlugField(max_length=32)
+	def eval(self, event):
+		if event.type == self.type:
+			return True
+		return False
+
+	@property
+	def description(self):
+		return "Event type: " + str(self.type)
+
+	def __str__(self):
+		return(str(self.tag))
+
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'tag type condition'
+		verbose_name_plural = 'tag type conditions'
+
+class TagWorkoutCondition(TagCondition):
+	workout_category = models.ForeignKey(EventWorkoutCategory, null=False, on_delete=models.CASCADE)
+	def eval(self, event):
+		if self.workout_category in event.workout_categories.all():
+			return True
+		return False
+
+	@property
+	def description(self):
+		return "Workout category: " + str(self.workout_category)
+
+	def __str__(self):
+		return(str(self.tag))
+
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'tag workour condition'
+		verbose_name_plural = 'tag workout conditions'
 
 @receiver(pre_save, sender=Day)
 def save_day_trigger(sender, instance, **kwargs):

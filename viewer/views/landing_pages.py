@@ -9,7 +9,7 @@ from viewer.models import Event
 from viewer.forms import EventForm, QuickEventForm
 
 from viewer.functions.locations import home_location
-from viewer.functions.utils import get_timeline_events, generate_dashboard, generate_onthisday
+from viewer.functions.utils import get_timeline_events, generate_dashboard, generate_onthisday, imouto_json_serializer
 
 
 def index(request):
