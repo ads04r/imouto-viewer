@@ -3,25 +3,21 @@ from django.core.files import File
 from django.db.models import Count, Avg, Max, Sum, Transform, Field, IntegerField, F, ExpressionWrapper
 from django.db.models.signals import pre_save
 from django.db.models.fields import DurationField
-from polymorphic.models import PolymorphicModel
 from django.contrib.staticfiles import finders
 from django.conf import settings
 from django.dispatch import receiver
 from django.utils.html import strip_tags
 from colorfield.fields import ColorField
-from PIL import Image, ImageDraw
+from PIL import Image
 from io import BytesIO
 from wordcloud import WordCloud, STOPWORDS
 from configparser import ConfigParser
-from staticmap import StaticMap, Line, CircleMarker
+from staticmap import StaticMap, Line
 from xml.dom import minidom
-from dateutil import parser
 from tzfpy import get_tz
 
 from viewer.health import parse_sleep, max_heart_rate
-from viewer.staticcharts import generate_pie_chart, generate_donut_chart
-from viewer.functions.geo import getposition, get_location_name
-from viewer.functions.location_manager import get_possible_location_events
+from viewer.functions.geo import get_location_name
 from viewer.functions.file_uploads import *
 
 import random, datetime, pytz, json, markdown, re, os, urllib.request
@@ -51,38 +47,6 @@ def create_or_get_day(query_date):
 
 	return ret
 
-class WeatherLocation(models.Model):
-	id = models.SlugField(max_length=32, primary_key=True)
-	lat = models.FloatField()
-	lon = models.FloatField()
-	api_id = models.SlugField(max_length=32, default='')
-	label = models.CharField(max_length=64)
-	def __str__(self):
-		return str(self.label)
-	class Meta:
-		app_label = 'viewer'
-		verbose_name = 'weather location'
-		verbose_name_plural = 'weather locations'
-		indexes = [
-			models.Index(fields=['label'])
-		]
-
-class WeatherReading(models.Model):
-	time = models.DateTimeField()
-	location = models.ForeignKey(WeatherLocation, on_delete=models.CASCADE, related_name='readings')
-	description = models.CharField(max_length=128, blank=True, null=True)
-	temperature = models.FloatField(blank=True, null=True)
-	wind_speed = models.FloatField(blank=True, null=True)
-	wind_direction = models.IntegerField(blank=True, null=True)
-	humidity = models.IntegerField(blank=True, null=True)
-	visibility = models.IntegerField(blank=True, null=True)
-	def __str__(self):
-		return str(self.time) + ' at ' + str(self.location)
-	class Meta:
-		app_label = 'viewer'
-		verbose_name = 'weather reading'
-		verbose_name_plural = 'weather readings'
-
 class LocationCountry(models.Model):
 	a2 = models.SlugField(primary_key=True, max_length=2)
 	a3 = models.SlugField(unique=True, max_length=3)
@@ -105,6 +69,22 @@ class LocationCountry(models.Model):
 		app_label = 'viewer'
 		verbose_name = 'country'
 		verbose_name_plural = 'countries'
+
+class WeatherLocation(models.Model):
+	id = models.SlugField(max_length=32, primary_key=True)
+	lat = models.FloatField()
+	lon = models.FloatField()
+	api_id = models.SlugField(max_length=32, default='')
+	label = models.CharField(max_length=64)
+	def __str__(self):
+		return str(self.label)
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'weather location'
+		verbose_name_plural = 'weather locations'
+		indexes = [
+			models.Index(fields=['label'])
+		]
 
 class Location(models.Model):
 	"""This is a class representing a named location significant to the user. It does not need to be validated by any
@@ -345,21 +325,6 @@ class Location(models.Model):
 		indexes = [
 			models.Index(fields=['label']),
 			models.Index(fields=['full_label']),
-		]
-
-class LocationProperty(models.Model):
-	location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name="properties")
-	key = models.SlugField(max_length=32)
-	value = models.CharField(max_length=255)
-	def __str__(self):
-		return str(self.location) + ' - ' + self.key
-	class Meta:
-		app_label = 'viewer'
-		verbose_name = 'location property'
-		verbose_name_plural = 'location properties'
-		indexes = [
-			models.Index(fields=['location']),
-			models.Index(fields=['key']),
 		]
 
 class Person(models.Model):
@@ -696,71 +661,6 @@ class PersonPhoto(models.Model):
 		app_label = 'viewer'
 		verbose_name = 'person photo'
 		verbose_name_plural = 'person photos'
-
-class RemoteInteraction(models.Model):
-	type = models.SlugField(max_length=32)
-	time = models.DateTimeField()
-	address = models.CharField(max_length=128)
-	incoming = models.BooleanField()
-	title = models.CharField(max_length=255, default='', blank=True)
-	message = models.TextField(default='', blank=True)
-	def person(self):
-		address = self.address.replace(' ', '')
-		try:
-			person = PersonProperty.objects.get(value=address).person
-		except:
-			person = None
-		return person
-	def __str__(self):
-		if self.incoming:
-			label = 'Message from ' + str(self.address)
-		else:
-			label = 'Message to ' + str(self.address)
-		return label
-	class Meta:
-		app_label = 'viewer'
-		verbose_name = 'remote interaction'
-		verbose_name_plural = 'remote interactions'
-		indexes = [
-			models.Index(fields=['type']),
-			models.Index(fields=['address']),
-			models.Index(fields=['time']),
-			models.Index(fields=['title']),
-		]
-
-class PersonProperty(models.Model):
-	person = models.ForeignKey(Person, on_delete=models.CASCADE, related_name="properties")
-	key = models.SlugField(max_length=32)
-	value = models.CharField(max_length=255)
-	def __str__(self):
-		return str(self.person) + ' - ' + self.key
-	class Meta:
-		app_label = 'viewer'
-		verbose_name = 'person property'
-		verbose_name_plural = 'person properties'
-		indexes = [
-			models.Index(fields=['person']),
-			models.Index(fields=['key']),
-		]
-
-class DataReading(models.Model):
-	start_time = models.DateTimeField()
-	end_time = models.DateTimeField()
-	type = models.SlugField(max_length=32)
-	value = models.IntegerField()
-	def length(self):
-		return((self.end_time - self.start_time).total_seconds())
-	def __str__(self):
-		return str(self.type) + "/" + str(self.start_time.strftime("%Y-%m-%d %H:%M:%S"))
-	class Meta:
-		app_label = 'viewer'
-		verbose_name = 'data reading'
-		verbose_name_plural = 'data readings'
-		indexes = [
-			models.Index(fields=['start_time']),
-			models.Index(fields=['end_time']),
-			models.Index(fields=['type']),
-		]
 
 class Event(models.Model):
 	"""A class representing an event in the life of the user. This is very vague and can mean
@@ -1245,20 +1145,6 @@ class LifePeriod(models.Model):
 		verbose_name = 'life period'
 		verbose_name_plural = 'life periods'
 
-class PhotoCollage(models.Model):
-	image = models.ImageField(blank=True, null=True) # , upload_to=photo_collage_upload_location)
-	event = models.ForeignKey(Event, null=True, blank=True, on_delete=models.SET_NULL, related_name='photo_collages')
-	photos = models.ManyToManyField(Photo, related_name='photo_collages')
-	def __str__(self):
-		if self.event is None:
-			return 'Unknown Event'
-		else:
-			return str(self.event.caption)
-	class Meta:
-		app_label = 'viewer'
-		verbose_name = 'photo collage'
-		verbose_name_plural = 'photo collages'
-
 class PersonEvent(models.Model):
 	person = models.ForeignKey(Person, on_delete=models.CASCADE)
 	event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="events")
@@ -1268,15 +1154,6 @@ class PersonEvent(models.Model):
 		app_label = 'viewer'
 		verbose_name = 'person event'
 		verbose_name_plural = 'person events'
-
-class Media(models.Model):
-	type = models.SlugField(max_length=16)
-	unique_id = models.SlugField(max_length=128)
-	label = models.CharField(max_length=255)
-
-class MediaEvent(models.Model):
-	media = models.ForeignKey(Media, on_delete=models.CASCADE, related_name="events")
-	time = models.DateTimeField()
 
 class LifeReport(models.Model):
 	"""This class represents a yearly life report, inspired by the work of Nicholas Felton.
@@ -1736,107 +1613,6 @@ class LifeReport(models.Model):
 		verbose_name = 'life report'
 		verbose_name_plural = 'life reports'
 
-class LifeReportProperties(models.Model):
-	report = models.ForeignKey(LifeReport, on_delete=models.CASCADE, related_name='properties')
-	key = models.CharField(max_length=128)
-	value = models.CharField(max_length=255)
-	category = models.SlugField(max_length=32, default='')
-	icon = models.SlugField(max_length=64, default='bar-chart')
-	description = models.TextField(null=True, blank=True)
-	def __str__(self):
-		return str(self.report) + ' - ' + self.key
-	def to_dict(self):
-		"""
-		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.
-
-		:return: The properties of the object as a dict
-		:rtype: dict
-		"""
-		return {'category': self.category, 'key': self.key, 'value': self.value, 'icon': self.icon, 'description': self.description}
-	class Meta:
-		app_label = 'viewer'
-		verbose_name = 'life report property'
-		verbose_name_plural = 'life report properties'
-		indexes = [
-			models.Index(fields=['report']),
-			models.Index(fields=['key']),
-		]
-
-class LifeReportGraph(models.Model):
-	report = models.ForeignKey(LifeReport, on_delete=models.CASCADE, related_name='graphs')
-	key = models.CharField(max_length=128)
-	data = models.TextField(default='', blank=True)
-	category = models.SlugField(max_length=32, default='')
-	type = models.SlugField(max_length=16, default='bar')
-	icon = models.SlugField(max_length=64, default='bar-chart')
-	cached_image = models.ImageField(blank=True, null=True, upload_to=report_graph_upload_location)
-	description = models.TextField(null=True, blank=True)
-	def image(self, w=640, h=640):
-		if ((w == 640) & (h == 640)):
-			if self.cached_image:
-				im = Image.open(self.cached_image)
-				return im
-		data = json.loads(self.data)
-		ret = None
-		if self.type == 'pie':
-			ret = generate_pie_chart(data, w, h)
-		if self.type == 'donut':
-			ret = generate_donut_chart(data, w, h)
-		if ret is None:
-			return False
-		if ((w == 640) & (h == 640)):
-			blob = BytesIO()
-			ret.save(blob, 'PNG')
-			self.cached_image.save(report_graph_upload_location, File(blob), save=False)
-			self.save()
-		return ret
-	def to_dict(self):
-		"""
-		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.
-
-		:return: The properties of the object as a dict
-		:rtype: dict
-		"""
-		if not self.cached_image:
-			im = self.image()
-		return {'category': self.category, 'name': self.key, 'image': self.cached_image.path}
-	def __str__(self):
-		return str(self.report) + ' - ' + self.key
-	class Meta:
-		app_label = 'viewer'
-		verbose_name = 'life report graph'
-		verbose_name_plural = 'life report graphs'
-		indexes = [
-			models.Index(fields=['report']),
-			models.Index(fields=['type']),
-			models.Index(fields=['key']),
-		]
-
-class LifeReportChart(models.Model):
-	report = models.ForeignKey(LifeReport, on_delete=models.CASCADE, related_name='charts')
-	text = models.CharField(max_length=128)
-	category = models.SlugField(max_length=32, default='')
-	data = models.TextField(default='[]')
-	description = models.TextField(null=True, blank=True)
-	def to_dict(self):
-		"""
-		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.
-
-		:return: The properties of the object as a dict
-		:rtype: dict
-		"""
-		return json.loads(self.data)
-	def __str__(self):
-		return str(self.report) + ' - ' + self.text
-	class Meta:
-		app_label = 'viewer'
-		verbose_name = 'life report chart'
-		verbose_name_plural = 'life report charts'
-		indexes = [
-			models.Index(fields=['report']),
-			models.Index(fields=['text']),
-		]
-
 class ReportPeople(models.Model):
 	report = models.ForeignKey(LifeReport, on_delete=models.CASCADE)
 	person = models.ForeignKey(Person, on_delete=models.CASCADE, related_name="reports")
@@ -1871,160 +1647,6 @@ class ReportEvents(models.Model):
 		app_label = 'viewer'
 		verbose_name = 'report event'
 		verbose_name_plural = 'report events'
-
-class EventSimilarity(models.Model):
-	event1 = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="similar_from")
-	event2 = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="similar_to")
-	diff_value = models.FloatField()
-	def __str__(self):
-		return "Similarity between " + str(self.event1) + " and " + str(self.event2)
-	class Meta:
-		app_label = 'viewer'
-		verbose_name = 'event similarity'
-		verbose_name_plural = 'event similarities'
-		indexes = [
-			models.Index(fields=['diff_value'])
-		]
-		constraints = [
-			models.UniqueConstraint(fields=['event1', 'event2'], name='events to compare')
-		]
-
-class EventWorkoutCategory(models.Model):
-	events = models.ManyToManyField(Event, related_name='workout_categories')
-	id = models.SlugField(max_length=32, primary_key=True)
-	label = models.CharField(max_length=32, default='')
-	comment = models.TextField(null=True, blank=True)
-	icon = models.SlugField(max_length=64, default='calendar')
-	def __set_stat(self, key, value):
-		try:
-			stat = self.stats.get(label=key)
-		except:
-			stat = EventWorkoutCategoryStat(label=key, category=self)
-		stat.value = str(value)
-		stat.save()
-		return stat
-	def __get_stat(self, stat):
-		try:
-			v = self.stats.get(label=stat).value
-		except:
-			v = self.recalculate_stats().get(label=stat).value
-		ret = parser.parse(v)
-		return ret
-	@property
-	def tags(self):
-		return EventTag.objects.filter(events__workout_categories=self).distinct().exclude(id='')
-	@property
-	def events_sorted(self):
-		return self.events.order_by('-start_time')
-	def stats_as_dict(self):
-		ret = {}
-		for stat in self.stats.all():
-			ret[stat.label] = stat.value
-		return ret
-	def recalculate_stats(self):
-		c = self.events.count()
-		self.__set_stat('count', c)
-		if c > 0:
-			events = self.events.all().order_by('start_time')
-			self.__set_stat('first_event', events[0].start_time)
-			self.__set_stat('last_event', events[c - 1].start_time)
-		return self.stats
-	@property
-	def last_event(self):
-		return self.__get_stat('last_event')
-	@property
-	def first_event(self):
-		return self.__get_stat('first_event')
-	def __str__(self):
-		r = self.id
-		if len(self.label) > 0:
-			r = self.label
-		return(r)
-	class Meta:
-		app_label = 'viewer'
-		verbose_name = 'workout category'
-		verbose_name_plural = 'workout categories'
-
-class EventWorkoutCategoryStat(models.Model):
-	category = models.ForeignKey(EventWorkoutCategory, related_name='stats', on_delete=models.CASCADE)
-	label = models.SlugField(max_length=32)
-	value = models.CharField(max_length=255)
-	def __str__(self):
-		return str(self.category) + ' ' + str(self.label)
-	class Meta:
-		app_label = 'viewer'
-		verbose_name = 'workout category statistic'
-		verbose_name_plural = 'workout category statistics'
-
-class EventTag(models.Model):
-	events = models.ManyToManyField(Event, related_name='tags')
-	id = models.SlugField(max_length=32, primary_key=True)
-	comment = models.TextField(null=True, blank=True)
-	colour = ColorField(default='#777777')
-	def __str__(self):
-		return(self.id)
-	class Meta:
-		app_label = 'viewer'
-		verbose_name = 'event tag'
-		verbose_name_plural = 'event tags'
-
-class CalendarFeed(models.Model):
-	url = models.URLField()
-	def __str__(self):
-		return(str(self.url))
-	class Meta:
-		app_label = 'viewer'
-		verbose_name = 'calendar'
-		verbose_name_plural = 'calendars'
-
-class CalendarAppointment(models.Model):
-	eventid = models.SlugField(max_length=255, blank=True, default='', unique=True)
-	start_time = models.DateTimeField()
-	end_time = models.DateTimeField(null=True, blank=True)
-	all_day = models.BooleanField(default=False)
-	data = models.TextField(default='', blank=True)
-	location = models.ForeignKey(Location, on_delete=models.SET_NULL, related_name="appointments", null=True, blank=True)
-	caption = models.CharField(max_length=255, default='', blank=True)
-	description = models.TextField(default='', blank=True)
-	created_time = models.DateTimeField(auto_now_add=True)
-	updated_time = models.DateTimeField(auto_now=True)
-	calendar = models.ForeignKey(CalendarFeed, on_delete=models.CASCADE, related_name='events')
-	def __str__(self):
-		return(self.eventid)
-	class Meta:
-		app_label = 'viewer'
-		verbose_name = 'calendar appointment'
-		verbose_name_plural = 'calendar appointments'
-
-class PersonCategory(models.Model):
-	"""This class represents a category of people. It can be something simple
-	like 'work colleagues' and 'friends' or it can be more specific, such as
-	'people I met at an anime con in 1996'.
-	"""
-	caption = models.CharField(max_length=255, default='', blank=True)
-	people = models.ManyToManyField(Person, related_name='categories')
-	colour = ColorField(default='#777777')
-	def __str__(self):
-		return(self.caption)
-	class Meta:
-		app_label = 'viewer'
-		verbose_name = 'person category'
-		verbose_name_plural = 'person categories'
-
-class LocationCategory(models.Model):
-	"""This class represents a category of places. It should normally be used
-	for things like 'pub' and 'cinema' but can also be 'friends houses', etc.
-	"""
-	caption = models.CharField(max_length=255, default='', blank=True)
-	locations = models.ManyToManyField(Location, related_name='categories')
-	colour = ColorField(default='#777777')
-	parent = models.ForeignKey('self', on_delete=models.SET_NULL, related_name="children", null=True, blank=True)
-	def __str__(self):
-		return(self.caption)
-	class Meta:
-		app_label = 'viewer'
-		verbose_name = 'location category'
-		verbose_name_plural = 'location categories'
 
 class Day(models.Model):
 	"""This class represents a day. This is necessary because a day may not begin
@@ -2365,141 +1987,70 @@ class Day(models.Model):
 		verbose_name = 'day'
 		verbose_name_plural = 'days'
 
-class AutoTag(models.Model):
-	tag = models.ForeignKey(EventTag, null=False, on_delete=models.CASCADE, related_name='rules')
-	enabled = models.BooleanField(default=True)
-	def add_location_condition(self, lat, lon):
-		ret = TagLocationCondition(lat=lat, lon=lon, tag=self)
-		ret.save()
-		return ret
-	def add_type_condition(self, type):
-		ret = TagTypeCondition(type=type, tag=self)
-		ret.save()
-		return ret
-	def eval(self, event):
-		if not(self.enabled):
-			return False
-		if self.conditions.count() == 0:
-			return False
-		for cond in self.conditions.all():
-			cond_eval = cond.eval(event)
-			if not(cond_eval):
-				return False
-		return True
-
+class PersonProperty(models.Model):
+	person = models.ForeignKey(Person, on_delete=models.CASCADE, related_name="properties")
+	key = models.SlugField(max_length=32)
+	value = models.CharField(max_length=255)
 	def __str__(self):
-		return(str(self.tag))
-
+		return str(self.person) + ' - ' + self.key
 	class Meta:
 		app_label = 'viewer'
-		verbose_name = 'autotag'
-		verbose_name_plural = 'autotags'
+		verbose_name = 'person property'
+		verbose_name_plural = 'person properties'
+		indexes = [
+			models.Index(fields=['person']),
+			models.Index(fields=['key']),
+		]
 
-class TagCondition(PolymorphicModel):
-	tag = models.ForeignKey(AutoTag, null=False, on_delete=models.CASCADE, related_name='conditions')
-	def eval(self, event):
-		return False
-
-	def __str__(self):
-		return(str(self.tag))
-
-	@property
-	def description(self):
-		return "A general condition"
-
-	class Meta:
-		app_label = 'viewer'
-		verbose_name = 'tag condition'
-		verbose_name_plural = 'tag conditions'
-
-class TagLocationCondition(TagCondition):
-	lat = models.FloatField()
-	lon = models.FloatField()
-	cached_staticmap = models.ImageField(blank=True, null=True, upload_to=tag_staticmap_upload_location)
-	cached_locationtext = models.TextField(default='')
-	def eval(self, event):
-		for ev in get_possible_location_events(event.start_time.date(), self.lat, self.lon):
-			if ((ev['start_time'] > event.start_time) & (ev['end_time'] < event.end_time)):
-				return True
-		return False
-
-	@property
-	def description(self):
-		ret = self.location_text()
-		if ret == '':
-			ret = str(self.lat) + ',' + str(self.lon)
-		return "Location near: " + ret
-
-	def staticmap(self):
-		if self.cached_staticmap:
-			im = Image.open(self.cached_staticmap.path)
-			return im
-		m = StaticMap(320, 320, url_template=settings.MAP_TILES)
-		marker_outline = CircleMarker((self.lon, self.lat), 'white', 18)
-		marker = CircleMarker((self.lon, self.lat), '#3C8DBC', 12)
-		m.add_marker(marker_outline)
-		m.add_marker(marker)
-		im = m.render(zoom=17)
-		blob = BytesIO()
-		im.save(blob, 'PNG')
-		self.cached_staticmap.save(tag_staticmap_upload_location, File(blob), save=False)
-		self.save()
-		return im
-
-	def location_text(self):
-		if self.cached_locationtext != '':
-			return self.cached_locationtext
-		ret = get_location_name(self.lat, self.lon)
-		if ret != '':
-			self.cached_locationtext = ret
-			self.save()
-		return ret
-
-	def __str__(self):
-		return(str(self.tag))
-
-	class Meta:
-		app_label = 'viewer'
-		verbose_name = 'tag location condition'
-		verbose_name_plural = 'tag location conditions'
-
-class TagTypeCondition(TagCondition):
+class DataReading(models.Model):
+	start_time = models.DateTimeField()
+	end_time = models.DateTimeField()
 	type = models.SlugField(max_length=32)
-	def eval(self, event):
-		if event.type == self.type:
-			return True
-		return False
-
-	@property
-	def description(self):
-		return "Event type: " + str(self.type)
-
+	value = models.IntegerField()
+	def length(self):
+		return((self.end_time - self.start_time).total_seconds())
 	def __str__(self):
-		return(str(self.tag))
-
+		return str(self.type) + "/" + str(self.start_time.strftime("%Y-%m-%d %H:%M:%S"))
 	class Meta:
 		app_label = 'viewer'
-		verbose_name = 'tag type condition'
-		verbose_name_plural = 'tag type conditions'
+		verbose_name = 'data reading'
+		verbose_name_plural = 'data readings'
+		indexes = [
+			models.Index(fields=['start_time']),
+			models.Index(fields=['end_time']),
+			models.Index(fields=['type']),
+		]
 
-class TagWorkoutCondition(TagCondition):
-	workout_category = models.ForeignKey(EventWorkoutCategory, null=False, on_delete=models.CASCADE)
-	def eval(self, event):
-		if self.workout_category in event.workout_categories.all():
-			return True
-		return False
-
-	@property
-	def description(self):
-		return "Workout category: " + str(self.workout_category)
-
+class RemoteInteraction(models.Model):
+	type = models.SlugField(max_length=32)
+	time = models.DateTimeField()
+	address = models.CharField(max_length=128)
+	incoming = models.BooleanField()
+	title = models.CharField(max_length=255, default='', blank=True)
+	message = models.TextField(default='', blank=True)
+	def person(self):
+		address = self.address.replace(' ', '')
+		try:
+			person = PersonProperty.objects.get(value=address).person
+		except:
+			person = None
+		return person
 	def __str__(self):
-		return(str(self.tag))
-
+		if self.incoming:
+			label = 'Message from ' + str(self.address)
+		else:
+			label = 'Message to ' + str(self.address)
+		return label
 	class Meta:
 		app_label = 'viewer'
-		verbose_name = 'tag workour condition'
-		verbose_name_plural = 'tag workout conditions'
+		verbose_name = 'remote interaction'
+		verbose_name_plural = 'remote interactions'
+		indexes = [
+			models.Index(fields=['type']),
+			models.Index(fields=['address']),
+			models.Index(fields=['time']),
+			models.Index(fields=['title']),
+		]
 
 @receiver(pre_save, sender=Day)
 def save_day_trigger(sender, instance, **kwargs):
