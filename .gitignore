@@ -14,6 +14,7 @@ importers
 docs
 build_docs
 commit_docs
+upload_docs
 nohup.out
 
 -static/viewer
