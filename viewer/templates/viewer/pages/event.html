@@ -404,6 +404,12 @@
 
 {% endif %}
 
+{% if data.weather %}
+
+	{% include 'viewer/cards/weather.html' %}
+
+{% endif %}
+
 {% if data.workout_categories.count > 0 %}
 
                 <div class="nav-tabs-custom">

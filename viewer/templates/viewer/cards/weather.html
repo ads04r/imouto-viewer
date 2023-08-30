@@ -1,0 +1,28 @@
+<div class="box box-primary">
+	<div class="box-body">
+
+		<table class="table table-inline">
+			<thead>
+				<tr>
+					<th>Time</th>
+					<th>Weather</th>
+					<th><i class="fa fa-thermometer"></i></th>
+				</tr>
+			</thead>
+			<tbody>
+
+{% for item in data.weather %}
+
+				<tr>
+					<td>{{ item.time|date:"g:i a" }}</td>
+					<td>{{ item.description }}</td>
+					<td>{{ item.temperature }}</td>
+				</tr>
+
+{% endfor %}
+
+			</tbody>
+		</table>
+
+	</div>
+</div>
