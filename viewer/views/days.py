@@ -5,7 +5,7 @@ from django.db.models import F
 from django.conf import settings
 import datetime, pytz, dateutil.parser, json, requests, random
 
-from viewer.models import Day, Location, Event, EventWorkoutCategory
+from viewer.models import Day, Location, Event, EventWorkoutCategory, create_or_get_day
 from viewer.forms import EventForm
 
 from viewer.functions.moonshine import get_moonshine_tracks

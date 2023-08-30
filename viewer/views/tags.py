@@ -1,6 +1,7 @@
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.db.models import Count
+from io import BytesIO
 import datetime, pytz, dateutil.parser, json, requests, random
 
 from viewer.models import Location, Event, EventWorkoutCategory, EventTag, AutoTag, TagCondition, TagLocationCondition, TagTypeCondition, TagWorkoutCondition
