@@ -51,10 +51,10 @@ def events(request):
 			raise Http404(form.errors)
 
 	data = {}
-	data['event'] = Event.objects.filter(type='event', workout_categories=None).order_by('-start_time')[0:10]
-	data['journey'] = Event.objects.filter(type='journey', workout_categories=None).order_by('-start_time')[0:10]
-	data['workout'] = Event.objects.exclude(workout_categories=None).order_by('-start_time')[0:10]
-	data['photo'] = Event.objects.filter(type='photo').exclude(caption='Photos').order_by('-start_time')[0:10]
+	#data['event'] = Event.objects.filter(type='event', workout_categories=None).order_by('-start_time')[0:10]
+	#data['journey'] = Event.objects.filter(type='journey', workout_categories=None).order_by('-start_time')[0:10]
+	#data['workout'] = Event.objects.exclude(workout_categories=None).order_by('-start_time')[0:10]
+	#data['photo'] = Event.objects.filter(type='photo').exclude(caption='Photos').order_by('-start_time')[0:10]
 	data['life'] = Event.objects.filter(type='life_event').order_by('-start_time')
 	form = EventForm()
 	context = {'type':'view', 'data':data, 'form':form, 'categories':EventWorkoutCategory.objects.all()}
