@@ -31,6 +31,8 @@ def day(request, ds):
 		events.append(event)
 		if event.type == 'journey':
 			continue
+		if event.type == 'sleepover':
+			continue
 		if not(last_event is None):
 			potential_joins.append([str(last_event.pk) + '_' + str(event.pk), str(last_event.caption) + ' to ' + str(event.caption)])
 		last_event = event

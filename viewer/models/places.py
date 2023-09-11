@@ -37,17 +37,3 @@ class LocationProperty(models.Model):
 			models.Index(fields=['key']),
 		]
 
-class LocationCategory(models.Model):
-	"""This class represents a category of places. It should normally be used
-	for things like 'pub' and 'cinema' but can also be 'friends houses', etc.
-	"""
-	caption = models.CharField(max_length=255, default='', blank=True)
-	locations = models.ManyToManyField(Location, related_name='categories')
-	colour = ColorField(default='#777777')
-	parent = models.ForeignKey('self', on_delete=models.SET_NULL, related_name="children", null=True, blank=True)
-	def __str__(self):
-		return(self.caption)
-	class Meta:
-		app_label = 'viewer'
-		verbose_name = 'location category'
-		verbose_name_plural = 'location categories'
