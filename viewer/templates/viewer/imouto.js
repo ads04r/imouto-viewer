@@ -116,6 +116,15 @@ function uploadScreen()
     });
 }
 
+function importWebScreen()
+{
+    $(".content-wrapper").load("./import-web.html", function(response, status, xhr){
+
+        if(status == 'error') { errorPage(xhr); return false; }
+
+    });
+}
+
 function updateReportQueue()
 {
 	var url = "report_queue.json";
@@ -2011,6 +2020,7 @@ function pageRefresh()
     if(page == '') { homeScreen(); return true; }
     if(page == 'timeline') { timelineScreen(); return true; }
     if(page == 'files') { uploadScreen(); return true; }
+    if(page == 'import-web') { importWebScreen(); return true; }
     if(page == 'reports') { reportsScreen(); return true; }
     if(page == 'onthisday') { anniversaryScreen(); return true; }
     if(page == 'life-grid') { lifeGridScreen(); return true; }

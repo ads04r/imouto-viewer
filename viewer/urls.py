@@ -10,6 +10,7 @@ urlpatterns = [
     path('onthisday.html', views.onthisday),
     path('life_grid.html', views.life_grid),
     path('upload.html', views.importer),
+    path('import-web.html', views.webimporter),
     path('timeline.html', views.timeline),
     path('timeline/<ds>.html', views.timelineitem),
     path('reports.html', views.reports),

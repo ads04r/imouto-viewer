@@ -39,6 +39,10 @@ def importer(request):
 	context = {'progress': r.json()}
 	return render(request, 'viewer/pages/import.html', context)
 
+def webimporter(request):
+	context = {'progress': []}
+	return render(request, 'viewer/pages/import-web.html', context)
+
 @csrf_exempt
 def search(request):
 	if request.method != 'POST':
