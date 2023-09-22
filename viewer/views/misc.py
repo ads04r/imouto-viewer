@@ -8,7 +8,7 @@ from haystack.query import SearchQuerySet
 import datetime, pytz, dateutil.parser, json, requests, random
 
 from viewer.models import Location, Person, Event
-from viewer.functions.rdf import get_webpage_data, microdata_to_rdf, get_schema_people, get_schema_places
+from viewer.functions.rdf import get_webpage_data, microdata_to_rdf, get_rdf_people, get_rdf_places
 
 def upload_file(request):
 	if request.method != 'POST':
@@ -94,8 +94,8 @@ def parse_rdf(request):
 		cache.set(cache_key, g, 86400)
 
 	data = []
-	data = data + get_schema_people(g)
-	data = data + get_schema_places(g)
+	data = data + get_rdf_people(g)
+	data = data + get_rdf_places(g)
 
 	response = HttpResponse(json.dumps(data), content_type='application/json')
 	return response
