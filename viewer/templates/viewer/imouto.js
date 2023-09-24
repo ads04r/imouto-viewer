@@ -122,6 +122,24 @@ function importWebScreen()
 
         if(status == 'error') { errorPage(xhr); return false; }
 
+	$('#importfromweb').on('click', function()
+	{
+		var url = $('#importformurl').val();
+		var waittext = '<tr class="founddata" data-data="{}"><td>Loading...</td></tr>';
+		$('table#founddata-table').html(waittext);
+		importrdf(url, function(data)
+		{
+			var text = '';
+			for(var i = 0; i < data.length; i++)
+			{
+				item = data[i];
+				text = text + '<tr class="founddata" data-data="{}"><td>' + item.name + '</td></tr>';
+			}
+			if(text == '') { text = '<tr class="founddata" data-data="{}"><td>Loading...</td></tr>'; }
+			$('table#founddata-table').html(text)
+		});
+	});
+
     });
 }
 
@@ -1939,6 +1957,20 @@ function search(query, callback)
 {
             var url = './search.json';
             var data = {'query': query};
+            $.ajax({
+                url: url,
+                dataType: 'json',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                method: 'POST',
+                success: callback
+            });
+}
+
+function importrdf(uri, callback)
+{
+            var url = './import-web.json';
+            var data = {'url': uri};
             $.ajax({
                 url: url,
                 dataType: 'json',
