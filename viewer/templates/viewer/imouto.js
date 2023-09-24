@@ -125,18 +125,42 @@ function importWebScreen()
 	$('#importfromweb').on('click', function()
 	{
 		var url = $('#importformurl').val();
-		var waittext = '<tr class="founddata" data-data="{}"><td>Loading...</td></tr>';
+		var waittext = '<tr class="founddata" data-data="{}"><td><i class="fa fa-refresh fa-spin"></i> Loading...</td></tr>';
 		$('table#founddata-table').html(waittext);
 		importrdf(url, function(data)
 		{
-			var text = '';
+			items = [];
 			for(var i = 0; i < data.length; i++)
 			{
-				item = data[i];
-				text = text + '<tr class="founddata" data-data="{}"><td>' + item.name + '</td></tr>';
+				var item = data[i];
+				if(item.name)
+				{
+					var title = item.name;
+					if(item.type == 'Location') { title = '<i class="fa fa-map-marker"></i> ' + title; }
+					if(item.type == 'Person') { title = '<i class="fa fa-user"></i> ' + title; }
+					var elemtd = $("<td>" + title + "</td>");
+					var elemtr = $("<tr>", {'class': 'founddata', 'data-data': JSON.stringify(item)});
+					elemtr.append(elemtd);
+					items.push(elemtr);
+				}
 			}
-			if(text == '') { text = '<tr class="founddata" data-data="{}"><td>Loading...</td></tr>'; }
-			$('table#founddata-table').html(text)
+			if(items.length == 0) { $('table#founddata-table').html('<tr class="founddata" data-data="{}"><td>No data found.</td></tr>'); } else { $('table#founddata-table').html(''); }
+			for(var i = 0; i < items.length; i++)
+			{
+				$('table#founddata-table').append(items[i]);
+			}
+			$('.founddata').on('click', function(){
+				var data = $(this).data('data');
+				if(data != '')
+				{
+					var html = '';
+					for(var i in data)
+					{
+						html = html + '<tr><td>' + i + '</td><td>' + data[i] + '</td></tr>';
+					}
+					$("#import-summary-window").html('<div class="box box-primary"><div class="box-body no-padding"><table class="table">' + html + '</table></div></div>');
+				}
+			});
 		});
 	});
 

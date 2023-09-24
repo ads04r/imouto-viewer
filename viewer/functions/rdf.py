@@ -14,6 +14,8 @@ def get_webpage_data(url):
 	if ct == 'application/json':
 		return {'json-ld': json.loads(r.text)}
 	g = Graph()
+	if ct == 'application/rdf+turtle':
+		g.parse(data=r.text, format='n3')
 	if ct == 'application/turtle':
 		g.parse(data=r.text, format='n3')
 	if ct == 'application/rdf+xml':
@@ -54,7 +56,7 @@ def unflatten_rdf_resource(uri, g, lang='en'):
 def get_rdf_people(g):
 
 	data = []
-	for uri in uris_of_type(g, ['http://schema.org/Person', 'http://dbpedia.org/ontology/Person', 'http://dbpedia.org/class/yago/Person100007846']):
+	for uri in uris_of_type(g, ['http://schema.org/Person', 'http://dbpedia.org/ontology/Person', 'http://dbpedia.org/class/yago/Person100007846', 'http://xmlns.com/foaf/0.1/Person']):
 		item = unflatten_rdf_resource(uri, g)
 		if len(item) > 0:
 			item['type'] = 'Person'
