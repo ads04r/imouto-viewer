@@ -3,9 +3,9 @@ from rdflib import Graph, Namespace, URIRef, Literal
 from rdflib.namespace import RDF, RDFS, XSD
 import json, requests, extruct
 
-def get_webpage_data(url):
+def get_webpage_data(url, lang='en'):
 
-	r = requests.get(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win94; x64; rv:55.0) Gecko/20100101 Firefox/55.0"})
+	r = requests.get(url, headers={"Accept-Language": lang, "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win94; x64; rv:55.0) Gecko/20100101 Firefox/55.0"})
 	ct = 'text/html'
 	if 'Content-Type' in r.headers:
 		ct = r.headers['Content-Type'].split(';')[0].strip()
@@ -52,7 +52,9 @@ def flatten_rdf_resource(uri, g, lang='en'):
 		if len(p_string) > 0:
 			if not(p_string in item):
 				item[p_string] = []
-			item[p_string].append(str(o))
+			o_val = str(o)
+			if not(o_val in item[p_string]):
+				item[p_string].append(o_val)
 	return item
 
 def get_rdf_people(g):

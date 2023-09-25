@@ -96,7 +96,6 @@ def parse_rdf(request):
 	data = []
 	data = data + get_rdf_people(g)
 	data = data + get_rdf_places(g)
-	data.append({'debug': g.serialize(format='turtle')})
 
 	response = HttpResponse(json.dumps(data), content_type='application/json')
 	return response
