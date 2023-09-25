@@ -80,6 +80,9 @@ def parse_rdf(request):
 		raise Http404()
 	query = json.loads(request.body)
 	url = query['url']
+	if 'wikipedia.org/wiki/' in url:
+		p = url.strip('/').split('/')
+		url = 'https://dbpedia.org/data/' + p[-1] + '.rdf'
 	ret = []
 
 	g = None
