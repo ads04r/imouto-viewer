@@ -153,12 +153,21 @@ function importWebScreen()
 				var data = $(this).data('data');
 				if(data != '')
 				{
+					var label = '';
 					var html = '';
 					for(var i in data)
 					{
-						html = html + '<tr><td>' + i + '</td><td>' + data[i] + '</td></tr>';
+						if(i == 'type') { continue; }
+						if(i.startsWith('wiki')) { continue; }
+						html = html + '<tr><td>' + i + '</td><td>';
+						for(var j = 0; j < data[i].length; j++)
+						{
+							if(i == 'name') { label = data[i][j]; }
+							html = html + data[i][j] + '<br/>';
+						}
+						html = html + '</td></tr>';
 					}
-					$("#import-summary-window").html('<div class="box box-primary"><div class="box-body no-padding"><table class="table">' + html + '</table></div></div>');
+					if(html != '') { $("#import-summary-window").html('<div class="box box-primary"><div class="box-header with-border"><h3 class="box-title">' + label + '</h3></div><div class="box-body no-padding"><table class="table table-condensed">' + html + '</table></div></div>'); }
 				}
 			});
 		});
