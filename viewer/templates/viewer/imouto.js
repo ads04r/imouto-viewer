@@ -122,6 +122,13 @@ function importWebScreen()
 
         if(status == 'error') { errorPage(xhr); return false; }
 
+	$('#importformurl').on('keypress', function(e)
+	{
+		var key = e.which;
+		console.log(key);
+		if(key == 13) { $('a#importfromweb').click(); return false; }
+	});
+
 	$('#importfromweb').on('click', function()
 	{
 		var url = $('#importformurl').val();
