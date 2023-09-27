@@ -140,9 +140,9 @@ function importWebScreen()
 			for(var i = 0; i < data.length; i++)
 			{
 				var item = data[i];
-				if(item.name)
+				if(item.label)
 				{
-					var title = item.name;
+					var title = item.label[0];
 					if(item.type == 'Location') { title = '<i class="fa fa-map-marker"></i> ' + title; }
 					if(item.type == 'Person') { title = '<i class="fa fa-user"></i> ' + title; }
 					var elemtd = $("<td>" + title + "</td>");
@@ -169,7 +169,7 @@ function importWebScreen()
 						html = html + '<tr><td>' + i + '</td><td>';
 						for(var j = 0; j < data[i].length; j++)
 						{
-							if(i == 'name') { label = data[i][j]; }
+							if(i == 'label') { label = data[i][j]; }
 							html = html + data[i][j] + '<br/>';
 						}
 						html = html + '</td></tr>';
