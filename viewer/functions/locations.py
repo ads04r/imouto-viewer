@@ -1,5 +1,5 @@
 import datetime, pytz, json, re, sys, os, requests
-from viewer.models import Location, Event
+from viewer.models import Location, Event, LocationCity
 from viewer.functions.calendar import event_label
 from django.conf import settings
 from geopy import distance
@@ -149,14 +149,17 @@ def distance_waffle(dist_value):
 		return ""
 	homeloc = (home.lat, home.lon)
 	ret = {"dist": 0.0}
-	for city in settings.CITY_LOCATIONS:
-		pos = (float(city['lat']), float(city['lon']))
+	for city in LocationCity.objects.all():
+		pos = (float(city.lat), float(city.lon))
 		dist = distance.distance(homeloc, pos).miles
 		if dist > dist_value:
 			continue
 		if dist < ret['dist']:
 			continue
 		ret = {"city": city, "dist": dist}
-	return "Further than the distance to " + (", ".join([ret['city']['capital'], ret['city']['country']])) + " (" + str(int(ret['dist'])) + " miles)"
+	if not('city' in ret):
+		return str(dist_value) + " miles"
+	city = ret['city']
+	return "Further than the distance to " + city.label + " (" + str(int(ret['dist'])) + " miles)"
 
 
