@@ -15,11 +15,6 @@ try:
 except ModuleNotFoundError:
     sys.stderr.write("Cannot find file settings_local.py. Please ensure it is created (use the settings_local_template.py if necessary) before continuing.\n")
     sys.exit(1)
-try:
-    from .settings_data import *
-except ModuleNotFoundError:
-    sys.stderr.write("Cannot find file settings_data.py. Please ensure it is created (use the settings_data_template.py if necessary) before continuing.\n")
-    sys.exit(1)
 
 # Application definition
 
