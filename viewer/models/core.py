@@ -73,6 +73,32 @@ class LocationCountry(models.Model):
 		verbose_name = 'country'
 		verbose_name_plural = 'countries'
 
+class LocationCity(models.Model):
+	label = models.CharField(max_length=100)
+	lat = models.FloatField()
+	lon = models.FloatField()
+	country = models.ForeignKey(LocationCountry, related_name='cities', null=True, blank=True, on_delete=models.SET_NULL)
+	wikipedia = models.URLField(blank=True, null=True)
+	def __str__(self):
+		return str(self.label)
+	def to_dict(self):
+		"""
+		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.
+
+		:return: The properties of the object as a dict
+		:rtype: dict
+		"""
+		ret = {"label": str(self.label), "lat": self.lat, "lon": self.lon}
+		if self.wikipedia:
+			ret['wikipedia'] = str(self.wikipedia)
+		if self.country:
+			ret['country'] = self.country.to_dict()
+		return ret
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'city'
+		verbose_name_plural = 'cities'
+
 class WeatherLocation(models.Model):
 	id = models.SlugField(max_length=32, primary_key=True)
 	lat = models.FloatField()
@@ -101,6 +127,7 @@ class Location(models.Model):
 	lat = models.FloatField()
 	lon = models.FloatField()
 	country = models.ForeignKey(LocationCountry, related_name='locations', null=True, blank=True, on_delete=models.SET_NULL)
+	city = models.ForeignKey(LocationCity, related_name='locations', null=True, blank=True, on_delete=models.SET_NULL)
 	creation_time = models.DateTimeField(blank=True, null=True)
 	destruction_time = models.DateTimeField(blank=True, null=True)
 	address = models.TextField(blank=True, null=True)
@@ -109,6 +136,7 @@ class Location(models.Model):
 	wikipedia = models.URLField(blank=True, null=True)
 	image = models.ImageField(blank=True, null=True, upload_to=location_thumbnail_upload_location)
 	weather_location = models.ForeignKey(WeatherLocation, on_delete=models.CASCADE, null=True, blank=True)
+	parent = models.ForeignKey('self', on_delete=models.SET_NULL, related_name="children", null=True, blank=True)
 	@property
 	def is_home(self):
 		"""
