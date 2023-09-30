@@ -1979,7 +1979,7 @@ class Day(models.Model):
 					main_wake = wake
 			return main_wake.start_time.astimezone(self.timezone), main_wake.end_time.astimezone(self.timezone)
 		else:
-			return dts.astimezone(self.timezone), dte.astimezone(self.timezone)
+			return dts, dte
 
 	def refresh(self, save=True):
 		"""
@@ -2006,6 +2006,7 @@ class Day(models.Model):
 			except:
 				pass # Leave at local time if we have an issue
 
+		dts, dte = self.__calculate_wake_time() # Do this again, because the timezone may have changed.
 		if not(self.today):
 			self.wake_time = dts
 			self.bed_time = dte
