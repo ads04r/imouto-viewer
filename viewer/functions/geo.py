@@ -1,7 +1,6 @@
 import datetime, pytz, json, urllib.request, re, sys, os
 import Fred as fred
 from django.core.cache import cache
-from viewer.models import *
 from django.conf import settings
 from geopy import distance
 
@@ -121,6 +120,45 @@ def get_area_name(n, w, s, e):
 	if len(addr) == 0:
 		return ''
 	return addr[0]
+
+def get_location_address_fragment(lat, lon, fragment='country'):
+	"""
+	Given a point, returns the most specific human-readable name for the area that matches the type given by fragment.
+
+	:param lat: The latitude of the point.
+	:param lon: The longitude of the point.
+	:param fragment: The type of address fragment we are after, eg 'country' or 'city'.
+	:return: A string containing a name for the area.
+	:rtype: str
+
+	"""
+	cache_key = "address_" + str(lat) + "," + str(lon)
+	data = cache.get(cache_key)
+	try:
+		mapbox_key = settings.MAPBOX_API_KEY
+	except:
+		return ''
+	if data is None:
+		url = "https://api.mapbox.com/geocoding/v5/mapbox.places/" + str(lon) + "," + str(lat) + ".json?language=en&access_token=" + mapbox_key
+		r = urllib.request.urlopen(url)
+		data = json.loads(r.read())
+		if not('features' in data):
+			return ''
+		cache.set(cache_key, data, timeout=86400)
+	if not('features' in data):
+		return ''
+	for f in data['features']:
+		if not(fragment in f['place_type']):
+			continue
+		if 'text_en' in f:
+			return f['text_en']
+		if 'place_name_en' in f:
+			return f['place_name_en']
+		if 'text' in f:
+			return f['text']
+		if 'place_name' in f:
+			return f['place_name']
+	return ''
 
 def journey_similarity(event1, event2):
 	"""

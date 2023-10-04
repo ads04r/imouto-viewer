@@ -4,8 +4,9 @@ from django.core.cache import cache
 from django.db.models import F, Count
 import datetime, pytz, dateutil.parser, json, requests, random
 
-from viewer.models import Location
+from viewer.models import Location, LocationCountry
 from viewer.forms import LocationForm
+from viewer.functions.geo import get_location_address_fragment
 
 def places(request):
 	data = {}
@@ -19,15 +20,25 @@ def places(request):
 			post = form.save(commit=False)
 			id = form.cleaned_data['uid']
 			if form.cleaned_data.get('uploaded_image'):
-				#image = Image(title=post.full_label, description=post.description, image=request.FILES['uploaded_image'])
-				#image.save()
+				image = Image(title=post.full_label, description=post.description, image=request.FILES['uploaded_image'])
+				image.save()
 				post.image = request.FILES['uploaded_image']
+			try:
+				country_name = get_location_address_fragment(post.lat, post.lon, 'country')
+			except:
+				country_name = ''
+			try:
+				country = LocationCountry.objects.get(label=country_name)
+			except:
+				country = None
+			if not(country is None):
+				post.country = country
 			post.save()
 			post.categories.clear()
 			try:
 				categories = str(request.POST['location_categories']).split(',')
 			except:
-				categproes = []
+				categories = []
 			for category in categories:
 				post.add_category(category.strip())
 

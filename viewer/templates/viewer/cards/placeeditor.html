@@ -1,0 +1,90 @@
+<div class="modal fade nav-tabs-custom" id="admin_places_add" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+                <form id="place-add" action="places.html" method="POST" enctype="multipart/form-data">{% csrf_token %}
+
+                    <div role="tabpanel">
+                        <ul class="nav nav-tabs">
+                            <li class="active"><a href="#label" data-toggle="tab">Label</a></li>
+                            <li><a href="#loc" data-toggle="tab">Location</a></li>
+                            <li><a href="#link" data-toggle="tab">Links</a></li>
+                        </ul>
+                    </div>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="label">
+
+                              <table class="table table-hover">
+{% for field in form %}
+{% if forloop.counter < 6 %}
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                </tr>
+{% endif %}
+{% endfor %}
+
+                                <tr class="form-row">
+                                  <td></td>
+                                  <td><label for="id_workout_type">Categories:</label></td>
+                                  <td><input type="text" id="id_location_categories" class="form-control" name="location_categories" /></td>
+                                </tr>
+
+                              </table>
+                        
+                        </div>
+                        <div class="tab-pane" id="loc">
+
+                              <div id="mapselect" class="mapselect"></div>
+                        
+                              <table class="table table-hover">
+{% for field in form %}
+{% if forloop.counter == 7 %}
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                </tr>
+{% endif %}
+{% if forloop.counter == 8 %}
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                </tr>
+{% endif %}
+{% endfor %}
+                              </table>
+
+                        </div>
+                        <div class="tab-pane" id="link">
+
+                              <table class="table table-hover">
+{% for field in form %}
+{% if forloop.counter == 6 %}
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                </tr>
+{% endif %}
+{% if forloop.counter > 8 and forloop.counter < 14 %}
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                </tr>
+{% endif %}
+{% endfor %}
+                              </table>
+
+                        </div>
+                    </div>
+
+                </form>
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary save-form-button">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

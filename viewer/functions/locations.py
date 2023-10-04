@@ -160,6 +160,9 @@ def distance_waffle(dist_value):
 	if not('city' in ret):
 		return str(dist_value) + " miles"
 	city = ret['city']
-	return "Further than the distance to " + city.label + " (" + str(int(ret['dist'])) + " miles)"
+	if city.country:
+		return "Further than the distance to " + city.label + ", " + city.country.label + " (" + str(int(ret['dist'])) + " miles)"
+	else:
+		return "Further than the distance to " + city.label + " (" + str(int(ret['dist'])) + " miles)"
 
 
