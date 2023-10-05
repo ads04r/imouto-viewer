@@ -1,6 +1,7 @@
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.core.cache import cache
+from django.conf import settings
 from django.db.models import F, Count
 import datetime, pytz, dateutil.parser, json, requests, random
 
@@ -10,8 +11,17 @@ from viewer.functions.geo import get_location_address_fragment
 
 def places(request):
 	data = {}
+	try:
+		home = Location.objects.get(pk=settings.USER_HOME_LOCATION)
+	except:
+		home = None
 	datecutoff = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC) - datetime.timedelta(days=60)
-	data['recent'] = Location.objects.filter(events__start_time__gte=datecutoff).annotate(num_events=Count('events')).order_by('-num_events')
+	data['home'] = home
+	data['recent'] = Location.objects.filter(events__start_time__gte=datecutoff).exclude(uid=home.uid).annotate(num_events=Count('events')).order_by('-num_events')
+	if home is None:
+		data['overseas'] = Location.objects.none()
+	else:
+		data['overseas'] = Location.objects.exclude(country=None).exclude(country=home.country).order_by('label')
 	data['all'] = Location.objects.annotate(num_events=Count('events')).order_by('label')
 	if request.method == 'POST':
 		cache.delete('dashboard')
