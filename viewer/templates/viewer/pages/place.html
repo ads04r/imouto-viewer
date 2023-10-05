@@ -26,6 +26,7 @@
                     <div class="box-body">
                         <p>{{ data.address }}</p>
                         <p>
+{% if data.parent %}Located within <a href="#place_{{ data.parent.uid }}">{{ data.parent.label }}</a>{% endif %}
                         </p>
                     </div>
                 </div>
