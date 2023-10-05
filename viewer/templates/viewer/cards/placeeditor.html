@@ -24,7 +24,6 @@
                                 </tr>
 {% endif %}
 {% endfor %}
-
                                 <tr class="form-row">
                                   <td></td>
                                   <td><label for="id_workout_type">Categories:</label></td>
@@ -47,6 +46,12 @@
                                 </tr>
 {% endif %}
 {% if forloop.counter == 8 %}
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                </tr>
+{% endif %}
+{% if forloop.counter == 14 %}
                                 <tr class="form-row">
                                   <td>{{ field.errors }}</td>
                                   <td>{{ field.label_tag }}</td><td>{{ field }}</td>

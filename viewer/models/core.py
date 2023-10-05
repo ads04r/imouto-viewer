@@ -23,7 +23,7 @@ from viewer.functions.geo import get_location_name
 from viewer.functions.location_manager import get_possible_location_events
 from viewer.functions.file_uploads import *
 
-import random, datetime, pytz, json, markdown, re, os, urllib.request
+import random, datetime, pytz, json, markdown, re, os, urllib.request, overpy
 
 @Field.register_lookup
 class WeekdayLookup(Transform):
@@ -68,6 +68,40 @@ class LocationCountry(models.Model):
 		if self.wikipedia:
 			ret['wikipedia'] = str(self.wikipedia)
 		return ret
+	def refresh_cities(self):
+		"""
+		Calls the OSM Overpass API to determine all the cities within the country specified, and stores them in Imouto.
+
+		:return: A QuerySet of cities linked to this country, after the refresh
+		:rtype: QuerySet
+		"""
+		api = overpy.Overpass()
+		query = 'area["name:en"="' + self.label + '"]->.country;node[place=city](area.country);out;'
+		result = api.query(query)
+		for node in result.nodes:
+			if not('name:en' in node.tags):
+				continue
+			city_name = node.tags['name:en']
+			lat = node.lat
+			lon = node.lon
+			wikipedia = ''
+			if 'wikipedia' in node.tags:
+				parse = node.tags['wikipedia'].split(':')
+				wikipedia = "https://" + parse[0] + ".wikipedia.org/wiki/" + parse[1]
+			if not('en.wikipedia.org') in wikipedia:
+				wikipedia = ''
+			try:
+				city = LocationCity.objects.get(label=city_name)
+			except:
+				city = LocationCity(label=city_name, country=self, lat=lat, lon=lon)
+			if city.wikipedia is None:
+				if len(wikipedia) > 0:
+					city.wikipedia = wikipedia
+			try:
+				city.save()
+			except:
+				continue
+		return LocationCity.objects.filter(country=self)
 	class Meta:
 		app_label = 'viewer'
 		verbose_name = 'country'
