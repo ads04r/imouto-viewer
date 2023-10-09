@@ -28,9 +28,9 @@ def wikidata_to_wikipedia(wdid):
 
 	data = get_webpage_data("https://wikidata.org/entity/" + wdid)
 	try:
-		return data['json-ld']['entities']['Q145']['sitelinks']['enwiki']['url']
+		return data['json-ld']['entities'][wdid]['sitelinks']['enwiki']['url']
 	except:
-		return data
+		return ''
 
 def uris_of_type(g, type_uris):
 

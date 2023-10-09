@@ -7,7 +7,8 @@ import datetime, pytz, dateutil.parser, json, requests, random
 
 from viewer.models import Location, LocationCountry
 from viewer.forms import LocationForm
-from viewer.functions.geo import get_location_address_fragment, get_location_country_code
+from viewer.functions.geo import get_location_address_fragment, get_location_country_code, get_location_wikidata_id
+from viewer.functions.rdf import wikidata_to_wikipedia
 
 def places(request):
 	data = {}
@@ -42,9 +43,12 @@ def places(request):
 					country = None
 				if country is None:
 					country_name = get_location_address_fragment(post.lat, post.lon, 'country')
+					country_wiki = wikidata_to_wikipedia(get_location_wikidata_id(post.lat, post.lon, 'country'))
 					if len(country_name) > 0:
 						try:
 							country = LocationCountry(a2=country_code, label=country_name)
+							if len(country_wiki) > 0:
+								country.wikipedia = country_wiki
 							country.save()
 						except:
 							country = None
