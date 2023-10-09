@@ -40,7 +40,11 @@
                                         <a class="product-title personlink" href="#place_{{ place.uid }}">
                                             {{ place }}</a>
                                         <span class="product-description">
-                                            {{ place.address }}</span>
+                                            {{ place.address }}
+{% if place.parent %}
+                                            <br/>Located within <a href="#place_{{ place.parent.uid }}">{{ place.parent }}</a>
+{% endif %}
+                                        </span>
                                     </div>
                                 </li>
                                 
@@ -66,7 +70,11 @@
                                         <a class="product-title personlink" href="#place_{{ place.uid }}">
                                             {{ place }}</a>
                                         <span class="product-description">
-                                            {{ place.address }}</span>
+                                            {{ place.address }}
+{% if place.parent %}
+                                            <br/>Located within <a href="#place_{{ place.parent.uid }}">{{ place.parent }}</a>
+{% endif %}
+                                        </span>
                                     </div>
                                 </li>
                                 
@@ -92,9 +100,14 @@
                                         <a class="product-title personlink" href="#place_{{ place.uid }}">
                                             {{ place }}</a>
                                         <span class="product-description">
-                                            {{ place.address }}</span>
+                                            {{ place.address }}
+                                        </span>
                                         <span class="product-description">
-                                            {{ place.num_events }} events</span>
+                                            {{ place.num_events }} events
+{% if place.parent %}
+                                            | Located within <a href="#place_{{ place.parent.uid }}">{{ place.parent }}</a>
+{% endif %}
+                                        </span>
                                     </div>
                                 </li>
                                 
