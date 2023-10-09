@@ -52,7 +52,7 @@ def create_or_get_day(query_date):
 
 class LocationCountry(models.Model):
 	a2 = models.SlugField(primary_key=True, max_length=2)
-	a3 = models.SlugField(unique=True, max_length=3)
+	a3 = models.SlugField(max_length=3, blank=True, null=True)
 	label = models.CharField(max_length=100)
 	wikipedia = models.URLField(blank=True, null=True)
 	def __str__(self):
@@ -64,7 +64,9 @@ class LocationCountry(models.Model):
 		:return: The properties of the object as a dict
 		:rtype: dict
 		"""
-		ret = {'iso': [self.a2, self.a3], "label": str(self.label)}
+		ret = {'iso': [self.a2], "label": str(self.label)}
+		if self.a3:
+			ret['iso'].append(self.a3)
 		if self.wikipedia:
 			ret['wikipedia'] = str(self.wikipedia)
 		return ret

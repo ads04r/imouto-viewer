@@ -24,6 +24,14 @@ def get_webpage_data(url, lang='en'):
 		g.parse(data=r.text, format='n3')
 	return {'json-ld': json.loads(g.serialize(format='json-ld'))}
 
+def wikidata_to_wikipedia(wdid):
+
+	data = get_webpage_data("https://wikidata.org/entity/" + wdid)
+	try:
+		return data['json-ld']['entities']['Q145']['sitelinks']['enwiki']['url']
+	except:
+		return data
+
 def uris_of_type(g, type_uris):
 
 	if(isinstance(type_uris, list)):

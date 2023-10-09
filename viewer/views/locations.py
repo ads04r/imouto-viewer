@@ -7,7 +7,7 @@ import datetime, pytz, dateutil.parser, json, requests, random
 
 from viewer.models import Location, LocationCountry
 from viewer.forms import LocationForm
-from viewer.functions.geo import get_location_address_fragment
+from viewer.functions.geo import get_location_address_fragment, get_location_country_code
 
 def places(request):
 	data = {}
@@ -33,14 +33,21 @@ def places(request):
 				image = Image(title=post.full_label, description=post.description, image=request.FILES['uploaded_image'])
 				image.save()
 				post.image = request.FILES['uploaded_image']
-			try:
-				country_name = get_location_address_fragment(post.lat, post.lon, 'country')
-			except:
-				country_name = ''
-			try:
-				country = LocationCountry.objects.get(label=country_name)
-			except:
-				country = None
+			country = None
+			country_code = get_location_country_code(post.lat, post.lon)
+			if country_code != '':
+				try:
+					country = LocationCountry.objects.get(a2=country_code)
+				except:
+					country = None
+				if country is None:
+					country_name = get_location_address_fragment(post.lat, post.lon, 'country')
+					if len(country_name) > 0:
+						try:
+							country = LocationCountry(a2=country_code, label=country_name)
+							country.save()
+						except:
+							country = None
 			if not(country is None):
 				post.country = country
 			post.save()

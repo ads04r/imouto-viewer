@@ -121,6 +121,59 @@ def get_area_name(n, w, s, e):
 		return ''
 	return addr[0]
 
+def __get_location_property(lat, lon, property, loctype='country'):
+
+	cache_key = "address_" + str(lat) + "," + str(lon)
+	data = cache.get(cache_key)
+	try:
+		mapbox_key = settings.MAPBOX_API_KEY
+	except:
+		return ''
+	if data is None:
+		url = "https://api.mapbox.com/geocoding/v5/mapbox.places/" + str(lon) + "," + str(lat) + ".json?language=en&access_token=" + mapbox_key
+		r = urllib.request.urlopen(url)
+		data = json.loads(r.read())
+		if not('features' in data):
+			return ''
+		cache.set(cache_key, data, timeout=86400)
+	if not('features' in data):
+		return ''
+	for f in data['features']:
+		if not(loctype in f['place_type']):
+			continue
+		if 'properties' in f:
+			if 'short_code' in f['properties']:
+				return str(f['properties'][property])
+	return ''
+
+def get_location_country_code(lat, lon):
+	"""
+	Given a point, returns the ISO-3166-1 alpha-2 country code.
+
+	:param lat: The latitude of the point.
+	:param lon: The longitude of the point.
+	:return: A string containing the country code, if possible, empty string if not.
+	:rtype: str
+
+	"""
+	ret = __get_location_property(lat, lon, 'short_code', 'country').upper()
+	if len(ret) == 2:
+		return ret
+	return ''
+
+def get_location_wikidata_id(lat, lon, loctype='country'):
+	"""
+	Given a point, returns the Wikidata ID for the area type specified, default is country.
+
+	:param lat: The latitude of the point.
+	:param lon: The longitude of the point.
+	:param loctype: The type of area for which to get the Wikidata ID.
+	:return: A string containing the country code, if possible, empty string if not.
+	:rtype: str
+
+	"""
+	return __get_location_property(lat, lon, 'wikidata', loctype)
+
 def get_location_address_fragment(lat, lon, fragment='country'):
 	"""
 	Given a point, returns the most specific human-readable name for the area that matches the type given by fragment.
