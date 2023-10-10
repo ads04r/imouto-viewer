@@ -10,6 +10,8 @@ from viewer.forms import LocationForm
 from viewer.functions.geo import get_location_address_fragment, get_location_country_code, get_location_wikidata_id
 from viewer.functions.rdf import wikidata_to_wikipedia
 
+from viewer.tasks import fill_cities
+
 def places(request):
 	data = {}
 	try:
@@ -63,6 +65,7 @@ def places(request):
 			for category in categories:
 				post.add_category(category.strip())
 
+			fill_cities()
 			return HttpResponseRedirect('./#place_' + str(id))
 		else:
 			raise Http404(form.errors)

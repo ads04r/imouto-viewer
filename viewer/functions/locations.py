@@ -1,5 +1,5 @@
-import datetime, pytz, json, re, sys, os, requests
-from viewer.models import Location, Event, LocationCity
+import datetime, pytz, json, re, sys, os, requests, overpy
+from viewer.models import Location, Event, LocationCity, LocationCountry
 from viewer.functions.calendar import event_label
 from django.conf import settings
 from geopy import distance
@@ -166,3 +166,48 @@ def distance_waffle(dist_value):
 		return "Further than the distance to " + city.label + " (" + str(int(ret['dist'])) + " miles)"
 
 
+def fill_country_cities():
+
+	api = overpy.Overpass()
+	ret = LocationCity.objects.count()
+	for country in LocationCountry.objects.exclude(locations=None):
+		query = 'area["name:en"="' + country.label + '"]->.country;node[place=city](area.country);out;'
+		result = api.query(query)
+		for node in result.nodes:
+			if not('name:en' in node.tags):
+				continue
+			city_name = node.tags['name:en']
+			lat = node.lat
+			lon = node.lon
+			wikipedia = ''
+			if 'wikipedia' in node.tags:
+				parse = node.tags['wikipedia'].split(':')
+				wikipedia = "https://" + parse[0] + ".wikipedia.org/wiki/" + parse[1]
+			if not('en.wikipedia.org') in wikipedia:
+				wikipedia = ''
+			try:
+				city = LocationCity.objects.get(label=city_name)
+			except:
+				city = LocationCity(label=city_name, country=country, lat=lat, lon=lon)
+			if city.wikipedia is None:
+				if len(wikipedia) > 0:
+					city.wikipedia = wikipedia
+			try:
+				city.save()
+			except:
+				continue
+	ret = LocationCity.objects.count() - ret
+	return ret
+
+def fill_location_cities():
+
+	ret = 0
+	for loc in Location.objects.filter(city=None).exclude(country=None):
+		address = [x.strip() for x in str(loc.address).split(',')]
+		for city in LocationCity.objects.filter(country=loc.country):
+			if city.label in address:
+				loc.city = city
+				ret = ret + 1
+				loc.save(update_fields=['city'])
+				break
+	return ret
