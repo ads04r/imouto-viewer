@@ -22,20 +22,6 @@ from viewer.functions.git import get_recent_github_commits
 from viewer.models import *
 from viewer.tasks import precache_photo_thumbnail, generate_location_events
 
-#    {
-#        "hash": "b76cef8048454a27d81ebe322e86fedc48db8613",
-#        "comment": "Supports a few differerent input types (eg turtle) and has a proper UI, no more console.log needed.",
-#        "repo_url": "https://github.com/ads04r/imouto-viewer",
-#        "node_id": "C_kwDODQKOC9oAKGI3NmNlZjgwNDg0NTRhMjdkODFlYmUzMjJlODZmZWRjNDhkYjg2MTM",
-#        "url": "https://github.com/ads04r/imouto-viewer/commit/b76cef8048454a27d81ebe322e86fedc48db8613",
-#        "stats": {
-#            "total": 49,
-#            "additions": 40,
-#            "deletions": 9
-#        } "time"
-#    }
-
-
 def import_github_history():
 	"""
 	Calls the public Github API to determine a list of commits pushed by the user, and imports these
@@ -58,9 +44,14 @@ def import_github_history():
 	for commit in get_recent_github_commits(username, since=last_commit):
 		if commit['time'] <= last_commit:
 			continue
-		item = GitCommit(hash=commit['hash'], comment=commit['comment'], repo_url=commit['repo_url'], commit_date=commit['time'], additions=commit['stats']['additions'], deletions=commit['stats']['deletions'])
-		item.save()
-		ret.append(save)
+		try:
+			item = GitCommit(hash=commit['hash'], comment=commit['comment'], repo_url=commit['repo_url'], commit_date=commit['time'], additions=commit['stats']['additions'], deletions=commit['stats']['deletions'])
+			item.save()
+		except:
+			item = None
+		if item is None:
+			continue
+		ret.append(item)
 	return ret
 
 def upload_file(temp_file, file_source, format=''):

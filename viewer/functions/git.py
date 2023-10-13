@@ -7,8 +7,6 @@ def get_recent_github_commits(username, since=None):
 
 	ret = []
 	r = requests.get(url)
-	print(r.text)
-	sys.exit(1)
 
 	for event in json.loads(r.text):
 
@@ -41,7 +39,9 @@ def get_recent_github_commits(username, since=None):
 
 			rr = requests.get(commit_url)
 			data = json.loads(rr.text)
-			item['url'] = data['html_url']
+			item['url'] = commit_url
+			if 'html_url' in data:
+				item['url'] = data['html_url']
 			item['stats'] = data['stats']
 			item['time'] = parser.parse(data['commit']['committer']['date'])
 
