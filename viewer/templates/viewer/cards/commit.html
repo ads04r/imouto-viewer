@@ -1,0 +1,13 @@
+{% load static %}
+
+	        <div class="box box-primary">
+                  <div class="box-body">
+	            <p>{{ event.comment }}</p>
+                    <p class="pull-right"><span class="label label-success"><i class="fa fa-plus"></i> {{ event.additions }}</span>&nbsp;<span class="label label-danger"><i class="fa fa-minus"></i> {{ event.deletions }}</span></p>
+	            <p><small>{{ event.commit_date|date:"l, g:ia" }} {{ event.hash }}</small></p>
+                  </div>
+                  <div class="box-footer">
+                    <a class="btn btn-secondary btn-xs" href="{{ event.repo_url }}">Git Repository</a>
+                  </div>
+	        </div>
+

@@ -877,6 +877,11 @@ class Event(models.Model):
 		if self.location.weather_location is None:
 			return None
 		return self.location.weather_location.readings.filter(time__gte=self.start_time, time__lte=self.end_time).order_by('time')
+	def commits(self):
+		"""
+		Every Git commit made during this event.
+		"""
+		return GitCommit.objects.filter(commit_date__gte=self.start_time, commit_date__lte=self.end_time).order_by('commit_date')
 	def refresh_geo(self):
 		id = self.start_time.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S") + self.end_time.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S")
 		url = settings.LOCATION_MANAGER_URL + "/route/" + id + "?format=json"

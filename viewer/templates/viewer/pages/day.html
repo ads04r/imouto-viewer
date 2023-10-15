@@ -59,6 +59,12 @@
 
 	{% endif %}
 
+	{% if event|get_class == 'GitCommit' %}
+
+		{% include 'viewer/cards/commit.html' %}
+
+	{% endif %}
+
 	{% if event|get_class == 'Event' %}
 
                 <div class="box box-primary" id="day_event_{{ event.pk }}">
