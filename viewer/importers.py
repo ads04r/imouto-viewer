@@ -18,8 +18,86 @@ from dateutil import tz
 from viewer.functions.monica import get_monica_contact_data, get_last_monica_activity, get_last_monica_call, assign_monica_avatar, create_monica_call, create_monica_activity_from_event
 from viewer.functions.people import find_person_by_picasaid as find_person
 from viewer.functions.geo import convert_to_degrees
+from viewer.functions.git import get_recent_github_commits, get_recent_gitea_commits
 from viewer.models import *
 from viewer.tasks import precache_photo_thumbnail, generate_location_events
+
+def import_github_history(since=None):
+	"""
+	Calls the public Github API to determine a list of commits pushed by the user, and imports these
+	as GitCommit objects.
+
+	:return: A list of the new GitCommit objects that have been added.
+	:rtype: list(GitCommit)
+	"""
+	try:
+		username = settings.USER_GITHUB
+	except AttributeError:
+		username = None
+	if username is None:
+		return []
+	if since is None:
+		last_commit = pytz.utc.localize(datetime.datetime(1970, 1, 1, 0, 0, 0))
+	else:
+		last_commit = since
+	ret = []
+	for commit in get_recent_github_commits(username, since=last_commit):
+		if commit['time'] <= last_commit:
+			continue
+		try:
+			item = GitCommit(hash=commit['hash'], comment=commit['comment'], repo_url=commit['repo_url'], commit_date=commit['time'], additions=commit['stats']['additions'], deletions=commit['stats']['deletions'])
+			item.save()
+		except:
+			item = None
+		if item is None:
+			continue
+		ret.append(item)
+	return ret
+
+def import_gitea_history(since=None):
+	"""
+	Calls a Gitea API to determine a list of commits pushed by the user, and imports these
+	as GitCommit objects.
+
+	:return: A list of the new GitCommit objects that have been added.
+	:rtype: list(GitCommit)
+	"""
+	try:
+		username = settings.GITEA_USER
+	except AttributeError:
+		username = None
+	try:
+		token = settings.GITEA_TOKEN
+	except AttributeError:
+		token = None
+	try:
+		url = settings.GITEA_URL
+	except AttributeError:
+		url = None
+	if username is None:
+		return []
+	if url is None:
+		return []
+	if token is None:
+		return []
+
+	if since is None:
+		last_commit = pytz.utc.localize(datetime.datetime(1970, 1, 1, 0, 0, 0))
+	else:
+		last_commit = since
+	ret = []
+	for commit in get_recent_gitea_commits(username, token, url, since=last_commit):
+		if commit['time'] <= last_commit:
+			continue
+		try:
+			item = GitCommit(hash=commit['hash'], comment=commit['comment'], repo_url=commit['repo_url'], commit_date=commit['time'], additions=None, deletions=None)
+			item.save()
+		except:
+			item = None
+		if item is None:
+			continue
+		ret.append(item)
+	return ret
 
 def upload_file(temp_file, file_source, format=''):
 	"""

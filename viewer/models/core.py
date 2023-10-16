@@ -50,6 +50,20 @@ def create_or_get_day(query_date):
 
 	return ret
 
+class GitCommit(models.Model):
+	repo_url = models.URLField()
+	commit_date = models.DateTimeField()
+	hash = models.SlugField(max_length=48, unique=True)
+	comment = models.TextField()
+	additions = models.IntegerField(blank=True, null=True)
+	deletions = models.IntegerField(blank=True, null=True)
+	def __str__(self):
+		return str(self.hash)
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'git commit'
+		verbose_name_plural = 'git commits'
+
 class LocationCountry(models.Model):
 	a2 = models.SlugField(primary_key=True, max_length=2)
 	a3 = models.SlugField(max_length=3, blank=True, null=True)
@@ -863,6 +877,11 @@ class Event(models.Model):
 		if self.location.weather_location is None:
 			return None
 		return self.location.weather_location.readings.filter(time__gte=self.start_time, time__lte=self.end_time).order_by('time')
+	def commits(self):
+		"""
+		Every Git commit made during this event.
+		"""
+		return GitCommit.objects.filter(commit_date__gte=self.start_time, commit_date__lte=self.end_time).order_by('commit_date')
 	def refresh_geo(self):
 		id = self.start_time.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S") + self.end_time.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S")
 		url = settings.LOCATION_MANAGER_URL + "/route/" + id + "?format=json"
@@ -1797,6 +1816,15 @@ class Day(models.Model):
 		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
 		dte = dts + datetime.timedelta(seconds=86400)
 		return RemoteInteraction.objects.filter(time__gte=dts, time__lte=dte, type='microblogpost', address='').order_by('time')
+	@property
+	def commits(self):
+		"""
+		Every Git commit made on this particular day.
+		"""
+		d = self.date
+		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
+		dte = dts + datetime.timedelta(seconds=86400)
+		return GitCommit.objects.filter(commit_date__gte=dts, commit_date__lte=dte).order_by('commit_date')
 	@property
 	def sms(self):
 		"""
