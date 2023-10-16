@@ -55,8 +55,8 @@ class GitCommit(models.Model):
 	commit_date = models.DateTimeField()
 	hash = models.SlugField(max_length=48, unique=True)
 	comment = models.TextField()
-	additions = models.IntegerField()
-	deletions = models.IntegerField()
+	additions = models.IntegerField(blank=True, null=True)
+	deletions = models.IntegerField(blank=True, null=True)
 	def __str__(self):
 		return str(self.hash)
 	class Meta:

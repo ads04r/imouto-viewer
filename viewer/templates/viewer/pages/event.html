@@ -112,7 +112,9 @@
 						<br><small><a href="{{ commit.repo_url }}">{{ commit.repo_url }}</a></small>
 					</td>
 					<td>
+{% if commit.additions %}
 						<span class="pull-right"><span class="label label-success"><i class="fa fa-plus"></i> {{ commit.additions }}</span>&nbsp;<span class="label label-danger"><i class="fa fa-minus"></i> {{ commit.deletions }}</span></span>
+{% endif %}
 					</td>
 				</tr>
 {% endfor %}
