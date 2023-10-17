@@ -22,9 +22,10 @@
 		{% include 'viewer/cards/day_switcher.html' %}
 		
 		<!--// Bottom of right margin --//-->
-		<div class="day-heart-summary"></div>
+
+		{% if not day.today %}<div class="day-heart-summary"></div>{% endif %}
 		<div class="hidden-xs hidden-sm hidden-md day-weight-summary"></div>
-		<div class="hidden-xs hidden-sm hidden-md day-sleep-summary"></div>
+		{% if not day.today %}<div class="hidden-xs hidden-sm hidden-md day-sleep-summary"></div>{% endif %}
 		<div class="hidden-xs hidden-sm hidden-md day-music-summary"></div>
 		<div class="hidden-xs day-people-summary"></div>
 
@@ -105,7 +106,7 @@
             <div class="col-xs-12 col-sm-6 col-md-8">
 		<!--// Bottom of left column --//-->
 		<div class="hidden-lg hidden-xl day-weight-summary"></div>
-		<div class="hidden-lg hidden-xl day-sleep-summary"></div>
+		{% if not day.today %}<div class="hidden-lg hidden-xl day-sleep-summary"></div>{% endif %}
 		<div class="hidden-lg hidden-xl day-music-summary"></div>
 		<div class="hidden-sm hidden-md hidden-lg hidden-xl day-people-summary"></div>
             </div>

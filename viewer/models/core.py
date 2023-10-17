@@ -1753,6 +1753,23 @@ class Day(models.Model):
 	cached_heart = models.TextField(null=True, blank=True)
 	cached_sleep = models.TextField(null=True, blank=True)
 
+	def __dts__(self):
+		"""
+		Generates a fail-safe 'start time' for this day
+		"""
+		d = self.date
+		if self.wake_time:
+			return self.wake_time
+		return datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
+	def __dte__(self):
+		"""
+		Generates a fail-safe 'end time' for this day
+		"""
+		if not(self.today):
+			if self.tomorrow.wake_time:
+				return self.tomorrow.wake_time
+		return self.__dts__() + datetime.timedelta(seconds=86400)
+
 	@property
 	def today(self):
 		"""
@@ -1795,26 +1812,26 @@ class Day(models.Model):
 		Every described event on this particular day.
 		"""
 		d = self.date
-		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
-		dte = dts + datetime.timedelta(seconds=86400)
-		return Event.objects.filter(end_time__gte=dts, start_time__lte=dte).exclude(type='life_event').order_by('start_time')
+		dts = self.__dts__()
+		dte = self.__dte__()
+		return Event.objects.filter(end_time__gte=dts, end_time__lte=dte).exclude(type='life_event').order_by('start_time')
 	@property
 	def calendar(self):
 		"""
 		Every calendar appointment scheduled on this particular day.
 		"""
 		d = self.date
-		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
-		dte = dts + datetime.timedelta(seconds=86400)
-		return CalendarAppointment.objects.filter(end_time__gte=dts, start_time__lte=dte).values('id', 'eventid', 'caption')
+		dts = self.__dts__()
+		dte = self.__dte__()
+		return CalendarAppointment.objects.filter(end_time__gte=dts, end_time__lte=dte).values('id', 'eventid', 'caption')
 	@property
 	def tweets(self):
 		"""
 		Every microblogpost (typically tweets, could be toots) made on this particular day.
 		"""
 		d = self.date
-		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
-		dte = dts + datetime.timedelta(seconds=86400)
+		dts = self.__dts__()
+		dte = self.__dte__()
 		return RemoteInteraction.objects.filter(time__gte=dts, time__lte=dte, type='microblogpost', address='').order_by('time')
 	@property
 	def commits(self):
@@ -1822,8 +1839,8 @@ class Day(models.Model):
 		Every Git commit made on this particular day.
 		"""
 		d = self.date
-		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
-		dte = dts + datetime.timedelta(seconds=86400)
+		dts = self.__dts__()
+		dte = self.__dte__()
 		return GitCommit.objects.filter(commit_date__gte=dts, commit_date__lte=dte).order_by('commit_date')
 	@property
 	def sms(self):
@@ -1831,8 +1848,8 @@ class Day(models.Model):
 		Every SMS message sent or received on this particular day.
 		"""
 		d = self.date
-		dts = datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
-		dte = dts + datetime.timedelta(seconds=86400)
+		dts = self.__dts__()
+		dte = self.__dte__()
 		return RemoteInteraction.objects.filter(time__gte=dts, time__lte=dte, type='sms').order_by('time')
 
 	@property

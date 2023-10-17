@@ -23,6 +23,7 @@ def day(request, ds):
 	dt = datetime.date(y, m, d)
 	Day.objects.filter(date=dt).delete()
 	day = Day(date=dt)
+	day.refresh()
 
 	events = []
 	potential_joins = []
