@@ -45,7 +45,7 @@ class QuickEventForm(ModelForm):
 class EventForm(ModelForm):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-		now = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+		now = pytz.utc.localize(datetime.datetime.utcnow())
 		self.fields['location'].queryset = Location.objects.exclude(creation_time__gt=now).exclude(destruction_time__lt=now).annotate(num_events=Count('events')).order_by('-num_events')
 	class Meta:
 		model = Event
@@ -60,9 +60,6 @@ class EventForm(ModelForm):
 		}
 
 class LifePeriodForm(ModelForm):
-	def __init__(self, *args, **kwargs):
-		super().__init__(*args, **kwargs)
-		now = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
 	class Meta:
 		model = LifePeriod
 		fields = ['caption', 'type', 'description', 'start_time', 'end_time']

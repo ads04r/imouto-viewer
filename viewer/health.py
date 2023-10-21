@@ -4,10 +4,10 @@ from django.conf import settings
 
 def max_heart_rate(self, at_time=None):
 	if at_time is None:
-		dt = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+		dt = pytz.utc.localize(datetime.datetime.utcnow())
 	else:
 		dt = at_time
-	age = int(((dt - datetime.datetime(settings.USER_DATE_OF_BIRTH.year, settings.USER_DATE_OF_BIRTH.month, settings.USER_DATE_OF_BIRTH.day, 0, 0, 0, tzinfo=dt.tzinfo)).days) / 365.25)
+	age = int(((dt - dt.tzinfo.localize(datetime.datetime(settings.USER_DATE_OF_BIRTH.year, settings.USER_DATE_OF_BIRTH.month, settings.USER_DATE_OF_BIRTH.day, 0, 0, 0))).days) / 365.25)
 	return (220 - age)
 
 def parse_sleep(sleep, timezone=None):
@@ -17,8 +17,8 @@ def parse_sleep(sleep, timezone=None):
 	else:
 		tz = timezone
 
-	time_from = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
-	time_to = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.UTC)
+	time_from = pytz.utc.localize(datetime.datetime.utcnow())
+	time_to = pytz.utc.localize(datetime.datetime(1970, 1, 1, 0, 0, 0))
 	ret = []
 	for item in sleep:
 		if item.start_time < time_from:

@@ -236,8 +236,8 @@ def generate_report(title, year, options, style='default', pdf=True):
 	"""
 
 	tz = pytz.timezone(settings.TIME_ZONE)
-	dts = datetime.datetime(year, 1, 1, 0, 0, 0, tzinfo=tz)
-	dte = datetime.datetime(year, 12, 31, 23, 59, 59, tzinfo=tz)
+	dts = tz.localize(datetime.datetime(year, 1, 1, 0, 0, 0))
+	dte = tz.localize(datetime.datetime(year, 12, 31, 23, 59, 59))
 
 	now = pytz.UTC.localize(datetime.datetime.utcnow())
 	report = LifeReport(label=title, style=style, year=year)

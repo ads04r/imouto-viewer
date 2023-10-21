@@ -15,7 +15,7 @@ class Command(BaseCommand):
 
 	def handle(self, *args, **kwargs):
 
-		dt = datetime.datetime.now().replace(tzinfo=pytz.UTC) - datetime.timedelta(days=7)
+		dt = pytz.utc.localize(datetime.datetime.utcnow()) - datetime.timedelta(days=7)
 		id = kwargs['event']
 		event = None
 		if id != '':

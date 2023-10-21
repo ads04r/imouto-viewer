@@ -33,7 +33,7 @@ def get_people_without_monica_hash(since=None):
 		if Event.objects.count() > 0:
 			dt = Event.objects.order_by('start_time')[0].start_time
 		else:
-			dt = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.UTC)
+			dt = pytz.utc.localize(datetime.datetime(1970, 1, 1, 0, 0, 0))
 	else:
 		dt = since
 	people = Person.objects.filter(personevent__event__start_time__gte=dt).distinct()
@@ -301,7 +301,7 @@ def get_last_monica_activity():
 
 def get_last_monica_call():
 
-	dt = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.UTC)
+	dt = pytz.utc.localize(datetime.datetime(1970, 1, 1, 0, 0, 0))
 	for act in get_monica_call_data():
 		if not('called_at' in act):
 			continue

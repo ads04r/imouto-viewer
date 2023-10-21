@@ -42,7 +42,7 @@ def health(request, pageid):
 	if pageid == 'heart':
 		return render(request, 'viewer/pages/health_heart.html', context)
 	if pageid == 'sleep':
-		dt = datetime.datetime.now().replace(hour=0, minute=0, second=0, tzinfo=pytz.UTC)
+		dt = pytz.utc.localize(datetime.datetime.now().replace(hour=0, minute=0, second=0))
 		expression = F('end_time') - F('start_time')
 		wrapped_expression = ExpressionWrapper(expression, DurationField())
 		context['data'] = {'stats': [], 'sleeps': []}
@@ -83,7 +83,7 @@ def health(request, pageid):
 	if pageid == 'blood':
 		if request.method == 'POST':
 			ret = json.loads(request.body)
-			dt = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=pytz.UTC)
+			dt = pytz.utc.localize(datetime.datetime.now(datetime.timezone.utc))
 			datapoint = DataReading(type='bp_sys', start_time=dt, end_time=dt, value=ret['bp_sys_val'])
 			datapoint.save()
 			datapoint = DataReading(type='bp_dia', start_time=dt, end_time=dt, value=ret['bp_dia_val'])
@@ -95,7 +95,7 @@ def health(request, pageid):
 	if pageid == 'weight':
 		context['data'] = health_data(['weight', 'fat', 'muscle', 'water'])
 		context['graphs'] = {}
-		dt = datetime.datetime.now().replace(hour=0, minute=0, second=0, tzinfo=pytz.UTC)
+		dt = pytz.utc.localize(datetime.datetime.now()).replace(hour=0, minute=0, second=0)
 		for i in [{'label': 'week', 'dt': (dt - datetime.timedelta(days=7))}, {'label': 'month', 'dt': (dt - datetime.timedelta(days=28))}, {'label': 'year', 'dt': (dt - datetime.timedelta(days=365))}]:
 			item = []
 			min_dt = i['dt'].timestamp()
@@ -109,7 +109,7 @@ def health(request, pageid):
 	if pageid == 'mentalhealth':
 		if request.method == 'POST':
 			ret = json.loads(request.body)
-			dt = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=pytz.UTC)
+			dt = pytz.utc.localize(datetime.datetime.now(datetime.timezone.utc))
 			datapoint = DataReading(type='hads-a', start_time=dt, end_time=dt, value=ret['anxiety'])
 			datapoint.save()
 			datapoint = DataReading(type='hads-d', start_time=dt, end_time=dt, value=ret['depression'])
@@ -142,7 +142,7 @@ def mood(request):
 		m = 5
 	if m == 0:
 		raise Http404()
-	dt = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC).astimezone(pytz.timezone(settings.TIME_ZONE))
+	dt = pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(settings.TIME_ZONE))
 	entry = DataReading(start_time=dt, end_time=dt, type='mood', value=m)
 	entry.save()
 	ret = {"date": dt, "mood": m, "created": entry.pk}

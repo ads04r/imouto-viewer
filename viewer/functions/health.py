@@ -15,7 +15,7 @@ def get_heart_history(days):
 	:return: A list of two-value lists consisting of a time offset and a heart rate in beats per minute.
 	:rtype: list
 	"""
-	dte = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC).astimezone(pytz.timezone(settings.TIME_ZONE)).replace(hour=0, minute=0, second=0)
+	dte = pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(settings.TIME_ZONE)).replace(hour=0, minute=0, second=0)
 	dts = dte - datetime.timedelta(days=days)
 	data = DataReading.objects.filter(start_time__gte=dts, type='heart-rate').order_by('start_time')
 	ret = []
@@ -40,7 +40,7 @@ def get_heart_graph(dt):
 	if not(ret is None):
 		return ret
 
-	dts = datetime.datetime(dt.year, dt.month, dt.day, 4, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
+	dts = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(dt.year, dt.month, dt.day, 4, 0, 0))
 	dte = dts + datetime.timedelta(days=1)
 	last = None
 	values = {}

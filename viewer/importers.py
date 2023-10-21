@@ -13,7 +13,6 @@ from django.core.files import File
 from django.core.cache import cache
 from tempfile import NamedTemporaryFile
 from ics import Calendar
-from dateutil import tz
 
 from viewer.functions.monica import get_monica_contact_data, get_last_monica_activity, get_last_monica_call, assign_monica_avatar, create_monica_call, create_monica_activity_from_event
 from viewer.functions.people import find_person_by_picasaid as find_person
@@ -127,8 +126,8 @@ def export_monica_calls(from_date=None):
 	ret = []
 	if from_date is None:
 		dtsd = get_last_monica_call() + datetime.timedelta(days=1)
-	dts = datetime.datetime(dtsd.year, dtsd.month, dtsd.day, 0, 0, 0, tzinfo=tz)
-	dte = datetime.datetime(now.year, now.month, now.day, 0, 0, 0, tzinfo=tz) - datetime.timedelta(seconds=1)
+	dts = tz.localize(datetime.datetime(dtsd.year, dtsd.month, dtsd.day, 0, 0, 0))
+	dte = tz.localize(datetime.datetime(now.year, now.month, now.day, 0, 0, 0)) - datetime.timedelta(seconds=1)
 	ret = []
 
 	for call in RemoteInteraction.objects.filter(type='phone-call', time__gte=dts, time__lte=dte).order_by('time'):
@@ -170,8 +169,8 @@ def export_monica_events(from_date=None):
 	ret = []
 	if from_date is None:
 		dtsd = get_last_monica_activity() + datetime.timedelta(days=1)
-	dts = datetime.datetime(dtsd.year, dtsd.month, dtsd.day, 0, 0, 0, tzinfo=tz)
-	dte = datetime.datetime(now.year, now.month, now.day, 0, 0, 0, tzinfo=tz) - datetime.timedelta(seconds=1)
+	dts = tz.localize(datetime.datetime(dtsd.year, dtsd.month, dtsd.day, 0, 0, 0))
+	dte = tz.localize(datetime.datetime(now.year, now.month, now.day, 0, 0, 0)) - datetime.timedelta(seconds=1)
 	ret = []
 	for event in Event.objects.filter(start_time__gte=dts, start_time__lte=dte):
 		if not((event.type == 'event') or (event.type == 'loc_prox')):
@@ -425,8 +424,7 @@ def import_fit(parseable_fit_input):
 				v['units'] = 'degrees'
 			item[k] = v
 		if item['timestamp']['value'].tzinfo is None or item['timestamp']['value'].utcoffset(item['timestamp']['value']) is None:
-			item['timestamp']['value'] = tz.localize(item['timestamp']['value'])
-			item['timestamp']['value'] = item['timestamp']['value'].replace(tzinfo=pytz.utc) - item['timestamp']['value'].utcoffset() # I like everything in UTC. Bite me.
+			item['timestamp']['value'] = pytz.timezone(settings.TIME_ZONE).localize(item['timestamp']['value'])
 		newitem = {}
 		newitem['date'] = item['timestamp']['value']
 		if 'heart_rate' in item:

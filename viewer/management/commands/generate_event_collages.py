@@ -14,7 +14,7 @@ class Command(BaseCommand):
 	def handle(self, *args, **kwargs):
 
 		min_photos = 3
-		dt = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+		dt = pytz.utc.localize(datetime.datetime.utcnow())
 		dts = dt - datetime.timedelta(days=365)
 		dte = dt - datetime.timedelta(days=7)
 

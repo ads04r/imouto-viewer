@@ -26,7 +26,7 @@ def nearest_location(lat, lon):
 	:rtype: Location
 
 	"""
-	now = datetime.datetime.now().replace(tzinfo=pytz.UTC)
+	now = pytz.utc.localize(datetime.datetime.utcnow())
 	dist = 99999.9
 	ret = None
 	check = (lat, lon)
@@ -52,7 +52,7 @@ def create_location_events(minlength=300):
 	except:
 		home_id = -1
 	dts = Event.objects.filter(type='loc_prox').exclude(location__id=home_id).order_by('-start_time')[0].start_time
-	dte = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, tzinfo=pytz.UTC) + datetime.timedelta(days=1)
+	dte = pytz.utc.localize(datetime.datetime.utcnow()).replace(hour=0, minute=0, second=0) + datetime.timedelta(days=1)
 	ret = []
 	while dts < dte:
 		url = settings.LOCATION_MANAGER_URL + '/event/' + dts.strftime("%Y-%m-%d")

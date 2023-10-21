@@ -268,7 +268,7 @@ def event_json(request, eid):
 
 def create_first_event(request):
 	if Event.objects.count() == 0:
-		dt = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+		dt = pytz.utc.localize(datetime.datetime.utcnow())
 		event = Event(start_time=dt, end_time=dt, type='event', caption='Installed Imouto Viewer')
 		event.description = "Congratulations on creating your first event!\n\nNext you'll want to start investigating the ways of importing your life into Imouto. As a good place to start, try importing a GPX or FIT file from a GPS watch using the '[Upload](./#files)' feature on the Viewer."
 		event.save()

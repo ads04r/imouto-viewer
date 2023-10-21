@@ -6,7 +6,7 @@ def locate_photos_by_exif(since=None, reassign=False):
 
 	ret = 0
 	if since is None:
-		datecutoff = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC) - datetime.timedelta(days=60)
+		datecutoff = pytz.utc.localize(datetime.datetime.utcnow()) - datetime.timedelta(days=60)
 	else:
 		datecutoff = since
 	if reassign:
@@ -32,7 +32,7 @@ def locate_photos_by_exif(since=None, reassign=False):
 def bubble_photo_locations(since=None, loc_id=None, reassign=False):
 
 	if since is None:
-		datecutoff = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC) - datetime.timedelta(days=60)
+		datecutoff = pytz.utc.localize(datetime.datetime.utcnow()) - datetime.timedelta(days=60)
 	else:
 		datecutoff = since
 	if loc_id is None:

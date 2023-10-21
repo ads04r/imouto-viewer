@@ -57,7 +57,7 @@ def day_music(request, ds):
 	y = int(ds[0:4])
 	m = int(ds[4:6])
 	d = int(ds[6:])
-	dts = datetime.datetime(y, m, d, 4, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
+	dts = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(y, m, d, 4, 0, 0))
 	dte = dts + datetime.timedelta(seconds=86400)
 
 	data = []
@@ -176,8 +176,8 @@ def day_loceventscreate(request, ds):
 	data = json.loads(request.body)
 	ret = []
 	for item in data:
-		dts = datetime.datetime.strptime(item['start'], "%Y-%m-%d %H:%M:%S").replace(tzinfo=pytz.UTC)
-		dte = datetime.datetime.strptime(item['end'], "%Y-%m-%d %H:%M:%S").replace(tzinfo=pytz.UTC)
+		dts = pytz.utc.localize(datetime.datetime.strptime(item['start'], "%Y-%m-%d %H:%M:%S"))
+		dte = pytz.utc.localize(datetime.datetime.strptime(item['end'], "%Y-%m-%d %H:%M:%S"))
 		loc = None
 		if item['value']:
 			if 'location' in item:
@@ -207,7 +207,7 @@ def day_locevents(request, ds):
 	if not('lon' in data):
 		raise Http404()
 	ret = []
-	epoch = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.UTC)
+	epoch = pytz.utc.localize(datetime.datetime(1970, 1, 1, 0, 0, 0))
 	loc = nearest_location(data['lat'], data['lon'])
 	for item in get_possible_location_events(dt, data['lat'], data['lon']):
 		result = {"start_time": item['start_time'].astimezone(pytz.UTC).strftime("%Y-%m-%d %H:%M:%S"), "end_time": item['end_time'].astimezone(pytz.UTC).strftime("%Y-%m-%d %H:%M:%S")}

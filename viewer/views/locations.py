@@ -18,7 +18,7 @@ def places(request):
 		home = Location.objects.get(pk=settings.USER_HOME_LOCATION)
 	except:
 		home = None
-	datecutoff = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC) - datetime.timedelta(days=60)
+	datecutoff = pytz.utc.localize(datetime.datetime.utcnow()) - datetime.timedelta(days=60)
 	data['home'] = home
 	data['recent'] = Location.objects.filter(events__start_time__gte=datecutoff).exclude(uid=home.uid).annotate(num_events=Count('events')).order_by('-num_events')
 	if home is None:

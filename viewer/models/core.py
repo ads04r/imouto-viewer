@@ -320,7 +320,7 @@ class Location(models.Model):
 		:return: True normally, False if the Location has not yet been built, or has been destroyed.
 		:rtype: bool
 		"""
-		dt = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+		dt = pytz.utc.localize(datetime.datetime.utcnow())
 		if((self.destruction_time is None) & (self.creation_time is None)):
 			return True
 		if(not(self.destruction_time is None)):
@@ -474,7 +474,7 @@ class Person(models.Model):
 		return label
 	def home(self):
 		ret = None
-		dt = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+		dt = pytz.utc.localize(datetime.datetime.utcnow())
 		for prop in PersonProperty.objects.filter(person=self).filter(key='livesat'):
 			value = int(str(prop.value))
 			try:
@@ -1081,7 +1081,7 @@ class Event(models.Model):
 			eventsearch = DataReading.objects.filter(end_time__gte=self.start_time, start_time__lte=self.end_time).exclude(type='heart-rate').exclude(type='cadence').order_by('start_time')
 		else:
 			eventsearch = DataReading.objects.filter(end_time__gte=self.start_time, start_time__lte=self.end_time).order_by('start_time')
-		cum = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.UTC)
+		cum = pytz.utc.localize(datetime.datetime(1970, 1, 1, 0, 0, 0))
 		for item in eventsearch:
 			if item.start_time <= cum:
 				continue
@@ -1297,8 +1297,8 @@ class LifeReport(models.Model):
 		return LocationCountry.objects.filter(locations__in=self.locations.all()).distinct()
 	def refresh_events(self):
 		tz = pytz.timezone(settings.TIME_ZONE)
-		dts = datetime.datetime(self.year, 1, 1, 0, 0, 0, tzinfo=tz)
-		dte = datetime.datetime(self.year, 12, 31, 23, 59, 59, tzinfo=tz)
+		dts = tz.localize(datetime.datetime(self.year, 1, 1, 0, 0, 0))
+		dte = tz.localize(datetime.datetime(self.year, 12, 31, 23, 59, 59))
 		subevents = []
 		self.events.clear()
 		self.cached_dict = None
@@ -1487,11 +1487,11 @@ class LifeReport(models.Model):
 			for i in range(0, 12):
 				ret.append({'type': 'title', 'image': None, 'title': months[i]})
 				page_count = len(ret)
-				dts = datetime.datetime(year, (i + 1), 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
+				dts = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(year, (i + 1), 1, 0, 0, 0))
 				if i < 11:
-					dte = datetime.datetime(year, (i + 2), 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE)) - datetime.timedelta(seconds=1)
+					dte = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(year, (i + 2), 1, 0, 0, 0)) - datetime.timedelta(seconds=1)
 				else:
-					dte = datetime.datetime((year + 1), 1, 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE)) - datetime.timedelta(seconds=1)
+					dte = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime((year + 1), 1, 1, 0, 0, 0)) - datetime.timedelta(seconds=1)
 				people = []
 				for person in Person.objects.filter(reports__report=self, reports__first_encounter__gte=dts, reports__first_encounter__lte=dte):
 					item = {'name': person.full_name()}
@@ -1760,7 +1760,7 @@ class Day(models.Model):
 		d = self.date
 		if self.wake_time:
 			return self.wake_time
-		return datetime.datetime(d.year, d.month, d.day, 4, 0, 0, tzinfo=self.timezone)
+		return self.timezone.localize(datetime.datetime(d.year, d.month, d.day, 4, 0, 0))
 	def __dte__(self):
 		"""
 		Generates a fail-safe 'end time' for this day
@@ -2046,7 +2046,7 @@ class Day(models.Model):
 	def __calculate_wake_time(self):
 
 		d = self.date
-		dts = datetime.datetime(d.year, d.month, d.day, 0, 0, 0, tzinfo=self.timezone)
+		dts = self.timezone.localize(datetime.datetime(d.year, d.month, d.day, 0, 0, 0))
 		dte = dts + datetime.timedelta(seconds=86400)
 		wakes = DataReading.objects.filter(type='awake', start_time__gte=dts, start_time__lt=dte).order_by('start_time')
 		wakecount = wakes.count()

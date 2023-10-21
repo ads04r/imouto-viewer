@@ -17,7 +17,7 @@ def __display_timeline_event(event):
 				if event.photos().count() == 0:
 					return False
 		if event.type == 'journey':
-			ddt = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC) - datetime.timedelta(days=7)
+			ddt = pytz.utc.localize(datetime.datetime.utcnow()) - datetime.timedelta(days=7)
 			if event.end_time < ddt:
 				if event.people.all().count() == 0:
 					if event.photos().count() == 0:
@@ -38,8 +38,8 @@ def generate_life_grid(start_date, weeks):
 			if len(year) > 0:
 				life.append(year)
 				year = []
-		dtts = datetime.datetime(dts.year, dts.month, dts.day, 0, 0, 0, tzinfo=pytz.UTC)
-		dtte = datetime.datetime(dte.year, dte.month, dte.day, 23, 59, 59, tzinfo=pytz.UTC)
+		dtts = pytz.utc.localize(datetime.datetime(dts.year, dts.month, dts.day, 0, 0, 0))
+		dtte = pytz.utc.localize(datetime.datetime(dte.year, dte.month, dte.day, 23, 59, 59))
 		item = {'start_time': dts, 'end_time': dte, 'events': Event.objects.filter(type='life_event', start_time__lte=dtte, end_time__gte=dtts), 'periods': LifePeriod.objects.filter(start_time__lte=dtte, end_time__gte=dtts)}
 		year.append(item)
 	if len(year) > 0:
@@ -109,7 +109,7 @@ def generate_onthisday():
 
 		offset = datetime.timedelta(hours=4)
 
-		dt = datetime.datetime.now().replace(tzinfo=pytz.timezone(settings.TIME_ZONE))
+		dt = pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(settings.TIME_ZONE))
 		year = dt.year - i
 		dt = dt.replace(year=year)
 		dts = dt.replace(hour=0, minute=0, second=0) + offset
@@ -270,7 +270,7 @@ def generate_dashboard():
 	total_steps = 0
 	for i in range(0, 7):
 		dtbase = last_record - datetime.timedelta(days=(7 - i))
-		dt = datetime.datetime(dtbase.year, dtbase.month, dtbase.day, 0, 0, 0, tzinfo=dtbase.tzinfo)
+		dt = dtbase.tzinfo.localize(datetime.datetime(dtbase.year, dtbase.month, dtbase.day, 0, 0, 0))
 		obj = DataReading.objects.filter(type='step-count').filter(start_time__gte=dt, end_time__lt=(dt + datetime.timedelta(days=1))).aggregate(Sum('value'))
 		try:
 			steps = int(obj['value__sum'])
@@ -284,7 +284,9 @@ def generate_dashboard():
 		stepdata.append(item)
 	stats['steps'] = total_steps
 	walk_dist = 0.0
-	dt = (last_record - datetime.timedelta(days=7)).replace(hour=0, minute=0, second=0, tzinfo=pytz.UTC)
+	dt = (last_record - datetime.timedelta(days=7)).replace(hour=0, minute=0, second=0)
+	if pytz.tzinfo is None:
+		dt = pytz.utc.localize(dt)
 	for walk in DataReading.objects.filter(start_time__gte=dt, type='pebble-app-activity', value='5'):
 		try:
 			ev = Event.objects.get(start_time=walk.start_time, end_time=walk.end_time, type='journey')
@@ -319,7 +321,7 @@ def generate_dashboard():
 	sleepdata = []
 	for i in range(0, 7):
 		dtbase = last_record - datetime.timedelta(days=(7 - i))
-		dt = datetime.datetime(dtbase.year, dtbase.month, dtbase.day, 16, 0, 0, tzinfo=dtbase.tzinfo)
+		dt = dtbase.tzinfo.localize(datetime.datetime(dtbase.year, dtbase.month, dtbase.day, 16, 0, 0))
 		total_sleep = 0
 		deep_sleep = 0
 		obj = DataReading.objects.filter(type='sleep').filter(value=1).filter(start_time__gte=(dt - datetime.timedelta(days=1))).filter(end_time__lt=dt)

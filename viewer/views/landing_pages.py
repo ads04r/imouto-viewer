@@ -63,7 +63,7 @@ def timelineitem(request, ds):
 	dsyear = int(ds[0:4])
 	dsmonth = int(ds[4:6])
 	dsday = int(ds[6:])
-	dtq = datetime.datetime(dsyear, dsmonth, dsday, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE))
+	dtq = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(dsyear, dsmonth, dsday, 0, 0, 0))
 	events = get_timeline_events(dtq)
 
 	dtq = events[0].start_time

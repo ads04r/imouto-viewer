@@ -93,7 +93,7 @@ class Command(BaseCommand):
 			if message is None:
 				continue
 			dtt = int(int(msg['LocalTimestamp']) / (10 * 1000 * 1000) - 11644473600)
-			dt = datetime.datetime.utcfromtimestamp(dtt).replace(tzinfo=pytz.UTC)
+			dt = pytz.utc.localize(datetime.datetime.utcfromtimestamp(dtt))
 			phone_number = self.format_number(msg['Sender'])
 			incoming = True
 			try:
@@ -115,7 +115,7 @@ class Command(BaseCommand):
 			if message is None:
 				continue
 			dtt = int(int(msg['LocalTimestamp']) / (10 * 1000 * 1000) - 11644473600)
-			dt = datetime.datetime.utcfromtimestamp(dtt).replace(tzinfo=pytz.UTC)
+			dt = pytz.utc.localize(datetime.datetime.utcfromtimestamp(dtt))
 			phone_number = self.format_number(msg['Recepients']['string'])
 			incoming = False
 			try:
@@ -150,7 +150,7 @@ class Command(BaseCommand):
 			phone_number = self.format_number(msg['@address'])
 			message = msg['@body']
 			dtt = int(int(msg['@date']) / 1000)
-			dt = datetime.datetime.utcfromtimestamp(dtt).replace(tzinfo=pytz.UTC)
+			dt = pytz.utc.localize(datetime.datetime.utcfromtimestamp(dtt))
 			ct = 0
 
 			try:
@@ -188,7 +188,7 @@ class Command(BaseCommand):
 				continue
 			if message['1020'] != 'PIT_MESSAGE_INBOX':
 				continue
-			dt = datetime.datetime.strptime(message['1041'], '%Y-%m-%dT%H:%M').replace(tzinfo=pytz.timezone(settings.TIME_ZONE))
+			dt = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime.strptime(message['1041'], '%Y-%m-%dT%H:%M'))
 
 			phone_number = self.format_number(message['1080'])
 			try:
@@ -208,7 +208,7 @@ class Command(BaseCommand):
 				continue
 			if message['1021'] != 'PIT_MESSAGE_OUTBOX':
 				continue
-			dt = datetime.datetime.strptime(message['1041'], '%Y-%m-%dT%H:%M').replace(tzinfo=pytz.timezone(settings.TIME_ZONE))
+			dt = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime.strptime(message['1041'], '%Y-%m-%dT%H:%M'))
 			try:
 				msg = RemoteInteraction.objects.get(type='sms', time=dt, address=message['1081'], incoming=True)
 			except:
