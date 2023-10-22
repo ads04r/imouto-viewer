@@ -1023,7 +1023,7 @@ def import_photo_directory(path, tzinfo=pytz.UTC):
 
 def import_calendar_feed(url, username=None, password=None):
 	"""
-	Imports CalDAV data from a web URL, and creates or augments CalendarFeed and CalendarAppointment objects accordingly.
+	Imports CalDAV data from a web URL, and creates or augments CalendarFeed, CalendarAppointment and CalendarTask objects accordingly.
 
 	:param url: The URL from which to retrieve the CardDAV data.
 	:param username: The username, if the URL is a WebDav resource.
@@ -1050,6 +1050,40 @@ def import_calendar_feed(url, username=None, password=None):
 
 	if cal is None:
 		return None
+
+	for task in list(cal.todos):
+
+		completed = None
+		due = None
+		created = None
+		if task.completed:
+			completed = task.completed.datetime
+		if task.due:
+			due = task.due.datetime
+		if task.created:
+			created = task.created.datetime
+		label = ''
+		if task.name:
+			label = task.name
+		description = ''
+		if task.description:
+			description = task.description
+		data = str(task.serialize())
+		id = str(task.uid)
+
+		try:
+			item = CalendarTask.objects.get(taskid=id, calendar=feed)
+		except:
+			item = CalendarTask(taskid=id, calendar=feed)
+
+		item.time_created = created
+		item.time_due = due
+		item.time_completed = completed
+		item.data = data
+		item.caption = label
+		item.description = description
+
+		item.save()
 
 	ret = []
 
