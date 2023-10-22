@@ -19,9 +19,18 @@ class Command(BaseCommand):
 			sys.stderr.write(self.style.ERROR("ICAL_URLS setting must be a list of ICS URLs.\n"))
 			sys.exit(1)
 
-		for url in urls:
+		for calendar_data in urls:
 
-			ret = import_calendar_feed(url)
+			username = None
+			password = None
+			if isinstance(calendar_data, str):
+				url = calendar_data
+			else:
+				url = calendar_data[0]
+				username = calendar_data[1]
+				password = calendar_data[2]
+
+			ret = import_calendar_feed(url, username, password)
 			if ret is None:
 				sys.stderr.write(self.style.ERROR("Failed to import " + url + "\n"))
 				continue

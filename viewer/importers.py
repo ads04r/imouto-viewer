@@ -1021,11 +1021,13 @@ def import_photo_directory(path, tzinfo=pytz.UTC):
 
 	return ret
 
-def import_calendar_feed(url):
+def import_calendar_feed(url, username=None, password=None):
 	"""
 	Imports CalDAV data from a web URL, and creates or augments CalendarFeed and CalendarAppointment objects accordingly.
 
 	:param url: The URL from which to retrieve the CardDAV data.
+	:param username: The username, if the URL is a WebDav resource.
+	:param password: The password, if the URL is a WebDav resource.
 	:return: A list of new CalendarAppointment objects created by this function call.
 	:rtype: list
 	"""
@@ -1036,7 +1038,11 @@ def import_calendar_feed(url):
 		feed.save()
 
 	try:
-		cal = Calendar(requests.get(url).text)
+		if username is None:
+			ics_text = requests.get(url).text
+		else:
+			ics_text = requests.get(url, auth=HTTPBasicAuth(username, password)).text
+		cal = Calendar(ics_text)
 		events = list(cal.events)
 	except:
 		cal = None
