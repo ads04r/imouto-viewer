@@ -96,7 +96,7 @@
 {% for category in data.workouts %}
 				<tr>
 					<td><a href="#workout_{{ category.id }}">{{ category.label }}</a></td>
-					<td>{{ category.distance }} miles</td>
+					<td><span class="pull-right">{{ category.distance }} miles</span></td>
 				</tr>
 {% endfor %}
 			</table>
@@ -163,6 +163,23 @@
 {% endfor %}
                                 
                             </ul>
+                    </div>
+                </div>
+{% endif %}
+{% if data.tasks %}
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Tasks due soon</h3>
+                    </div>
+                    <div class="box-body no-padding">
+			<table class="table table-condensed">
+{% for task in data.tasks %}
+				<tr>
+					<td>{{ task.caption }}</td>
+					<td><span class="pull-right"><small class="muted">Due {{ task.time_due|date:"l g:ia" }}</small></span></td>
+				</tr>
+{% endfor %}
+			</table>
                     </div>
                 </div>
 {% endif %}

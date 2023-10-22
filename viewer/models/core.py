@@ -882,6 +882,11 @@ class Event(models.Model):
 		Every Git commit made during this event.
 		"""
 		return GitCommit.objects.filter(commit_date__gte=self.start_time, commit_date__lte=self.end_time).order_by('commit_date')
+	def tasks_completed(self):
+		"""
+		All tasks that were marked as 'completed' during this event.
+		"""
+		return CalendarTask.objects.filter(time_completed__gte=self.start_time, time_completed__lte=self.end_time).order_by('time_completed')
 	def refresh_geo(self):
 		id = self.start_time.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S") + self.end_time.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S")
 		url = settings.LOCATION_MANAGER_URL + "/route/" + id + "?format=json"
@@ -1842,6 +1847,15 @@ class Day(models.Model):
 		dts = self.__dts__()
 		dte = self.__dte__()
 		return GitCommit.objects.filter(commit_date__gte=dts, commit_date__lte=dte).order_by('commit_date')
+	@property
+	def tasks_completed(self):
+		"""
+		Every task marked as 'completed' on this particular day.
+		"""
+		d = self.date
+		dts = self.__dts__()
+		dte = self.__dte__()
+		return CalendarTask.objects.filter(time_completed__gte=dts, time_completed__lte=dte).order_by('time_completed')
 	@property
 	def sms(self):
 		"""

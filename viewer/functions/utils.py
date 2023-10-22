@@ -175,10 +175,11 @@ def generate_onthisday():
 def generate_dashboard():
 
 	stats = {}
+	now = pytz.utc.localize(datetime.datetime.utcnow())
 
 	try:
 		user_dob = settings.USER_DATE_OF_BIRTH
-		user_age = (datetime.datetime.now().date() - user_dob).total_seconds() / (86400 * 365.25)
+		user_age = (now.date() - user_dob).total_seconds() / (86400 * 365.25)
 	except:
 		return {'error': 'USER_DATE_OF_BIRTH must be set.'}
 	try:
@@ -358,7 +359,7 @@ def generate_dashboard():
 	walkdata = walkdata[0:5]
 
 	birthdays = []
-	dtd = datetime.datetime.now().date()
+	dtd = now.date()
 	for pp in PersonProperty.objects.filter(key='birthday'):
 		if not(pp.person.significant):
 			continue
@@ -371,6 +372,10 @@ def generate_dashboard():
 			birthdays.append([pp.person, dtp, person_age])
 	birthdays = sorted(birthdays, key=lambda p: p[1])
 
+	tasks = []
+	for task in CalendarTask.objects.filter(time_due__gte=now, time_due__lt=(now + datetime.timedelta(days=7))):
+		tasks.append(task)
+
 	workouts = []
 	dts = last_record - datetime.timedelta(days=7)
 	dte = last_record
@@ -381,7 +386,7 @@ def generate_dashboard():
 		if v > 0:
 			workouts.append({'id': category.pk, 'label': str(category), 'distance': int(v)})
 
-	ret = {'stats': stats, 'birthdays': birthdays, 'workouts': workouts, 'steps': json.dumps(stepdata), 'sleep': json.dumps(sleepdata), 'contact': contactdata, 'people': peopledata, 'places': locationdata, 'walks': walkdata}
+	ret = {'stats': stats, 'birthdays': birthdays, 'tasks': tasks, 'workouts': workouts, 'steps': json.dumps(stepdata), 'sleep': json.dumps(sleepdata), 'contact': contactdata, 'people': peopledata, 'places': locationdata, 'walks': walkdata}
 	if len(tags) > 0:
 		ret['tags'] = tags
 	if len(heartdata) > 0:
