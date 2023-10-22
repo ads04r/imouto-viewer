@@ -2179,6 +2179,24 @@ class CalendarFeed(models.Model):
 		verbose_name = 'calendar'
 		verbose_name_plural = 'calendars'
 
+class CalendarTask(models.Model):
+	taskid = models.SlugField(max_length=255, blank=True, default='', unique=True)
+	time_due = models.DateTimeField(null=True, blank=True)
+	time_created = models.DateTimeField(null=True, blank=True)
+	time_completed = models.DateTimeField(null=True, blank=True)
+	data = models.TextField(default='', blank=True)
+	caption = models.CharField(max_length=255, default='', blank=True)
+	description = models.TextField(default='', blank=True)
+	created_time = models.DateTimeField(auto_now_add=True)
+	updated_time = models.DateTimeField(auto_now=True)
+	calendar = models.ForeignKey(CalendarFeed, on_delete=models.CASCADE, related_name='tasks')
+	def __str__(self):
+		return(self.taskid)
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'calendar task'
+		verbose_name_plural = 'calendar tasks'
+
 class CalendarAppointment(models.Model):
 	eventid = models.SlugField(max_length=255, blank=True, default='', unique=True)
 	start_time = models.DateTimeField()
