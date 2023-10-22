@@ -43,8 +43,10 @@ def day(request, ds):
 		events.append(sms)
 	for commit in day.commits:
 		events.append(commit)
+	for task in day.tasks_completed:
+		events.append(task)
 	dss = str(day)
-	events = sorted(events, key=lambda x: x.start_time if x.__class__.__name__ == 'Event' else (x.commit_date if x.__class__.__name__ == 'GitCommit' else (x['time'] if isinstance(x, (dict)) else x.time)))
+	events = sorted(events, key=lambda x: x.start_time if x.__class__.__name__ == 'Event' else (x.time_completed if x.__class__.__name__ == 'CalendarTask' else (x.commit_date if x.__class__.__name__ == 'GitCommit' else (x['time'] if isinstance(x, (dict)) else x.time))))
 	appointments = day.calendar
 	context = {'type':'view', 'caption': dss, 'events':events, 'day': day, 'potential_joins': potential_joins, 'appointments': appointments, 'categories':EventWorkoutCategory.objects.all()}
 	context['form'] = EventForm()
