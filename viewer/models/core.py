@@ -19,7 +19,7 @@ from xml.dom import minidom
 from tzfpy import get_tz
 
 from viewer.health import parse_sleep, max_heart_rate
-from viewer.functions.geo import get_location_name
+from viewer.functions.geo import getgeoline, getelevation, getspeed, get_location_name
 from viewer.functions.location_manager import get_possible_location_events, get_logged_position
 from viewer.functions.file_uploads import *
 
@@ -690,7 +690,7 @@ class Photo(models.Model):
 		blob = BytesIO()
 		ret.save(blob, 'JPEG')
 		self.cached_thumbnail.save(photo_thumbnail_upload_location, File(blob), save=False)
-		self.save()
+		self.save(update_fields=['cached_thumbnail'])
 		return ret
 	def events(self):
 		if self.time is None:
@@ -786,7 +786,7 @@ class Event(models.Model):
 			ret['geo'] = self.geo
 		else:
 			if self.type == 'journey':
-				self.refresh_geo()
+				self.__refresh_geo()
 				if self.geo:
 					ret['geo'] = self.geo
 		if self.description:
@@ -843,7 +843,7 @@ class Event(models.Model):
 		blob = BytesIO()
 		im.save(blob, 'PNG')
 		self.cached_staticmap.save(event_staticmap_upload_location, File(blob), save=False)
-		self.save()
+		self.save(update_fields=['cached_staticmap'])
 		return im
 	def tag(self, tagname):
 		tagid = tagname.lower()
@@ -863,12 +863,21 @@ class Event(models.Model):
 			return ''
 		md = markdown.Markdown()
 		return md.convert(self.description)
-	def refresh(self):
-		for photo in Photo.objects.filter(time__gte=self.start_time).filter(time__lte=self.end_time):
-			for person in photo.people.all():
-				self.people.add(person)
-		self.cached_health = ''
-		self.save()
+	def refresh(self, save=True):
+		if len(self.cached_health) <= 2:
+			health = self.__refresh_health(save=False)
+		self.auto_tag()
+		self.populate_people_from_photos()
+		if self.type == 'journey':
+			geo = self.__refresh_geo(save=False)
+			self.elevation = getelevation(self.start_time, self.end_time)
+			self.speed = getspeed(self.start_time, self.end_time)
+		if self.type == 'loc_prox':
+			self.geo = ''
+			self.elevation = ''
+			self.speed = ''
+		if save:
+			self.save()
 	def subevents(self):
 		return Event.objects.filter(start_time__gte=self.start_time, end_time__lte=self.end_time).exclude(id=self.id).order_by('start_time')
 	def weather(self):
@@ -887,21 +896,8 @@ class Event(models.Model):
 		All tasks that were marked as 'completed' during this event.
 		"""
 		return CalendarTask.objects.filter(time_completed__gte=self.start_time, time_completed__lte=self.end_time).order_by('time_completed')
-	def refresh_geo(self):
-		id = self.start_time.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S") + self.end_time.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S")
-		url = settings.LOCATION_MANAGER_URL + "/route/" + id + "?format=json"
-		ret = {}
-		data = {}
-		with urllib.request.urlopen(url) as h:
-			data = json.loads(h.read().decode())
-		if 'geo' in data:
-			if 'geometry' in data['geo']:
-				if 'coordinates' in data['geo']['geometry']:
-					if len(data['geo']['geometry']['coordinates']) > 0:
-						ret = data['geo']
-				if 'geometries' in data['geo']['geometry']:
-					if len(data['geo']['geometry']['geometries']) > 0:
-						ret = data['geo']
+	def __refresh_geo(self, save=True):
+		ret = json.loads(getgeoline(self.start_time, self.end_time))
 		if 'geometry' in ret:
 			if 'geometries' in ret['geometry']:
 				try:
@@ -916,7 +912,8 @@ class Event(models.Model):
 						if not(lat is None):
 							ret['geometry']['geometries'].append({"type": "Point", "coordinates": [lon, lat], "properties": {"type": "poi", "time": ds, "label": "Highest heart rate " + str(max_hr.value) + "bpm at " + max_hr.start_time.strftime("%H:%M:%S")}})
 		self.geo = json.dumps(ret)
-		self.save()
+		if save:
+			self.save(update_fields=['geo'])
 		return self.geo
 	def gpx(self):
 		dt = self.start_time
@@ -1066,9 +1063,13 @@ class Event(models.Model):
 				ret.append(conversation)
 		return sorted(ret, key=lambda item: item[0].time)
 	def health(self):
+		if len(self.cached_health) > 2:
+			return json.loads(self.cached_health)
+		return self.__refresh_health()
+	def __refresh_health(self, save=True):
+		if len(self.cached_health) > 2:
+			return json.loads(self.cached_health)
 		max_hr = float(max_heart_rate(self.start_time))
-#		if len(self.cached_health) > 2:
-#			return json.loads(self.cached_health)
 		ret = {}
 		heart_total = 0.0
 		heart_count = 0.0
@@ -1186,9 +1187,9 @@ class Event(models.Model):
 			ret['speedavgmoving'] = int(speed_total / speed_move_count)
 			ret['speedmax'] = int(speed_max)
 			ret['speedmoving'] = self.length_string(int(speed_move_time))
-
 		self.cached_health = json.dumps(ret)
-		self.save()
+		if save:
+			self.save(update_fields=['cached_health'])
 		return ret
 	def populate_people_from_photos(self):
 		for photo in self.photos():
@@ -1320,7 +1321,7 @@ class LifeReport(models.Model):
 		subevents = []
 		self.events.clear()
 		self.cached_dict = None
-		self.save()
+		self.save(update_fields=['cached_dict'])
 		for event in Event.objects.filter(type='life_event', start_time__lte=dte, end_time__gte=dts).order_by('start_time'):
 			self.events.add(event)
 			if event.location:
@@ -1370,7 +1371,7 @@ class LifeReport(models.Model):
 		for country in self.countries():
 			ret['countries'].append(country.to_dict())
 		self.cached_dict = json.dumps(ret)
-		self.save()
+		self.save(update_fields=['cached_dict'])
 		return ret
 	def pages(self):
 		ret = []
@@ -1662,7 +1663,7 @@ class LifeReport(models.Model):
 		blob = BytesIO()
 		im.save(blob, 'PNG')
 		self.cached_wordcloud.save(report_wordcloud_upload_location, File(blob), save=False)
-		self.save()
+		self.save(update_fields=['cached_wordcloud'])
 		return im
 	def life_events(self):
 		return self.events.filter(type='life_event')
@@ -2419,7 +2420,7 @@ class TagLocationCondition(TagCondition):
 		blob = BytesIO()
 		im.save(blob, 'PNG')
 		self.cached_staticmap.save(tag_staticmap_upload_location, File(blob), save=False)
-		self.save()
+		self.save(update_fields=['cached_staticmap'])
 		return im
 
 	def location_text(self):
@@ -2428,7 +2429,7 @@ class TagLocationCondition(TagCondition):
 		ret = get_location_name(self.lat, self.lon)
 		if ret != '':
 			self.cached_locationtext = ret
-			self.save()
+			self.save(update_fields=['cached_locationtext'])
 		return ret
 
 	def __str__(self):
@@ -2494,5 +2495,9 @@ class LocationCategory(models.Model):
 
 @receiver(pre_save, sender=Day)
 def save_day_trigger(sender, instance, **kwargs):
+	instance.refresh(save=False)
+
+@receiver(pre_save, sender=Event)
+def save_event_trigger(sender, instance, **kwargs):
 	instance.refresh(save=False)
 

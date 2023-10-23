@@ -20,17 +20,7 @@ def events(request):
 		form = EventForm(request.POST)
 		if form.is_valid():
 			event = form.save(commit=False)
-			if event.type == 'journey':
-				event.geo = getgeoline(event.start_time, event.end_time)
-				event.elevation = getelevation(event.start_time, event.end_time)
-				event.speed = getspeed(event.start_time, event.end_time)
-			if event.type == 'loc_prox':
-				event.geo = ''
-				event.elevation = ''
-				event.speed = ''
-			event.cached_health = ''
 			event.save()
-			event.tags.clear()
 			try:
 				tags = str(request.POST['event_tags']).split(',')
 			except:
@@ -42,9 +32,6 @@ def events(request):
 			if len(catid) > 0:
 				for category in EventWorkoutCategory.objects.filter(id=catid):
 					event.workout_categories.add(category)
-			event.save()
-			event.populate_people_from_photos()
-			event.auto_tag()
 
 			return HttpResponseRedirect('./#event_' + str(event.id))
 		else:
@@ -74,9 +61,6 @@ def event(request, eid):
 			event = form.save(commit=False)
 			if event.type == 'journey':
 				regenerate_similar_events(event.pk)
-				event.geo = getgeoline(event.start_time, event.end_time)
-				event.elevation = getelevation(event.start_time, event.end_time)
-				event.speed = getspeed(event.start_time, event.end_time)
 			try:
 				peoples = str(request.POST['people'])
 			except:
@@ -95,7 +79,10 @@ def event(request, eid):
 			except:
 				tags = []
 			for tag in tags:
-				event.tag(tag.strip())
+				tag_text = tag.strip()
+				if tag_text == '':
+					continue
+				event.tag(tag_text)
 			event.workout_categories.clear()
 			try:
 				catid = str(request.POST['workout_type'])
@@ -104,10 +91,7 @@ def event(request, eid):
 			if len(catid) > 0:
 				for category in EventWorkoutCategory.objects.filter(id=catid):
 					event.workout_categories.add(category)
-			event.cached_health = ''
 			event.save()
-			event.populate_people_from_photos()
-			event.auto_tag()
 
 			cache.set(cache_key, data, 86400)
 			return HttpResponseRedirect('../#event_' + str(eid))

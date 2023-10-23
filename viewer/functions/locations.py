@@ -129,7 +129,7 @@ def join_location_events(event1, event2):
 
 	event = Event(caption=caption, type='journey', start_time=(ev1.end_time - datetime.timedelta(minutes=1)), end_time=(ev2.start_time + datetime.timedelta(minutes=1)))
 	event.save()
-	geo = event.refresh_geo()
+	geo = event.geo
 	health = event.health()
 
 	return event
