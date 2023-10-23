@@ -20,7 +20,7 @@ from tzfpy import get_tz
 
 from viewer.health import parse_sleep, max_heart_rate
 from viewer.functions.geo import get_location_name
-from viewer.functions.location_manager import get_possible_location_events
+from viewer.functions.location_manager import get_possible_location_events, get_logged_position
 from viewer.functions.file_uploads import *
 
 import random, datetime, pytz, json, markdown, re, os, urllib.request, overpy
@@ -890,7 +890,7 @@ class Event(models.Model):
 	def refresh_geo(self):
 		id = self.start_time.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S") + self.end_time.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S")
 		url = settings.LOCATION_MANAGER_URL + "/route/" + id + "?format=json"
-		ret = ""
+		ret = {}
 		data = {}
 		with urllib.request.urlopen(url) as h:
 			data = json.loads(h.read().decode())
@@ -898,13 +898,26 @@ class Event(models.Model):
 			if 'geometry' in data['geo']:
 				if 'coordinates' in data['geo']['geometry']:
 					if len(data['geo']['geometry']['coordinates']) > 0:
-						ret = json.dumps(data['geo'])
+						ret = data['geo']
 				if 'geometries' in data['geo']['geometry']:
 					if len(data['geo']['geometry']['geometries']) > 0:
-						ret = json.dumps(data['geo'])
-		self.geo = ret
+						ret = data['geo']
+		if 'geometry' in ret:
+			if 'geometries' in ret['geometry']:
+				try:
+					max_hr = DataReading.objects.filter(end_time__gte=self.start_time, start_time__lte=self.end_time, type='heart-rate').order_by('-value')[0]
+				except:
+					max_hr = None
+				if not(max_hr is None):
+					opt_rate = int(float(max_heart_rate(max_hr.start_time)) / 2)
+					if max_hr.value >= opt_rate:
+						ds = max_hr.start_time.strftime("%Y-%m-%dT%H:%M:%S%z")
+						lat, lon = get_logged_position(max_hr.start_time)
+						if not(lat is None):
+							ret['geometry']['geometries'].append({"type": "Point", "coordinates": [lon, lat], "properties": {"type": "poi", "time": ds, "label": "Highest heart rate " + str(max_hr.value) + "bpm at " + max_hr.start_time.strftime("%H:%M:%S")}})
+		self.geo = json.dumps(ret)
 		self.save()
-		return ret
+		return self.geo
 	def gpx(self):
 		dt = self.start_time
 		root = minidom.Document()
@@ -1775,6 +1788,27 @@ class Day(models.Model):
 				return self.tomorrow.wake_time
 		return self.__dts__() + datetime.timedelta(seconds=86400)
 
+	def __calculate_wake_time(self):
+
+		d = self.date
+		dts = self.timezone.localize(datetime.datetime(d.year, d.month, d.day, 0, 0, 0))
+		dte = dts + datetime.timedelta(seconds=86400)
+		wakes = DataReading.objects.filter(type='awake', start_time__gte=dts, start_time__lt=dte).order_by('start_time')
+		wakecount = wakes.count()
+		if wakecount > 0:
+			main_wake = None
+			for wake in wakes:
+				if main_wake is None:
+					main_wake = wake
+					continue
+				if main_wake.length() < wake.length():
+					main_wake = wake
+			return main_wake.start_time.astimezone(self.timezone), main_wake.end_time.astimezone(self.timezone)
+		else:
+			dts = self.timezone.localize(datetime.datetime(d.year, d.month, d.day, 4, 0, 0))
+			dte = dts + datetime.timedelta(seconds=86400)
+			return dts, dte
+
 	@property
 	def today(self):
 		"""
@@ -2056,25 +2090,6 @@ class Day(models.Model):
 			self.save(update_fields=['wake_time', 'bed_time', 'cached_sleep'])
 
 		return data
-
-	def __calculate_wake_time(self):
-
-		d = self.date
-		dts = self.timezone.localize(datetime.datetime(d.year, d.month, d.day, 0, 0, 0))
-		dte = dts + datetime.timedelta(seconds=86400)
-		wakes = DataReading.objects.filter(type='awake', start_time__gte=dts, start_time__lt=dte).order_by('start_time')
-		wakecount = wakes.count()
-		if wakecount > 0:
-			main_wake = None
-			for wake in wakes:
-				if main_wake is None:
-					main_wake = wake
-					continue
-				if main_wake.length() < wake.length():
-					main_wake = wake
-			return main_wake.start_time.astimezone(self.timezone), main_wake.end_time.astimezone(self.timezone)
-		else:
-			return dts, dte
 
 	def refresh(self, save=True):
 		"""
