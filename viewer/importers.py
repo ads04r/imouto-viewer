@@ -424,7 +424,7 @@ def import_fit(parseable_fit_input):
 				v['units'] = 'degrees'
 			item[k] = v
 		if item['timestamp']['value'].tzinfo is None or item['timestamp']['value'].utcoffset(item['timestamp']['value']) is None:
-			item['timestamp']['value'] = pytz.timezone(settings.TIME_ZONE).localize(item['timestamp']['value'])
+			item['timestamp']['value'] = pytz.utc.localize(item['timestamp']['value']) # If no timestamp, we assume UTC
 		newitem = {}
 		newitem['date'] = item['timestamp']['value']
 		if 'heart_rate' in item:
