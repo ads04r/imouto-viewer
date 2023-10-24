@@ -17,6 +17,7 @@ from staticmap import StaticMap, Line
 from dateutil import parser
 from xml.dom import minidom
 from tzfpy import get_tz
+from suntimes import SunTimes
 
 from viewer.health import parse_sleep, max_heart_rate
 from viewer.functions.geo import getgeoline, getelevation, getspeed, get_location_name
@@ -1799,6 +1800,10 @@ class Day(models.Model):
 	cached_heart = models.TextField(null=True, blank=True)
 	cached_sleep = models.TextField(null=True, blank=True)
 
+	is_public_holiday = models.BooleanField(default=True)
+	sunrise_time = models.DateTimeField(null=True, blank=True)
+	sunset_time = models.DateTimeField(null=True, blank=True)
+
 	def __dts__(self):
 		"""
 		Generates a fail-safe 'start time' for this day
@@ -2119,6 +2124,34 @@ class Day(models.Model):
 
 		return data
 
+	def __suntimes(self):
+		"""
+		Calculates the sun up / down times for this day, based on where the user slept or the
+		home location if that isn't available.
+		"""
+		if not((self.sunrise_time is None) or (self.sunset_time is None)):
+			return(self.sunrise_time, self.sunset_time)
+		try:
+			home = Location.objects.get(pk=settings.USER_HOME_LOCATION)
+		except:
+			home = None
+		if not(home is None):
+			wake_loc = (home.lat, home.lon)
+			sleep_loc = (home.lat, home.lon)
+		if not(self.wake_time is None):
+			wake_loc = get_logged_position(self.wake_time)
+		if not(self.bed_time is None):
+			sleep_loc = get_logged_position(self.bed_time)
+		if wake_loc is None:
+			return None
+		if sleep_loc is None:
+			return None
+		sun_wake = SunTimes(wake_loc[1], wake_loc[0])
+		sun_sleep = SunTimes(sleep_loc[1], sleep_loc[0])
+		self.sunrise_time = pytz.utc.localize(sun_wake.riseutc(self.date))
+		self.sunset_time = pytz.utc.localize(sun_sleep.setutc(self.date))
+		return(self.sunrise_time, self.sunset_time)
+
 	def refresh(self, save=True):
 		"""
 		Refreshes the data in the object (regenerating stored properties like wake and sleep time).
@@ -2148,7 +2181,7 @@ class Day(models.Model):
 		if not(self.today):
 			self.wake_time = dts
 			self.bed_time = dte
-
+		self.__suntimes()
 		if save:
 			self.cached_heart = None
 			self.cached_sleep = None
