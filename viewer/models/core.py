@@ -774,6 +774,32 @@ class Event(models.Model):
 	speed = models.TextField(default='', blank=True)
 	cover_photo = models.ForeignKey(Photo, null=True,  blank=True, on_delete=models.SET_NULL)
 	"""The Photo object that best illustrates this Event."""
+	@property
+	def show_hearttab(self):
+		health = self.health()
+		if 'heartavg' in health:
+			return True
+		if 'heartmax' in health:
+			return True
+		if 'heartavgprc' in health:
+			return True
+		if 'heartmaxprc' in health:
+			return True
+		if 'heartoptimaltime' in health:
+			return True
+		return False
+	@property
+	def show_elevationtab(self):
+		health = self.health()
+		if 'elevgain' in health:
+			return True
+		if 'elevloss' in health:
+			return True
+		if 'elevmin' in health:
+			return True
+		if 'elevmax' in health:
+			return True
+		return False
 	def to_dict(self):
 		"""
 		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.
@@ -866,8 +892,6 @@ class Event(models.Model):
 	def refresh(self, save=True):
 		if len(self.cached_health) <= 2:
 			health = self.__refresh_health(save=False)
-		self.auto_tag()
-		self.populate_people_from_photos()
 		if self.type == 'journey':
 			geo = self.__refresh_geo(save=False)
 			self.elevation = getelevation(self.start_time, self.end_time)
@@ -878,6 +902,9 @@ class Event(models.Model):
 			self.speed = ''
 		if save:
 			self.save()
+		if self.id:
+			self.auto_tag()
+			self.populate_people_from_photos()
 	def subevents(self):
 		return Event.objects.filter(start_time__gte=self.start_time, end_time__lte=self.end_time).exclude(id=self.id).order_by('start_time')
 	def weather(self):

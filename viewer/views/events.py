@@ -93,21 +93,21 @@ def event(request, eid):
 					event.workout_categories.add(category)
 			event.save()
 
-			cache.set(cache_key, data, 86400)
+			#cache.set(cache_key, data, 86400)
 			return HttpResponseRedirect('../#event_' + str(eid))
 		else:
 			form = QuickEventForm(request.POST, instance=data)
 			if form.is_valid():
 				form.save()
-				cache.set(cache_key, data, 86400)
+				#cache.set(cache_key, data, 86400)
 				return HttpResponseRedirect('../#event_' + str(eid))
 			else:
 				raise Http404(form.errors)
 
-	data = cache.get(cache_key)
-	if data is None:
-		data = get_object_or_404(Event, pk=eid)
-		cache.set(cache_key, data, 86400)
+	#data = cache.get(cache_key)
+	#if data is None:
+	data = get_object_or_404(Event, pk=eid)
+	#	cache.set(cache_key, data, 86400)
 
 	form = EventForm(instance=data)
 	context = {'type':'event', 'data':data, 'form':form, 'people':Person.objects.all(), 'categories':EventWorkoutCategory.objects.all()}
