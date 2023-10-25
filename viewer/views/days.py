@@ -21,6 +21,7 @@ def day(request, ds):
 	m = int(ds[4:6])
 	d = int(ds[6:])
 	dt = datetime.date(y, m, d)
+	now = pytz.utc.localize(datetime.datetime.utcnow())
 	Day.objects.filter(date=dt).delete()
 	day = Day(date=dt)
 	day.refresh()
@@ -29,6 +30,7 @@ def day(request, ds):
 	potential_joins = []
 	last_event = None
 	for event in day.events:
+		event.start_time = event.start_time.astimezone(day.timezone)
 		events.append(event)
 		if event.type == 'journey':
 			continue
@@ -45,6 +47,12 @@ def day(request, ds):
 		events.append(commit)
 	for task in day.tasks_completed:
 		events.append(task)
+	if day.sunrise_time:
+		if day.sunrise_time < now:
+			events.append({'type': 'sun_time', 'time': day.sunrise_time.astimezone(day.timezone), 'value': 'sunrise'})
+	if day.sunset_time:
+		if day.sunset_time < now:
+			events.append({'type': 'sun_time', 'time': day.sunset_time.astimezone(day.timezone), 'value': 'sunset'})
 	dss = str(day)
 	events = sorted(events, key=lambda x: x.start_time if x.__class__.__name__ == 'Event' else (x.time_completed if x.__class__.__name__ == 'CalendarTask' else (x.commit_date if x.__class__.__name__ == 'GitCommit' else (x['time'] if isinstance(x, (dict)) else x.time))))
 	appointments = day.calendar

@@ -17,13 +17,14 @@ from staticmap import StaticMap, Line
 from dateutil import parser
 from xml.dom import minidom
 from tzfpy import get_tz
+from suntimes import SunTimes
 
 from viewer.health import parse_sleep, max_heart_rate
 from viewer.functions.geo import getgeoline, getelevation, getspeed, get_location_name
 from viewer.functions.location_manager import get_possible_location_events, get_logged_position
 from viewer.functions.file_uploads import *
 
-import random, datetime, pytz, json, markdown, re, os, urllib.request, overpy
+import random, datetime, pytz, json, markdown, re, os, urllib.request, overpy, holidays
 
 @Field.register_lookup
 class WeekdayLookup(Transform):
@@ -1799,6 +1800,10 @@ class Day(models.Model):
 	cached_heart = models.TextField(null=True, blank=True)
 	cached_sleep = models.TextField(null=True, blank=True)
 
+	is_public_holiday = models.BooleanField(default=False)
+	sunrise_time = models.DateTimeField(null=True, blank=True)
+	sunset_time = models.DateTimeField(null=True, blank=True)
+
 	def __dts__(self):
 		"""
 		Generates a fail-safe 'start time' for this day
@@ -2119,6 +2124,40 @@ class Day(models.Model):
 
 		return data
 
+	def __suntimes(self):
+		"""
+		Calculates the sun up / down times for this day, based on where the user slept or the
+		home location if that isn't available.
+		"""
+		if not((self.sunrise_time is None) or (self.sunset_time is None)):
+			return(self.sunrise_time, self.sunset_time)
+		try:
+			home = Location.objects.get(pk=settings.USER_HOME_LOCATION)
+		except:
+			home = None
+		if not(home is None):
+			wake_loc = (home.lat, home.lon)
+			sleep_loc = (home.lat, home.lon)
+		if not(self.wake_time is None):
+			try:
+				wake_loc = get_logged_position(self.wake_time)
+			except:
+				wake_loc = None
+		if not(self.bed_time is None):
+			try:
+				sleep_loc = get_logged_position(self.bed_time)
+			except:
+				sleep_loc = wake_loc
+		if wake_loc is None:
+			return None
+		if sleep_loc is None:
+			return None
+		sun_wake = SunTimes(wake_loc[1], wake_loc[0])
+		sun_sleep = SunTimes(sleep_loc[1], sleep_loc[0])
+		self.sunrise_time = pytz.utc.localize(sun_wake.riseutc(self.date))
+		self.sunset_time = pytz.utc.localize(sun_sleep.setutc(self.date))
+		return(self.sunrise_time, self.sunset_time)
+
 	def refresh(self, save=True):
 		"""
 		Refreshes the data in the object (regenerating stored properties like wake and sleep time).
@@ -2148,6 +2187,17 @@ class Day(models.Model):
 		if not(self.today):
 			self.wake_time = dts
 			self.bed_time = dte
+		suntimes = self.__suntimes()
+		try:
+			country = Location.objects.get(id=settings.USER_HOME_LOCATION).country.a2
+		except:
+			country = ''
+		if len(country) == 2:
+			hols = holidays.country_holidays(country)
+			if self.date in hols:
+				self.is_public_holiday = True
+			else:
+				self.is_public_holiday = False
 
 		if save:
 			self.cached_heart = None

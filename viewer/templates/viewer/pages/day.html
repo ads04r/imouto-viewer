@@ -1,4 +1,5 @@
 {% load static %}
+{% load tz %}
 {% load class_tag %}
 
 <section class="content-header">
@@ -34,11 +35,18 @@
 
 {% for event in events %}
 
+	{% localtime off %}
+
 	{% if event|get_class == 'dict' %}
 
 		{% if event.type == 'music_track' %}
 
 			{% include 'viewer/cards/musictrack.html' %}
+
+		{% endif %}
+		{% if event.type == 'sun_time' %}
+
+			{% include 'viewer/cards/suntime.html' %}
 
 		{% endif %}
 
@@ -102,6 +110,8 @@
                 </div>
 
 	{% endif %}
+
+	{% endlocaltime %}
 
 {% endfor %}
 
