@@ -1,7 +1,7 @@
 {% load static %}
 {% if event.value == 'sunrise' %}
 
-	        <div class="callout callout-warning">
+	        <div class="callout callout-info">
 	          <table>
 	            <td valign="top"><i class="fa fa-sun-o"></i>&nbsp;</td>
 	            <td valign="top">Sunrise at {{ event.time|date:"g:ia" }}</td>
@@ -11,7 +11,7 @@
 {% endif %}
 {% if event.value == 'sunset' %}
 
-	        <div class="callout callout-warning">
+	        <div class="callout callout-info">
 	          <table>
 	            <td valign="top"><i class="fa fa-moon-o"></i>&nbsp;</td>
 	            <td valign="top">Sunset at {{ event.time|date:"g:ia" }}</td>

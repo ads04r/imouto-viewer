@@ -2139,9 +2139,15 @@ class Day(models.Model):
 			wake_loc = (home.lat, home.lon)
 			sleep_loc = (home.lat, home.lon)
 		if not(self.wake_time is None):
-			wake_loc = get_logged_position(self.wake_time)
+			try:
+				wake_loc = get_logged_position(self.wake_time)
+			except:
+				wake_loc = None
 		if not(self.bed_time is None):
-			sleep_loc = get_logged_position(self.bed_time)
+			try:
+				sleep_loc = get_logged_position(self.bed_time)
+			except:
+				sleep_loc = wake_loc
 		if wake_loc is None:
 			return None
 		if sleep_loc is None:
