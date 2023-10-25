@@ -24,7 +24,7 @@ from viewer.functions.geo import getgeoline, getelevation, getspeed, get_locatio
 from viewer.functions.location_manager import get_possible_location_events, get_logged_position
 from viewer.functions.file_uploads import *
 
-import random, datetime, pytz, json, markdown, re, os, urllib.request, overpy
+import random, datetime, pytz, json, markdown, re, os, urllib.request, overpy, holidays
 
 @Field.register_lookup
 class WeekdayLookup(Transform):
@@ -1800,7 +1800,7 @@ class Day(models.Model):
 	cached_heart = models.TextField(null=True, blank=True)
 	cached_sleep = models.TextField(null=True, blank=True)
 
-	is_public_holiday = models.BooleanField(default=True)
+	is_public_holiday = models.BooleanField(default=False)
 	sunrise_time = models.DateTimeField(null=True, blank=True)
 	sunset_time = models.DateTimeField(null=True, blank=True)
 
@@ -2187,7 +2187,18 @@ class Day(models.Model):
 		if not(self.today):
 			self.wake_time = dts
 			self.bed_time = dte
-		self.__suntimes()
+		suntimes = self.__suntimes()
+		try:
+			country = Location.objects.get(id=settings.USER_HOME_LOCATION).country.a2
+		except:
+			country = ''
+		if len(country) == 2:
+			hols = holidays.country_holidays(country)
+			if self.date in hols:
+				self.is_public_holiday = True
+			else:
+				self.is_public_holiday = False
+
 		if save:
 			self.cached_heart = None
 			self.cached_sleep = None
