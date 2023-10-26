@@ -109,7 +109,7 @@ def health(request, pageid):
 	if pageid == 'mentalhealth':
 		if request.method == 'POST':
 			ret = json.loads(request.body)
-			dt = pytz.utc.localize(datetime.datetime.now(datetime.timezone.utc))
+			dt = pytz.utc.localize(datetime.datetime.utcnow())
 			datapoint = DataReading(type='hads-a', start_time=dt, end_time=dt, value=ret['anxiety'])
 			datapoint.save()
 			datapoint = DataReading(type='hads-d', start_time=dt, end_time=dt, value=ret['depression'])
