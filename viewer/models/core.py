@@ -892,8 +892,6 @@ class Event(models.Model):
 		md = markdown.Markdown()
 		return md.convert(self.description)
 	def refresh(self, save=True):
-		if len(self.cached_health) <= 2:
-			health = self.__refresh_health(save=False)
 		if self.type == 'journey':
 			geo = self.__refresh_geo(save=False)
 			self.elevation = getelevation(self.start_time, self.end_time)
@@ -902,6 +900,8 @@ class Event(models.Model):
 			self.geo = ''
 			self.elevation = ''
 			self.speed = ''
+		if len(self.cached_health) <= 2:
+			health = self.__refresh_health(save=False)
 		if save:
 			self.save()
 		if self.id:
@@ -1160,7 +1160,8 @@ class Event(models.Model):
 				sleep.append(item)
 		if self.speed != '':
 			speed = json.loads(self.speed)
-			last_time = datetime.datetime.strptime(re.sub('\.[0-9]+', '', speed[0]['x']), "%Y-%m-%dT%H:%M:%S%z")
+			first_entry = speed[0]
+			last_time = datetime.datetime.strptime(re.sub('\.[0-9]+', '', first_entry['x']), "%Y-%m-%dT%H:%M:%S%z")
 			for item in speed:
 				cur_time = datetime.datetime.strptime(re.sub('\.[0-9]+', '', item['x']), "%Y-%m-%dT%H:%M:%S%z")
 				time_diff = (cur_time - last_time).total_seconds()
