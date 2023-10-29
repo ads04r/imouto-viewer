@@ -1332,7 +1332,7 @@ class LifeReport(models.Model):
 			if propkey in ret:
 				continue
 			ret.append(propkey)
-		for chart in LifeReportGraph.objects.filter(report=self):
+		for chart in LifeReportChart.objects.filter(report=self):
 			propkey = str(chart.category)
 			if propkey == '':
 				propkey = 'misc'

@@ -27,7 +27,8 @@
 			<ul class="list-group list-group-unbordered">
 				<li class="list-group-item"><b>Date created</b><small class="pull-right">{{ data.created_date }}</small></li>
 				<li class="list-group-item"><b>Life Events</b><small class="pull-right">{{ data.life_events.count }}</small></li>
-				<li class="list-group-item"><b>Diary Entries</b><small class="pull-right">{{ data.diary_entries.count }}</small></li>
+				<li class="list-group-item"><b>Places Visited</b><small class="pull-right">{{ data.locations.count }}</small></li>
+				<li class="list-group-item"><b>People Encountered</b><small class="pull-right">{{ data.people.count }}</small></li>
 			</ul>
                     </div>
                 </div>
@@ -64,7 +65,7 @@
                     <div class="tab-pane" id="report-tab-people">
 {% for person in data.people.all %}
 
-         	      {% if person.image %}<a href="#person_{{ person.uid }}"><img src="people/{{ person.uid }}_thumb.jpg" alt="{{ person }}" height="50" width="50"></a>{% endif %}
+         	      {% if person.image %}<a href="#person_{{ person.uid }}"><img class="img-bordered" src="people/{{ person.uid }}_thumb.jpg" alt="{{ person }}" height="50" width="50"></a>{% endif %}
 
 {% endfor %}
                     </div>
@@ -159,24 +160,7 @@
 
 {% endfor %}
 
-	            </div>
-	        </div>
-
-	</div>
-
-        <div class="row">
-            <div class="col-xs-12">
-
-
-<br><br>
-
-            </div>
-        </div>
-
 {% for event in data.diary_entries %}
-
-        <div class="row">
-            <div class="col-xs-12 col-sm-6 col-md-9">
 
                 <div class="box box-primary">
                     <div class="box-header with-border">
@@ -186,21 +170,16 @@
                     <div class="box-body">
 			<small class="muted">{{ event.start_time|date:"l jS F" }}</small><br>
 			{{ event.description_html|safe }}
-
                     </div>
                 </div>
 
-            </div>
-{% if event.geo %}
-
-            <div class="col-xs-12 col-sm-6 col-md-3">
-                <div id="map{{ event.pk }}" class="eventmap reportmap" data-geojson="{{ event.geo }}"></div>
-            </div>
-
-{% endif %}
-        </div>
-
 {% endfor %}
+
+	            </div>
+	        </div>
+
+	</div>
+
 
     </div>
 
