@@ -2,7 +2,7 @@ from django.conf import settings
 from fpdf import FPDF
 from tempfile import NamedTemporaryFile
 from viewer.models import Photo, Person
-import os, urllib.request
+import os, requests
 
 class ModernReport(FPDF):
 
@@ -104,8 +104,8 @@ class ModernReport(FPDF):
 			if len(ext) > 5:
 				ext = None
 			tf = NamedTemporaryFile(mode='wb', suffix=ext)
-			with urllib.request.urlopen(image) as rc:
-				tf.write(rc.read())
+			with requests.get(image) as r:
+				tf.write(r.text)
 			self.__temp.append(tf)
 			return tf.name
 		try:

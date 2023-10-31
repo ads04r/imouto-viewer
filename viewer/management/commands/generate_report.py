@@ -3,7 +3,7 @@ from django.core.cache import cache
 from django.conf import settings
 from viewer.models import *
 from viewer.tasks import generate_report, generate_report_pdf
-import os, sys, datetime, shutil, sqlite3, pytz, json, urllib.request
+import os, sys, datetime, shutil, sqlite3, pytz, json
 
 class Command(BaseCommand):
 	"""

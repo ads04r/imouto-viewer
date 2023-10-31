@@ -4,7 +4,7 @@ from colorfield.fields import ColorField
 
 from viewer.models.core import Location, WeatherLocation
 
-import random, datetime, pytz, json, markdown, re, os, urllib.request
+import random, datetime, pytz, json, markdown, re, os
 
 class WeatherReading(models.Model):
 	time = models.DateTimeField()

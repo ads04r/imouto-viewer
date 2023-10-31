@@ -1,4 +1,4 @@
-import datetime, pytz, json, random, urllib.request, re
+import datetime, pytz, json, random, re
 from django.db.models import Sum, Count, F, ExpressionWrapper, DurationField, fields
 from django.conf import settings
 
