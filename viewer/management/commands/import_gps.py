@@ -45,4 +45,5 @@ class Command(BaseCommand):
 			upload_file(temp_file, file_source)
 		else:
 			upload_file(temp_file, file_source, format)
+		os.remove(temp_file)
 		sys.stdout.write(self.style.SUCCESS(uploaded_file + "\n"))
