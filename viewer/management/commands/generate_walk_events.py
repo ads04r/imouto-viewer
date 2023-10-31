@@ -3,8 +3,8 @@ from django.core.cache import cache
 from django.conf import settings
 from viewer.models import DataReading, Event, EventWorkoutCategory
 from viewer.tasks import regenerate_similar_events
-from viewer.functions.utils import get_location_manager_report_queue
-from viewer.functions.geo import getgeoline, get_area_name
+from viewer.functions.geo import get_area_name
+from viewer.functions.location_manager import getgeoline, get_location_manager_report_queue
 from xml.dom import minidom
 import os, sys, datetime, pytz, json
 

@@ -18,6 +18,7 @@ from viewer.functions.monica import get_monica_contact_data, get_last_monica_act
 from viewer.functions.people import find_person_by_picasaid as find_person
 from viewer.functions.geo import convert_to_degrees
 from viewer.functions.git import get_recent_github_commits, get_recent_gitea_commits
+from viewer.functions.location_manager import get_logged_position
 from viewer.models import *
 from viewer.tasks import precache_photo_thumbnail, generate_location_events
 
@@ -878,16 +879,11 @@ def import_photo_file(filepath, tzinfo=pytz.UTC):
 	else:
 		if photo:
 			if photo.time:
-				ds = photo.time.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S")
-				try:
-					url = settings.LOCATION_MANAGER_URL + '/position/' + ds
-					r = requests.get(url)
-					data = json.loads(r.text)
-				except:
-					data = {'explicit': False}
-				if data['explicit'] == True:
-					photo.lat = data['lat']
-					photo.lon = data['lon']
+				dt = pytz.utc.localize(photo.time)
+				lat, lon = get_logged_position(dt)
+				if not(lat is None):
+					photo.lat = lat
+					photo.lon = lon
 					photo.save()
 
 	return photo

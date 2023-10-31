@@ -46,21 +46,6 @@ def generate_life_grid(start_date, weeks):
 		life.append(year)
 	return life
 
-def get_location_manager_report_queue():
-
-	ret = []
-	url = settings.LOCATION_MANAGER_URL + '/process'
-	r = requests.get(url)
-	data = json.loads(r.text)
-	if 'tasks' in data:
-		ret = ret + data['tasks']
-	url = settings.LOCATION_MANAGER_URL + '/import'
-	r = requests.get(url)
-	data = json.loads(r.text)
-	if 'tasks' in data:
-		ret = ret + data['tasks']
-	return ret
-
 def get_report_queue():
 
 	ret = []

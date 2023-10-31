@@ -4,7 +4,7 @@ from django.conf import settings
 from viewer.models import Event, Location
 from viewer.functions.people import bubble_event_people
 from viewer.functions.locations import create_location_events
-import os, sys, datetime, pytz, csv, socket, json, urllib, re, random, sys, urllib.request
+import os, sys, datetime, pytz, csv, socket, json, re, random, sys
 
 class Command(BaseCommand):
 	"""

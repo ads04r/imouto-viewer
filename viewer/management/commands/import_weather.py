@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand
 from django.core.cache import cache
 from django.conf import settings
 from viewer.models import *
-import os, sys, datetime, shutil, sqlite3, pytz, json, urllib.request
+import os, sys, datetime, shutil, sqlite3, pytz, json, requests
 
 class Command(BaseCommand):
 	"""
@@ -30,8 +30,8 @@ class Command(BaseCommand):
 				continue
 
 			url = 'https://api.openweathermap.org/data/2.5/weather?id=' + wloc.api_id + '&appid=' + api_key
-			with urllib.request.urlopen(url) as h:
-				data = json.loads(h.read().decode())
+			with requests.get(url) as r:
+				data = json.loads(r.text)
 			wloc.lat = data['coord']['lat']
 			wloc.lon = data['coord']['lon']
 			wloc.label = data['name']

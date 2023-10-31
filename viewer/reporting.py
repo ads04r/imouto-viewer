@@ -149,9 +149,9 @@ def generate_report_music(report, dts, dte, moonshine_url=''):
 		report_url = moonshine_url.rstrip('/') + '/report/' + str(dts.year)
 		music_data = {}
 		try:
-			req = urllib.request.urlopen(report_url)
-			if(req.getcode() == 200):
-				music_data = json.loads(req.read())
+			req = requests.get(report_url)
+			if(req.status_code == 200):
+				music_data = json.loads(req.text)
 		except:
 			music_data = {}
 		if len(music_data) > 0:

@@ -5,6 +5,7 @@ import datetime, pytz, os
 from background_task.models import Task
 from viewer.functions.utils import *
 from viewer.functions.locations import create_location_events, fill_country_cities, fill_location_cities
+from viewer.functions.location_manager import get_location_manager_report_queue
 
 @background(schedule=0, queue='process')
 def fill_cities():

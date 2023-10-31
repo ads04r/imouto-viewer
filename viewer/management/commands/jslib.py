@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.conf import settings
-import os, sys, urllib.request
+import os, sys, requests
 
 class Command(BaseCommand):
 	"""
@@ -46,7 +46,11 @@ class Command(BaseCommand):
 			if not(os.path.exists(file_dir)):
 				os.makedirs(file_dir)
 			try:
-				urllib.request.urlretrieve(file[1], file_path)
+				with requests.get(file[1], stream=True) as r:
+					r.raise_for_status()
+					with open(file_path, 'wb') as fp:
+						for chunk in r.iter_content(chunk_size=4096):
+							fp.write(chunk)
 				sys.stderr.write(self.style.SUCCESS(file[1] + " ok\n"))
 			except:
 				sys.stderr.write(self.style.ERROR(file[1] + " failed\n"))

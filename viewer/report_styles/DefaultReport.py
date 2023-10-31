@@ -1,7 +1,7 @@
 from fpdf import FPDF
 from tempfile import NamedTemporaryFile
 from viewer.models import Photo, Person
-import os, urllib.request
+import os, requests
 
 class DefaultReport(FPDF):
 
@@ -48,8 +48,8 @@ class DefaultReport(FPDF):
 			if len(ext) > 5:
 				ext = None
 			tf = NamedTemporaryFile(mode='wb', suffix=ext)
-			with urllib.request.urlopen(image) as rc:
-				tf.write(rc.read())
+			with requests(image) as r:
+				tf.write(r.text)
 			self.__temp.append(tf)
 			return tf.name
 		try:

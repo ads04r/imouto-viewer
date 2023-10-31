@@ -3,7 +3,7 @@ from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from viewer.models import Event, Photo
-import os, sys, datetime, shutil, sqlite3, pytz, json, urllib.request, random
+import os, sys, datetime, shutil, sqlite3, pytz, json, random
 
 class Command(BaseCommand):
 	"""

@@ -1,6 +1,6 @@
 from django.conf import settings
 from PIL import Image, ImageDraw, ImageFont
-import random, datetime, pytz, json, markdown, re, os, urllib.request
+import random, datetime, pytz, json, markdown, re, os
 
 def generate_pie_chart(data, w=640, h=640, colours=None, legend=True, font_path=None):
 	return __generate_radial_chart(data, 'pie', w, h, colours, legend, font_path)

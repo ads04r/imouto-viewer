@@ -1,4 +1,4 @@
-import datetime, pytz, json, urllib.request, re, sys, os
+import datetime, pytz, json, re, sys, os, requests
 import Fred as fred
 from django.core.cache import cache
 from django.conf import settings
@@ -23,8 +23,8 @@ def get_location_name(lat, lon):
 	except:
 		return ""
 	url = "https://api.mapbox.com/geocoding/v5/mapbox.places/" + str(lon) + "," + str(lat) + ".json?language=en&access_token=" + mapbox_key
-	r = urllib.request.urlopen(url)
-	data = json.loads(r.read())
+	r = requests.get(url)
+	data = json.loads(r.text)
 	if 'features' in data:
 		if len(data['features']) > 0:
 			if 'text' in data['features'][0]:
@@ -62,8 +62,8 @@ def get_area_address(n, w, s, e):
 		lon = query[0]
 		lat = query[1]
 		url = "https://api.mapbox.com/geocoding/v5/mapbox.places/" + str(lon) + "," + str(lat) + ".json?language=en&access_token=" + mapbox_key
-		r = urllib.request.urlopen(url)
-		data = json.loads(r.read())
+		r = requests.get(url)
+		data = json.loads(r.text)
 		addr = []
 		if 'features' in data:
 			if len(data['features']) > 0:
@@ -131,8 +131,8 @@ def __get_location_property(lat, lon, property, loctype='country'):
 		return ''
 	if data is None:
 		url = "https://api.mapbox.com/geocoding/v5/mapbox.places/" + str(lon) + "," + str(lat) + ".json?language=en&access_token=" + mapbox_key
-		r = urllib.request.urlopen(url)
-		data = json.loads(r.read())
+		r = requests.get(url)
+		data = json.loads(r.text)
 		if not('features' in data):
 			return ''
 		cache.set(cache_key, data, timeout=86400)
@@ -193,8 +193,8 @@ def get_location_address_fragment(lat, lon, fragment='country'):
 		return ''
 	if data is None:
 		url = "https://api.mapbox.com/geocoding/v5/mapbox.places/" + str(lon) + "," + str(lat) + ".json?language=en&access_token=" + mapbox_key
-		r = urllib.request.urlopen(url)
-		data = json.loads(r.read())
+		r = requests.get(url)
+		data = json.loads(r.text)
 		if not('features' in data):
 			return ''
 		cache.set(cache_key, data, timeout=86400)
@@ -275,124 +275,3 @@ def convert_to_degrees(value):
 
 	return d + (m / 60.0) + (s / 3600.0)
 
-def getposition(dt, loc_manager=None):
-	"""
-	Queries the location manager for the user's position at a particular time.
-
-	:param dt: A Python datetime representing the time being queried.
-	:param loc_manager: (Optional) The URL of an Imouto Location Manager server. If omitted, we use the LOCATION_MANAGER_URL setting.
-	:return: The raw output from the location manager, which should be a dict containing values for lat, lon, speed, etc.
-	:rtype: dict
-
-	"""
-	address = settings.LOCATION_MANAGER_URL
-	if not(loc_manager is None):
-		address = loc_manager
-	if not('://' in address):
-		address = 'http://' + address
-
-	id = dt.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S")
-	url = address + "/position/" + id + "?format=json"
-	data = {}
-	with urllib.request.urlopen(url) as h:
-		try:
-			data = json.loads(h.read().decode())
-		except:
-			data = {}
-	return data
-
-def getgeoline(dts, dte, loc_manager=None):
-	"""
-	Queries the location manager for the user's route between two times.
-
-	:param dts: A Python datetime representing the start of the time period being queried.
-	:param dte: A Python datetime representing the end of the time period being queried.
-	:param loc_manager: (Optional) The URL of an Imouto Location Manager server. If omitted, we use the LOCATION_MANAGER_URL setting.
-	:return: The raw output from the location manager, which should be a dict containing GeoJSON polyline, among other things.
-	:rtype: dict
-
-	"""
-	address = settings.LOCATION_MANAGER_URL
-	if not(loc_manager is None):
-		address = loc_manager
-	if not('://' in address):
-		address = 'http://' + address
-
-	id = dts.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S") + dte.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S")
-	url = address + "/route/" + id + "?format=json"
-	data = {}
-	with urllib.request.urlopen(url) as h:
-		data = json.loads(h.read().decode())
-	if 'geo' in data:
-		if 'geometry' in data['geo']:
-			if 'coordinates' in data['geo']['geometry']:
-				if len(data['geo']['geometry']['coordinates']) > 0:
-					return json.dumps(data['geo'])
-			if 'geometries' in data['geo']['geometry']:
-				if len(data['geo']['geometry']['geometries']) > 0:
-					return json.dumps(data['geo'])
-	return ""
-
-def getelevation(dts, dte, loc_manager=None):
-	"""
-	Queries the location manager for the user's elevation between two times.
-
-	:param dts: A Python datetime representing the start of the time period being queried.
-	:param dte: A Python datetime representing the end of the time period being queried.
-	:param loc_manager: (Optional) The URL of an Imouto Location Manager server. If omitted, we use the LOCATION_MANAGER_URL setting.
-	:return: A list containing a sequence of two-element {x, y} dicts, useful for drawing an elevation graph.
-	:rtype: list
-
-	"""
-	address = settings.LOCATION_MANAGER_URL
-	if not(loc_manager is None):
-		address = loc_manager
-	if not('://' in address):
-		address = 'http://' + address
-
-	id = dts.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S") + dte.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S")
-	url = address + "/elevation/" + id + "?format=json"
-	data = []
-	with urllib.request.urlopen(url) as h:
-		for item in json.loads(h.read().decode()):
-			data.append({'x': item[1], 'y': item[2]})
-	if len(data) > 0:
-		return json.dumps(data)
-	return ""
-
-def getspeed(dts, dte, loc_manager=None):
-	"""
-	Queries the location manager for the user's speed between two times.
-
-	:param dts: A Python datetime representing the start of the time period being queried.
-	:param dte: A Python datetime representing the end of the time period being queried.
-	:param loc_manager: (Optional) The URL of an Imouto Location Manager server. If omitted, we use the LOCATION_MANAGER_URL setting.
-	:return: A list containing a sequence of two-element {x, y} dicts, useful for drawing a graph with speed on the y-axis and time on the x-axis.
-	:rtype: list
-
-	"""
-	address = settings.LOCATION_MANAGER_URL
-	if not(loc_manager is None):
-		address = loc_manager
-	if not('://' in address):
-		address = 'http://' + address
-
-	id = dts.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S") + dte.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S")
-	url = address + "/elevation/" + id + "?format=json"
-	data = []
-	last_dist = 0
-	last_time = dts
-	with urllib.request.urlopen(url) as h:
-		for item in json.loads(h.read().decode()):
-			dt = datetime.datetime.strptime(re.sub('\.[0-9]+', '', item[0]), "%Y-%m-%dT%H:%M:%S%z")
-			time_diff = (dt - last_time).total_seconds()
-			dist_diff = item[1] - last_dist
-			speed = 0
-			if time_diff > 0:
-				speed = ((dist_diff / 1609.344) / (time_diff / 3600))
-			data.append({'x': item[0], 'y': speed})
-			last_time = dt
-			last_dist = item[1]
-	if len(data) > 0:
-		return json.dumps(data)
-	return ""

@@ -55,12 +55,10 @@ def create_location_events(minlength=300):
 	dte = pytz.utc.localize(datetime.datetime.utcnow()).replace(hour=0, minute=0, second=0) + datetime.timedelta(days=1)
 	ret = []
 	while dts < dte:
-		url = settings.LOCATION_MANAGER_URL + '/event/' + dts.strftime("%Y-%m-%d")
+		data = getstopevents(dts)
 		dt_check = dts.replace(hour=0, minute=0, second=0)
 		dts = dts + datetime.timedelta(days=1)
 
-		r = requests.get(url)
-		data = json.loads(r.text)
 		last_item = ''
 		for item in data:
 			if item['timestart'] == last_item:

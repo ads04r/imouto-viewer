@@ -20,12 +20,12 @@ from tzfpy import get_tz
 from suntimes import SunTimes
 
 from viewer.health import parse_sleep, max_heart_rate
-from viewer.functions.geo import getgeoline, getelevation, getspeed, get_location_name
-from viewer.functions.location_manager import get_possible_location_events, get_logged_position
+from viewer.functions.geo import get_location_name
+from viewer.functions.location_manager import get_possible_location_events, get_logged_position, getgeoline, getelevation, getspeed, getboundingbox
 from viewer.staticcharts import generate_pie_chart, generate_donut_chart
 from viewer.functions.file_uploads import *
 
-import random, datetime, pytz, json, markdown, re, os, urllib.request, overpy, holidays
+import random, datetime, pytz, json, markdown, re, os, overpy, holidays
 
 @Field.register_lookup
 class WeekdayLookup(Transform):
@@ -2171,11 +2171,7 @@ class Day(models.Model):
 		self.timezone_str = settings.TIME_ZONE
 		dts, dte = self.__calculate_wake_time()
 
-		id = dts.strftime("%Y%m%d%H%M%S") + dte.strftime("%Y%m%d%H%M%S")
-		url = settings.LOCATION_MANAGER_URL + "/bbox/" + id + "?format=json"
-		data = []
-		with urllib.request.urlopen(url) as h:
-			data = json.loads(h.read().decode())
+		data = getboundingbox(dts, dte)
 		if len(data) == 4:
 			try:
 				tz1 = get_tz(data[0], data[1])

@@ -9,6 +9,7 @@ import datetime, pytz, dateutil.parser, json, requests, random
 
 from viewer.models import Location, Person, Event
 from viewer.functions.rdf import get_webpage_data, microdata_to_rdf, get_rdf_people, get_rdf_places
+from viewer.functions.location_manager import get_location_manager_import_queue, get_location_manager_process_queue
 
 def upload_file(request):
 	if request.method != 'POST':
@@ -18,26 +19,19 @@ def upload_file(request):
 	data = {'file_source': request.POST['uploadformfilesource']}
 
 	r = requests.post(url, files=files, data=data)
+	r.raise_for_status()
 	return HttpResponseRedirect('./#files')
 
 def locman_import(request):
-	url = settings.LOCATION_MANAGER_URL + '/import'
-	r = requests.get(url)
-	r.raise_for_status()
-	response = HttpResponse(r.text, content_type='application/json')
+	response = HttpResponse(json.dumps(get_location_manager_import_queue()), content_type='application/json')
 	return response
 
 def locman_process(request):
-	url = settings.LOCATION_MANAGER_URL + '/process'
-	r = requests.get(url)
-	r.raise_for_status()
-	response = HttpResponse(r.text, content_type='application/json')
+	response = HttpResponse(json.dumps(get_location_manager_process_queue()), content_type='application/json')
 	return response
 
 def importer(request):
-	url = settings.LOCATION_MANAGER_URL + '/import'
-	r = requests.get(url=url)
-	context = {'progress': r.json()}
+	context = {'progress': get_location_manager_import_queue()}
 	return render(request, 'viewer/pages/import.html', context)
 
 def webimporter(request):

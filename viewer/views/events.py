@@ -12,7 +12,7 @@ from viewer.forms import EventForm, QuickEventForm
 
 from viewer.functions.moonshine import get_moonshine_tracks
 from viewer.functions.locations import join_location_events
-from viewer.functions.geo import getgeoline, getelevation, getspeed
+from viewer.functions.location_manager import getgeoline, getelevation, getspeed
 
 def events(request):
 	if request.method == 'POST':
