@@ -143,7 +143,7 @@ def getspeed(dts, dte, loc_manager=None):
 	last_time = dts
 	try:
 		with requests.get(url) as h:
-			for item in json.loads(h.text.decode()):
+			for item in json.loads(h.text):
 				dt = datetime.datetime.strptime(re.sub('\.[0-9]+', '', item[0]), "%Y-%m-%dT%H:%M:%S%z")
 				time_diff = (dt - last_time).total_seconds()
 				dist_diff = item[1] - last_dist

@@ -926,7 +926,10 @@ class Event(models.Model):
 		"""
 		return CalendarTask.objects.filter(time_completed__gte=self.start_time, time_completed__lte=self.end_time).order_by('time_completed')
 	def __refresh_geo(self, save=True):
-		ret = json.loads(getgeoline(self.start_time, self.end_time))
+		try:
+			ret = json.loads(getgeoline(self.start_time, self.end_time))
+		except:
+			ret = {}
 		if 'geometry' in ret:
 			if 'geometries' in ret['geometry']:
 				try:
@@ -2155,8 +2158,11 @@ class Day(models.Model):
 		if sleep_loc is None:
 			return None
 		sun_wake = SunTimes(wake_loc[1], wake_loc[0])
-		sun_sleep = SunTimes(sleep_loc[1], sleep_loc[0])
 		self.sunrise_time = pytz.utc.localize(sun_wake.riseutc(self.date))
+		try:
+			sun_sleep = SunTimes(sleep_loc[1], sleep_loc[0])
+		except:
+			sun_sleep = sun_wake
 		self.sunset_time = pytz.utc.localize(sun_sleep.setutc(self.date))
 		return(self.sunrise_time, self.sunset_time)
 
