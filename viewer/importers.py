@@ -879,7 +879,7 @@ def import_photo_file(filepath, tzinfo=pytz.UTC):
 	else:
 		if photo:
 			if photo.time:
-				dt = pytz.utc.localize(photo.time)
+				dt = photo.time
 				lat, lon = get_logged_position(dt)
 				if not(lat is None):
 					photo.lat = lat
