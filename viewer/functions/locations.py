@@ -1,6 +1,7 @@
 import datetime, pytz, json, re, sys, os, requests, overpy
 from viewer.models import Location, Event, LocationCity, LocationCountry
 from viewer.functions.calendar import event_label
+from viewer.functions.location_manager import getstopevents
 from django.conf import settings
 from geopy import distance
 from dateutil import parser
