@@ -468,6 +468,11 @@ def import_fit(parseable_fit_input):
 					event = DataReading(start_time=dts, end_time=dte, type='cadence', value=item['cadence'])
 					event.save()
 
+	for f in ImportedFile.objects.all():
+		if f.path == parseable_fit_input:
+			f.import_time = pytz.utc.localize(datetime.datetime.utcnow())
+			f.save()
+
 	for dt in days:
 		Day.objects.filter(date=dt).delete()
 

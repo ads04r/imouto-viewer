@@ -44,24 +44,27 @@ class WatchedDirectory(models.Model):
 			if f.path in ignore:
 				continue
 			if f.exists:
-				if f.import_time is None:
-					if not(f.path in ret):
+				if not(f.path in ret):
+					if f.import_time is None:
 						ret.append(f.path)
+					else:
+						file_size = os.path.getsize(f.path)
+						modified_time = pytz.utc.localize(datetime.datetime.utcfromtimestamp(os.path.getmtime(f.path)))
+						if not((f.file_size == file_size) & (f.modified_time == modified_time)):
+							ret.append(f.path)
 			ignore.append(f.path)
 		for fn in self.__files_in_directory():
 			if fn in ignore:
 				continue
 			if fn in ret:
 				continue
-			modified_time = pytz.utc.localize(datetime.datetime.utcfromtimestamp(os.path.getmtime(fn)))
-			if modified_time < self.last_check:
-				continue
 			if fn.startswith(self.path):
+				modified_time = pytz.utc.localize(datetime.datetime.utcfromtimestamp(os.path.getmtime(fn)))
 				file_size = os.path.getsize(fn)
 				rel_path = fn[(len(self.path) + 1):]
 				file_object = ImportedFile(relative_path=rel_path, modified_time=modified_time, watched_directory=self, file_size=file_size)
 				file_object.save()
-			ret.append(fn)
+				ret.append(fn)
 		return ret
 	def __str__(self):
 		return self.path

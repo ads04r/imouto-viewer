@@ -8,6 +8,17 @@ from viewer.functions.locations import create_location_events, fill_country_citi
 from viewer.functions.location_manager import get_location_manager_report_queue
 
 @background(schedule=0, queue='process')
+def check_watched_directories():
+	"""
+	Iterates through all the watched directories and begins an import for each new file found.
+	"""
+	if Task.objects.filter(queue='process', task_name__icontains='tasks.check_watched_directories').count() > 1:
+		return # If there's already an instance of this task running or queued, don't start another.
+	if len(get_location_manager_report_queue()) > 0:
+		check_watched_directories(schedule=60) # If there are tasks in the location manager, hold back until they finish
+		return
+
+@background(schedule=0, queue='process')
 def fill_cities():
 	"""
 	Uses an OSM API to determine the cities that exist within the countries visited, and matches them
