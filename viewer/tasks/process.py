@@ -1,8 +1,9 @@
 from background_task import background
 from django.conf import settings
-import datetime, pytz, os
+import datetime, pytz, os, sys
 
 from background_task.models import Task
+from viewer.models import WatchedDirectory, ImportedFile
 from viewer.functions.utils import *
 from viewer.functions.locations import create_location_events, fill_country_cities, fill_location_cities
 from viewer.functions.location_manager import get_location_manager_report_queue
@@ -17,6 +18,21 @@ def check_watched_directories():
 	if len(get_location_manager_report_queue()) > 0:
 		check_watched_directories(schedule=60) # If there are tasks in the location manager, hold back until they finish
 		return
+
+	ret = []
+	for wd in WatchedDirectory.objects.all():
+		for fn in wd.unimported_files:
+			for f in wd.known_files.all():
+				if f.path == fn:
+					modified_time = pytz.utc.localize(datetime.datetime.utcfromtimestamp(os.path.getmtime(fn)))
+					file_size = os.path.getsize(fn)
+					if((f.modified_time == modified_time) & (f.file_size == file_size)):
+						ret.append(fn)
+					else:
+						f.modified_time = modified_time
+						f.file_size = file_size
+						f.import_time = None
+						f.save()
 
 @background(schedule=0, queue='process')
 def fill_cities():
