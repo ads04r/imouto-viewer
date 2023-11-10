@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from viewer.importers import upload_file
+from viewer.importers.location import upload_file
 import os, sys, datetime, shutil
 
 class Command(BaseCommand):
