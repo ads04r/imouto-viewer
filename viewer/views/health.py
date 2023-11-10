@@ -83,7 +83,7 @@ def health(request, pageid):
 	if pageid == 'blood':
 		if request.method == 'POST':
 			ret = json.loads(request.body)
-			dt = pytz.utc.localize(datetime.datetime.now(datetime.timezone.utc))
+			dt = pytz.utc.localize(datetime.datetime.utcnow())
 			datapoint = DataReading(type='bp_sys', start_time=dt, end_time=dt, value=ret['bp_sys_val'])
 			datapoint.save()
 			datapoint = DataReading(type='bp_dia', start_time=dt, end_time=dt, value=ret['bp_dia_val'])
