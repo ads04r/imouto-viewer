@@ -3,7 +3,7 @@ from django.conf import settings
 from fitparse import FitFile
 
 from viewer.models import Day, DataReading, ImportedFile
-from viewer.tasks.imports import generate_location_events
+from viewer.tasks.process import generate_location_events
 
 def upload_file(temp_file, file_source, format=''):
 	"""

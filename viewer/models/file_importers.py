@@ -8,6 +8,7 @@ class WatchedDirectory(models.Model):
 	last_check = models.DateTimeField()
 	check_interval = models.IntegerField(default=300)
 	importer = models.SlugField(max_length=100)
+	source = models.SlugField(max_length=32, default='filesystem')
 	def __files_in_directory(self, path=None):
 		scan_path = path
 		ret = []

@@ -12,7 +12,7 @@ def generate_location_events(min_duration=300):
 
 	:param min_duration: Doesn't create Events shorter than this many seconds. Good for avoiding creating 'stopped at a red light' Events.
 	"""
-	if Task.objects.filter(queue='process', task_name__icontains='tasks.generate_location_events').count() > 1:
+	if Task.objects.filter(queue='process', task_name__icontains='tasks.process.generate_location_events').count() > 1:
 		return # If there's already an instance of this task running or queued, don't start another.
 	if len(get_location_manager_report_queue()) > 0:
 		generate_location_events(min_duration=min_duration, schedule=60) # If there are tasks in the location manager, hold back until they finish
@@ -25,7 +25,7 @@ def fill_cities():
 	Uses an OSM API to determine the cities that exist within the countries visited, and matches them
 	to locations where possible.
 	"""
-	if Task.objects.filter(queue='process', task_name__icontains='tasks.fill_cities').count() > 1:
+	if Task.objects.filter(queue='process', task_name__icontains='tasks.process.fill_cities').count() > 1:
 		return # If there's already an instance of this task running or queued, don't start another.
 	if len(get_location_manager_report_queue()) > 0:
 		fill_cities(schedule=60) # If there are tasks in the location manager, hold back until they finish
