@@ -2157,7 +2157,10 @@ class Day(models.Model):
 			return None
 		if sleep_loc is None:
 			return None
-		sun_wake = SunTimes(wake_loc[1], wake_loc[0])
+		try:
+			sun_wake = SunTimes(wake_loc[1], wake_loc[0])
+		except:
+			return None
 		self.sunrise_time = pytz.utc.localize(sun_wake.riseutc(self.date))
 		try:
 			sun_sleep = SunTimes(sleep_loc[1], sleep_loc[0])
