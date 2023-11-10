@@ -4,11 +4,11 @@ from django.db.models import Q
 from django.core.files import File
 from django.core.cache import cache
 
+from viewer.models import Photo
 from viewer.functions.people import find_person_by_picasaid as find_person
 from viewer.functions.geo import convert_to_degrees
 from viewer.functions.location_manager import get_logged_position
-from viewer.models import Photo
-from viewer.tasks import precache_photo_thumbnail
+from viewer.tasks.process import precache_photo_thumbnail
 
 def import_photo_file(filepath, tzinfo=pytz.UTC):
 	"""

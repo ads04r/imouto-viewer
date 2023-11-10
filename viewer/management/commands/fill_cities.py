@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from viewer.tasks import fill_cities
+from viewer.tasks.process import fill_cities
 
 class Command(BaseCommand):
 	"""
