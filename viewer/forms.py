@@ -1,5 +1,5 @@
 from django.forms import ModelForm, ImageField, TextInput, Textarea, Select, DateInput
-from viewer.models import Location, Event, LifeReport, EventWorkoutCategory, LifePeriod
+from viewer.models import Location, Event, LifeReport, EventWorkoutCategory, LifePeriod, WatchedDirectory
 from django.db.models import Sum, Count
 import datetime, pytz
 
@@ -75,3 +75,8 @@ class CreateReportForm(ModelForm):
 	class Meta:
 		model = LifeReport
 		fields = ['label', 'style']
+
+class WatchedDirectoryForm(ModelForm):
+	class Meta:
+		model = WatchedDirectory
+		fields = ['importer', 'path', 'recursive', 'check_interval', 'source', 'file_regex']

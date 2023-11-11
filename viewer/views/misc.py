@@ -7,9 +7,10 @@ from django.conf import settings
 from haystack.query import SearchQuerySet
 import datetime, pytz, dateutil.parser, json, requests, random
 
-from viewer.models import Location, Person, Event
+from viewer.models import Location, Person, Event, WatchedDirectory
 from viewer.functions.rdf import get_webpage_data, microdata_to_rdf, get_rdf_people, get_rdf_places
 from viewer.functions.location_manager import get_location_manager_import_queue, get_location_manager_process_queue
+from viewer.forms import WatchedDirectoryForm
 
 def upload_file(request):
 	if request.method != 'POST':
@@ -31,7 +32,7 @@ def locman_process(request):
 	return response
 
 def importer(request):
-	context = {'progress': get_location_manager_import_queue()}
+	context = {'progress': get_location_manager_import_queue(), 'form': WatchedDirectoryForm(), 'paths': WatchedDirectory.objects.all()}
 	return render(request, 'viewer/pages/import.html', context)
 
 def webimporter(request):
