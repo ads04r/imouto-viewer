@@ -1,5 +1,5 @@
 from django.http import HttpResponse, Http404, HttpResponseRedirect, HttpResponseNotAllowed
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
 from django.db.models import Q, F
@@ -38,6 +38,11 @@ def importer(request):
 def webimporter(request):
 	context = {'progress': []}
 	return render(request, 'viewer/pages/import-web.html', context)
+
+def watcheddir(request, uid):
+	data = get_object_or_404(WatchedDirectory, pk=uid)
+	context = {'data': data, 'form': WatchedDirectoryForm(instance=data)}
+	return render(request, 'viewer/pages/watched_dir.html', context)
 
 @csrf_exempt
 def search(request):

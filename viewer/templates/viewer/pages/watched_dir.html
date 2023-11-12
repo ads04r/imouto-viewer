@@ -1,0 +1,43 @@
+{% load static %}
+
+<section class="content-header">
+    <h1>
+        {{ data.path }}
+        <small>Watched Directory</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="#files">Watched Directories</a></li>
+        <li>{{ data.path }}</li>
+    </ol>
+</section>
+
+<section class="content">
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-12 col-sm-6 col-md-8">
+
+                <div class="box box-primary">
+                    <div class="box-body">
+
+                <form action="" method="POST" enctype="multipart/form-data">{% csrf_token %}
+
+                              <table class="table table-hover">
+{% for field in form %}
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                </tr>
+{% endfor %}
+
+                              </table>
+                </form>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</section>
