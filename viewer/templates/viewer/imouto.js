@@ -108,6 +108,9 @@ function uploadScreen()
 
         if(status == 'error') { errorPage(xhr); return false; }
 
+	$('#watcheddir-save-form-button').on('click', function() {
+		$('#watcheddir-edit').submit();
+	});
 	createTimer(updateUploadStats, 1000);
 	createTimer(updateUploadQueue, 5000);
 	updateUploadStats();
@@ -1961,6 +1964,7 @@ function watchedDirectoryScreen(id)
     $(".content-wrapper").load("./watched_directory/" + id + ".html", function(response, status, xhr)
     {
         if(status == 'error') { errorPage(xhr); return false; }
+
     });
 }
 

@@ -4,7 +4,7 @@ import re, os, datetime, pytz
 class WatchedDirectory(models.Model):
 	path = models.CharField(max_length=1024, null=False)
 	recursive = models.BooleanField(default=False)
-	file_regex = models.CharField(max_length=512, null=True)
+	file_regex = models.CharField(max_length=512, null=True, blank=True)
 	last_check = models.DateTimeField()
 	check_interval = models.IntegerField(default=300)
 	importer = models.SlugField(max_length=100)

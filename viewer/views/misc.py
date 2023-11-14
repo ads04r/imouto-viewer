@@ -39,7 +39,10 @@ def webimporter(request):
 	context = {'progress': []}
 	return render(request, 'viewer/pages/import-web.html', context)
 
-def watcheddir(request, uid):
+def watcheddir(request, uid=None):
+	if request.method == 'POST':
+		response = HttpResponse(json.dumps(request.POST), content_type='application/json')
+		return response
 	data = get_object_or_404(WatchedDirectory, pk=uid)
 	context = {'data': data, 'form': WatchedDirectoryForm(instance=data)}
 	return render(request, 'viewer/pages/watched_dir.html', context)
