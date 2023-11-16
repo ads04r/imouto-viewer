@@ -2,12 +2,12 @@
 
 <section class="content-header">
     <h1>
-        {{ data.path }}
+        {{ data.label }}
         <small>Watched Directory</small>
     </h1>
     <ol class="breadcrumb">
         <li><a href="#files">Watched Directories</a></li>
-        <li>{{ data.path }}</li>
+        <li>{{ data.label }}</li>
     </ol>
 </section>
 
@@ -20,7 +20,7 @@
                 <div class="box box-primary">
                     <div class="box-body box-profile">
 
-			<h3>{{ data.path }}</h3>
+			<h3 class="profile-username text-center"><i class="fa fa-folder-o"></i>&nbsp;{{ data.label }}</h3>
 			<ul class="list-group list-group-unbordered">
 				<li class="list-group-item"><b>Last check</b> <span class="pull-right">{{ data.last_check|date:"l g:ia" }}</span></li>
 				<li class="list-group-item"><b>Imported</b> <span class="pull-right">{{ data.known_files.count }} files</span></li>

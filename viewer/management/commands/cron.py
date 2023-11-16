@@ -4,7 +4,7 @@ from django.conf import settings
 from viewer.models import DataReading, Event
 from io import StringIO
 import os, sys, datetime, shutil, sqlite3, pytz, csv, xmltodict, json
-from viewer.tasks.imports import check_watched_directories
+from viewer.tasks.cron import check_watched_directories
 from viewer.tasks.process import generate_location_events
 
 class Command(BaseCommand):

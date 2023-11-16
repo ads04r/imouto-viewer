@@ -41,8 +41,26 @@ def webimporter(request):
 
 def watcheddir(request, uid=None):
 	if request.method == 'POST':
-		response = HttpResponse(json.dumps(request.POST), content_type='application/json')
-		return response
+		data = None
+		if uid is None:
+			form = WatchedDirectoryForm(request.POST)
+		else:
+			data = get_object_or_404(WatchedDirectory, pk=uid)
+			form = WatchedDirectoryForm(request.POST, instance=data)
+		if 'delete' in request.POST:
+			if not(data is None):
+				data.delete()
+				return HttpResponseRedirect('../#files')
+		if form.is_valid():
+			wd = form.save(commit=False)
+			wd.last_check = pytz.utc.localize(datetime.datetime.utcnow())
+			wd.save()
+			if uid is None:
+				return HttpResponseRedirect('./#files')
+			else:
+				return HttpResponseRedirect('../#files')
+		else:
+			raise Http404(form.errors)
 	data = get_object_or_404(WatchedDirectory, pk=uid)
 	context = {'data': data, 'form': WatchedDirectoryForm(instance=data)}
 	return render(request, 'viewer/pages/watched_dir.html', context)
