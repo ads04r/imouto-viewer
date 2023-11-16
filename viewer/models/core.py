@@ -172,6 +172,18 @@ class SchemaOrgClass(models.Model):
 	uri = models.URLField(null=False)
 	parent = models.ForeignKey('self', on_delete=models.SET_NULL, related_name='children', null=True, blank=True)
 	comment = models.TextField()
+	@property
+	def ancestors(self):
+		ret = []
+		p = self
+		while True:
+			if p.parent is None:
+				break
+			if p.parent.label == 'Thing':
+				break
+			ret.append(p.parent.pk)
+			p = p.parent
+		return SchemaOrgClass.objects.filter(pk__in=ret).order_by('label')
 	def __str__(self):
 		return self.label
 	class Meta:
@@ -210,6 +222,19 @@ class Location(models.Model):
 		except:
 			home = -1
 		return (self.pk == home)
+	def schema_classes(self):
+		ret = []
+		for c in self.categories.all():
+			if c.schema_map is None:
+				continue
+			if c.schema_map in ret:
+				continue
+			ret.append(c.schema_map)
+			for sc in c.schema_map.ancestors.all():
+				if sc in ret:
+					continue
+				ret.append(sc)
+		return ret
 	def to_dict(self):
 		"""
 		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.

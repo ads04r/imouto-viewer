@@ -127,6 +127,22 @@
                 </div>
 
 {% endif %}
+{% if data.schema_classes|length > 1 %}
+
+                <div class="box box-primary">
+                    <div class="box-body no-padding">
+			<table class="table table-inline">
+{% for sc in data.schema_classes %}
+                          <li class="list-group-item">
+				<b>{{ sc.label }}</b>
+				{% if sc.comment %}<br/><small class="muted">{{ sc.comment }}</small>{% endif %}
+                          </li>
+{% endfor %}
+                        </table>
+                    </div>
+                </div>
+
+{% endif %}
 
             </div>
 
