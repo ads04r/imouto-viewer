@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.core.cache import cache
 from django.conf import settings
-from viewer.importers import import_openscale
+from viewer.importers.openscale import import_openscale
 import os, sys
 
 class Command(BaseCommand):
