@@ -167,6 +167,29 @@ class WeatherLocation(models.Model):
 			models.Index(fields=['label'])
 		]
 
+class SchemaOrgClass(models.Model):
+	label = models.CharField(max_length=256, null=False)
+	uri = models.URLField(null=False)
+	parent = models.ForeignKey('self', on_delete=models.SET_NULL, related_name='children', null=True, blank=True)
+	comment = models.TextField()
+	@property
+	def ancestors(self):
+		ret = []
+		p = self
+		while True:
+			if p.parent is None:
+				break
+			if p.parent.label == 'Thing':
+				break
+			ret.append(p.parent.pk)
+			p = p.parent
+		return SchemaOrgClass.objects.filter(pk__in=ret).order_by('label')
+	def __str__(self):
+		return self.label
+	class Meta:
+		verbose_name = "schema.org class"
+		verbose_name_plural = "schema.org classes"
+
 class Location(models.Model):
 	"""This is a class representing a named location significant to the user. It does not need to be validated by any
 	authority, but must have a name, a latitude and longitude, and a country (represented by the LocationCountry class)
@@ -199,6 +222,19 @@ class Location(models.Model):
 		except:
 			home = -1
 		return (self.pk == home)
+	def schema_classes(self):
+		ret = []
+		for c in self.categories.all():
+			if c.schema_map is None:
+				continue
+			if c.schema_map in ret:
+				continue
+			ret.append(c.schema_map)
+			for sc in c.schema_map.ancestors.all():
+				if sc in ret:
+					continue
+				ret.append(sc)
+		return ret
 	def to_dict(self):
 		"""
 		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.
@@ -2569,7 +2605,7 @@ class LocationCategory(models.Model):
 	caption = models.CharField(max_length=255, default='', blank=True)
 	locations = models.ManyToManyField(Location, related_name='categories')
 	colour = ColorField(default='#777777')
-	parent = models.ForeignKey('self', on_delete=models.SET_NULL, related_name="children", null=True, blank=True)
+	schema_map = models.ForeignKey(SchemaOrgClass, on_delete=models.SET_NULL, related_name='categories', null=True, blank=True)
 	def __str__(self):
 		return(self.caption)
 	class Meta:
@@ -2685,4 +2721,3 @@ class LifeReportChart(models.Model):
 			models.Index(fields=['report']),
 			models.Index(fields=['text']),
 		]
-
