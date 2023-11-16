@@ -93,6 +93,13 @@ def health(request, pageid):
 		context['data'] = health_data(['bp_sys', 'bp_dia'])
 		return render(request, 'viewer/pages/health_bp.html', context)
 	if pageid == 'weight':
+		if request.method == 'POST':
+			ret = json.loads(request.body)
+			dt = datetime.datetime.now(pytz.utc)
+			datapoint = DataReading(type='weight', start_time=dt, end_time=dt, value=(float(ret['weight_val']) * 1000))
+			datapoint.save()
+			response = HttpResponse(json.dumps(ret), content_type='application/json')
+			return response
 		context['data'] = health_data(['weight', 'fat', 'muscle', 'water'])
 		context['graphs'] = {}
 		dt = pytz.utc.localize(datetime.datetime.now()).replace(hour=0, minute=0, second=0)
