@@ -1,0 +1,23 @@
+<div class="modal fade nav-tabs-custom" id="delete-wd" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+		<p>Are you sure you want to stop watching the directory <strong id="wd-update-label"></strong></p>
+
+                <form id="delete-wd-form" action="" method="POST">
+		<input id="wd-update-id" type="hidden" name="delete" value=""/>
+{% csrf_token %}
+                </form>
+
+            </div>
+            
+            <div class="modal-footer">
+		<span class="pull-right">
+                <button type="button" class="btn btn-danger delete-wd-button" data-form="delete-wd-form">Delete</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+		</span>
+            </div>
+        </div>
+    </div>
+</div>

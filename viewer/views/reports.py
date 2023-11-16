@@ -7,7 +7,7 @@ import datetime, pytz, dateutil.parser, json, requests, random, os
 
 from viewer.models import Event, LifeReport, LifeReportGraph
 from viewer.forms import CreateReportForm
-from viewer.tasks import generate_report
+from viewer.tasks.reports import generate_report
 
 from viewer.functions.utils import get_report_queue
 

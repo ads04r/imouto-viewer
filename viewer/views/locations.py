@@ -10,7 +10,7 @@ from viewer.forms import LocationForm
 from viewer.functions.geo import get_location_address_fragment, get_location_country_code, get_location_wikidata_id
 from viewer.functions.rdf import wikidata_to_wikipedia
 
-from viewer.tasks import fill_cities
+from viewer.tasks.process import fill_cities
 
 def places(request):
 	data = {}

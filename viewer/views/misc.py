@@ -1,5 +1,5 @@
 from django.http import HttpResponse, Http404, HttpResponseRedirect, HttpResponseNotAllowed
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
 from django.db.models import Q, F
@@ -7,9 +7,10 @@ from django.conf import settings
 from haystack.query import SearchQuerySet
 import datetime, pytz, dateutil.parser, json, requests, random
 
-from viewer.models import Location, Person, Event
+from viewer.models import Location, Person, Event, WatchedDirectory
 from viewer.functions.rdf import get_webpage_data, microdata_to_rdf, get_rdf_people, get_rdf_places
 from viewer.functions.location_manager import get_location_manager_import_queue, get_location_manager_process_queue
+from viewer.forms import WatchedDirectoryForm
 
 def upload_file(request):
 	if request.method != 'POST':
@@ -31,12 +32,38 @@ def locman_process(request):
 	return response
 
 def importer(request):
-	context = {'progress': get_location_manager_import_queue()}
+	context = {'progress': get_location_manager_import_queue(), 'form': WatchedDirectoryForm(), 'paths': WatchedDirectory.objects.all()}
 	return render(request, 'viewer/pages/import.html', context)
 
 def webimporter(request):
 	context = {'progress': []}
 	return render(request, 'viewer/pages/import-web.html', context)
+
+def watcheddir(request, uid=None):
+	if request.method == 'POST':
+		data = None
+		if uid is None:
+			form = WatchedDirectoryForm(request.POST)
+		else:
+			data = get_object_or_404(WatchedDirectory, pk=uid)
+			form = WatchedDirectoryForm(request.POST, instance=data)
+		if 'delete' in request.POST:
+			if not(data is None):
+				data.delete()
+				return HttpResponseRedirect('../#files')
+		if form.is_valid():
+			wd = form.save(commit=False)
+			wd.last_check = pytz.utc.localize(datetime.datetime.utcnow())
+			wd.save()
+			if uid is None:
+				return HttpResponseRedirect('./#files')
+			else:
+				return HttpResponseRedirect('../#files')
+		else:
+			raise Http404(form.errors)
+	data = get_object_or_404(WatchedDirectory, pk=uid)
+	context = {'data': data, 'form': WatchedDirectoryForm(instance=data)}
+	return render(request, 'viewer/pages/watched_dir.html', context)
 
 @csrf_exempt
 def search(request):

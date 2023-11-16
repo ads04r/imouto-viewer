@@ -3,7 +3,7 @@ from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from viewer.models import Event, PhotoCollage
-from viewer.tasks import generate_photo_collages
+from viewer.tasks.reports import generate_photo_collages
 from random import shuffle
 import datetime, pytz, os
 

@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand
 from django.core.cache import cache
 from django.conf import settings
 from viewer.models import *
-from viewer.tasks import generate_report, generate_report_pdf
+from viewer.tasks.reports import generate_report, generate_report_pdf
 import os, sys, datetime, shutil, sqlite3, pytz, json
 
 class Command(BaseCommand):

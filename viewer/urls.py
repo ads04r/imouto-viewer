@@ -63,6 +63,8 @@ urlpatterns = [
     path('photo/<uid>_thumb.jpg', views.photo_thumbnail),
     path('photo/<uid>.jpg', views.photo_full),
     path('photo/<uid>.json', views.photo_json),
+    path('watched_directory', views.watcheddir),
+    path('watched_directory/<uid>.html', views.watcheddir),
     path('search.json', views.search),
     path('upload_file', views.upload_file),
     path('health/<pageid>.html', views.health),

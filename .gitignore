@@ -7,10 +7,10 @@ viewer/static/libraries
 static/viewer/script
 static/libraries
 imouto/settings_local.py
+/importers
 index
 media
 static/*
-importers
 docs
 build_docs
 commit_docs

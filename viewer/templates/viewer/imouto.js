@@ -108,6 +108,22 @@ function uploadScreen()
 
         if(status == 'error') { errorPage(xhr); return false; }
 
+	$('#watcheddir-save-form-button').on('click', function() {
+		$('#watcheddir-edit').submit();
+	});
+	$('.delete-watched-directory').on('click', function() {
+		var id = $(this).data('wd-id');
+		var label = $(this).data('wd-label');
+		var url = "watched_directory/" + id + ".html";
+		var form = $('#delete-wd-form');
+		$('#wd-update-id').val(id);
+		$('#wd-update-label').html(label);
+		form.attr('action', url);
+		$('#delete-wd').modal('show');
+		$('.delete-wd-button').on('click', function() {
+			form.submit();
+		});
+	});
 	createTimer(updateUploadStats, 1000);
 	createTimer(updateUploadQueue, 5000);
 	updateUploadStats();
@@ -1956,6 +1972,15 @@ function workoutScreen(id)
     });
 }
 
+function watchedDirectoryScreen(id)
+{
+    $(".content-wrapper").load("./watched_directory/" + id + ".html", function(response, status, xhr)
+    {
+        if(status == 'error') { errorPage(xhr); return false; }
+
+    });
+}
+
 function eventScreen(id)
 {
     $(".content-wrapper").load("./events/" + id + ".html", function(response, status, xhr)
@@ -2110,6 +2135,7 @@ function pageRefresh()
     if(page.startsWith('person_')) { personScreen(page.replace('person_', '')); }
     if(page.startsWith('workout_')) { workoutScreen(page.replace('workout_', '')); }
     if(page.startsWith('report_')) { var parse = page.replace('report_', '').split('_'); reportScreen(parse[0], parse[1]); }
+    if(page.startsWith('watched_directory_')) { watchedDirectoryScreen(page.replace('watched_directory_', '')); }
 
     if(page.startsWith('health-')) { healthReportScreen(page.replace('health-', '')); }
 

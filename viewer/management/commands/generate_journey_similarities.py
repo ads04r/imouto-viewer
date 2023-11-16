@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand
 from django.core.cache import cache
 from django.conf import settings
 from background_task.models import Task
-from viewer.tasks import generate_similar_events
+from viewer.tasks.datacrunching import generate_similar_events
 
 class Command(BaseCommand):
 	"""
