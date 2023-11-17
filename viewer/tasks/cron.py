@@ -44,12 +44,17 @@ def check_watched_directories():
 		if f.watched_directory.importer == 'fit':
 			f.import_time = pytz.utc.localize(datetime.datetime.utcnow())
 			f.save(update_fields=['import_time'])
-			upload_file(f.path, f.watched_directory.source)
-			import_fit(f.path)
+			if upload_file(f.path, f.watched_directory.source):
+				import_fit(f.path)
+			else:
+				f.import_time = None
+				f.save(update_fields=['import_time'])
 		if f.watched_directory.importer == 'gpx':
 			f.import_time = pytz.utc.localize(datetime.datetime.utcnow())
 			f.save(update_fields=['import_time'])
-			upload_file(f.path, f.watched_directory.source)
+			if not(upload_file(f.path, f.watched_directory.source)):
+				f.import_time = None
+				f.save(update_fields=['import_time'])
 		if f.watched_directory.importer == 'jpg':
 			f.import_time = pytz.utc.localize(datetime.datetime.utcnow())
 			f.save(update_fields=['import_time'])

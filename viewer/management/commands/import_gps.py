@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from viewer.importers.location import upload_file
+from viewer.tasks.process import generate_location_events
 import os, sys, datetime, shutil
 
 class Command(BaseCommand):
@@ -42,8 +43,10 @@ class Command(BaseCommand):
 		shutil.copyfile(uploaded_file, temp_file)
 
 		if format == '':
-			upload_file(temp_file, file_source)
+			imported_ok = upload_file(temp_file, file_source)
 		else:
-			upload_file(temp_file, file_source, format)
+			imported_ok = upload_file(temp_file, file_source, format)
 		os.remove(temp_file)
+		if imported_ok:
+			generate_location_events()
 		sys.stdout.write(self.style.SUCCESS(uploaded_file + "\n"))
