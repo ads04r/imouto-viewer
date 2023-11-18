@@ -8,7 +8,6 @@ from viewer.models import Photo
 from viewer.functions.people import find_person_by_picasaid as find_person
 from viewer.functions.geo import convert_to_degrees
 from viewer.functions.location_manager import get_logged_position
-from viewer.tasks.process import precache_photo_thumbnail
 
 def import_photo_file(filepath, tzinfo=pytz.UTC):
 	"""
@@ -171,7 +170,6 @@ def import_photo_directory(path, tzinfo=pytz.UTC):
 		p = import_photo_file(photo, tzinfo)
 		if p is None:
 			continue
-		precache_photo_thumbnail(p.id)
 		ret.append(photo)
 
 	faces = import_picasa_faces(picasafile)
