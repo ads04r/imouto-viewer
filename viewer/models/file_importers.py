@@ -40,6 +40,12 @@ class WatchedDirectory(models.Model):
 		next_check = self.last_check + datetime.timedelta(seconds=self.check_interval)
 		return (next_check < pytz.utc.localize(datetime.datetime.utcnow()))
 	@property
+	def last_upload(self):
+		files = self.known_files.exclude(import_time=None)
+		if files.count == 0:
+			return None
+		return files.order_by('-import_time')[0]
+	@property
 	def unimported_files(self):
 		if not(os.path.exists(self.path)):
 			return []

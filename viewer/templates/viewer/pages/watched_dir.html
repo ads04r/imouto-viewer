@@ -23,6 +23,7 @@
 			<h3 class="profile-username text-center"><i class="fa fa-folder-o"></i>&nbsp;{{ data.label }}</h3>
 			<ul class="list-group list-group-unbordered">
 				<li class="list-group-item"><b>Last check</b> <span class="pull-right">{{ data.last_check|date:"l g:ia" }}</span></li>
+				{% if data.last_upload %}<li class="list-group-item"><b>Last import</b> <span class="pull-right"><a href="#day_{{ data.last_upload.import_time|date:"Ymd" }}">{{ data.last_upload.import_time|date:"l g:ia" }}</a></span></li>{% endif %}
 				<li class="list-group-item"><b>Imported</b> <span class="pull-right">{{ data.known_files.count }} files</span></li>
 			</ul>
 
