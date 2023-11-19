@@ -3,6 +3,7 @@ from django.core.cache import cache
 from django.conf import settings
 from viewer.importers.photos import import_photo_directory, import_picasa_faces
 from viewer.functions.photos import bubble_photo_locations, locate_photos_by_exif
+from viewer.tasks import precache_photo_thumbnail
 import os, sys, pytz
 
 class Command(BaseCommand):
@@ -55,6 +56,8 @@ class Command(BaseCommand):
 		else:
 
 			ret = import_photo_directory(full_path, tz)
+			for p in ret:
+				precache_photo_thumbnail(p.id)
 			sys.stderr.write(self.style.SUCCESS(str(len(ret)) + " new photo(s) added.\n"))
 			ret = bubble_photo_locations() + locate_photos_by_exif()
 			if ret > 0:
