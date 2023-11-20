@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from viewer.importers import import_github_history, import_gitea_history
+from viewer.importers.git import import_github_history, import_gitea_history
 import sys, datetime, pytz
 
 class Command(BaseCommand):

@@ -30,7 +30,7 @@ def import_github_history(since=None):
 		if commit['time'] <= last_commit:
 			continue
 		try:
-			item = GitCommit(hash=commit['hash'], comment=commit['comment'], repo_url=commit['repo_url'], commit_date=commit['time'], additions=commit['stats']['additions'], deletions=commit['stats']['deletions'])
+			item = GitCommit(hash=commit['hash'], comment=commit['comment'].strip(), repo_url=commit['repo_url'], commit_date=commit['time'], additions=commit['stats']['additions'], deletions=commit['stats']['deletions'])
 			item.save()
 		except:
 			item = None
@@ -75,7 +75,7 @@ def import_gitea_history(since=None):
 		if commit['time'] <= last_commit:
 			continue
 		try:
-			item = GitCommit(hash=commit['hash'], comment=commit['comment'], repo_url=commit['repo_url'], commit_date=commit['time'], additions=None, deletions=None)
+			item = GitCommit(hash=commit['hash'], comment=commit['comment'].strip(), repo_url=commit['repo_url'], commit_date=commit['time'], additions=None, deletions=None)
 			item.save()
 		except:
 			item = None
