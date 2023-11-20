@@ -611,6 +611,7 @@ function daySleepReport(date)
 {
 	$("#daysleepsummary").html('<i class="fa fa-refresh fa-spin"></i>');
 
+	var date = $(this).data('day');
 	var url = './days/' + date + '/sleep.json';
         $.ajax({
             url: url,
@@ -749,17 +750,6 @@ function healthReportScreen(page)
         }
         if(page == 'sleep')
         {
-            var dt = new Date();
-            dt.setDate(dt.getDate() - 1);
-            var dsy = String(dt.getFullYear());
-            var dsm = String(dt.getMonth() + 1);
-            var dsd = String(dt.getDate());
-            var ds = dsy + dsm.padStart(2, '0') + dsd.padStart(2, '0');
-            daySleepReport(ds);
-            $(".sleep-area-chart").each(function() {
-                var data = $(this).data('data');
-                makeSleepAreaChart($(this), data);
-            });
         }
         if(page == 'mentalhealth')
         {
