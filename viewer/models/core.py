@@ -1908,6 +1908,17 @@ class Day(models.Model):
 		"""
 		return create_or_get_day(self.date - datetime.timedelta(days=1))
 	@property
+	def length(self):
+		"""
+		Returns the length of the day (ie bedtime minus wake time).
+		"""
+		if ((self.bed_time is None) or (self.wake_time is None)):
+			dts, dte = self.__calculate_wake_time()
+		else:
+			dts = self.wake_time
+			dte = self.bed_time
+		return (dte - dts)
+	@property
 	def timezone(self):
 		"""
 		Returns the relevant time zone for this particular day (ie it would normally be the same as settings.TIME_ZONE, but the user may be travelling abroad.)

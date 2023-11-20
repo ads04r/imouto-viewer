@@ -7,7 +7,7 @@ from django.utils.text import slugify
 from django.conf import settings
 import datetime, pytz, dateutil.parser, json, requests, random
 
-from viewer.models import Event, DataReading, EventWorkoutCategory
+from viewer.models import Event, DataReading, EventWorkoutCategory, Day
 from viewer.forms import WorkoutCategoryForm
 
 from viewer.functions.health import get_sleep_history
@@ -42,16 +42,9 @@ def health(request, pageid):
 	if pageid == 'heart':
 		return render(request, 'viewer/pages/health_heart.html', context)
 	if pageid == 'sleep':
-		dt = pytz.utc.localize(datetime.datetime.now().replace(hour=0, minute=0, second=0))
-		expression = F('end_time') - F('start_time')
-		wrapped_expression = ExpressionWrapper(expression, DurationField())
-		context['data'] = {'stats': [], 'sleeps': []}
-		try:
-			for days in [7, 28, 365]:
-				context['data']['stats'].append({'label': 'week', 'graph': get_sleep_history(days), 'best_sleep': DataReading.objects.filter(type='sleep', value='2', start_time__gte=(dt - datetime.timedelta(days=days))).annotate(length=wrapped_expression).order_by('-length')[0].start_time, 'earliest_waketime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(start_time)'}).order_by('time')[0].start_time, 'latest_waketime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(start_time)'}).order_by('-time')[0].start_time, 'earliest_bedtime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(end_time)'}).order_by('time')[0].end_time, 'latest_bedtime': DataReading.objects.filter(start_time__gte=(dt - datetime.timedelta(days=days)), type='awake').extra(select={'time': 'TIME(end_time)'}).order_by('-time')[0].end_time})
-			context['data']['midpoint'] = context['data']['stats'][2]['latest_waketime']
-		except:
-			pass
+		dt = pytz.utc.localize(datetime.datetime.utcnow())
+		dt_start = (dt - datetime.timedelta(days=365)).date()
+		context['data'] = {'stats': [], 'days': Day.objects.filter(date__gte=dt_start).order_by('-date')}
 		return render(request, 'viewer/pages/health_sleep.html', context)
 	if pageid == 'distance':
 		return render(request, 'viewer/pages/health_distance.html', context)

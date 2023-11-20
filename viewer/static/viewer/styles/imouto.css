@@ -136,3 +136,7 @@
 tr.founddata td {
 	cursor: pointer;
 }
+
+div.barsleeppattern {
+	min-width: 150px;
+}
