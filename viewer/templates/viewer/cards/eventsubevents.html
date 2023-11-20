@@ -1,0 +1,18 @@
+{% load static %}
+
+                <div class="box box-primary">
+                    <div class="box-body">
+                        <div class="table-responsive">
+                            <table class="table no-margin">
+                                <tbody>
+{% for item in data.subevents %}
+                                    <tr>
+                                        <td><a href="#event_{{ item.id }}"><small class="muted">{{ item.start_time }}</small><br>{{ item.caption }}</a></td>
+                                        <td><span class="badge">{{ item.type }}</span></td>
+                                    </tr>
+{% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>

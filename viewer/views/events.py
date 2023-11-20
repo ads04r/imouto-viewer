@@ -115,7 +115,7 @@ def event(request, eid):
 		context['music'] = music
 	template = 'viewer/pages/event.html'
 	if data.type=='life_event':
-		template = 'viewer/pages/lifeevent.html'
+		template = 'viewer/pages/life_event.html'
 	return render(request, template, context)
 
 def event_addjourney(request):

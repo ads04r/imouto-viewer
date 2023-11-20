@@ -1,0 +1,26 @@
+{% load static %}
+
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Sleep</h3>
+                    </div>
+                    <div class="box-body">
+
+                        <div>
+                            <span>{{ data.health.sleep.start_friendly }}</span>
+                            <span class="pull-right">{{ data.health.sleep.end_friendly }}</span>
+                        </div>
+                        <div class="progress-group">
+                            <div class="progress sleep-bar">
+                        
+        {% for bar in data.health.sleep.data %}
+
+                                <div class="progress-bar" role="progressbar" aria-valuenow="{{ bar.2 }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ bar.2 }}%; background-color: {% if bar.0 == 0 %}rgba(0, 0, 0, 0){% endif %}{% if bar.0 == 1 %}#ABC1D8{% endif %}{% if bar.0 == 2 %}#3C8DBC{% endif %};"></div>
+
+        {% endfor %}
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>

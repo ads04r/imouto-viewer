@@ -1,0 +1,25 @@
+{% load static %}
+
+
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">
+                            People</h3>
+                    </div>
+                    <div class="box-body">
+                        <ul class="users-list clearfix">
+
+{% for item in data.people.all %}
+                        
+                            <li>
+                                {% if item.image %}<img class="profile-user-img img-responsive" src="people/{{ item.uid }}_thumb.jpg"/>{% else %}<img class="profile-user-img img-responsive img-circle" src="{% static "viewer/graphics/unknown_person.jpg" %}">{% endif %}
+                                <a class="users-list-name personlink" href="#person_{{ item.uid }}">
+                                    {{ item.full_name }}</a>
+                            </li>
+
+{% endfor %}
+
+                        </ul>
+                    </div>
+                </div>
+

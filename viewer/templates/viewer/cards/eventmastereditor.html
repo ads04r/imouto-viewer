@@ -1,0 +1,100 @@
+{% load static %}
+
+<div class="modal fade nav-tabs-custom" id="admin_event_edit" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+                <form id="event-edit" action="events/{{ data.pk }}.html" method="POST" enctype="multipart/form-data">{% csrf_token %}
+
+                    <div role="tabpanel">
+                        <ul class="nav nav-tabs">
+                            <li class="active"><a href="#label" data-toggle="tab">Event</a></li>
+                            <li><a href="#event-people" data-toggle="tab">People</a></li>
+                            <li><a href="#link" data-toggle="tab">Narrative</a></li>
+                        </ul>
+                    </div>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="label">
+
+                              <table class="table table-hover">
+{% for field in form %}
+{% if forloop.counter != 3 %}
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                </tr>
+{% endif %}
+{% endfor %}
+                                <tr class="form-row">
+                                  <td></td>
+                                  <td><label for="id_workout_type">Workout type:</label></td><td><select id="id_workout_type" class="form-control" name="workout_type">
+                                      <option value="">---------</option>
+{% for category in categories %}
+{% if data.workout_categories.first.id == category.id %}
+                                      <option selected="selected" value="{{ category.id }}">{{ category.label }}</option>
+{% else %}
+                                      <option value="{{ category.id }}">{{ category.label }}</option>
+{% endif %}
+{% endfor %}
+                                  </select></td>
+                                </tr>
+                              </table>
+                        
+                        </div>
+                        <div class="tab-pane" id="event-people">
+
+		<div class="input-group input-group-sm">
+
+			<select id="person_add" class="form-control">
+{% for person in people %}
+				<option value="{{ person.uid }}">{{ person.full_name }}</option>
+{% endfor %}
+			</select>
+			<span class="input-group-btn"><button class="btn btn-success btn-flat" type="button" id="person_add_submit">Add</button></span>
+
+		</div>
+
+		<div id="event_people_list" class="list-group list-group-unbordered">
+{% for item in data.people.all %}
+                        
+                        <div class="person_delete list-group-item" data-id="{{ item.uid }}"><img style="margin-right: 1em;" width="32" height="32" src="people/{{ item.uid }}_thumb.jpg"/>{{ item.full_name }} <small class="pull-right"><a href="#" class="delete_person btn btn-danger btn-sm" data-id="{{ item.uid }}">Delete</a></small></div>
+
+{% endfor %}
+		</div>
+
+                        </div>
+                        <div class="tab-pane" id="link">
+
+                              <table class="table table-hover">
+{% for field in form %}
+{% if forloop.counter == 3 %}
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                </tr>
+
+{% endif %}
+{% endfor %}
+
+                                <tr class="form-row">
+                                  <td></td>
+                                  <td><label for="id_workout_type">Tags:</label></td>
+                                  <td><input type="text" id="id_event_tags" class="form-control" name="event_tags" value="{{ data.tags_field|safe }}"/></td>
+                                </tr>
+
+                              </table>
+
+                        </div>
+                    </div>
+
+                </form>
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="event-save-form-button">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

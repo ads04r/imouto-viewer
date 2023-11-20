@@ -1,0 +1,66 @@
+{% load static %}
+
+                <div class="info-box bg-blue">
+                    <span class="info-box-icon"><i class="fa fa-calendar-o"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">{% if data.type == 'life_event' %}Start Date{% else %}Event Date{% endif %}</span>
+                        <span class="info-box-number"><a href="#day_{{ data.start_time|date:"Ymd" }}">{{ data.start_time|date:"jS F Y" }}</a></span>
+                        <span class="info-box-text">{{ data.start_time|date:"l, g:i a" }}</span>
+                    </div>
+                </div>
+
+{% if data.location != None %}
+
+                <div class="info-box bg-blue">
+                    <span class="info-box-icon"><i class="fa fa-map-marker"></i></span>
+                    <div class="info-box-content" style="overflow: hidden !important;">
+                        <span class="info-box-text">Location</span>
+                        <span class="info-box-number" style="max-height: 2.5em;"><a href="#place_{{ data.location.uid }}">{{ data.location }}</a></span>
+                    </div>
+                </div>
+
+{% endif %}
+
+                <div class="info-box bg-blue">
+                    <span class="info-box-icon"><i class="fa fa-clock-o"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Total Duration</span>
+                        <span class="info-box-number">{{ data.length_string }}</span>
+                    </div>
+                </div>
+
+{% if data.distance > 0 %}
+
+                <div class="info-box bg-blue">
+                    <span class="info-box-icon"><i class="fa fa-map-signs"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Total Distance</span>
+                        <span class="info-box-number">{{ data.distance }}&nbsp;miles</span>
+                    </div>
+                </div>
+
+{% endif %}
+
+{% if data.music %}
+
+                <div class="info-box bg-blue">
+                    <span class="info-box-icon"><i class="fa fa-music"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Total Tracks</span>
+                        <span class="info-box-number">{{ data.music|length }}</span>
+                    </div>
+                </div>
+
+{% endif %}
+
+{% if data.health.steps != None %}
+
+                <div class="info-box bg-blue">
+                    <span class="info-box-icon"><i class="fa fa-road"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Total Steps</span>
+                        <span class="info-box-number">{{ data.health.steps }}</span>
+                    </div>
+                </div>
+
+{% endif %}

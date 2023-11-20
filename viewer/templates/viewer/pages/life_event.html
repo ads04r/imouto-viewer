@@ -3,7 +3,7 @@
 <section class="content-header">
     <h1>
         {{ data.caption }}
-        <small>Event</small>
+        <small>Life Event</small>
     </h1>
     <ol class="breadcrumb">
         <li><a href="#events">Events</a></li>
@@ -31,28 +31,6 @@
   {% include 'viewer/cards/eventcommits.html' %}
 {% endif %}
 
-{% if data.geo != '' %}
-{% if data.speed != '' %}
-  {% include 'viewer/cards/eventspeedgraph.html' %}
-{% endif %}
-{% if data.elevation != '' %}
-  {% include 'viewer/cards/eventelevationgraph.html' %}
-{% endif %}
-{% endif %}
-
-{% if data.workout_categories.count > 0 %}
-{% if data.health.heart != None %}
-  {% include 'viewer/cards/eventheartgraph.html' %}
-{% endif %}
-{% if data.health.cadence != None %}
-  {% include 'viewer/cards/eventcadencegraph.html' %}
-{% endif %}
-{% endif %}
-            
-{% if data.health.sleep != None %}
-  {% include 'viewer/cards/eventsleepgraph.html' %}
-{% endif %}
-
 {% if data.sms %}
   {% include 'viewer/cards/eventsms.html' %}
 {% endif %}
@@ -67,10 +45,6 @@
 
             </div>
             <div class="col-xs-12 col-sm-6 col-md-4">
-
-{% if data.location != None and data.geo == '' %}
-  {% include 'viewer/cards/eventmap.html' %}
-{% endif %}
 
 {% include 'viewer/cards/eventstats.html' %}
 
@@ -89,18 +63,9 @@
                     </div>
                 </div>
 
-{% if data.similar %}
-  {% include 'viewer/cards/eventsimilar.html' %}
-{% endif %}
-
 {% if data.weather %}
 	{% include 'viewer/cards/weather.html' %}
 {% endif %}
-
-{% if data.workout_categories.count > 0 %}
-	{% include 'viewer/cards/eventhealth.html' %}
-{% endif %}
-
 
             </div>
         </div>

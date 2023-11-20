@@ -1,0 +1,26 @@
+{% load static %}
+
+
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Git Commits</h3>
+                    </div>
+                    <div class="box-body no-padding">
+                        <table class="table table-inline">
+{% for commit in data.commits %}
+				<tr>
+					<td>{{ commit.commit_date|date:"H:i" }}</td>
+					<td>
+						{{ commit.comment }}
+						<br><small><a href="{{ commit.repo_url }}">{{ commit.repo_url }}</a></small>
+					</td>
+					<td>
+{% if commit.additions %}
+						<span class="pull-right"><span class="label label-success"><i class="fa fa-plus"></i> {{ commit.additions }}</span>&nbsp;<span class="label label-danger"><i class="fa fa-minus"></i> {{ commit.deletions }}</span></span>
+{% endif %}
+					</td>
+				</tr>
+{% endfor %}
+			</table>
+                    </div>
+                </div>
