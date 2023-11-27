@@ -98,7 +98,18 @@
 					<table class="table table-hover" action="" method="POST">
 						<tr class="form-row">
 							<td><label for="#weight_val">Weight:</label></td>
-							<td><input class="form-control" type="text" id="weight_val" name="weight_val"/>
+							<td><input class="form-control" type="text" id="weight_val" name="weight_val"/></td>
+						</tr>
+						<tr class="form-row">
+							<td><label for="#weight_unit">Unit of measurement:</label></td>
+							<td>
+								<select class="form-control" id="weight_unit" name="weight_unit">
+									<option value="6350">stone</option>
+									<option value="1000" selected="selected">kilograms</option>
+									<option value="453.6">pounds</option>
+									<option value="1">grams</option>
+								</select>
+							</td>
 						</tr>
 					</table>
 				</form>

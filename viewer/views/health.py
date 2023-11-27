@@ -89,7 +89,10 @@ def health(request, pageid):
 		if request.method == 'POST':
 			ret = json.loads(request.body)
 			dt = datetime.datetime.now(pytz.utc)
-			datapoint = DataReading(type='weight', start_time=dt, end_time=dt, value=(float(ret['weight_val']) * 1000))
+			value = float(ret['weight_val'])
+			value_unit = float(ret['weight_unit'])
+			value_grams = value * value_unit
+			datapoint = DataReading(type='weight', start_time=dt, end_time=dt, value=value_grams)
 			datapoint.save()
 			response = HttpResponse(json.dumps(ret), content_type='application/json')
 			return response

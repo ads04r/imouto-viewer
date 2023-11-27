@@ -791,6 +791,11 @@ function healthReportScreen(page)
                 v = $(this).val();
                 if(!(k === undefined)) { data[k] = v; }
             });
+            $("form select").each(function() {
+                k = $(this).attr('name');
+                v = $(this).val();
+                if(!(k === undefined)) { data[k] = v; }
+            });
             $.ajax({
                 url: url,
                 dataType: 'json',
