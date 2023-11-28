@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.files import File
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import Count, Avg, Max, Sum, Transform, Field, IntegerField, F, ExpressionWrapper
 from django.db.models.signals import pre_save
 from django.db.models.fields import DurationField
@@ -48,6 +49,16 @@ def create_or_get_day(query_date):
 		ret = Day.objects.get(date=dt)
 	except:
 		ret = Day(date=dt)
+		ret.save()
+
+	return ret
+
+def create_or_get_month(month, year):
+
+	try:
+		ret = Month.objects.get(year=year, month=month)
+	except:
+		ret = Month(year=year, month=month)
 		ret.save()
 
 	return ret
@@ -1827,6 +1838,41 @@ class ReportEvents(models.Model):
 		verbose_name = 'report event'
 		verbose_name_plural = 'report events'
 
+class Month(models.Model):
+	month = models.IntegerField(validators=[MaxValueValidator(12), MinValueValidator(1)])
+	year = models.IntegerField()
+	@property
+	def days(self):
+		"""
+		Every day in this month.
+		"""
+		dts = datetime.date(self.year, self.month, 1)
+		if self.month < 12:
+			dte = datetime.date(self.year, self.month + 1, 1)
+		else:
+			dte = datetime.date(self.year + 1, 1, 1)
+		dt = dts
+		while dt < dte:
+			day = create_or_get_day(dts)
+			dt = dt + datetime.timedelta(days=1)
+		return Day.objects.filter(date__gte=dts, date__lt=dte).order_by('date')
+	def events(self):
+		"""
+		Every described event during this month.
+		"""
+		dts = datetime.datetime(self.year, self.month, 1, 0, 0, 0)
+		if month < 12:
+			dte = datetime.datetime(self.year, self.month + 1, 1, 0, 0, 0) - datetime.timedelta(seconds=1)
+		else:
+			dte = datetime.datetime(self.year + 1, 1, 1, 0, 0, 0) - datetime.timedelta(seconds=1)
+		return Event.objects.filter(end_time__gte=dts, end_time__lte=dte).exclude(type='life_event').order_by('start_time')
+	def __str__(self):
+		return(datetime.date(self.year, self.month, 1).strftime('%B %Y'))
+	class Meta:
+		constraints = [
+			models.UniqueConstraint(fields=['month', 'year'], name='month and year')
+		]
+
 class Day(models.Model):
 	"""This class represents a day. This is necessary because a day may not begin
 	and end at midnight. I personally often go to bed after midnight, and if you
@@ -1889,6 +1935,12 @@ class Day(models.Model):
 		Determines if this day represents today in real time.
 		"""
 		return (datetime.datetime.now().date() == self.date)
+	@property
+	def month(self):
+		"""
+		Returns the Month object that contains this Day.
+		"""
+		return create_or_get_month(self.date.month, self.date.year)
 	@property
 	def slug(self):
 		"""
