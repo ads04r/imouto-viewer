@@ -55,6 +55,10 @@ def create_or_get_day(query_date):
 
 def create_or_get_month(month, year):
 
+	if month < 1:
+		return None
+	if month > 12:
+		return None
 	try:
 		ret = Month.objects.get(year=year, month=month)
 	except:

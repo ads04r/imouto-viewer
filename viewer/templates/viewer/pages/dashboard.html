@@ -86,6 +86,18 @@
                     </div>
                 </div>
 {% endif %}
+                <div class="box box-primary">
+                    <div class="box-body no-padding">
+			<table class="table table-condensed">
+{% for day in data.days %}
+				<tr>
+					<td><a href="#{{ day.slug }}">{{ day }}</a></td>
+					<td><span class="pull-right">{% if day.average_mood == 5 %}<i class="fa fa-smile-o"></i>{% endif %}{% if day.average_mood == 4 %}<i class="fa fa-smile-o"></i>{% endif %}{% if day.average_mood == 3 %}<i class="fa fa-meh-o"></i>{% endif %}{% if day.average_mood == 2 %}<i class="fa fa-meh-o"></i>{% endif %}{% if day.average_mood == 1 %}<i class="fa fa-frown-o"></i>{% endif %}</span></td>
+				</tr>
+{% endfor %}
+			</table>
+                    </div>
+                </div>
 {% if data.workouts %}
                 <div class="box box-primary">
                     <div class="box-header with-border">

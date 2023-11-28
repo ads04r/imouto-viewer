@@ -285,6 +285,7 @@ def generate_dashboard():
 		stats['walk_distance'] = float(int(walk_dist * 100)) / 100
 
 	heartdata = []
+	days = []
 
 	if DataReading.objects.filter(type='heart-rate', start_time__gte=(last_record - datetime.timedelta(days=7))).count() > 0:
 		duration = ExpressionWrapper(F('end_time') - F('start_time'), output_field=fields.BigIntegerField())
@@ -298,11 +299,14 @@ def generate_dashboard():
 			except:
 				zone = [0, 0, 0]
 
+			days.append(day)
 			item = {}
 			item['label'] = dtbase.strftime("%a")
 			item['value'] = [zone[1], zone[2]]
 			item['link'] = "#day_" + dtbase.strftime("%Y%m%d")
 			heartdata.append(item)
+
+	days.reverse()
 
 	sleepdata = []
 	for i in range(0, 7):
@@ -371,7 +375,7 @@ def generate_dashboard():
 		if v > 0:
 			workouts.append({'id': category.pk, 'label': str(category), 'distance': int(v)})
 
-	ret = {'stats': stats, 'birthdays': birthdays, 'tasks': tasks, 'workouts': workouts, 'steps': json.dumps(stepdata), 'sleep': json.dumps(sleepdata), 'contact': contactdata, 'people': peopledata, 'places': locationdata, 'walks': walkdata}
+	ret = {'stats': stats, 'birthdays': birthdays, 'tasks': tasks, 'workouts': workouts, 'steps': json.dumps(stepdata), 'sleep': json.dumps(sleepdata), 'contact': contactdata, 'people': peopledata, 'places': locationdata, 'walks': walkdata, 'days': days}
 	if len(tags) > 0:
 		ret['tags'] = tags
 	if len(heartdata) > 0:
