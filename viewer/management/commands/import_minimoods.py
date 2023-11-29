@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.core.cache import cache
 from django.conf import settings
-from viewer.importers import import_data
+from viewer.importers.core import import_data
 from dateutil import parser
 import os, sys, csv, datetime
 
@@ -41,10 +41,10 @@ class Command(BaseCommand):
 				data.append({'start_time': dts, 'end_time': dte, 'type': 'mood', 'value': v})
 
 		if len(data) == 0:
-			sys.stderr.write(self.style.ERROR("Cannot import - the file contains no readable data."))
+			sys.stderr.write(self.style.ERROR("Cannot import - the file contains no readable data.\n"))
 			sys.exit(1)
 		c = import_data(data)
-		if c == 0:
-			sys.stderr.write(self.style.ERROR("Cannot import - either there is no data, or all the data in the file already exists."))
+		if c[0] == 0:
+			sys.stderr.write(self.style.ERROR("Cannot import - either there is no data, or all the data in the file already exists.\n"))
 			sys.exit(1)
-		print(c)
+		sys.stderr.write(self.style.SUCCESS(str(c) + " mood readings imported.\n"))
