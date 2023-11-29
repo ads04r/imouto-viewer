@@ -42,9 +42,10 @@ class WatchedDirectory(models.Model):
 	@property
 	def last_upload(self):
 		files = self.known_files.exclude(import_time=None)
-		if files.count == 0:
+		ret = files.order_by('-import_time')
+		if ret.count == 0:
 			return None
-		return files.order_by('-import_time')[0]
+		return ret.first()
 	@property
 	def unimported_files(self):
 		if not(os.path.exists(self.path)):

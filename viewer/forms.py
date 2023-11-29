@@ -85,7 +85,7 @@ class WatchedDirectoryForm(ModelForm):
 		fields = ['path', 'importer', 'recursive', 'check_interval', 'source', 'file_regex']
 		widgets = {
 			'path': TextInput(attrs={'class': 'form-control'}),
-			'importer': Select(choices=(('fit', 'ANT-FIT files'), ('gpx', 'GPX files'), ('jpg', 'Photos (JPG)')), attrs={'class': 'form-control'}),
+			'importer': Select(choices=(('fit', 'ANT-FIT files'), ('gpx', 'GPX files'), ('mood', 'Mini-Moods exported files'), ('jpg', 'Photos (JPG)')), attrs={'class': 'form-control'}),
 			'check_interval': TextInput(attrs={'class': 'form-control'}),
 			'source': TextInput(attrs={'class': 'form-control'}),
 			'file_regex': TextInput(attrs={'class': 'form-control'}),

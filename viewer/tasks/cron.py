@@ -7,6 +7,7 @@ from viewer.functions.photos import locate_photos_by_exif
 from viewer.importers.upload import import_fit
 from viewer.importers.location import upload_file
 from viewer.importers.photos import import_photo_file
+from viewer.importers.minimoods import import_mood_file
 
 @background(schedule=0, queue='process')
 def check_watched_directories():
@@ -55,6 +56,10 @@ def check_watched_directories():
 			if not(upload_file(f.path, f.watched_directory.source)):
 				f.import_time = None
 				f.save(update_fields=['import_time'])
+		if f.watched_directory.importer == 'mood':
+			f.import_time = pytz.utc.localize(datetime.datetime.utcnow())
+			f.save(update_fields=['import_time'])
+			ret = import_mood_file(f.path)
 		if f.watched_directory.importer == 'jpg':
 			f.import_time = pytz.utc.localize(datetime.datetime.utcnow())
 			f.save(update_fields=['import_time'])
