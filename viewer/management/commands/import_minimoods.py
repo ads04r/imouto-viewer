@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.core.cache import cache
 from django.conf import settings
-from viewer.importers.core import import_data
+from viewer.importers.minimoods import import_mood_file
 from dateutil import parser
 import os, sys, csv, datetime
 
@@ -25,25 +25,7 @@ class Command(BaseCommand):
 			sys.stderr.write(self.style.ERROR("File not found: '" + uploaded_file + "'\n"))
 			sys.exit(1)
 
-		data = []
-		with open(uploaded_file, newline='\n') as csvfile:
-			r = csv.reader(csvfile, delimiter=',', quotechar='"')
-			for row in r:
-				if len(row) < 2:
-					continue
-				dts = parser.parse(row[0])
-				dte = dts + datetime.timedelta(seconds=86400)
-				v = 6 - int(row[1])
-				if v > 5:
-					continue
-				if v < 1:
-					continue
-				data.append({'start_time': dts, 'end_time': dte, 'type': 'mood', 'value': v})
-
-		if len(data) == 0:
-			sys.stderr.write(self.style.ERROR("Cannot import - the file contains no readable data.\n"))
-			sys.exit(1)
-		c = import_data(data)
+		c = import_mood_file(uploaded_file)
 		if c[0] == 0:
 			sys.stderr.write(self.style.ERROR("Cannot import - either there is no data, or all the data in the file already exists.\n"))
 			sys.exit(1)
