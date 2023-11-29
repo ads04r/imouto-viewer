@@ -2082,7 +2082,7 @@ class Day(models.Model):
 		The average mood of the user during thie particular Day. Returns None if no mood data found.
 		"""
 		dts, dte = self.__calculate_wake_time()
-		obj = DataReading.objects.filter(type='mood').filter(start_time__gte=dts, end_time__lt=dte).aggregate(mood=Avg('value'))
+		obj = DataReading.objects.filter(type='mood').filter(start_time__gte=dts, start_time__lte=dte).aggregate(mood=Avg('value'))
 		try:
 			ret = int(float(obj['mood']) + 0.5)
 		except:
