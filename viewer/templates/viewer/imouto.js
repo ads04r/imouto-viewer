@@ -841,6 +841,10 @@ function eventsScreen()
            editable: false,
            droppable: false, // this allows things to be dropped onto the calendar !!!
            contentHeight: "auto",
+           dayClick: function(date, jsEvent, view) {
+               url = "#day_" + date.format("YYYYMMDD");
+               window.location = url;
+           }
 
         });
         $("#event-save-form-button").on('click', function()
@@ -849,6 +853,14 @@ function eventsScreen()
             return false;
         })
 
+    });
+}
+
+function monthScreen(id)
+{
+    $(".content-wrapper").load("./months/" + id + ".html", function(response, status, xhr)
+    {
+        if(status == 'error') { errorPage(xhr); return false; }
     });
 }
 
@@ -2123,6 +2135,7 @@ function pageRefresh()
     if(page == 'tags') { tagsScreen(); return true; }
 
     if(page.startsWith('day_')) { dayScreen(page.replace('day_', '')); }
+    if(page.startsWith('month_')) { monthScreen(page.replace('month_', '')); }
     if(page.startsWith('tag_')) { tagScreen(page.replace('tag_', '')); }
     if(page.startsWith('tagrules_')) { tagRulesScreen(page.replace('tagrules_', '')); }
     if(page.startsWith('event_')) { eventScreen(page.replace('event_', '')); }

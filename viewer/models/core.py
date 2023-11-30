@@ -1846,6 +1846,12 @@ class Month(models.Model):
 	month = models.IntegerField(validators=[MaxValueValidator(12), MinValueValidator(1)])
 	year = models.IntegerField()
 	@property
+	def slug(self):
+		"""
+		The unique 'slug id' for this Month object, as would be displayed after the '#' in the URL bar.
+		"""
+		return("month_" + datetime.date(self.year, self.month, 1).strftime('%Y%m'))
+	@property
 	def days(self):
 		"""
 		Every day in this month.
@@ -1857,19 +1863,47 @@ class Month(models.Model):
 			dte = datetime.date(self.year + 1, 1, 1)
 		dt = dts
 		while dt < dte:
-			day = create_or_get_day(dts)
+			create_or_get_day(dt)
 			dt = dt + datetime.timedelta(days=1)
 		return Day.objects.filter(date__gte=dts, date__lt=dte).order_by('date')
+	@property
+	def people(self):
+		"""
+		Every person encountered during this month.
+		"""
+		dtsd = datetime.date(self.year, self.month, 1)
+		if self.month < 12:
+			dted = datetime.date(self.year, self.month + 1, 1)
+		else:
+			dted = datetime.date(self.year + 1, 1, 1)
+		try:
+			dts = create_or_get_day(dtsd).wake_time
+			dte = create_or_get_day(dted).bed_time
+		except:
+			return Person.objects.none()
+		return Person.objects.filter(event__end_time__gt=dts, event__start_time__lt=dte).annotate(event_count=Count('event')).order_by('-event_count')
+	@property
 	def events(self):
 		"""
 		Every described event during this month.
 		"""
 		dts = datetime.datetime(self.year, self.month, 1, 0, 0, 0)
-		if month < 12:
+		if self.month < 12:
 			dte = datetime.datetime(self.year, self.month + 1, 1, 0, 0, 0) - datetime.timedelta(seconds=1)
 		else:
 			dte = datetime.datetime(self.year + 1, 1, 1, 0, 0, 0) - datetime.timedelta(seconds=1)
-		return Event.objects.filter(end_time__gte=dts, end_time__lte=dte).exclude(type='life_event').order_by('start_time')
+		return Event.objects.filter(end_time__gte=dts, start_time__lte=dte).exclude(type='life_event').order_by('start_time')
+	@property
+	def life_events(self):
+		"""
+		Every described life event during this month.
+		"""
+		dts = datetime.datetime(self.year, self.month, 1, 0, 0, 0)
+		if self.month < 12:
+			dte = datetime.datetime(self.year, self.month + 1, 1, 0, 0, 0) - datetime.timedelta(seconds=1)
+		else:
+			dte = datetime.datetime(self.year + 1, 1, 1, 0, 0, 0) - datetime.timedelta(seconds=1)
+		return Event.objects.filter(start_time__gte=dts, start_time__lte=dte, type="life_event").order_by('start_time')
 	def __str__(self):
 		return(datetime.date(self.year, self.month, 1).strftime('%B %Y'))
 	class Meta:

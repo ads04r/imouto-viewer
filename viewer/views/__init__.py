@@ -9,3 +9,4 @@ from viewer.views.people import *
 from viewer.views.photos import *
 from viewer.views.reports import *
 from viewer.views.tags import *
+from viewer.views.months import *

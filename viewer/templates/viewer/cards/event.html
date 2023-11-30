@@ -12,11 +12,14 @@
             {% endif %}
 
                 <div{% if event.geo == '' %}{% if event.location %}{% if event.location.image %} style="margin-right: 120px;"{% endif %}{% endif %}{% endif %}>
-                
+
+{% if event.type != 'life_event' %}                
                     <div class="timeline-gallery">
                         {% for photo in event.photos %}{% if forloop.counter <= 5 %}<a href="photo/{{ photo.pk }}.jpg" target="_blank" class="event_image_select" data-photoid="{{ photo.pk }}" data-eventid="{{ event.pk }}" data-cover="{% if data.cover_photo == photo %}true{% else %}false{% endif %}"><img src="photo/{{ photo.pk }}_thumb.jpg" width="100" height="100" alt="{{ photo.generate_caption }}"></a>{% endif %}{% endfor %}
                     </div>
+{% endif %}
                     {% if event.description != '' %}{{ event.description_html|safe }}{% endif %}
+{% if event.type != 'life_event' %}                
                     {% if event.people.count > 0 %}
                     <div class="timeline-people-row">
                     {% for person in event.people.all %}
@@ -31,6 +34,7 @@
                     {% endfor %}
                     </div>
                     {% endif %}
+{% endif %}
                     
                     {% if event.people.count == 0 and event.description == '' and event.photos.count == 0 and event.geo == '' %}
                         {% if event.location %}

@@ -25,6 +25,7 @@ urlpatterns = [
     path('reports/<id>.png', views.report_wordcloud),
     path('reports/<rid>/delete', views.reportdelete),
     path('reports/graph/<id>.png', views.report_graph),
+    path('months/<ds>.html', views.month),
     path('days/<ds>.html', views.day),
     path('days/<ds>/heart.json', views.day_heart),
     path('days/<ds>/sleep.json', views.day_sleep),

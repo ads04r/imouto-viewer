@@ -133,6 +133,13 @@
 	border: 1px solid #000000;
 }
 
+td.fc-day-number {
+	cursor: pointer;
+}
+td.fc-day-number:hover {
+	background-color: var(--win-hover-bgcolor) !important;
+}
+
 tr.founddata td {
 	cursor: pointer;
 }
