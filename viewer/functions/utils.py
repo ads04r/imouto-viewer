@@ -103,6 +103,9 @@ def generate_onthisday():
 		events = []
 		places = []
 		people = []
+		history = []
+		for event in HistoricalEvent.objects.filter(date=dts.date()):
+			history.append(event)
 		journeys = []
 		for event in Event.objects.filter(end_time__gte=dts, start_time__lte=dte):
 			for person in event.people.all():
@@ -119,7 +122,7 @@ def generate_onthisday():
 			if len(str(event.description)) > 0:
 				events.append(event)
 				continue
-			if event.type == 'life_event' or event.type == 'event': # or event.type == 'photo':
+			if event.type == 'life_event' or event.type == 'event':
 				events.append(event)
 		tweets = []
 		for tweet in RemoteInteraction.objects.filter(type='microblogpost', address='', time__gte=dts, time__lte=dte):
@@ -145,6 +148,7 @@ def generate_onthisday():
 			item['people'] = people
 			item['tweets'] = tweets
 			item['journeys'] = journeys
+			item['history'] = history
 			countries = []
 			for loc in places:
 				if loc.country in countries:
