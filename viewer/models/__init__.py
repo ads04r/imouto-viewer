@@ -4,3 +4,4 @@ from viewer.models.people import *
 from viewer.models.media import *
 from viewer.models.photos import *
 from viewer.models.file_importers import *
+from viewer.models.history import *
