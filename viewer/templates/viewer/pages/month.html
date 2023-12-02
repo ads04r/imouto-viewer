@@ -37,7 +37,7 @@
 
 {% for event in history %}
 
-			<h4>{{ event.date|date:"l jS" }}</h4>
+			<h4><a href="#day_{{ event.date|date:"Ymd" }}">{{ event.date|date:"l jS" }}</a></h4>
 			<p>{{ event.description }} <span class="badge badge-secondary">{{ event.category }}</span></p>
 
 {% endfor %}
@@ -73,7 +73,7 @@
                         <table class="table table-condensed">
 {% for day in month.days %}
                                 <tr>
-                                        <td><a href="#{{ day.slug }}">{{ day }}</a></td>
+                                        <td><a href="#{{ day.slug }}">{{ day.date|date:"l jS" }}</a></td>
                                         <td><span class="pull-right">{% if day.average_mood == 5 %}<i class="fa fa-smile-o"></i>{% endif %}{% if day.average_mood == 4 %}<i class="fa fa-smile-o"></i>{% endif %}{% if day.average_mood == 3 %}<i class="fa fa-meh-o"></i>{% endif %}{% if day.average_mood == 2 %}<i class="fa fa-meh-o"></i>{% endif %}{% if day.average_mood == 1 %}<i class="fa fa-frown-o"></i>{% endif %}</span></td>
                                 </tr>
 {% endfor %}
