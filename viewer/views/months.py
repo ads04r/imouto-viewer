@@ -2,7 +2,7 @@ from django.http import HttpResponse, Http404
 from django.shortcuts import render
 from django.conf import settings
 
-from viewer.models import Month, Day, create_or_get_month
+from viewer.models import Month, Day, HistoricalEvent, create_or_get_month
 
 def month(request, ds):
 
@@ -12,6 +12,8 @@ def month(request, ds):
 	m = int(ds[4:])
 	obj = create_or_get_month(m, y)
 
-	context = {'type':'view', 'caption': str(obj), 'month': obj}
+	history = HistoricalEvent.objects.filter(date__month=m, date__year=y).order_by('date')
+
+	context = {'type':'view', 'caption': str(obj), 'month': obj, 'history': history}
 	return render(request, 'viewer/pages/month.html', context)
 
