@@ -10,7 +10,7 @@ from requests import request
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from PIL import Image
 import sys, vobject
-from viewer.importers import import_sms_from_imap, import_calls_from_imap
+from viewer.importers.messages import import_sms_from_imap, import_calls_from_imap
 
 class Command(BaseCommand):
 	"""
