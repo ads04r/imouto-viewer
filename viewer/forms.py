@@ -1,5 +1,5 @@
-from django.forms import ModelForm, ImageField, TextInput, Textarea, Select, DateInput
-from viewer.models import Location, Event, LifeReport, EventWorkoutCategory, LifePeriod, WatchedDirectory
+from django.forms import ModelForm, ImageField, TextInput, Textarea, Select, DateInput, CheckboxInput, FileInput, URLInput
+from viewer.models import Location, Event, LifeReport, EventWorkoutCategory, LifePeriod, WatchedDirectory, Person
 from django.db.models import Sum, Count
 import datetime, pytz
 
@@ -18,9 +18,23 @@ class LocationForm(ModelForm):
 			'wikipedia': TextInput(attrs={'class': 'form-control'}),
 			'address': Textarea(attrs={'class': 'form-control'}),
 			'description': Textarea(attrs={'class': 'form-control'}),
-			'creation_time': TextInput(attrs={'class': 'form-control'}),
-			'destruction_time': TextInput(attrs={'class': 'form-control'}),
+			'creation_time': TextInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD HH:MM:SS'}),
+			'destruction_time': TextInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD HH:MM:SS'}),
 			'parent': Select(attrs={'class': 'form-control'}),
+		}
+
+class PersonForm(ModelForm):
+	class Meta:
+		model = Person
+		fields = ['uid', 'given_name', 'family_name', 'nickname', 'image', 'significant', 'wikipedia']
+		labels = {'significant': 'Important'}
+		widgets = {
+			'uid': TextInput(attrs={'class': 'form-control'}),
+			'given_name': TextInput(attrs={'class': 'form-control'}),
+			'family_name': TextInput(attrs={'class': 'form-control'}),
+			'nickname': TextInput(attrs={'class': 'form-control'}),
+			'wikipedia': URLInput(attrs={'class': 'form-control'}),
+			'significant': CheckboxInput(attrs={'class': 'checkbox'}),
 		}
 
 class WorkoutCategoryForm(ModelForm):
@@ -55,8 +69,8 @@ class EventForm(ModelForm):
 			'type': TextInput(attrs={'class': 'form-control'}),
 			'location': Select(attrs={'class': 'form-control'}),
 			'description': Textarea(attrs={'class': 'form-control'}),
-			'start_time': TextInput(attrs={'class': 'form-control'}),
-			'end_time': TextInput(attrs={'class': 'form-control'}),
+			'start_time': TextInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD HH:MM:SS'}),
+			'end_time': TextInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD HH:MM:SS'}),
 		}
 
 class LifePeriodForm(ModelForm):
@@ -67,8 +81,8 @@ class LifePeriodForm(ModelForm):
 			'caption': TextInput(attrs={'class': 'form-control'}),
 			'type': TextInput(attrs={'class': 'form-control'}),
 			'description': Textarea(attrs={'class': 'form-control'}),
-			'start_time': DateInput(attrs={'class': 'form-control'}),
-			'end_time': DateInput(attrs={'class': 'form-control'}),
+			'start_time': DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD HH:MM:SS'}),
+			'end_time': DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD HH:MM:SS'}),
 		}
 
 class CreateReportForm(ModelForm):

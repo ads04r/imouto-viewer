@@ -33,8 +33,6 @@ def places(request):
 			post = form.save(commit=False)
 			id = form.cleaned_data['uid']
 			if form.cleaned_data.get('uploaded_image'):
-				image = Image(title=post.full_label, description=post.description, image=request.FILES['uploaded_image'])
-				image.save()
 				post.image = request.FILES['uploaded_image']
 			country = None
 			country_code = get_location_country_code(post.lat, post.lon)

@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.core.cache import cache
 from django.db.models import F, Max, Count
@@ -6,8 +6,8 @@ from django.db.models.functions import Cast
 from django.db.models.fields import DateField
 import datetime, pytz, dateutil.parser, json, requests, random
 
-from viewer.models import Person, RemoteInteraction
-
+from viewer.models import Person, RemoteInteraction, Location, PersonProperty
+from viewer.forms import PersonForm
 from viewer.functions.people import explode_properties
 
 def people(request):
@@ -40,9 +40,44 @@ def people(request):
 		if not(person is None):
 			data['calls'].append([person, number['messages']])
 	data['all'] = Person.objects.annotate(days=Count(Cast('event__start_time', DateField()), distinct=True)).annotate(last_seen=Max('event__start_time')).order_by('given_name', 'family_name')
-	context = {'type':'person', 'data':data}
+	if request.method == 'POST':
+		cache.delete('dashboard')
+		form = PersonForm(request.POST, request.FILES)
+		if form.is_valid():
+			post = form.save(commit=False)
+			id = form.cleaned_data['uid']
+			#m = []
+			#for k in form.cleaned_data.keys():
+			#	m.append(str(k))
+			#return HttpResponse(json.dumps(m), content_type='application/json')
+			if form.cleaned_data.get('image'):
+				post.image = request.FILES['image']
+			post.save()
+			try:
+				person_home = request.POST['home']
+			except:
+				person_home = form.cleaned_data.get('home')
+			if person_home:
+				loc = Location.objects.get(uid=person_home)
+				pp = PersonProperty(person=post, key='livesat', value=loc.pk)
+				pp.save()
+			for p in [('birthday', 'birthday'), ('homephone', 'phone'), ('workphone', 'work'), ('mobilephone', 'mobile')]:
+				try:
+					person_value = request.POST[p[0]]
+				except:
+					person_value = form.cleaned_data.get(p[0])
+				if person_value:
+					pp = PersonProperty(person=post, key=p[1], value=person_value)
+					pp.save()
+			return HttpResponseRedirect('./#person_' + str(id))
+		else:
+			raise Http404(form.errors)
+	else:
+		form = PersonForm()
+	context = {'type':'person', 'data':data, 'form':form, 'places':Location.objects.all().values('uid', 'label').order_by('label')}
 	ret = render(request, 'viewer/pages/people.html', context)
 	return ret
+
 
 def person(request, uid):
 	key = 'person_' + str(uid) + '_' + datetime.date.today().strftime("%Y%m%d")

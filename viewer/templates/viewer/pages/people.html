@@ -19,6 +19,9 @@
                         <li class="active"><a href="#tab-people-recent" data-toggle="tab">Summary</a></li>
                         <li><a href="#tab-people-main" data-toggle="tab">Important People</a></li>
                         <li><a href="#tab-people-all" data-toggle="tab">All People</a></li>
+                        <li class="pull-right">
+                                <a class="btn btn-primary btn-xs" data-toggle="modal" data-target="#admin_people_add" aria-hidden="true" href="#"><i class="fa fa-plus"></i></a>
+                        </li>
                     </ul>
                     <div class="tab-content">
                         <div class="active tab-pane" id="tab-people-recent">
@@ -238,3 +241,5 @@
     </div>
 
 </section>
+
+{% include 'viewer/cards/personeditor.html' %}

@@ -1,0 +1,85 @@
+<div class="modal fade nav-tabs-custom" id="admin_people_add" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+                <form id="person-add" action="people.html" method="POST" enctype="multipart/form-data">{% csrf_token %}
+
+                    <div role="tabpanel">
+                        <ul class="nav nav-tabs">
+                            <li class="active"><a href="#basic" data-toggle="tab">Basic</a></li>
+                            <li><a href="#advanced" data-toggle="tab">Detail</a></li>
+                            <li><a href="#link" data-toggle="tab">Misc</a></li>
+                        </ul>
+                    </div>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="basic">
+
+                              <table class="table table-hover">
+{% for field in form %}
+{% if forloop.counter != 7 %}
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                </tr>
+{% endif %}
+{% endfor %}
+                              </table>
+                        
+                        </div>
+                        <div class="tab-pane" id="advanced">
+
+                              <table class="table table-hover">
+                                <tr class="form-row">
+                                  <td></td>
+                                  <td>Birthday:</td><td><div class="input-group"><div class="input-group-addon"><i class="fa fa-calendar"></i></div><input id="id_birthday" class="form-control" type="text" name="birthday" placeholder="YYYY-MM-DD (use 0000 if year unknown)"/></div></td>
+                                </tr>
+                                <tr class="form-row">
+                                  <td></td>
+                                  <td>Home location:</td><td><select id="id_home" class="form-control" name="home"><option selected value="">---------</option>{% for place in places %}<option value="{{ place.uid }}">{{ place.label }}</option>{% endfor %}</select></div></td>
+                                </tr>
+                                <tr class="form-row">
+                                  <td></td>
+                                  <td>Home phone:</td><td><div class="input-group"><div class="input-group-addon"><i class="fa fa-phone"></i></div><input id="id_phone_home" class="form-control" type="text" name="homephone"/></div></td>
+                                </tr>
+                                <tr class="form-row">
+                                  <td></td>
+                                  <td>Work phone:</td><td><div class="input-group"><div class="input-group-addon"><i class="fa fa-phone"></i></div><input id="id_phone_work" class="form-control" type="text" name="workphone"/></div></td>
+                                </tr>
+                                <tr class="form-row">
+                                  <td></td>
+                                  <td>Mobile phone:</td><td><div class="input-group"><div class="input-group-addon"><i class="fa fa-phone"></i></div><input id="id_phone_mobile" class="form-control" type="text" name="mobilephone"/></div></td>
+                                </tr>
+                              </table>
+
+                        </div>
+                        <div class="tab-pane" id="link">
+
+                              <table class="table table-hover">
+                                <tr class="form-row">
+                                  <td></td>
+                                  <td>Homepage:</td><td><input id="id_homepage" class="form-control" type="url" name="homepage" maxlength="200"/></td>
+                                </tr>
+{% for field in form %}
+{% if forloop.counter == 7 %}
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                </tr>
+{% endif %}
+{% endfor %}
+                              </table>
+
+                        </div>
+                    </div>
+
+                </form>
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary save-form-button">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1151,7 +1151,15 @@ function daySummary(date)
 
 function peopleScreen()
 {
-    $(".content-wrapper").load("./people.html", function(response, status, xhr){ if(status == 'error') { errorPage(xhr); return false; } });
+    $(".content-wrapper").load("./people.html", function(response, status, xhr)
+    {
+        if(status == 'error') { errorPage(xhr); return false; }
+        $(".save-form-button").on('click', function()
+        {
+            $("#person-add").submit();
+            return true;
+        });
+    });
 }
 
 function personScreen(id)
