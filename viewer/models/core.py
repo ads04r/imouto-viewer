@@ -1867,6 +1867,62 @@ class Month(models.Model):
 			dt = dt + datetime.timedelta(days=1)
 		return Day.objects.filter(date__gte=dts, date__lt=dte).order_by('date')
 	@property
+	def earliest_morning(self):
+		"""
+		The day with the earliest wake_time in this month.
+		"""
+		dts = datetime.date(self.year, self.month, 1)
+		if self.month < 12:
+			dte = datetime.date(self.year, self.month + 1, 1)
+		else:
+			dte = datetime.date(self.year + 1, 1, 1)
+		dt = dts
+		ret = None
+		early = 86400
+		while dt < dte:
+			day = create_or_get_day(dt)
+			day_midnight = day.timezone.localize(datetime.datetime.combine(dt, datetime.datetime.min.time()))
+			if day.wake_time is None:
+				dt = dt + datetime.timedelta(days=1)
+				continue
+			before_wake = (day.wake_time - day_midnight).total_seconds()
+			if before_wake < early:
+				early = before_wake
+				ret = day
+			dt = dt + datetime.timedelta(days=1)
+		return ret
+	@property
+	def latest_night(self):
+		"""
+		The day with the latest bed_time in this month.
+		"""
+		dts = datetime.date(self.year, self.month, 1)
+		if self.month < 12:
+			dte = datetime.date(self.year, self.month + 1, 1)
+		else:
+			dte = datetime.date(self.year + 1, 1, 1)
+		dt = dts
+		ret = None
+		latest = 0
+		while dt < dte:
+			day = create_or_get_day(dt)
+			day_midnight = day.timezone.localize(datetime.datetime.combine(dt, datetime.datetime.min.time()))
+			if day.bed_time is None:
+				dt = dt + datetime.timedelta(days=1)
+				continue
+			before_bed = (day.bed_time - day_midnight).total_seconds()
+			if before_bed > latest:
+				latest = before_bed
+				ret = day
+			dt = dt + datetime.timedelta(days=1)
+		return ret
+	@property
+	def average_sunlight(self):
+		"""
+		Returns the month's average daily sunlight
+		"""
+		return self.days.annotate(total_sunlight=F('sunset_time')-F('sunrise_time')).aggregate(average_sunlight=Avg('total_sunlight'))['average_sunlight']
+	@property
 	def people(self):
 		"""
 		Every person encountered during this month.
@@ -1881,18 +1937,28 @@ class Month(models.Model):
 			dte = create_or_get_day(dted).bed_time
 		except:
 			return Person.objects.none()
+		if dts is None:
+			dts = pytz.utc.localize(datetime.datetime(dtsd.year, dtsd.month, 1, 0, 0, 0))
+		if dte is None:
+			dte = pytz.utc.localize(datetime.datetime(dted.year, dted.month, dted.day, 23, 59, 59))
 		return Person.objects.filter(event__end_time__gt=dts, event__start_time__lt=dte).annotate(event_count=Count('event')).order_by('-event_count')
 	@property
 	def events(self):
 		"""
 		Every described event during this month.
 		"""
-		dts = datetime.datetime(self.year, self.month, 1, 0, 0, 0)
+		dts = pytz.utc.localize(datetime.datetime(self.year, self.month, 1, 0, 0, 0))
 		if self.month < 12:
-			dte = datetime.datetime(self.year, self.month + 1, 1, 0, 0, 0) - datetime.timedelta(seconds=1)
+			dte = pytz.utc.localize(datetime.datetime(self.year, self.month + 1, 1, 0, 0, 0) - datetime.timedelta(seconds=1))
 		else:
-			dte = datetime.datetime(self.year + 1, 1, 1, 0, 0, 0) - datetime.timedelta(seconds=1)
+			dte = pytz.utc.localize(datetime.datetime(self.year + 1, 1, 1, 0, 0, 0) - datetime.timedelta(seconds=1))
 		return Event.objects.filter(end_time__gte=dts, start_time__lte=dte).exclude(type='life_event').order_by('start_time')
+	@property
+	def locations(self):
+		"""
+		Every location visited during this month.
+		"""
+		return Location.objects.filter(events__in=self.events).distinct()
 	@property
 	def life_events(self):
 		"""
