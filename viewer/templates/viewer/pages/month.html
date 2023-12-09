@@ -29,6 +29,9 @@
                         <li class="list-group-item"><b>Average sunlight per day</b> <span class="pull-right">{{ month.average_sunlight }}</span></li>
                         <li class="list-group-item"><b>Earliest morning</b> <span class="pull-right"><a href="#{{ month.earliest_morning.slug }}">{{ month.earliest_morning.wake_time|date:"g:ia" }}</a></span></li>
                         <li class="list-group-item"><b>Latest night</b> <span class="pull-right"><a href="#{{ month.latest_night.slug }}">{{ month.latest_night.bed_time|date:"g:ia" }}</a></span></li>
+{% for wc in month.workouts %}
+                        <li class="list-group-item"><b>{{ wc.0 }} distance</b> <span class="pull-right">{{ wc.1 }} miles</span></li>
+{% endfor %}
                     </ul>
                 </div>
             </div>

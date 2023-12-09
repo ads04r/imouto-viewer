@@ -69,6 +69,14 @@ def import_fit(parseable_fit_input):
 					event = DataReading(start_time=dts, end_time=dte, type='cadence', value=item['cadence'])
 					event.save()
 
+		if 'speed' in item:
+			if not(item['speed'] is None):
+				try:
+					event = DataReading.objects.get(start_time=dts, end_time=dte, type='speed')
+				except:
+					event = DataReading(start_time=dts, end_time=dte, type='speed', value=item['speed'])
+					event.save()
+
 	for f in ImportedFile.objects.all():
 		if f.path == parseable_fit_input:
 			f.import_time = pytz.utc.localize(datetime.datetime.utcnow())

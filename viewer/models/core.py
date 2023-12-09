@@ -1970,6 +1970,16 @@ class Month(models.Model):
 		else:
 			dte = datetime.datetime(self.year + 1, 1, 1, 0, 0, 0) - datetime.timedelta(seconds=1)
 		return Event.objects.filter(start_time__gte=dts, start_time__lte=dte, type="life_event").order_by('start_time')
+	def workouts(self):
+		ret = []
+		for wc in EventWorkoutCategory.objects.all():
+			item = [str(wc), 0.0]
+			for event in self.events.filter(type='journey', workout_categories=wc):
+				item[1] = item[1] + event.distance()
+			if item[1] > 0.0:
+				item[1] = float(int(item[1] * 100)) / 100
+				ret.append(item)
+		return ret
 	def __str__(self):
 		return(datetime.date(self.year, self.month, 1).strftime('%B %Y'))
 	class Meta:
