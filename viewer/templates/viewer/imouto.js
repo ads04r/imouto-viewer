@@ -861,6 +861,7 @@ function monthScreen(id)
     $(".content-wrapper").load("./months/" + id + ".html", function(response, status, xhr)
     {
         if(status == 'error') { errorPage(xhr); return false; }
+        initialiseGraphics();
     });
 }
 

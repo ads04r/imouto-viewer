@@ -1,0 +1,12 @@
+{% load static %}
+
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Location categories</h3>
+                    </div>
+                    <div class="box-body">
+                        <div class="chart">
+                            <canvas class="donut-chart" style="height: 160px" data-labels="{{ month.location_categories_chart.0|escape }}" data-data="{{ month.location_categories_chart.1|escape }}"></canvas>
+                        </div>
+                    </div>
+                </div>

@@ -1980,6 +1980,20 @@ class Month(models.Model):
 				item[1] = float(int(item[1] * 100)) / 100
 				ret.append(item)
 		return ret
+	def location_categories(self):
+		categories = {}
+		for loc in Location.objects.filter(events__in=self.events.filter(type='loc_prox').exclude(location__pk=settings.USER_HOME_LOCATION)).annotate(time_spent=F('events__end_time')-F('events__start_time')).annotate(total_time=Sum('time_spent')).order_by('-total_time'):
+			for c in loc.categories.all():
+				if not(c.pk in categories):
+					categories[c.pk] = [c, 0]
+				categories[c.pk][1] = categories[c.pk][1] + int(loc.total_time.total_seconds())
+		return list(categories.values())
+	def location_categories_chart(self):
+		ret = [[], []]
+		for item in self.location_categories():
+			ret[0].append(str(item[0]))
+			ret[1].append(item[1])
+		return (json.dumps(ret[0]), json.dumps(ret[1]))
 	def __str__(self):
 		return(datetime.date(self.year, self.month, 1).strftime('%B %Y'))
 	class Meta:
