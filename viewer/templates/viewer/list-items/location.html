@@ -1,0 +1,27 @@
+                                
+                                <li class="item">
+                                    <div class="product-img">
+                                        {% if place.image %}<img src="places/{{ place.uid }}_thumb.jpg"/>{% endif %}
+                                    </div>
+                                    <div class="product-info">
+                                        <a class="product-title personlink" href="#place_{{ place.uid }}">
+                                            {{ place }}</a>
+                                        <span class="product-description">
+                                            {% if place.address %}{{ place.address }}{% else %}{% if place.city %}{{ place.city }}{% else %}{{ place.country }}{% endif %}{% endif %}
+                                        </span>
+                                        <span class="product-description">
+{% if place.categories.count > 0 %}
+                                            {% for category in place.categories.all %}{{ category }}{% endfor %}
+{% else %}
+                                            Uncategorised
+{% endif %}
+{% if place.num_events %}
+                                            | {{ place.num_events }} events
+{% endif %}
+{% if place.parent %}
+                                            | Located within <a href="#place_{{ place.parent.uid }}">{{ place.parent }}</a>
+{% endif %}
+                                        </span>
+                                    </div>
+                                </li>
+

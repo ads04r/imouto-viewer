@@ -20,7 +20,7 @@
                         <li><a href="#tab-places-all" data-toggle="tab">Current</span></a></li>
                         <li><a href="#tab-places-destroyed" data-toggle="tab">Historical</a></li>
                         <li class="pull-right">
-                                <a class="btn btn-primary btn-xs" data-toggle="modal" data-target="#admin_places_add" aria-hidden="true" href="#"><i class="fa fa-plus"></i></a>
+				<div class="box-tools"><a class="btn btn-primary btn-xs" data-toggle="modal" data-target="#admin_places_add" aria-hidden="true" href="#"><i class="fa fa-plus"></i></a></div>
                         </li>
                     </ul>
                     <div class="tab-content">
@@ -32,21 +32,7 @@
 {% for place in data.recent %}
 {% if place.num_events > 0 %}
                                 
-                                <li class="item">
-                                    <div class="product-img">
-                                        {% if place.image %}<img src="places/{{ place.uid }}_thumb.jpg"/>{% endif %}
-                                    </div>
-                                    <div class="product-info">
-                                        <a class="product-title personlink" href="#place_{{ place.uid }}">
-                                            {{ place }}</a>
-                                        <span class="product-description">
-                                            {{ place.address }}
-{% if place.parent %}
-                                            <br/>Located within <a href="#place_{{ place.parent.uid }}">{{ place.parent }}</a>
-{% endif %}
-                                        </span>
-                                    </div>
-                                </li>
+	{% include 'viewer/list-items/location.html' %}
                                 
 {% endif %}
 {% endfor %}
@@ -62,21 +48,7 @@
                                 
 {% for place in data.overseas %}
                                 
-                                <li class="item">
-                                    <div class="product-img">
-                                        {% if place.image %}<img src="places/{{ place.uid }}_thumb.jpg"/>{% endif %}
-                                    </div>
-                                    <div class="product-info">
-                                        <a class="product-title personlink" href="#place_{{ place.uid }}">
-                                            {{ place }}</a>
-                                        <span class="product-description">
-                                            {{ place.address }}
-{% if place.parent %}
-                                            <br/>Located within <a href="#place_{{ place.parent.uid }}">{{ place.parent }}</a>
-{% endif %}
-                                        </span>
-                                    </div>
-                                </li>
+	{% include 'viewer/list-items/location.html' %}
                                 
 {% endfor %}
                                 
@@ -92,24 +64,7 @@
 {% if place.num_events > 0 %}
 {% if place.exists %}
                                 
-                                <li class="item">
-                                    <div class="product-img">
-                                        {% if place.image %}<img src="places/{{ place.uid }}_thumb.jpg"/>{% endif %}
-                                    </div>
-                                    <div class="product-info">
-                                        <a class="product-title personlink" href="#place_{{ place.uid }}">
-                                            {{ place }}</a>
-                                        <span class="product-description">
-                                            {{ place.address }}
-                                        </span>
-                                        <span class="product-description">
-                                            {{ place.num_events }} events
-{% if place.parent %}
-                                            | Located within <a href="#place_{{ place.parent.uid }}">{{ place.parent }}</a>
-{% endif %}
-                                        </span>
-                                    </div>
-                                </li>
+	{% include 'viewer/list-items/location.html' %}
                                 
 {% endif %}
 {% endif %}
@@ -126,19 +81,7 @@
 {% if place.num_events > 0 %}
 {% if place.exists == False %}
                                 
-                                <li class="item">
-                                    <div class="product-img">
-                                        {% if place.image %}<img src="places/{{ place.uid }}_thumb.jpg"/>{% endif %}
-                                    </div>
-                                    <div class="product-info">
-                                        <a class="product-title personlink" href="#place_{{ place.uid }}">
-                                            {{ place }}</a>
-                                        <span class="product-description">
-                                            {{ place.address }}</span>
-                                        <span class="product-description">
-                                            {{ place.num_events }} events</span>
-                                    </div>
-                                </li>
+	{% include 'viewer/list-items/location.html' %}
                                 
 {% endif %}
 {% endif %}
@@ -157,4 +100,4 @@
 
 </section>
 
-{% include 'viewer/cards/placeeditor.html' %}
+{% include 'viewer/modal/placeeditor.html' %}

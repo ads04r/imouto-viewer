@@ -607,6 +607,11 @@ class Person(models.Model):
 		return Photo.objects.filter(people__in=[self]).order_by('-time')
 	def events(self):
 		return Event.objects.filter(people=self).order_by('-start_time')
+	def first_month(self, year):
+		dts = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(year, 1, 1, 0, 0, 0))
+		dte = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(year, 12, 31, 23, 59, 59))
+		event = Event.objects.filter(people=self, end_time__gte=dts, start_time__lte=dte).order_by('start_time').first()
+		return int(event.start_time.month)
 	def __str__(self):
 		return self.name()
 	class Meta:
