@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand
 from django.core.cache import cache
 from django.conf import settings
 from dateutil.parser import parse as dateparse
-from viewer.importers import import_calendar_feed
+from viewer.importers.dav import import_calendar_feed
 import os, sys, datetime, pytz, requests
 
 class Command(BaseCommand):

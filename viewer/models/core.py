@@ -2535,7 +2535,7 @@ class CalendarFeed(models.Model):
 		verbose_name_plural = 'calendars'
 
 class CalendarTask(models.Model):
-	taskid = models.SlugField(max_length=255, blank=True, default='', unique=True)
+	taskid = models.SlugField(max_length=255, blank=True, default='')
 	time_due = models.DateTimeField(null=True, blank=True)
 	time_created = models.DateTimeField(null=True, blank=True)
 	time_completed = models.DateTimeField(null=True, blank=True)
@@ -2551,6 +2551,7 @@ class CalendarTask(models.Model):
 		app_label = 'viewer'
 		verbose_name = 'calendar task'
 		verbose_name_plural = 'calendar tasks'
+		unique_together = ('taskid', 'calendar')
 
 class CalendarAppointment(models.Model):
 	eventid = models.SlugField(max_length=255, blank=True, default='', unique=True)
