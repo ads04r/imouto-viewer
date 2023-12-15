@@ -1857,6 +1857,15 @@ class Month(models.Model):
 		"""
 		return("month_" + datetime.date(self.year, self.month, 1).strftime('%Y%m'))
 	@property
+	def this_month(self):
+		"""
+		Determines if this month represents the current month in real time.
+		"""
+		dt = datetime.datetime.now().date()
+		if ((dt.month == self.month) & (dt.year == self.year)):
+			return True
+		return False
+	@property
 	def days(self):
 		"""
 		Every day in this month.

@@ -1,0 +1,33 @@
+{% load static %}
+{% load tz %}
+{% load class_tag %}
+
+<section class="content-header">
+    <h1>
+        {{ caption }}
+        <small>Month</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="#events">Events</a></li>
+        <li>{{ caption }}</li>
+    </ol>
+</section>
+
+<section class="content">
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-4">
+
+            <div class="box box-primary">
+                <div class="box-body box-profile">
+                    <h3 class="profile-username text-center">{{ month }}</h3>
+                    <p>This month is still ongoing! Statistics will appear here once the month is over.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</section>
+

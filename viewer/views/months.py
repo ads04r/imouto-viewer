@@ -15,5 +15,8 @@ def month(request, ds):
 	history = HistoricalEvent.objects.filter(date__month=m, date__year=y).order_by('date')
 
 	context = {'type':'view', 'caption': str(obj), 'month': obj, 'history': history}
-	return render(request, 'viewer/pages/month.html', context)
+	template = 'viewer/pages/month.html'
+	if obj.this_month:
+		template = 'viewer/pages/this_month.html'
+	return render(request, template, context)
 
