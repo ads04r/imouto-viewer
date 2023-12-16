@@ -2093,7 +2093,12 @@ class Day(models.Model):
 					main_wake = wake
 			return main_wake.start_time.astimezone(self.timezone), main_wake.end_time.astimezone(self.timezone)
 		else:
-			dts = self.timezone.localize(datetime.datetime(d.year, d.month, d.day, 4, 0, 0))
+			try:
+				last_sleep = DataReading.objects.filter(type='sleep').order_by('-end_time')[0].end_time
+				if last_sleep < dte:
+					dts = last_sleep
+			except:
+				dts = self.timezone.localize(datetime.datetime(d.year, d.month, d.day, 4, 0, 0))
 			dte = dts + datetime.timedelta(seconds=86400)
 			return dts, dte
 
