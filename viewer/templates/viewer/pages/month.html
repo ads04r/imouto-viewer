@@ -23,9 +23,6 @@
                 <div class="box-body box-profile">
                     <h3 class="profile-username text-center">{{ month }}</h3>
                     <ul class="list-group list-group-unbordered">
-                        <li class="list-group-item"><b>Days</b> <span class="pull-right">{{ month.days.count }}</span></li>
-                        <li class="list-group-item"><b>People</b> <span class="pull-right">{{ month.people.count }}</span></li>
-                        <li class="list-group-item"><b>Events</b> <span class="pull-right">{{ month.events.count }}</span></li>
                         <li class="list-group-item"><b>Average sunlight per day</b> <span class="pull-right">{{ month.average_sunlight }}</span></li>
                         <li class="list-group-item"><b>Earliest morning</b> <span class="pull-right"><a href="#{{ month.earliest_morning.slug }}">{{ month.earliest_morning.wake_time|date:"g:ia" }}</a></span></li>
                         <li class="list-group-item"><b>Latest night</b> <span class="pull-right"><a href="#{{ month.latest_night.slug }}">{{ month.latest_night.bed_time|date:"g:ia" }}</a></span></li>
@@ -33,6 +30,33 @@
                         <li class="list-group-item"><b>{{ wc.0 }} distance</b> <span class="pull-right">{{ wc.1 }} miles</span></li>
 {% endfor %}
                     </ul>
+
+<div class="chart">
+<canvas class="donut-chart" style="height: 160px" data-labels="{{ month.location_categories_chart.0|escape }}" data-data="{{ month.location_categories_chart.1|escape }}"></canvas>
+</div>
+
+                </div>
+                <div class="box-footer">
+			<div class="row">
+				<div class="col-sm-4 border-right">
+					<div class="description-block">
+						<h5 class="description-header">{{ month.days.count }}</h3>
+						<span class="description-text">Days</h3>
+					</div>
+				</div>
+				<div class="col-sm-4 border-right">
+					<div class="description-block">
+						<h5 class="description-header">{{ month.people.count }}</h3>
+						<span class="description-text">People</h3>
+					</div>
+				</div>
+				<div class="col-sm-4">
+					<div class="description-block">
+						<h5 class="description-header">{{ month.events.count }}</h3>
+						<span class="description-text">Events</h3>
+					</div>
+				</div>
+			</div>
                 </div>
             </div>
 
@@ -52,8 +76,6 @@
             </div>
 
 {% endif %}
-
-{% include 'viewer/cards/monthloccat.html' %}
 
 {% for event in month.life_events %}
 

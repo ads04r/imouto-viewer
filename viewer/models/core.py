@@ -1866,6 +1866,32 @@ class Month(models.Model):
 			return True
 		return False
 	@property
+	def next(self):
+		"""
+		Returns the Day object representing the day after the one represented by this Day object.
+		"""
+		if self.this_month:
+			return None
+		y = self.year
+		m = self.month
+		m = m + 1
+		if m > 12:
+			m = m - 12
+			y = y + 1
+		return create_or_get_month(year=y, month=m)
+	@property
+	def previous(self):
+		"""
+		Returns the Day object representing the day before the one represented by this Day object.
+		"""
+		y = self.year
+		m = self.month
+		m = m - 1
+		if m < 1:
+			m = m + 12
+			y = y - 1
+		return create_or_get_month(year=y, month=m)
+	@property
 	def days(self):
 		"""
 		Every day in this month.
