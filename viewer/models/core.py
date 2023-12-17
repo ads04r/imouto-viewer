@@ -2071,7 +2071,7 @@ class Day(models.Model):
 		"""
 		Generates a fail-safe 'end time' for this day
 		"""
-		if not(self.today):
+		if self.future_data:
 			if self.tomorrow.wake_time:
 				return self.tomorrow.wake_time
 		return self.__dts__() + datetime.timedelta(seconds=86400)
@@ -2108,6 +2108,16 @@ class Day(models.Model):
 		Determines if this day represents today in real time.
 		"""
 		return (datetime.datetime.now().date() == self.date)
+	@property
+	def future_data(self):
+		"""
+		Determines if any health data exists beyond this day, returns false if the last data is in the past.
+		"""
+		if self.today:
+			return False
+		if not(self.wake_time):
+			self.wake_time = self.__dts__()
+		return (DataReading.objects.filter(type='sleep', start_time__gt=(self.wake_time + datetime.timedelta(hours=12))).count() > 0)
 	@property
 	def month(self):
 		"""
