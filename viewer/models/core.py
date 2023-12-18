@@ -2,7 +2,7 @@ from django.db import models
 from django.core.files import File
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import Count, Avg, Max, Sum, Transform, Field, IntegerField, F, ExpressionWrapper
-from django.db.models.signals import pre_save
+from django.db.models.signals import pre_save, post_save
 from django.db.models.fields import DurationField
 from django.contrib.staticfiles import finders
 from django.conf import settings
@@ -960,9 +960,6 @@ class Event(models.Model):
 			health = self.__refresh_health(save=False)
 		if save:
 			self.save()
-		if self.id:
-			self.auto_tag()
-			self.populate_people_from_photos()
 	def subevents(self):
 		return Event.objects.filter(start_time__gte=self.start_time, end_time__lte=self.end_time).exclude(id=self.id).order_by('start_time')
 	def weather(self):
@@ -2867,6 +2864,11 @@ def save_day_trigger(sender, instance, **kwargs):
 @receiver(pre_save, sender=Event)
 def save_event_trigger(sender, instance, **kwargs):
 	instance.refresh(save=False)
+
+@receiver(post_save, sender=Event)
+def post_save_event_trigger(sender, instance, **kwargs):
+	instance.auto_tag()
+	instance.populate_people_from_photos()
 
 class LifeReportProperties(models.Model):
 	report = models.ForeignKey(LifeReport, on_delete=models.CASCADE, related_name='properties')
