@@ -1870,6 +1870,20 @@ class Year(models.Model):
 		dt = datetime.datetime.now().date()
 		return (dt.year == self.year)
 	@property
+	def next(self):
+		"""
+		Returns the Year object representing the year after the one represented by this one.
+		"""
+		if self.this_year:
+			return None
+		return create_or_get_year(year=self.year + 1)
+	@property
+	def previous(self):
+		"""
+		Returns the Year object representing the year before the one represented by this one.
+		"""
+		return create_or_get_year(year=self.year - 1)
+	@property
 	def months(self):
 		"""
 		Every month within this year.
@@ -1987,6 +2001,9 @@ class Month(models.Model):
 			m = m - 12
 			y = y + 1
 		return create_or_get_month(year=y, month=m)
+	@property
+	def label(self):
+		return(datetime.date(self.year, self.month, 1).strftime('%B'))
 	@property
 	def previous(self):
 		"""

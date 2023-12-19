@@ -9,7 +9,8 @@
     </h1>
     <ol class="breadcrumb">
         <li><a href="#events">Events</a></li>
-        <li><a href="#{{ day.month.slug }}">{{ day.month }}</a></li>
+        <li><a href="#year_{{ day.month.year }}">{{ day.month.year }}</a></li>
+        <li><a href="#{{ day.month.slug }}">{{ day.month.label }}</a></li>
         <li>{{ day.date|date:"l d" }}</li>
     </ol>
 </section>
