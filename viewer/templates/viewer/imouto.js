@@ -856,6 +856,14 @@ function eventsScreen()
     });
 }
 
+function yearScreen(id)
+{
+    $(".content-wrapper").load("./years/" + id + ".html", function(response, status, xhr)
+    {
+        if(status == 'error') { errorPage(xhr); return false; }
+    });
+}
+
 function monthScreen(id)
 {
     $(".content-wrapper").load("./months/" + id + ".html", function(response, status, xhr)
@@ -2145,6 +2153,7 @@ function pageRefresh()
 
     if(page.startsWith('day_')) { dayScreen(page.replace('day_', '')); }
     if(page.startsWith('month_')) { monthScreen(page.replace('month_', '')); }
+    if(page.startsWith('year_')) { yearScreen(page.replace('year_', '')); }
     if(page.startsWith('tag_')) { tagScreen(page.replace('tag_', '')); }
     if(page.startsWith('tagrules_')) { tagRulesScreen(page.replace('tagrules_', '')); }
     if(page.startsWith('event_')) { eventScreen(page.replace('event_', '')); }

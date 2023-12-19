@@ -24,3 +24,6 @@ def event_staticmap_upload_location(instance, filename):
 
 def tag_staticmap_upload_location(instance, filename):
 	return 'autotag/tag_staticmap_' + str(instance.pk) + '.png'
+
+def year_wordcloud_upload_location(instance, filename):
+	return 'wordclouds/year_wc_' + str(instance.year) + '.png'

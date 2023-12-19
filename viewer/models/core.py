@@ -67,6 +67,15 @@ def create_or_get_month(month, year):
 
 	return ret
 
+def create_or_get_year(year):
+
+	try:
+		ret = Year.objects.get(year=year)
+	except:
+		ret = Year(year=year)
+		ret.save()
+	return ret
+
 class GitCommit(models.Model):
 	repo_url = models.URLField()
 	commit_date = models.DateTimeField()
@@ -1843,6 +1852,108 @@ class ReportEvents(models.Model):
 		app_label = 'viewer'
 		verbose_name = 'report event'
 		verbose_name_plural = 'report events'
+
+class Year(models.Model):
+	year = models.IntegerField()
+	cached_wordcloud = models.ImageField(blank=True, null=True, upload_to=year_wordcloud_upload_location)
+	@property
+	def slug(self):
+		"""
+		The unique 'slug id' for this Year object, as would be displayed after the '#' in the URL bar.
+		"""
+		return("year_" + datetime.date(self.year, 1, 1).strftime('%Y'))
+	@property
+	def this_year(self):
+		"""
+		Determines if this year represents the current year in real time.
+		"""
+		dt = datetime.datetime.now().date()
+		return (dt.year == self.year)
+	@property
+	def months(self):
+		"""
+		Every month within this year.
+		"""
+		if not(self.this_year):
+			for i in range(0, 12):
+				create_or_get_month(year=self.year, month=(i + 1))
+		return Month.objects.filter(year=self.year).order_by('month')
+	@property
+	def events(self):
+		"""
+		Every described event during this year.
+		"""
+		dts = pytz.utc.localize(datetime.datetime(self.year, 1, 1, 0, 0, 0))
+		dte = pytz.utc.localize(datetime.datetime(self.year, 12, 31, 23, 59, 59))
+		return Event.objects.filter(end_time__gte=dts, start_time__lte=dte).exclude(type='life_event').order_by('start_time')
+	@property
+	def life_events(self):
+		"""
+		Every described life event during this year.
+		"""
+		dts = pytz.utc.localize(datetime.datetime(self.year, 1, 1, 0, 0, 0))
+		dte = pytz.utc.localize(datetime.datetime(self.year, 12, 31, 23, 59, 59))
+		return Event.objects.filter(end_time__gte=dts, start_time__lte=dte, type='life_event').order_by('start_time')
+	def words(self):
+		text = ''
+		for event in self.life_events.all():
+			text = text + event.description + ' '
+		for event in self.events.all():
+			text = text + event.description + ' '
+			for msg in event.messages():
+				if msg.incoming:
+					continue
+				if ((msg.type != 'sms') & (msg.type != 'microblogpost')):
+					continue
+				text = text + msg.message + ' '
+		text = re.sub('=[0-9A-F][0-9A-F]', '', text)
+		text = strip_tags(text)
+		text = text.strip()
+		ret = []
+		for word in text.split(' '):
+			if len(word) < 3:
+				continue
+			if word.startswith("I'"):
+				continue
+			if '://' in word:
+				continue
+			if word.endswith("'s"):
+				word = word[:-2]
+			word = word.strip('\t!?.," ').replace('\n', ' ').replace('\r', ' ').replace('  ', ' ')
+			ret.append(word)
+		return ' '.join(ret)
+	def wordcloud(self):
+		if self.cached_wordcloud:
+			im = Image.open(self.cached_wordcloud.path)
+			return im
+		text = self.words()
+		stopwords = set()
+		for word in set(STOPWORDS):
+			stopwords.add(word)
+			stopwords.add(word.capitalize())
+		wc = WordCloud(width=2598, height=3543, background_color=None, mode='RGBA', max_words=500, stopwords=stopwords, font_path=settings.DEFAULT_FONT).generate(text)
+		im = wc.to_image()
+		blob = BytesIO()
+		im.save(blob, 'PNG')
+		self.cached_wordcloud.save(report_wordcloud_upload_location, File(blob), save=False)
+		self.save(update_fields=['cached_wordcloud'])
+		return im
+	def workouts(self):
+		ret = []
+		for wc in EventWorkoutCategory.objects.all():
+			item = [str(wc), 0.0]
+			for event in self.events.filter(type='journey', workout_categories=wc):
+				item[1] = item[1] + event.distance()
+			if item[1] > 0.0:
+				item[1] = float(int(item[1] * 100)) / 100
+				ret.append(item)
+		return ret
+	def __str__(self):
+		return(str(self.year))
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'year'
+		verbose_name_plural = 'years'
 
 class Month(models.Model):
 	month = models.IntegerField(validators=[MaxValueValidator(12), MinValueValidator(1)])
