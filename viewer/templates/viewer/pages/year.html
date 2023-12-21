@@ -23,17 +23,46 @@
                 <div class="box-body box-profile">
                     <h3 class="profile-username text-center">{{ year }}</h3>
 
-                    <ul class="list-group list-group-unbordered">
+			<table class="table table-condensed">
+				<tr>
 {% for month in year.months %}
-                        <li class="list-group-item"><a href="#{{ month.slug }}">{{ month }}</a></li>
+{% if forloop.counter0 > 0 %}{% if forloop.counter0|divisibleby:3 %}</tr><tr>{% endif %}{% endif %}
+					<td class="text-center"><a href="#{{ month.slug }}">{{ month.label }}</a></td>
 {% endfor %}
-{% for wc in year.workouts %}
-                        <li class="list-group-item"><b>{{ wc.0 }} distance</b> <span class="pull-right">{{ wc.1 }} miles</span></li>
+				</tr>
+			</table>
+
+                    <ul class="list-group list-group-unbordered">
+{% for prop in year.properties.all %}
+{% if prop.category == '' %}
+			<li class="list-group-item"><b>{{ prop.key }}</b> {{ prop.category }}<span class="pull-right">{{ prop.value }}</span></li>
+{% endif %}
 {% endfor %}
                     </ul>
+                </div>
+            </div>
+
+{% if year.workouts %}
+
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Exercise</h3>
+                </div>
+                <div class="box-body no-padding">
+
+			<table class="table table-condensed">
+{% for wc in year.workouts %}
+				<tr>
+					<td><b>{{ wc.0 }}</b></td>
+					<td>{{ wc.1 }} miles</td>
+				</tr>
+{% endfor %}
+			</table>
 
                 </div>
             </div>
+
+{% endif %}
 
             </div>
             <div class="col-xs-12 col-sm-12 col-md-8">
@@ -42,6 +71,7 @@
 
                 <div class="box box-primary" id="day_event_{{ event.pk }}">
                     <div class="box-header with-border">
+                        <p class="pull-right">{{ event.start_time|date:"F" }}</p>
                         <h3 class="box-title">{{ event.caption }}</h3>
                     </div>
                     <div class="box-body">
@@ -55,13 +85,6 @@
                 </div>
 
 {% endfor %}
-
-            </div>
-            <div class="col-xs-12 col-sm-6 col-md-4">
-
-            </div>
-            <div class="col-xs-12 col-sm-6 col-md-4">
-
 
             </div>
         </div>

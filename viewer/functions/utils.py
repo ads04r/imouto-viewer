@@ -195,6 +195,7 @@ def generate_dashboard():
 			item = {'person': person, 'address': address, 'messages': int(i['messages'])}
 			contactdata.append(item)
 
+	first_event = Event.objects.all().order_by('start_time')[0].start_time
 	last_event = Event.objects.all().order_by('-start_time')[0].start_time
 
 	tags = []
@@ -370,6 +371,7 @@ def generate_dashboard():
 		tasks.append(task)
 
 	workouts = []
+	workout_total = 0
 	dts = last_record - datetime.timedelta(days=7)
 	dte = last_record
 	for category in EventWorkoutCategory.objects.all():
@@ -378,8 +380,15 @@ def generate_dashboard():
 			v = v + event.distance()
 		if v > 0:
 			workouts.append({'id': category.pk, 'label': str(category), 'distance': int(v)})
+			workout_total = workout_total + int(v)
+	for i in range(0, len(workouts)):
+		workouts[i]['prc'] = int(float(workouts[i]['distance']) / float(workout_total))
 
-	ret = {'stats': stats, 'birthdays': birthdays, 'tasks': tasks, 'workouts': workouts, 'steps': json.dumps(stepdata), 'sleep': json.dumps(sleepdata), 'contact': contactdata, 'people': peopledata, 'places': locationdata, 'walks': walkdata, 'days': days}
+	years = []
+	for i in range(first_event.year, days[0].date.year):
+		years.append(i)
+	years.reverse()
+	ret = {'stats': stats, 'birthdays': birthdays, 'tasks': tasks, 'workouts': workouts, 'steps': json.dumps(stepdata), 'sleep': json.dumps(sleepdata), 'contact': contactdata, 'people': peopledata, 'places': locationdata, 'walks': walkdata, 'days': days, 'years': years[0:8]}
 	if len(tags) > 0:
 		ret['tags'] = tags
 	if len(heartdata) > 0:
