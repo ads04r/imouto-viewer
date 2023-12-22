@@ -1,0 +1,32 @@
+
+            <div class="box box-primary">
+                <div class="box-header with-border">
+{% if chart.category %}
+                    <div class="pull-right"><span class="label label-secondary">{{ chart.category }}</span></div>
+{% endif %}
+                    <h3 class="box-title">{{ chart.text }}</h3>
+                </div>
+                <div class="box-body no-padding">
+
+                        <table class="table table-condensed">
+
+{% for row in chart.data_tabular %}
+{% if forloop.counter0 > 0 %}
+                                <tr>
+{% for item in row %}
+{% if forloop.counter0 > 0 %}
+					<td class="pull-right">{{ item }}</td>
+{% else %}
+					<td>{{ item }}</td>
+{% endif %}
+{% endfor %}
+                                </tr>
+{% endif %}
+{% endfor %}
+
+                        </table>
+
+                </div>
+            </div>
+
+

@@ -1,5 +1,5 @@
 from django.forms import ModelForm, ImageField, TextInput, Textarea, Select, DateInput, CheckboxInput, FileInput, URLInput
-from viewer.models import Location, Event, LifeReport, EventWorkoutCategory, LifePeriod, WatchedDirectory, Person
+from viewer.models import Location, Event, EventWorkoutCategory, LifePeriod, WatchedDirectory, Person
 from django.db.models import Sum, Count
 import datetime, pytz
 
@@ -84,11 +84,6 @@ class LifePeriodForm(ModelForm):
 			'start_time': DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD HH:MM:SS'}),
 			'end_time': DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD HH:MM:SS'}),
 		}
-
-class CreateReportForm(ModelForm):
-	class Meta:
-		model = LifeReport
-		fields = ['label', 'style']
 
 class WatchedDirectoryForm(ModelForm):
 	def __init__(self, *args, **kwargs):

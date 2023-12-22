@@ -63,6 +63,32 @@
             </div>
 
 {% endif %}
+{% if year.countries %}
+
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Countries visited</h3>
+                </div>
+                <div class="box-body no-padding">
+
+			<table class="table table-condensed">
+{% for country in year.countries %}
+				<tr>
+					<td><b>{{ country }}</b></td>
+				</tr>
+{% endfor %}
+			</table>
+
+                </div>
+            </div>
+
+{% endif %}
+
+{% for chart in year.charts.all %}
+
+                {% include 'viewer/cards/yearchart.html' %}	
+
+{% endfor %}
 
             </div>
             <div class="col-xs-12 col-sm-12 col-md-8">
