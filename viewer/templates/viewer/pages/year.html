@@ -33,12 +33,17 @@
 			</table>
 
                     <ul class="list-group list-group-unbordered">
-{% for prop in year.properties.all %}
+{% for prop in year.properties.distinct %}
 {% if prop.category == '' %}
 			<li class="list-group-item"><b>{{ prop.key }}</b> {{ prop.category }}<span class="pull-right">{{ prop.value }}</span></li>
 {% endif %}
 {% endfor %}
                     </ul>
+
+<div class="chart">
+<canvas class="donut-chart" style="height: 160px" data-labels="{{ year.location_categories_chart.0|escape }}" data-data="{{ year.location_categories_chart.1|escape }}"></canvas>
+</div>
+
                 </div>
             </div>
 
@@ -107,6 +112,40 @@
                     </div>
                     <div class="box-footer">
                         <a class="btn btn-primary btn-xs" href="#event_{{ event.pk }}">Read more</a>
+                    </div>
+                </div>
+
+{% endfor %}
+
+{% for category in year.get_stat_categories %}
+
+                <div class="box box-primary" id="day_event_{{ event.pk }}">
+                    <div class="box-body">
+                        <div class="row">
+
+{% for graph in year.graphs.all %}
+{% if graph.category == category %}
+
+<div class="col-xs-12 col-sm-6">
+<h4>{{ graph.key }}</h4>
+<canvas class="report-graph" data-type="{{ graph.type }}" data-data="{{ graph.data }}"/>
+</div>
+
+{% endif %}
+{% endfor %}
+
+<div class="col-xs-12 col-sm-12">
+<dl class="dl-horizontal">
+{% for property in year.properties.distinct %}
+{% if property.category == category %}
+	<dt>{{ property.key }}</dt>
+	<dd><nobr><strong>{{ property.value }}</strong>{% if property.description %}&nbsp;<small>&nbsp;({{ property.description }})</small>{% endif %}</nobr></dd>
+{% endif %}
+{% endfor %}
+</dl>
+</div>
+
+                        </div>
                     </div>
                 </div>
 

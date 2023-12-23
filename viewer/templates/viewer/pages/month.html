@@ -61,6 +61,27 @@
                 </div>
             </div>
 
+{% if month.cities %}
+
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Cities visited</h3>
+                </div>
+                <div class="box-body no-padding">
+
+                        <table class="table table-condensed">
+{% for city in month.cities %}
+                                <tr>
+                                        <td><b>{{ city }}</b></td>
+                                </tr>
+{% endfor %}
+                        </table>
+
+                </div>
+            </div>
+
+{% endif %}
+
 {% if history.count > 0 %}
 
             <div class="box box-primary">

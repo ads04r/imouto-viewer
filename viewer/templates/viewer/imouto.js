@@ -861,6 +861,13 @@ function yearScreen(id)
     $(".content-wrapper").load("./years/" + id + ".html", function(response, status, xhr)
     {
         if(status == 'error') { errorPage(xhr); return false; }
+        $('.report-graph').each(function() {
+            var canvas = $(this);
+            var type = canvas.data('type');
+            var data = canvas.data('data');
+            if(type == 'donut') { makeDonutChart(canvas[0].getContext('2d'), data[1], data[0]); }
+        });
+        initialiseGraphics();
     });
 }
 
