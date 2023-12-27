@@ -99,6 +99,9 @@
 
 {% endif %}
 
+            </div>
+            <div class="col-xs-12 col-sm-6 col-md-8">
+
 {% for event in month.life_events %}
 
                 <div class="box box-primary" id="day_event_{{ event.pk }}">
@@ -117,54 +120,6 @@
 
 {% endfor %}
 
-            </div>
-            <div class="col-xs-12 col-sm-6 col-md-4">
-
-                <div class="box box-primary">
-                    <div class="box-body no-padding">
-                        <table class="table table-condensed">
-{% for day in month.days %}
-                                <tr>
-                                        <td><a href="#{{ day.slug }}">{{ day.date|date:"l jS" }}</a></td>
-                                        <td><span class="pull-right">{% if day.average_mood == 5 %}<i class="fa fa-smile-o"></i>{% endif %}{% if day.average_mood == 4 %}<i class="fa fa-smile-o"></i>{% endif %}{% if day.average_mood == 3 %}<i class="fa fa-meh-o"></i>{% endif %}{% if day.average_mood == 2 %}<i class="fa fa-meh-o"></i>{% endif %}{% if day.average_mood == 1 %}<i class="fa fa-frown-o"></i>{% endif %}</span></td>
-                                </tr>
-{% endfor %}
-                        </table>
-                    </div>
-                </div>
-		
-            </div>
-            <div class="col-xs-12 col-sm-6 col-md-4">
-
-                <div class="box box-primary">
-                    <div class="box-body">
-                            <ul class="products-list product-list-in-box">
-
-{% for item in month.people %}
-{% if item.significant %}
-{% if item.image %}
-
-                                <li class="item">
-                                    <div class="product-img">
-                                        <img src="people/{{ item.uid }}_thumb.jpg"/>
-                                    </div>
-                                    <div class="product-info">
-                                        <a class="product-title personlink" href="#person_{{ item.uid }}">
-                                            {{ item.full_name }}</a>
-                                        <span class="product-description">
-                                            {{ item.event_count }} encounter(s)
-                                            </span>
-                                    </div>
-                                </li>
-
-{% endif %}
-{% endif %}
-{% endfor %}
-
-
-                            </ul>
-                    </div>
-                </div>
 
             </div>
         </div>

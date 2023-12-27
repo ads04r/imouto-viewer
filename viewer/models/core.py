@@ -1362,6 +1362,8 @@ class PersonEvent(models.Model):
 
 class Year(models.Model):
 	year = models.IntegerField()
+	caption = models.CharField(max_length=255, default='', blank=True)
+	"""A human-readable caption for the Year, could also be described as the title or summary."""
 	cached_wordcloud = models.ImageField(blank=True, null=True, upload_to=year_wordcloud_upload_location)
 	@property
 	def slug(self):
@@ -1526,7 +1528,7 @@ class Year(models.Model):
 	def workouts(self):
 		ret = []
 		for wc in EventWorkoutCategory.objects.all():
-			item = [str(wc), 0.0]
+			item = [str(wc), 0.0, str(wc.icon)]
 			for event in self.events.filter(type='journey', workout_categories=wc):
 				item[1] = item[1] + event.distance()
 			if item[1] > 0.0:

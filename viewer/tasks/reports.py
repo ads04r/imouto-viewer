@@ -6,7 +6,7 @@ import datetime, pytz, os, random
 
 from viewer.models import Event, Year, create_or_get_year
 from viewer.functions.utils import *
-from viewer.reporting import generate_year_travel, generate_year_photos, generate_year_comms, generate_year_music, generate_year_movies
+from viewer.reporting import generate_year_travel, generate_year_photos, generate_year_comms, generate_year_music, generate_year_movies, generate_year_health
 
 def photo_collage_upload_location(instance, filename):
 	return 'collages/photo_collage_' + str(instance.pk) + '.jpg'
@@ -154,6 +154,7 @@ def generate_report(title, year):
 	except:
 		moonshine_url = ''
 
+	generate_year_health(report)
 	generate_year_travel(report)
 	generate_year_comms(report)
 	generate_year_photos(report)
