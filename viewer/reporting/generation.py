@@ -1,12 +1,13 @@
 from django.db.models import Count, Sum, Max, Min
 from django.conf import settings
-from .models import Event
+from viewer.models import Event
 from bs4 import BeautifulSoup
-import datetime, pytz, os, random, requests
+import datetime, pytz, json, requests
 
-from .models import Year, YearChart, YearProperty, YearGraph
-from .functions.utils import *
-from .functions.moonshine import get_moonshine_artist_image
+from viewer.models import Year, YearChart, YearProperty, YearGraph
+from viewer.models import DataReading, RemoteInteraction
+from viewer.models import Location, Person, Photo
+from viewer.functions.moonshine import get_moonshine_artist_image
 
 def generate_year_travel(year):
 
@@ -108,7 +109,6 @@ def generate_year_comms(year):
 def generate_year_music(year, moonshine_url=''):
 
 	dts = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(year.year, 1, 1, 0, 0, 0))
-	dte = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(year.year + 1, 1, 1, 0, 0, 0)) - datetime.timedelta(seconds=1)
 
 	if len(moonshine_url) > 0:
 		report_url = moonshine_url.rstrip('/') + '/report/' + str(dts.year)
@@ -150,9 +150,6 @@ def generate_year_music(year, moonshine_url=''):
 						prop.save(update_fields=['description'])
 
 def generate_year_movies(year, username=''):
-
-	dts = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(year.year, 1, 1, 0, 0, 0))
-	dte = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(year.year + 1, 1, 1, 0, 0, 0)) - datetime.timedelta(seconds=1)
 
 	if len(username) > 0:
 
