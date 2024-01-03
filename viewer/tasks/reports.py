@@ -142,6 +142,9 @@ def generate_report(title, year):
 	"""
 
 	report = create_or_get_year(year)
+	if len(title) > 0:
+		report.caption = title
+		report.save(update_fields=['caption'])
 	dts = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(report.year, 1, 1, 0, 0, 0))
 	dte = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(report.year + 1, 1, 1, 0, 0, 0)) - datetime.timedelta(seconds=1)
 

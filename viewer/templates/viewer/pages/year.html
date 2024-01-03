@@ -47,7 +47,8 @@
                 </div>
             </div>
 
-{% if year.countries %}
+{% with counries=year.countries %}
+{% if countries %}
 
             <div class="box box-primary">
                 <div class="box-header with-border">
@@ -56,7 +57,7 @@
                 <div class="box-body no-padding">
 
 			<table class="table table-condensed">
-{% for country in year.countries %}
+{% for country in countries %}
 				<tr>
 					<td><b>{{ country }}</b></td>
 				</tr>
@@ -67,6 +68,7 @@
             </div>
 
 {% endif %}
+{% endwith %}
 
 {% for chart in year.charts.all %}
 

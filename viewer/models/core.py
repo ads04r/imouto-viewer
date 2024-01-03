@@ -14,7 +14,7 @@ from PIL import Image
 from io import BytesIO
 from wordcloud import WordCloud, STOPWORDS
 from configparser import ConfigParser
-from staticmap import StaticMap, Line
+from staticmap import StaticMap, Line, CircleMarker
 from dateutil import parser
 from xml.dom import minidom
 from tzfpy import get_tz
@@ -24,7 +24,7 @@ from viewer.health import parse_sleep, max_heart_rate
 from viewer.functions.geo import get_location_name
 from viewer.functions.location_manager import get_possible_location_events, get_logged_position, getgeoline, getelevation, getspeed, getboundingbox
 from viewer.staticcharts import generate_pie_chart, generate_donut_chart
-from viewer.functions.file_uploads import *
+from viewer.functions.file_uploads import user_thumbnail_upload_location, photo_thumbnail_upload_location, location_thumbnail_upload_location, report_pdf_upload_location, report_wordcloud_upload_location, report_graph_upload_location, event_collage_upload_location, event_staticmap_upload_location, tag_staticmap_upload_location, year_wordcloud_upload_location
 
 import random, datetime, pytz, json, markdown, re, os, overpy, holidays
 
@@ -468,6 +468,21 @@ class Location(models.Model):
 		indexes = [
 			models.Index(fields=['label']),
 			models.Index(fields=['full_label']),
+		]
+
+class LocationProperty(models.Model):
+	location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name="properties")
+	key = models.SlugField(max_length=32)
+	value = models.CharField(max_length=255)
+	def __str__(self):
+		return str(self.location) + ' - ' + self.key
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'location property'
+		verbose_name_plural = 'location properties'
+		indexes = [
+			models.Index(fields=['location']),
+			models.Index(fields=['key']),
 		]
 
 class Person(models.Model):
@@ -958,7 +973,7 @@ class Event(models.Model):
 		return md.convert(self.description)
 	def refresh(self, save=True):
 		if self.type == 'journey':
-			geo = self.__refresh_geo(save=False)
+			self.__refresh_geo(save=False)
 			self.elevation = getelevation(self.start_time, self.end_time)
 			self.speed = getspeed(self.start_time, self.end_time)
 		if self.type == 'loc_prox':
@@ -966,7 +981,7 @@ class Event(models.Model):
 			self.elevation = ''
 			self.speed = ''
 		if len(self.cached_health) <= 2:
-			health = self.__refresh_health(save=False)
+			self.__refresh_health(save=False)
 		if save:
 			self.save()
 	def subevents(self):
@@ -1442,7 +1457,7 @@ class Year(models.Model):
 		return LocationCity.objects.filter(locations__events__in=self.events).exclude(locations__pk=settings.USER_HOME_LOCATION).distinct()
 	def get_stat_categories(self):
 		ret = []
-		for item in list(self.properties.values('category').distinct()) + list(self.graphs.values('category').distinct()):
+		for item in list(self.properties.values('category').distinct()) + list(self.charts.values('category').distinct()) + list(self.graphs.values('category').distinct()):
 			if item['category'] == '':
 				continue
 			if item['category'] in ret:
@@ -1724,6 +1739,12 @@ class Month(models.Model):
 			dt = dt + datetime.timedelta(days=1)
 		return Day.objects.filter(date__gte=dts, date__lt=dte).order_by('date')
 	@property
+	def cities(self):
+		"""
+		Every city visited in this month.
+		"""
+		return LocationCity.objects.filter(locations__events__in=self.events).exclude(locations__pk=settings.USER_HOME_LOCATION).distinct()
+	@property
 	def earliest_morning(self):
 		"""
 		The day with the earliest wake_time in this month.
@@ -1821,11 +1842,11 @@ class Month(models.Model):
 		"""
 		Every described life event during this month.
 		"""
-		dts = datetime.datetime(self.year, self.month, 1, 0, 0, 0)
+		dts = pytz.utc.localize(datetime.datetime(self.year, self.month, 1, 0, 0, 0))
 		if self.month < 12:
-			dte = datetime.datetime(self.year, self.month + 1, 1, 0, 0, 0) - datetime.timedelta(seconds=1)
+			dte = pytz.utc.localize(datetime.datetime(self.year, self.month + 1, 1, 0, 0, 0)) - datetime.timedelta(seconds=1)
 		else:
-			dte = datetime.datetime(self.year + 1, 1, 1, 0, 0, 0) - datetime.timedelta(seconds=1)
+			dte = pytz.utc.localize(datetime.datetime(self.year + 1, 1, 1, 0, 0, 0)) - datetime.timedelta(seconds=1)
 		return Event.objects.filter(start_time__gte=dts, start_time__lte=dte, type="life_event").order_by('start_time')
 	def workouts(self):
 		ret = []
@@ -1851,6 +1872,21 @@ class Month(models.Model):
 			ret[0].append(str(item[0]))
 			ret[1].append(item[1])
 		return (json.dumps(ret[0]), json.dumps(ret[1]))
+	def new_people(self):
+		ret = []
+		for person in self.people.all():
+			if person.first_month(self.year) == self.month:
+				ret.append(person)
+		return ret
+	def longest_journey(self):
+		ret = None
+		dist = 0
+		for event in self.events.filter(type='journey'):
+			new_dist = event.distance()
+			if new_dist > dist:
+				ret = event
+				dist = new_dist
+		return ret
 	def __str__(self):
 		return(datetime.date(self.year, self.month, 1).strftime('%B %Y'))
 	class Meta:

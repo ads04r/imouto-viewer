@@ -22,18 +22,4 @@ class WeatherReading(models.Model):
 		verbose_name = 'weather reading'
 		verbose_name_plural = 'weather readings'
 
-class LocationProperty(models.Model):
-	location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name="properties")
-	key = models.SlugField(max_length=32)
-	value = models.CharField(max_length=255)
-	def __str__(self):
-		return str(self.location) + ' - ' + self.key
-	class Meta:
-		app_label = 'viewer'
-		verbose_name = 'location property'
-		verbose_name_plural = 'location properties'
-		indexes = [
-			models.Index(fields=['location']),
-			models.Index(fields=['key']),
-		]
 

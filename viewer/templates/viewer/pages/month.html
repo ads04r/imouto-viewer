@@ -61,7 +61,8 @@
                 </div>
             </div>
 
-{% if month.cities %}
+{% with cities=month.cities %}
+{% if cities %}
 
             <div class="box box-primary">
                 <div class="box-header with-border">
@@ -70,7 +71,7 @@
                 <div class="box-body no-padding">
 
                         <table class="table table-condensed">
-{% for city in month.cities %}
+{% for city in cities %}
                                 <tr>
                                         <td><b>{{ city }}</b></td>
                                 </tr>
@@ -81,6 +82,7 @@
             </div>
 
 {% endif %}
+{% endwith %}
 
 {% if history.count > 0 %}
 
@@ -119,7 +121,54 @@
                 </div>
 
 {% endfor %}
+{% with people=month.new_people %}
+{% if people %}
 
+                <div class="box box-primary" id="day_event_{{ event.pk }}">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">People</h3>
+                    </div>
+                    <div class="box-body">
+
+                        <ul class="users-list clearfix">
+
+{% for item in people %}
+                        
+                            <li>
+                                {% if item.image %}<img class="profile-user-img img-responsive" src="people/{{ item.uid }}_thumb.jpg"/>{% else %}<img class="profile-user-img img-responsive img-circle" src="{% static "viewer/graphics/unknown_person.jpg" %}">{% endif %}
+                                <a class="users-list-name personlink" href="#person_{{ item.uid }}">
+                                    {{ item.full_name }}</a>
+                            </li>
+
+{% endfor %}
+
+                        </ul>
+
+                    </div>
+                </div>
+
+{% endif %}
+{% endwith %}
+{% with event=month.longest_journey %}
+{% if event %}
+
+                <div class="box box-primary" id="day_event_{{ event.pk }}">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Longest Journey</h3>
+                        <span class="pull-right">{{ event.start_time|date:"l g:ia" }}</span>
+                    </div>
+                    <div class="box-body">
+
+                {% include 'viewer/cards/event.html' %}
+
+                    </div>
+                    <div class="box-footer">
+                        <a class="btn btn-primary btn-xs" href="#event_{{ event.pk }}">Read more</a>
+                    </div>
+                </div>
+
+{% endif %}
+{% endwith %}
 
             </div>
         </div>

@@ -131,6 +131,30 @@ def generate_year_music(year, moonshine_url=''):
 						chart_data.append(item)
 					if len(chart_data) > 0:
 						year.add_chart(text='Most Played Artists', category='music', chart_data=chart_data)
+				if 'tracks' in music_data['charts']:
+					chart_data = []
+					for track in music_data['charts']['tracks']:
+						mbid = track['mbid']
+						item = {'text': track['title'], 'value': track['plays']}
+						image = None
+						track_url = moonshine_url.rstrip('/') + '/track/' + str(mbid)
+						req = requests.get(track_url)
+						if(req.status_code == 200):
+							track_data = json.loads(req.text)
+							artist_data = {}
+							if 'artists' in track_data:
+								if isinstance(track_data['artists'], list):
+									if len(track_data['artists']) > 0:
+										artist_data = track_data['artists'][0]
+							if 'name' in artist_data:
+								item['text'] = artist_data['name'] + ' - ' + track['title']
+							if 'mbid' in artist_data:
+								image = get_moonshine_artist_image(artist_data['mbid'])
+						if image:
+							item['image'] = image
+						chart_data.append(item)
+					if len(chart_data) > 0:
+						year.add_chart(text='Most Played Songs', category='music', chart_data=chart_data)
 			if 'play_count' in music_data:
 				prop = year.add_property(key='Tracks played', icon='music', value=str(music_data['play_count']), category='music')
 				if 'track_count' in music_data:

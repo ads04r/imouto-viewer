@@ -877,6 +877,7 @@ function monthScreen(id)
     {
         if(status == 'error') { errorPage(xhr); return false; }
         initialiseGraphics();
+        makeMap();
     });
 }
 
