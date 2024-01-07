@@ -7,6 +7,7 @@ import datetime, pytz, os, random
 from viewer.models import Event, Year, create_or_get_year
 from viewer.functions.utils import *
 from viewer.reporting.generation import generate_year_travel, generate_year_photos, generate_year_comms, generate_year_music, generate_year_movies, generate_year_health
+from viewer.reporting.pdf import generate_year_pdf
 
 def photo_collage_upload_location(instance, filename):
 	return 'collages/photo_collage_' + str(instance.pk) + '.jpg'
@@ -174,3 +175,13 @@ def generate_report(title, year):
 					generate_staticmap(event.pk)
 
 	generate_year_wordcloud(year)
+
+@background(schedule=0, queue='reports')
+def generate_report_pdf(year):
+	"""
+	A background task for generating a PDF from a Year object
+
+	:param year: The calendar year with which to make a report
+	"""
+	report = create_or_get_year(year)
+	generate_year_pdf(year, '/home/pi/data/reports/test_' + str(year) + '_report.pdf')

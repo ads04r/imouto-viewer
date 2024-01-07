@@ -1,5 +1,5 @@
 from reportlab.lib.pagesizes import A4
-from reportlab.platypus import SimpleDocTemplate, Paragraph, ParagraphAndImage, KeepTogether, Table, Image, PageBreak, PageBreakIfNotEmpty, BalancedColumns
+from reportlab.platypus import SimpleDocTemplate, Paragraph, ParagraphAndImage, KeepTogether, Table, Image, PageBreak, PageBreakIfNotEmpty, BalancedColumns, Frame
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch, cm
 from reportlab.graphics.shapes import Drawing
@@ -18,7 +18,10 @@ class SectionTitle(Paragraph):
 def generate_year_story(year, styles):
 
 	story = []
-	for category in year.get_stat_categories():
+	if year.cached_wordcloud:
+		story.append(Image(str(year.cached_wordcloud.file), width=18*cm, height=25*cm))
+		story.append(PageBreakIfNotEmpty())
+	for category in year.get_all_stat_categories():
 		statboxes = []
 		graphs = []
 		stats = []
@@ -78,6 +81,22 @@ def generate_year_story(year, styles):
 			story.append(item)
 	return story
 
+def generate_life_event_story(event, styles):
+
+	story = []
+	items = []
+	items.append(Paragraph(event.caption, style=styles['Heading1']))
+	if event.description:
+		md = markdown.Markdown()
+		html = md.convert(event.description.replace('\n', '\n\n'))
+		if event.cover_photo:
+			file_path = str(event.cover_photo.file.path)
+		items.append(Paragraph(html, style=styles['Normal']))
+	item = KeepTogether(items)
+	story.append(item)
+	story.append(PageBreakIfNotEmpty())
+	return story
+
 def generate_month_story(month, styles):
 
 	story = []
@@ -103,22 +122,33 @@ def generate_month_story(month, styles):
 		story.append(Table(table))
 		story.append(PageBreakIfNotEmpty())
 	for event in month.life_events.order_by('start_time'):
-		items = []
-		items.append(Paragraph(event.caption, style=styles['Heading1']))
+		for item in generate_life_event_story(event, styles):
+			story.append(item)
+	for event in month.reportable_events().order_by('start_time'):
 		if event.description:
-			md = markdown.Markdown()
-			html = md.convert(event.description.replace('\n', '\n\n'))
-			if event.cover_photo:
-				file_path = str(event.cover_photo.file.path)
-#				if os.path.exists(file_path):
-#					items.append(Image(file_path, width=15*cm))
-			items.append(Paragraph(html, style=styles['Normal']))
-		item = KeepTogether(items)
-		story.append(item)
-		story.append(PageBreakIfNotEmpty())
+			if event.cached_staticmap:
+				story.append(Table(
+					[
+						[Paragraph(event.caption, style=styles['Heading2']), ''], 
+						[Paragraph(event.description_html(), style=styles['Normal']), Image(str(event.cached_staticmap.file), width=6*cm, height=6*cm)]
+					], colWidths=[None, 7*cm], style=[('VALIGN', (0, 0), (1, 2), 'TOP'), ('SPAN', (0, 0), (1, 0))]))
+			else:
+				story.append(Table(
+					[
+						[Paragraph(event.caption, style=styles['Heading2'])],
+						[Paragraph(event.description_html(), style=styles['Normal'])]
+					], colWidths=[None, 7*cm], style=[('VALIGN', (0, 0), (0, 1), 'TOP')]))
+	story.append(PageBreakIfNotEmpty())
+	for event in month.reportable_events().order_by('start_time'):
+		if event.photo_collages.count() >= 1:
+			story.append(Image(str(event.photo_collages.first().image.file), width=18*cm, height=25*cm))
+
+	story.append(PageBreakIfNotEmpty())
 	return story
 
-def generate_test_document(year, export_file, document_styles=None):
+#							Paragraph(event.start_time.strftime("%A %d %B, %I:%M"), style=styles['Italic']),
+
+def generate_year_pdf(year, export_file, document_styles=None):
 
 	doc = SimpleDocTemplate(export_file, pagesize=A4, rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
 	year = Year.objects.get(year=year)

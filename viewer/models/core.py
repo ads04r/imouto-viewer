@@ -1457,6 +1457,15 @@ class Year(models.Model):
 		return LocationCity.objects.filter(locations__events__in=self.events).exclude(locations__pk=settings.USER_HOME_LOCATION).distinct()
 	def get_stat_categories(self):
 		ret = []
+		for item in list(self.properties.values('category').distinct()) + list(self.graphs.values('category').distinct()):
+			if item['category'] == '':
+				continue
+			if item['category'] in ret:
+				continue
+			ret.append(item['category'])
+		return ret
+	def get_all_stat_categories(self):
+		ret = []
 		for item in list(self.properties.values('category').distinct()) + list(self.charts.values('category').distinct()) + list(self.graphs.values('category').distinct()):
 			if item['category'] == '':
 				continue
@@ -1887,6 +1896,8 @@ class Month(models.Model):
 				ret = event
 				dist = new_dist
 		return ret
+	def reportable_events(self):
+		return self.events.exclude(type='life_event').exclude(cached_staticmap=None).exclude(description=None).exclude(description='').union(self.events.exclude(type='life_event').exclude(photo_collages=None))
 	def __str__(self):
 		return(datetime.date(self.year, self.month, 1).strftime('%B %Y'))
 	class Meta:
