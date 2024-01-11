@@ -1898,7 +1898,12 @@ class Month(models.Model):
 				dist = new_dist
 		return ret
 	def reportable_events(self):
-		return self.events.exclude(type='life_event').exclude(cached_staticmap=None).exclude(description=None).exclude(description='').union(self.events.exclude(type='life_event').exclude(photo_collages=None))
+		exclude = []
+		for life_event in self.life_events.all():
+			for event in life_event.subevents():
+				if not(event.id in exclude):
+					exclude.append(event.id)
+		return self.events.exclude(type='life_event').exclude(cached_staticmap=None).exclude(description=None).exclude(description='').exclude(id__in=exclude).union(self.events.exclude(type='life_event').exclude(photo_collages=None).exclude(id__in=exclude))
 	def __str__(self):
 		return(datetime.date(self.year, self.month, 1).strftime('%B %Y'))
 	class Meta:

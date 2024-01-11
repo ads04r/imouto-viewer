@@ -8,20 +8,18 @@ from viewer.models.core import Year, Month, Day, Event
 from tempfile import NamedTemporaryFile
 import random, json, markdown, os
 
-class SectionTitle(Paragraph):
-
-	def wrap(self, availWidth, availHeight):
-		return Paragraph.wrap(self, availWidth, availHeight)
-	def draw(self):
-		Paragraph.draw(self)
-
 def imouto_sample_layout(doc):
 
-	return [PageTemplate(id='FullPage', frames=Frame(doc.leftMargin, doc.bottomMargin, doc.width, doc.height, id='normal')),
-		PageTemplate(id='TwoColumns', frames=[
+	return [PageTemplate(id='TitlePage', frames=Frame(doc.leftMargin, doc.bottomMargin, doc.width, doc.height, id='fullpage')),
+		PageTemplate(id='FullPage', frames=Frame(doc.leftMargin, doc.bottomMargin, doc.width, doc.height, id='fullpage')),
+		PageTemplate(id='LifeEventPage', frames=Frame(doc.leftMargin, doc.bottomMargin, doc.width, doc.height, id='lifeeventpage')),
+		PageTemplate(id='PeoplePage', frames=Frame(doc.leftMargin, doc.bottomMargin, doc.width, doc.height, id='peoplepage'), onPage=imouto_sample_footer),
+		PageTemplate(id='EventsPage', frames=Frame(doc.leftMargin, doc.bottomMargin, doc.width, doc.height, id='eventspage'), onPage=imouto_sample_footer),
+		PageTemplate(id='Normal', frames=Frame(doc.leftMargin, doc.bottomMargin, doc.width, doc.height, id='normal'), onPage=imouto_sample_footer),
+		PageTemplate(id='StatsPage', frames=[
 			Frame(doc.leftMargin, doc.bottomMargin, (doc.width / 2) - 6, doc.height, id='col1'),
 			Frame(doc.leftMargin + (doc.width / 2) + 6, doc.bottomMargin, (doc.width / 2) - 6, doc.height, id='col2')
-		], onPage=render_footer)]
+		], onPage=imouto_sample_footer)]
 
 def imouto_sample_stylesheet():
 
@@ -35,6 +33,8 @@ def imouto_sample_stylesheet():
 	ret['Heading3'] = sss['Heading3']
 	ret['Heading4'] = sss['Heading4']
 
+	ret['SectionTitle'] = ParagraphStyle('SectionTitle', parent=sss['Title'], alignment=1, textTransform='uppercase', spaceBefore=cm, spaceAfter=0)
+	ret['SectionSubTitle'] = ParagraphStyle('SectionTitle', parent=sss['Title'], alignment=1, textTransform='uppercase', spaceBefore=cm, spaceAfter=0)
 	ret['GraphTitle'] = ParagraphStyle('GraphTitle', parent=sss['Heading2'], alignment=1, textTransform='uppercase', spaceBefore=cm, spaceAfter=0)
 	ret['StatisticTitle'] = ParagraphStyle('StatisticTitle', parent=sss['Heading2'], alignment=1, textTransform='uppercase', spaceBefore=cm, spaceAfter=0)
 	ret['StatisticValue'] = ParagraphStyle('StatisticValue', parent=sss['Heading1'], alignment=1, spaceBefore=0, spaceAfter=0)
@@ -42,13 +42,25 @@ def imouto_sample_stylesheet():
 
 	return ret
 
+def imouto_sample_footer(canvas, doc):
+	canvas.saveState()
+	canvas.setFont('Times-Roman', 12)
+	text = "Page " + str(doc.page)
+	if doc.page % 2 == 0:
+		canvas.drawString(cm, cm, text)
+	else:
+		canvas.drawRightString(doc.width - cm, cm, text)
+	canvas.restoreState()
+
 def generate_year_story(year, styles):
 
 	story = []
+	story.append(Paragraph(str(year.year), style=styles['SectionTitle']))
+	story.append(Paragraph(str(year.caption), style=styles['SectionSubTitle']))
 	if year.cached_wordcloud:
-		story.append(Image(str(year.cached_wordcloud.file), width=18*cm, height=25*cm))
-		story.append(NextPageTemplate('TwoColumns'))
+		story.append(NextPageTemplate('FullPage'))
 		story.append(PageBreakIfNotEmpty())
+		story.append(Image(str(year.cached_wordcloud.file), width=18*cm, height=25*cm))
 	for category in year.get_all_stat_categories():
 		stats = []
 		graphs = []
@@ -93,7 +105,7 @@ def generate_year_story(year, styles):
 				piechart.add(pie)
 				graphs.append(Table([[Paragraph(graph.key, style=styles['GraphTitle'])], [piechart]], style=[('NOSPLIT', (0, 0), (-1, -1))]))
 		if (len(stats) + len(graphs)) > 0:
-			story.append(NextPageTemplate('TwoColumns'))
+			story.append(NextPageTemplate('StatsPage'))
 			story.append(PageBreakIfNotEmpty())
 			story.append(Paragraph(str(year.year) + " in " + str(category), style=styles['Heading1']))
 			for s in stats:
@@ -102,9 +114,9 @@ def generate_year_story(year, styles):
 				story.append(g)
 			for c in charts:
 				story.append(c)
-	story.append(NextPageTemplate('FullPage'))
-	story.append(PageBreakIfNotEmpty())
 	for i in range(0, 12):
+		story.append(NextPageTemplate('TitlePage'))
+		story.append(PageBreakIfNotEmpty())
 		month = Month.objects.get(year=year.year, month=(i + 1))
 		for item in generate_month_story(month, styles):
 			story.append(item)
@@ -142,17 +154,29 @@ def generate_month_story(month, styles):
 		if len(row) >= max_people_per_row:
 			table.append(row)
 			row = []
+	life_events = month.life_events.order_by('start_time')
 	if len(row) > 0:
 		table.append(row)
-	story.append(SectionTitle(str(month), style=styles['Title']))
+	story.append(Paragraph(str(month), style=styles['SectionTitle']))
+	if len(table) > 0:
+		story.append(NextPageTemplate('PeoplePage'))
+	else:
+		if life_events.count == 0:
+			story.append(NextPageTemplate('EventsPage'))
+		else:
+			story.append(NextPageTemplate('LifeEventPage'))
 	story.append(PageBreakIfNotEmpty())
 	if len(table) > 0:
 		story.append(Paragraph("People", style=styles['Heading1']))
 		story.append(Table(table))
+		story.append(NextPageTemplate('EventsPage'))
 		story.append(PageBreakIfNotEmpty())
-	for event in month.life_events.order_by('start_time'):
+	for event in life_events:
 		for item in generate_life_event_story(event, styles):
 			story.append(item)
+	if life_events.count() > 0:
+		story.append(NextPageTemplate('EventsPage'))
+		story.append(PageBreakIfNotEmpty())
 	for event in month.reportable_events().order_by('start_time'):
 		if event.description:
 			if event.cached_staticmap:
@@ -160,26 +184,29 @@ def generate_month_story(month, styles):
 					[
 						[Paragraph(event.caption, style=styles['Heading2']), ''],
 						[Paragraph(event.description_html(), style=styles['Normal']), Image(str(event.cached_staticmap.file), width=6*cm, height=6*cm)]
-					], colWidths=[None, 7*cm], style=[('VALIGN', (0, 0), (1, 2), 'TOP'), ('SPAN', (0, 0), (1, 0))]))
+					], colWidths=[None, 7*cm], style=[('VALIGN', (0, 0), (1, 2), 'TOP'), ('NOSPLIT', (0, 0), (-1, -1)), ('SPAN', (0, 0), (1, 0))]))
+			elif event.cover_photo:
+				tf = NamedTemporaryFile(delete=False)
+				im = event.cover_photo.thumbnail(200)
+				im.save(tf, format='JPEG')
+				story.append(Table(
+					[
+						[Paragraph(event.caption, style=styles['Heading2']), ''],
+						[Paragraph(event.description_html(), style=styles['Normal']), Image(str(tf.name), width=6*cm, height=6*cm)]
+					], colWidths=[None, 7*cm], style=[('VALIGN', (0, 0), (1, 2), 'TOP'), ('NOSPLIT', (0, 0), (-1, -1)), ('SPAN', (0, 0), (1, 0))]))
 			else:
 				story.append(Table(
 					[
 						[Paragraph(event.caption, style=styles['Heading2'])],
 						[Paragraph(event.description_html(), style=styles['Normal'])]
-					], colWidths=[None, 7*cm], style=[('VALIGN', (0, 0), (0, 1), 'TOP')]))
+					], colWidths=[None, 7*cm], style=[('VALIGN', (0, 0), (0, 1), 'TOP'), ('NOSPLIT', (0, 0), (-1, -1))]))
+	story.append(NextPageTemplate('FullPage'))
 	story.append(PageBreakIfNotEmpty())
 	for event in month.reportable_events().order_by('start_time'):
 		if event.photo_collages.count() >= 1:
 			story.append(Image(str(event.photo_collages.first().image.file), width=18*cm, height=25*cm))
 
-	story.append(PageBreakIfNotEmpty())
 	return story
-
-def render_footer(canvas, doc):
-	canvas.saveState()
-	canvas.setFont('Times-Roman', 9)
-	canvas.drawString(cm, cm, "Page %d" % doc.page)
-	canvas.restoreState()
 
 def generate_year_pdf(year, export_file, stylesheet=None, layout=None):
 
