@@ -7,8 +7,8 @@ def photo_thumbnail_upload_location(instance, filename):
 def location_thumbnail_upload_location(instance, filename):
 	return 'places/' + str(instance.uid) + '/' + filename
 
-def report_pdf_upload_location(instance, filename):
-	return 'reports/report_' + str(instance.id) + '.pdf'
+def year_pdf_upload_location(instance, filename):
+	return 'reports/report_' + str(instance.year) + "_" + str(instance.id) + '.pdf'
 
 def report_wordcloud_upload_location(instance, filename):
 	return 'wordclouds/report_wc_' + str(instance.id) + '.png'

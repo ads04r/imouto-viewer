@@ -24,7 +24,7 @@ from viewer.health import parse_sleep, max_heart_rate
 from viewer.functions.geo import get_location_name
 from viewer.functions.location_manager import get_possible_location_events, get_logged_position, getgeoline, getelevation, getspeed, getboundingbox
 from viewer.staticcharts import generate_pie_chart, generate_donut_chart
-from viewer.functions.file_uploads import user_thumbnail_upload_location, photo_thumbnail_upload_location, location_thumbnail_upload_location, report_pdf_upload_location, report_wordcloud_upload_location, report_graph_upload_location, event_collage_upload_location, event_staticmap_upload_location, tag_staticmap_upload_location, year_wordcloud_upload_location
+from viewer.functions.file_uploads import user_thumbnail_upload_location, photo_thumbnail_upload_location, location_thumbnail_upload_location, year_pdf_upload_location, report_wordcloud_upload_location, report_graph_upload_location, event_collage_upload_location, event_staticmap_upload_location, tag_staticmap_upload_location, year_wordcloud_upload_location
 
 import random, datetime, pytz, json, markdown, re, os, overpy, holidays
 
@@ -1380,6 +1380,7 @@ class Year(models.Model):
 	caption = models.CharField(max_length=255, default='', blank=True)
 	"""A human-readable caption for the Year, could also be described as the title or summary."""
 	cached_wordcloud = models.ImageField(blank=True, null=True, upload_to=year_wordcloud_upload_location)
+	cached_pdf = models.FileField(blank=True, null=True, upload_to=year_pdf_upload_location)
 	@property
 	def slug(self):
 		"""
