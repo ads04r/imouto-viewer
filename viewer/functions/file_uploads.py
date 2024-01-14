@@ -27,3 +27,6 @@ def tag_staticmap_upload_location(instance, filename):
 
 def year_wordcloud_upload_location(instance, filename):
 	return 'wordclouds/year_wc_' + str(instance.year) + '.png'
+
+def photo_collage_upload_location(instance, filename):
+	return 'collages/photo_collage_' + str(instance.pk) + '.jpg'

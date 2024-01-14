@@ -1,16 +1,15 @@
 from background_task import background
 from django.conf import settings
-from viewer.eventcollage import make_collage
 from tempfile import NamedTemporaryFile
-import datetime, pytz, os, random
+import datetime, pytz, os, random, json
 
 from viewer.models import Event, Year, create_or_get_year
 from viewer.functions.utils import *
 from viewer.reporting.generation import generate_year_travel, generate_year_photos, generate_year_comms, generate_year_music, generate_year_movies, generate_year_health
 from viewer.reporting.pdf import generate_year_pdf
-
-def photo_collage_upload_location(instance, filename):
-	return 'collages/photo_collage_' + str(instance.pk) + '.jpg'
+from viewer.functions.file_uploads import photo_collage_upload_location, year_pdf_upload_location
+from viewer.eventcollage import make_collage
+from background_task.models import Task
 
 @background(schedule=0, queue='reports')
 def generate_staticmap(event_id):
@@ -136,7 +135,7 @@ def generate_year_wordcloud(year):
 @background(schedule=0, queue='reports')
 def generate_report(title, year):
 	"""
-	A background task for generating a LifeReport object
+	A background task for generating statistics for a year
 
 	:param title: A descriptive title for the report (eg "The Year I Got Married")
 	:param year: The calendar year with which to make a report
@@ -175,6 +174,7 @@ def generate_report(title, year):
 					generate_staticmap(event.pk)
 
 	generate_year_wordcloud(year)
+	generate_report_pdf(year)
 
 @background(schedule=0, queue='reports')
 def generate_report_pdf(year):
@@ -183,5 +183,17 @@ def generate_report_pdf(year):
 
 	:param year: The calendar year with which to make a report
 	"""
+
+	for task in Task.objects.filter(task_name__contains='generate_report_pdf', queue='reports'):
+		task_year = json.loads(task.task_params)[0][0]
+		if task_year == year:
+			return False # Don't start another task if one is already queued or running
+
 	report = create_or_get_year(year)
-	generate_year_pdf(year, '/home/pi/data/reports/test_' + str(year) + '_report.pdf')
+	if report.cached_pdf:
+		report.cached_pdf.delete()
+		report.save(update_fields=['cached_pdf'])
+	path = os.path.join(settings.MEDIA_ROOT, year_pdf_upload_location(year, ''))
+	generate_year_pdf(year, path)
+	report.cached_pdf = path
+	report.save(update_fields=['cached_pdf'])

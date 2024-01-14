@@ -931,6 +931,11 @@ class Event(models.Model):
 			geo = json.loads(self.geo)['geometry']
 		else:
 			geo = {'type': 'None'}
+		if geo['type'] == 'GeometryCollection':
+			for subgeo in geo['geometries']:
+				if subgeo['type'] == 'MultiLineString':
+					geo = subgeo
+					break
 		if geo['type'] != 'MultiLineString':
 			im = Image.new('RGB', (1024, 1024))
 			blob = BytesIO()
@@ -1899,7 +1904,9 @@ class Month(models.Model):
 		return ret
 	def reportable_events(self):
 		exclude = []
-		for life_event in self.life_events.all():
+		dts = pytz.utc.localize(datetime.datetime(self.year, 1, 1, 0, 0, 0))
+		dte = pytz.utc.localize(datetime.datetime(self.year + 1, 1, 1, 0, 0, 0)) - datetime.timedelta(seconds=1)
+		for life_event in Event.objects.filter(start_time__gte=dts, start_time__lte=dte, type="life_event"):
 			for event in life_event.subevents():
 				if not(event.id in exclude):
 					exclude.append(event.id)
