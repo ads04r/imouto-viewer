@@ -856,6 +856,19 @@ function eventsScreen()
     });
 }
 
+function updateReportStatus()
+{
+    var id = $("#year-report-generation-progress").data('year');
+    $("#year-report-generation-progress").load("./years/progress/" + id + ".html", function(response, status, xhr)
+    {
+	$(".add-year-report").on('click', function()
+	{
+            $("#createyearreport").modal('show');
+            return false;
+	});
+    });
+}
+
 function yearScreen(id)
 {
     $(".content-wrapper").load("./years/" + id + ".html", function(response, status, xhr)
@@ -868,6 +881,9 @@ function yearScreen(id)
             if(type == 'donut') { makeDonutChart(canvas[0].getContext('2d'), data[1], data[0]); }
         });
         initialiseGraphics();
+        $('#generateyearpdfsubmit').on('click', function() { $('#generateyearpdfform').submit(); return false; });
+        createTimer(updateReportStatus, 1000);
+	updateReportStatus()
     });
 }
 

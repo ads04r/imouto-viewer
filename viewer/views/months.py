@@ -15,7 +15,8 @@ def month(request, ds):
 
 	history = HistoricalEvent.objects.filter(date__month=m, date__year=y).order_by('date')
 	longest_journey = obj.longest_journey()
-	generate_staticmap(longest_journey.pk)
+	if not(longest_journey is None):
+		generate_staticmap(longest_journey.pk)
 
 	context = {'type':'view', 'caption': str(obj), 'month': obj, 'history': history, 'longest_journey': longest_journey}
 	template = 'viewer/pages/month.html'

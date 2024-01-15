@@ -45,6 +45,8 @@
 </div>
 
                 </div>
+                <div class="box-footer" id="year-report-generation-progress" data-year="{{ year.year }}">
+                </div>
             </div>
 
 {% with counries=year.countries %}
@@ -141,3 +143,4 @@
 
 </section>
 
+{% include 'viewer/modal/createyearreport.html' %}

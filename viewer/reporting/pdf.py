@@ -36,11 +36,12 @@ def imouto_sample_stylesheet():
 	ret['YearTitle'] = ParagraphStyle('YearTitle', parent=sss['Title'], alignment=1, textTransform='uppercase', fontSize=100, leading=120)
 	ret['SectionTitle'] = ParagraphStyle('SectionTitle', parent=sss['Title'], alignment=1, textTransform='uppercase', fontSize=36, leading=40)
 	ret['SectionSubTitle'] = ParagraphStyle('SectionTitle', parent=sss['Title'], alignment=1, textTransform='uppercase')
-	ret['GraphTitle'] = ParagraphStyle('GraphTitle', parent=sss['Heading2'], alignment=1, textTransform='uppercase', spaceBefore=cm, spaceAfter=0)
-	ret['EventTitle'] = ParagraphStyle('EventTitle', parent=sss['Heading2'])
+	ret['ChartTitle'] = ParagraphStyle('GraphTitle', parent=sss['Heading2'], alignment=1, textTransform='uppercase', backColor='#CFCFCF', spaceBefore=cm, spaceAfter=0)
+	ret['GraphTitle'] = ParagraphStyle('GraphTitle', parent=sss['Heading2'], alignment=1, textTransform='uppercase', backColor='#CFCFCF', spaceBefore=cm, spaceAfter=0)
+	ret['EventTitle'] = ParagraphStyle('EventTitle', parent=sss['Heading2'], backColor='#CFCFCF')
 	ret['EventDate'] = ParagraphStyle('EventDate', parent=sss['Normal'])
 	ret['EventText'] = ParagraphStyle('EventText', parent=sss['Normal'])
-	ret['StatisticTitle'] = ParagraphStyle('StatisticTitle', parent=sss['Heading2'], alignment=1, textTransform='uppercase', spaceBefore=cm, spaceAfter=0)
+	ret['StatisticTitle'] = ParagraphStyle('StatisticTitle', parent=sss['Heading2'], alignment=1, textTransform='uppercase', backColor='#CFCFCF', spaceBefore=cm, spaceAfter=0)
 	ret['StatisticValue'] = ParagraphStyle('StatisticValue', parent=sss['Heading1'], alignment=1, spaceBefore=0, spaceAfter=0)
 	ret['StatisticDescription'] = ParagraphStyle('StatisticDescription', parent=sss['Normal'], alignment=1, spaceBefore=0, spaceAfter=1.5*cm)
 
@@ -83,7 +84,7 @@ def generate_year_story(year, styles):
 				[Paragraph(desc, style=styles['StatisticDescription'])]
 				], style=[('ALIGN', (0, 0), (0, 3), 'CENTER'), ('VALIGN', (0, 0), (0, 3), 'TOP')]))
 		for chart in year.charts.filter(category=category):
-			data = [[Paragraph(str(chart.text), style=styles['Heading2']), '']]
+			data = [[Paragraph(str(chart.text), style=styles['ChartTitle']), '']]
 			for row in json.loads(chart.data):
 				if not('text' in row):
 					continue
@@ -256,6 +257,8 @@ def generate_month_story(month, styles):
 		lj_table.append([Spacer(cm, cm)])
 		lj_table.append([Paragraph("Longest Journey", style=styles['StatisticTitle'])])
 		lj_table.append([Image(str(tf.name), width=6*cm, height=6*cm)])
+		lj_table.append([Paragraph(str(int(longest_journey.distance() + 0.5)) + " miles", style=styles['StatisticValue'])])
+		lj_table.append([Paragraph(longest_journey.start_time.strftime("%A %-d %B"), style=styles['StatisticDescription'])])
 		story.append(Table(lj_table, style=[
 			('VALIGN', (0, 0), (-1, -1), 'TOP'),
 			('ALIGN', (-1, 1), (-1, -1), 'CENTER'),
