@@ -856,12 +856,44 @@ function eventsScreen()
     });
 }
 
+function updateReportStatus()
+{
+    var id = $("#year-report-generation-progress").data('year');
+    $("#year-report-generation-progress").load("./years/progress/" + id + ".html", function(response, status, xhr)
+    {
+	$(".add-year-report").on('click', function()
+	{
+            $("#createyearreport").modal('show');
+            return false;
+	});
+    });
+}
+
+function yearScreen(id)
+{
+    $(".content-wrapper").load("./years/" + id + ".html", function(response, status, xhr)
+    {
+        if(status == 'error') { errorPage(xhr); return false; }
+        $('.report-graph').each(function() {
+            var canvas = $(this);
+            var type = canvas.data('type');
+            var data = canvas.data('data');
+            if(type == 'donut') { makeDonutChart(canvas[0].getContext('2d'), data[1], data[0]); }
+        });
+        initialiseGraphics();
+        $('#generateyearpdfsubmit').on('click', function() { $('#generateyearpdfform').submit(); return false; });
+        createTimer(updateReportStatus, 1000);
+	updateReportStatus()
+    });
+}
+
 function monthScreen(id)
 {
     $(".content-wrapper").load("./months/" + id + ".html", function(response, status, xhr)
     {
         if(status == 'error') { errorPage(xhr); return false; }
         initialiseGraphics();
+        makeMap();
     });
 }
 
@@ -2145,6 +2177,7 @@ function pageRefresh()
 
     if(page.startsWith('day_')) { dayScreen(page.replace('day_', '')); }
     if(page.startsWith('month_')) { monthScreen(page.replace('month_', '')); }
+    if(page.startsWith('year_')) { yearScreen(page.replace('year_', '')); }
     if(page.startsWith('tag_')) { tagScreen(page.replace('tag_', '')); }
     if(page.startsWith('tagrules_')) { tagRulesScreen(page.replace('tagrules_', '')); }
     if(page.startsWith('event_')) { eventScreen(page.replace('event_', '')); }

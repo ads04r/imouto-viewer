@@ -9,7 +9,8 @@
     </h1>
     <ol class="breadcrumb">
         <li><a href="#events">Events</a></li>
-        <li>{{ caption }}</li>
+        <li><a href="#year_{{ month.year }}">{{ month.year }}</a></li>
+        <li>{{ month.label }}</li>
     </ol>
 </section>
 
@@ -60,6 +61,29 @@
                 </div>
             </div>
 
+{% with cities=month.cities %}
+{% if cities %}
+
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Cities visited</h3>
+                </div>
+                <div class="box-body no-padding">
+
+                        <table class="table table-condensed">
+{% for city in cities %}
+                                <tr>
+                                        <td><b>{{ city }}</b></td>
+                                </tr>
+{% endfor %}
+                        </table>
+
+                </div>
+            </div>
+
+{% endif %}
+{% endwith %}
+
 {% if history.count > 0 %}
 
             <div class="box box-primary">
@@ -76,6 +100,9 @@
             </div>
 
 {% endif %}
+
+            </div>
+            <div class="col-xs-12 col-sm-6 col-md-8">
 
 {% for event in month.life_events %}
 
@@ -94,55 +121,54 @@
                 </div>
 
 {% endfor %}
+{% with people=month.new_people %}
+{% if people %}
 
-            </div>
-            <div class="col-xs-12 col-sm-6 col-md-4">
-
-                <div class="box box-primary">
-                    <div class="box-body no-padding">
-                        <table class="table table-condensed">
-{% for day in month.days %}
-                                <tr>
-                                        <td><a href="#{{ day.slug }}">{{ day.date|date:"l jS" }}</a></td>
-                                        <td><span class="pull-right">{% if day.average_mood == 5 %}<i class="fa fa-smile-o"></i>{% endif %}{% if day.average_mood == 4 %}<i class="fa fa-smile-o"></i>{% endif %}{% if day.average_mood == 3 %}<i class="fa fa-meh-o"></i>{% endif %}{% if day.average_mood == 2 %}<i class="fa fa-meh-o"></i>{% endif %}{% if day.average_mood == 1 %}<i class="fa fa-frown-o"></i>{% endif %}</span></td>
-                                </tr>
-{% endfor %}
-                        </table>
+                <div class="box box-primary" id="day_event_{{ event.pk }}">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">People</h3>
                     </div>
-                </div>
-		
-            </div>
-            <div class="col-xs-12 col-sm-6 col-md-4">
-
-                <div class="box box-primary">
                     <div class="box-body">
-                            <ul class="products-list product-list-in-box">
 
-{% for item in month.people %}
-{% if item.significant %}
-{% if item.image %}
+                        <ul class="users-list clearfix">
 
-                                <li class="item">
-                                    <div class="product-img">
-                                        <img src="people/{{ item.uid }}_thumb.jpg"/>
-                                    </div>
-                                    <div class="product-info">
-                                        <a class="product-title personlink" href="#person_{{ item.uid }}">
-                                            {{ item.full_name }}</a>
-                                        <span class="product-description">
-                                            {{ item.event_count }} encounter(s)
-                                            </span>
-                                    </div>
-                                </li>
+{% for item in people %}
+                        
+                            <li>
+                                {% if item.image %}<img class="profile-user-img img-responsive" src="people/{{ item.uid }}_thumb.jpg"/>{% else %}<img class="profile-user-img img-responsive img-circle" src="{% static "viewer/graphics/unknown_person.jpg" %}">{% endif %}
+                                <a class="users-list-name personlink" href="#person_{{ item.uid }}">
+                                    {{ item.full_name }}</a>
+                            </li>
 
-{% endif %}
-{% endif %}
 {% endfor %}
 
+                        </ul>
 
-                            </ul>
                     </div>
                 </div>
+
+{% endif %}
+{% endwith %}
+{% with event=month.longest_journey %}
+{% if event %}
+
+                <div class="box box-primary" id="day_event_{{ event.pk }}">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Longest Journey</h3>
+                        <span class="pull-right">{{ event.start_time|date:"l g:ia" }}</span>
+                    </div>
+                    <div class="box-body">
+
+                {% include 'viewer/cards/event.html' %}
+
+                    </div>
+                    <div class="box-footer">
+                        <a class="btn btn-primary btn-xs" href="#event_{{ event.pk }}">Read more</a>
+                    </div>
+                </div>
+
+{% endif %}
+{% endwith %}
 
             </div>
         </div>

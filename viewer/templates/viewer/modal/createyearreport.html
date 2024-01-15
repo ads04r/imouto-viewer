@@ -1,0 +1,28 @@
+<div class="modal fade nav-tabs-custom" id="createyearreport" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+		<form id="generateyearpdfform" action="years/{{ year.year }}.html" method="POST">
+
+                              <table class="table table-hover">
+                                <tr class="form-row">
+                                  <td>Year:</td><td><input class="form-control" type="text" id="createreportyear" value="{{ year.year }}" name="createreportyear" readonly/></td>
+                                </tr>
+                                <tr class="form-row">
+                                  <td>Report Title:</td><td><input class="form-control" type="text" id="createreporttitle" value="{{ year.caption }}" name="createreporttitle"/></td>
+                                </tr>
+
+                              </table>{% csrf_token %}
+
+		</form>
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" id="generateyearpdfsubmit">Generate</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,38 @@
+{% load static %}
+{% load tz %}
+{% load class_tag %}
+
+<section class="content-header">
+    <h1>
+        {{ caption }}
+        <small>Year</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="#events">Events</a></li>
+        <li>{{ caption }}</li>
+    </ol>
+</section>
+
+<section class="content">
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-4">
+
+            <div class="box box-primary">
+                <div class="box-body box-profile">
+                    <h3 class="profile-username text-center">{{ year }}</h3>
+                    <p>This year is still ongoing! Statistics will appear here once the year is over.</p>
+                    <p>In the meantime, check out <a href="#{{ year.previous.slug }}">last year</a>.</p>
+                </div>
+            </div>
+
+            </div>
+            <div class="col-xs-12 col-sm-12 col-md-8">
+
+            </div>
+        </div>
+    </div>
+
+</section>
+

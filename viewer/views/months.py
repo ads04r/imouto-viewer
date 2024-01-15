@@ -3,6 +3,7 @@ from django.shortcuts import render
 from django.conf import settings
 
 from viewer.models import Month, Day, HistoricalEvent, create_or_get_month
+from viewer.tasks.reports import generate_staticmap
 
 def month(request, ds):
 
@@ -13,8 +14,11 @@ def month(request, ds):
 	obj = create_or_get_month(m, y)
 
 	history = HistoricalEvent.objects.filter(date__month=m, date__year=y).order_by('date')
+	longest_journey = obj.longest_journey()
+	if not(longest_journey is None):
+		generate_staticmap(longest_journey.pk)
 
-	context = {'type':'view', 'caption': str(obj), 'month': obj, 'history': history}
+	context = {'type':'view', 'caption': str(obj), 'month': obj, 'history': history, 'longest_journey': longest_journey}
 	template = 'viewer/pages/month.html'
 	if obj.this_month:
 		template = 'viewer/pages/this_month.html'

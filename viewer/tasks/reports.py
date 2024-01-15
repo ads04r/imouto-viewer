@@ -1,16 +1,14 @@
 from background_task import background
 from django.conf import settings
-from viewer.eventcollage import make_collage
 from tempfile import NamedTemporaryFile
-import datetime, pytz, os, random
+import datetime, pytz, os, random, json
 
-from viewer.models import LifeReport, Event
+from viewer.models import Event, Year, create_or_get_year
 from viewer.functions.utils import *
-from viewer.report_styles import DefaultReport, ModernReport
-from viewer.reporting import generate_report_travel, generate_report_photos, generate_report_people, generate_report_comms, generate_report_music, generate_report_movies
-
-def photo_collage_upload_location(instance, filename):
-	return 'collages/photo_collage_' + str(instance.pk) + '.jpg'
+from viewer.reporting.generation import generate_year_travel, generate_year_photos, generate_year_comms, generate_year_music, generate_year_movies, generate_year_health
+from viewer.reporting.pdf import generate_year_pdf
+from viewer.functions.file_uploads import photo_collage_upload_location, year_pdf_upload_location
+from viewer.eventcollage import make_collage
 
 @background(schedule=0, queue='reports')
 def generate_staticmap(event_id):
@@ -122,37 +120,32 @@ def generate_life_event_photo_collages(event_id):
 	return ret
 
 @background(schedule=0, queue='reports')
-def generate_report_wordcloud(reportid):
+def generate_year_wordcloud(year):
 	"""
-	Generates a word cloud for a LifeReport object, using any text we can find within (event descriptions, messages, etc).
+	Generates a word cloud for a Year object, using any text we can find within (event descriptions, messages, etc).
 
-	:param reportid: The ID (primary key) of the report of which to create the word cloud
+	:param year: The year of which to create the word cloud
 	"""
-	report = LifeReport.objects.get(id=reportid)
+	report = Year.objects.get(year=year)
 	if report.cached_wordcloud:
 		report.cached_wordcloud.delete()
-	im = report.wordcloud()
+	report.wordcloud()
 
 @background(schedule=0, queue='reports')
-def generate_report(title, year, options, style='default', pdf=True):
+def generate_report(title, year):
 	"""
-	A background task for generating a LifeReport object
+	A background task for generating statistics for a year
 
 	:param title: A descriptive title for the report (eg "The Year I Got Married")
 	:param year: The calendar year with which to make a report
-	:param options: A dict containing some options for generating the report
-	:param style: The graphical style of the report, currently only applies to the printable PDF version of it
-	:param pdf: True if we want the function to queue a `generate_report_pdf` task after completing, False if not
 	"""
 
-	tz = pytz.timezone(settings.TIME_ZONE)
-	dts = tz.localize(datetime.datetime(year, 1, 1, 0, 0, 0))
-	dte = tz.localize(datetime.datetime(year, 12, 31, 23, 59, 59))
-
-	now = pytz.UTC.localize(datetime.datetime.utcnow())
-	report = LifeReport(label=title, style=style, year=year)
-	report.options = json.dumps(options)
-	report.save()
+	report = create_or_get_year(year)
+	if len(title) > 0:
+		report.caption = title
+		report.save(update_fields=['caption'])
+	dts = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(report.year, 1, 1, 0, 0, 0))
+	dte = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(report.year + 1, 1, 1, 0, 0, 0)) - datetime.timedelta(seconds=1)
 
 	try:
 		letterboxd_username = settings.LETTERBOXD_USERNAME
@@ -163,32 +156,14 @@ def generate_report(title, year, options, style='default', pdf=True):
 	except:
 		moonshine_url = ''
 
-	generate_report_people(report, dts, dte)
-	generate_report_travel(report, dts, dte)
-	generate_report_comms(report, dts, dte)
-	generate_report_photos(report, dts, dte)
-	generate_report_music(report, dts, dte, moonshine_url)
-	generate_report_movies(report, letterboxd_username)
+	generate_year_health(report)
+	generate_year_travel(report)
+	generate_year_comms(report)
+	generate_year_photos(report)
+	generate_year_music(report, moonshine_url)
+	generate_year_movies(report, letterboxd_username)
 
-	subevents = []
-	report.refresh_events()
-
-	for event in report.events.filter(type='life_event').order_by('start_time'):
-		for e in event.subevents():
-			if e in subevents:
-				continue
-			subevents.append(e)
-			if e.photos().count() > 5:
-				if e.photo_collages.count() == 0:
-					generate_photo_collages(e.pk)
-			if not(e.cached_staticmap):
-				if e.geo:
-					if ((e.description != '') & (e.geo != '')):
-						generate_staticmap(e.pk)
-
-	for event in report.events.exclude(type='life_event').order_by('start_time'):
-		if event in subevents:
-			continue
+	for event in report.events.order_by('start_time'):
 		if event.photos().count() > 5:
 			if event.photo_collages.count() == 0:
 				generate_photo_collages(event.pk)
@@ -197,78 +172,22 @@ def generate_report(title, year, options, style='default', pdf=True):
 				if ((event.description != '') & (event.geo != '')):
 					generate_staticmap(event.pk)
 
-	if options['wordcloud']:
-		generate_report_wordcloud(report.id)
-
-	if pdf:
-		generate_report_pdf(report.id)
-
-	return report
+	generate_year_wordcloud(year)
+	generate_report_pdf(year)
 
 @background(schedule=0, queue='reports')
-def generate_report_pdf(reportid, override_style=''):
+def generate_report_pdf(year):
 	"""
-	Creates a printable PDF report 'book' based on a LifeReport object
+	A background task for generating a PDF from a Year object
 
-	:param reportid: The ID (primary key) of the report of which to create the PDF file
-	:param override_style: The style of the report is normally selected at the creation time of the LifeReport, but can also be set here.
+	:param year: The calendar year with which to make a report
 	"""
-	try:
-		report = LifeReport.objects.get(id=reportid)
-	except:
-		return None # Entirely possible that the report has been deleted before this function gets triggered
 
-	if report is None:
-		return None
-
-	style = override_style
-	if style == '':
-		style = report.style
-	options = json.loads(report.options)
-	filename = os.path.join(settings.MEDIA_ROOT, 'reports', 'report_' + str(report.id) + '_' + str(report.year) + '.pdf')
-	pages = report.pages()
-
-	if style == 'modern':
-		pdf = ModernReport()
-	else:
-		pdf = DefaultReport()
-	for page in pages:
-		if page['type'] == 'title':
-			title = ''
-			subtitle = ''
-			if 'title' in page:
-				title = page['title']
-			if 'subtitle' in page:
-				subtitle = page['subtitle']
-			pdf.add_title_page(title, subtitle)
-		if page['type'] == 'image':
-			file = page['image']
-			ext = file.split('.')[-1]
-			if os.path.exists(file):
-				caption = ''
-				if 'text' in page:
-					caption = page['text']
-				pdf.add_image_page(page['image'], format=ext, caption=caption)
-		if page['type'] == 'items':
-			pdf.add_row_items_page(page['data'])
-		if page['type'] == 'feature':
-			image = ''
-			if 'image' in page:
-				image = page['image']
-			pdf.add_feature_page(page['title'], page['description'], image)
-		if page['type'] == 'stats':
-			pdf.add_stats_page(page['title'], page['data'])
-		if page['type'] == 'grid':
-			pdf.add_grid_page(page['title'], page['data'])
-		if page['type'] == 'chart':
-			if 'description' in page:
-				pdf.add_chart_page(page['title'], page['description'], page['data'])
-			else:
-				pdf.add_chart_page(page['title'], '', page['data'])
-
-	pdf.output(filename, 'F')
-	report.pdf = filename
-	report.save()
-
-	return report
-
+	report = create_or_get_year(year)
+	if report.cached_pdf:
+		report.cached_pdf.delete()
+		report.save(update_fields=['cached_pdf'])
+	path = os.path.join(settings.MEDIA_ROOT, year_pdf_upload_location(report, ''))
+	generate_year_pdf(year, path)
+	report.cached_pdf = path
+	report.save(update_fields=['cached_pdf'])

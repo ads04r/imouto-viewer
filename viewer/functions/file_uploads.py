@@ -7,8 +7,8 @@ def photo_thumbnail_upload_location(instance, filename):
 def location_thumbnail_upload_location(instance, filename):
 	return 'places/' + str(instance.uid) + '/' + filename
 
-def report_pdf_upload_location(instance, filename):
-	return 'reports/report_' + str(instance.id) + '.pdf'
+def year_pdf_upload_location(instance, filename):
+	return 'reports/report_' + str(instance.year) + "_" + str(instance.id) + '.pdf'
 
 def report_wordcloud_upload_location(instance, filename):
 	return 'wordclouds/report_wc_' + str(instance.id) + '.png'
@@ -24,3 +24,9 @@ def event_staticmap_upload_location(instance, filename):
 
 def tag_staticmap_upload_location(instance, filename):
 	return 'autotag/tag_staticmap_' + str(instance.pk) + '.png'
+
+def year_wordcloud_upload_location(instance, filename):
+	return 'wordclouds/year_wc_' + str(instance.year) + '.png'
+
+def photo_collage_upload_location(instance, filename):
+	return 'collages/photo_collage_' + str(instance.pk) + '.jpg'

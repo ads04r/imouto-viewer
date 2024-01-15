@@ -1,0 +1,146 @@
+{% load static %}
+{% load tz %}
+{% load class_tag %}
+
+<section class="content-header">
+    <h1>
+        {{ caption }}
+        <small>Year</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="#events">Events</a></li>
+        <li>{{ caption }}</li>
+    </ol>
+</section>
+
+<section class="content">
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-4">
+
+            <div class="box box-primary">
+                <div class="box-body box-profile">
+                    <h3 class="profile-username text-center">{{ year }}</h3>
+
+			<table class="table table-condensed">
+				<tr>
+{% for month in year.months %}
+{% if forloop.counter0 > 0 %}{% if forloop.counter0|divisibleby:3 %}</tr><tr>{% endif %}{% endif %}
+					<td class="text-center"><a href="#{{ month.slug }}">{{ month.label }}</a></td>
+{% endfor %}
+				</tr>
+			</table>
+
+                    <ul class="list-group list-group-unbordered">
+{% for prop in year.properties.distinct %}
+{% if prop.category == '' %}
+			<li class="list-group-item"><b>{{ prop.key }}</b> {{ prop.category }}<span class="pull-right">{{ prop.value }}</span></li>
+{% endif %}
+{% endfor %}
+                    </ul>
+
+<div class="chart">
+<canvas class="donut-chart" style="height: 160px" data-labels="{{ year.location_categories_chart.0|escape }}" data-data="{{ year.location_categories_chart.1|escape }}"></canvas>
+</div>
+
+                </div>
+                <div class="box-footer" id="year-report-generation-progress" data-year="{{ year.year }}">
+                </div>
+            </div>
+
+{% with counries=year.countries %}
+{% if countries %}
+
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Countries visited</h3>
+                </div>
+                <div class="box-body no-padding">
+
+			<table class="table table-condensed">
+{% for country in countries %}
+				<tr>
+					<td><b>{{ country }}</b></td>
+				</tr>
+{% endfor %}
+			</table>
+
+                </div>
+            </div>
+
+{% endif %}
+{% endwith %}
+
+{% for chart in year.charts.all %}
+
+                {% include 'viewer/cards/yearchart.html' %}	
+
+{% endfor %}
+
+            </div>
+            <div class="col-xs-12 col-sm-12 col-md-8">
+
+{% for event in year.life_events %}
+
+                <div class="box box-primary" id="day_event_{{ event.pk }}">
+                    <div class="box-header with-border">
+                        <span class="pull-right">{{ event.start_time|date:"F" }}</span>
+                        <h3 class="box-title">{{ event.caption }}</h3>
+                    </div>
+                    <div class="box-body">
+
+                {% include 'viewer/cards/event.html' %}
+
+                    </div>
+                    <div class="box-footer">
+                        <a class="btn btn-primary btn-xs" href="#event_{{ event.pk }}">Read more</a>
+                    </div>
+                </div>
+
+{% endfor %}
+
+{% for category in year.get_stat_categories %}
+
+                <div class="box box-primary" id="day_event_{{ event.pk }}">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">{{ year.year }} in {{ category }}</h3>
+                    </div>
+                    <div class="box-body">
+                        <div class="row">
+
+{% for graph in year.graphs.all %}
+{% if graph.category == category %}
+
+<div class="col-xs-12 col-sm-6">
+<h4>{{ graph.key }}</h4>
+<canvas class="report-graph" data-type="{{ graph.type }}" data-data="{{ graph.data }}"/>
+</div>
+
+{% endif %}
+{% endfor %}
+
+<div class="col-xs-12 col-sm-12">
+<dl class="dl-horizontal">
+{% for property in year.properties.distinct %}
+{% if property.category == category %}
+	<dt>{{ property.key }}</dt>
+	<dd><nobr><strong>{{ property.value }}</strong>{% if property.description %}&nbsp;<small>&nbsp;({{ property.description }})</small>{% endif %}</nobr></dd>
+{% endif %}
+{% endfor %}
+</dl>
+</div>
+
+                        </div>
+                    </div>
+                </div>
+
+{% endfor %}
+
+            </div>
+        </div>
+    </div>
+
+</section>
+
+{% include 'viewer/modal/createyearreport.html' %}
