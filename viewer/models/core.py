@@ -1386,6 +1386,7 @@ class Year(models.Model):
 	"""A human-readable caption for the Year, could also be described as the title or summary."""
 	cached_wordcloud = models.ImageField(blank=True, null=True, upload_to=year_wordcloud_upload_location)
 	cached_pdf = models.FileField(blank=True, null=True, upload_to=year_pdf_upload_location)
+	report_prc = models.IntegerField(null=False, default=0, validators=[MaxValueValidator(100), MinValueValidator(0)])
 	@property
 	def slug(self):
 		"""

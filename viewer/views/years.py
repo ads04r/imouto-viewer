@@ -4,7 +4,7 @@ from django.conf import settings
 from background_task.models import Task
 
 from viewer.models import Year, create_or_get_year
-from viewer.tasks.reports import generate_report_pdf
+from viewer.tasks.reports import generate_report, generate_report_pdf
 
 import os, json
 
@@ -31,6 +31,15 @@ def year(request, ds):
 	if obj.this_year:
 		template = 'viewer/pages/this_year.html'
 		context['years'] = Year.objects.all()
+	else:
+		if obj.report_prc == 0:
+			active_task = None
+			for task in Task.objects.filter(task_name__contains='generate_report', queue='reports'):
+				task_year = json.loads(task.task_params)[0][0]
+				if task_year == obj.year:
+					active_task = task
+			if active_task is None:
+				generate_report("", obj.year)
 	return render(request, template, context)
 
 def year_wordcloud(request, ds):
@@ -55,6 +64,8 @@ def year_report_status(request, ds):
 	for task in Task.objects.filter(task_name__contains='generate_report_pdf', queue='reports'):
 		task_year = json.loads(task.task_params)[0][0]
 		if task_year == data.year:
-			template = 'viewer/cards/report-inprogress.html'
+			template = 'viewer/cards/report-pdf-inprogress.html'
+	if data.report_prc < 100:
+		template = "viewer/cards/report-inprogress.html"
 
 	return render(request, template, context);

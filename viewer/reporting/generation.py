@@ -21,25 +21,35 @@ def generate_year_health(year):
 	dte = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(year.year + 1, 1, 1, 0, 0, 0)) - datetime.timedelta(seconds=1) # the second subtraction supports leap-seconds, assuming Django does
 	steps = DataReading.objects.filter(type='step-count', start_time__gte=dts, end_time__lte=dte).aggregate(steps=Sum('value'))['steps']
 	ww = DataReading.objects.filter(type='weight', start_time__gte=dts, end_time__lte=dte).aggregate(max=Max('value'), min=Min('value'))
-	max_weight = float(ww['max']) / 1000.0
-	min_weight = float(ww['min']) / 1000.0
+	max_weight = None
+	min_weight = None
+	if ww['max']:
+		max_weight = float(ww['max']) / 1000.0
+	if ww['min']:
+		min_weight = float(ww['min']) / 1000.0
 	days = ((dte - dts).total_seconds() + 1.0) / 86400.0
-	steps_per_day = int(float(steps) / days)
+	steps_per_day = None
+	if steps:
+		steps_per_day = int(float(steps) / days)
 
 	for workout in year.workouts():
 		prop = year.add_property(key=workout[0] + ' distance', value=workout[1], category='health', icon=workout[2])
 		prop.description='miles'
 		prop.save(update_fields=['description'])
-	prop = year.add_property(key='Total steps', value=steps, category='health', icon='male')
-	prop = year.add_property(key='Steps per day', value=steps_per_day, category='health', icon='male')
-	prop.description='mean'
-	prop.save(update_fields=['description'])
-	prop = year.add_property(key='Highest weight', value=max_weight, category='health', icon='balance-scale')
-	prop.description='kg'
-	prop.save(update_fields=['description'])
-	prop = year.add_property(key='Lowest weight', value=min_weight, category='health', icon='balance-scale')
-	prop.description='kg'
-	prop.save(update_fields=['description'])
+	if steps:
+		prop = year.add_property(key='Total steps', value=steps, category='health', icon='male')
+	if steps_per_day:
+		prop = year.add_property(key='Steps per day', value=steps_per_day, category='health', icon='male')
+		prop.description='mean'
+		prop.save(update_fields=['description'])
+	if max_weight:
+		prop = year.add_property(key='Highest weight', value=max_weight, category='health', icon='balance-scale')
+		prop.description='kg'
+		prop.save(update_fields=['description'])
+	if min_weight:
+		prop = year.add_property(key='Lowest weight', value=min_weight, category='health', icon='balance-scale')
+		prop.description='kg'
+		prop.save(update_fields=['description'])
 
 def generate_year_photos(year):
 

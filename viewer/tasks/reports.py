@@ -141,11 +141,16 @@ def generate_report(title, year):
 	"""
 
 	report = create_or_get_year(year)
+	if report.cached_pdf:
+		report.cached_pdf.delete()
 	if len(title) > 0:
 		report.caption = title
 		report.save(update_fields=['caption'])
 	dts = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(report.year, 1, 1, 0, 0, 0))
 	dte = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(report.year + 1, 1, 1, 0, 0, 0)) - datetime.timedelta(seconds=1)
+
+	report.report_prc = 0
+	report.save(update_fields=['report_prc'])
 
 	try:
 		letterboxd_username = settings.LETTERBOXD_USERNAME
@@ -157,22 +162,44 @@ def generate_report(title, year):
 		moonshine_url = ''
 
 	generate_year_health(report)
+	report.report_prc = 10
+	report.save(update_fields=['report_prc'])
 	generate_year_travel(report)
+	report.report_prc = 20
+	report.save(update_fields=['report_prc'])
 	generate_year_comms(report)
+	report.report_prc = 30
+	report.save(update_fields=['report_prc'])
 	generate_year_photos(report)
+	report.report_prc = 40
+	report.save(update_fields=['report_prc'])
 	generate_year_music(report, moonshine_url)
+	report.report_prc = 50
+	report.save(update_fields=['report_prc'])
 	generate_year_movies(report, letterboxd_username)
+	report.report_prc = 60
+	report.save(update_fields=['report_prc'])
 
+	event_count = report.events.count()
+	increment = int(30.0 / float(event_count * 2))
 	for event in report.events.order_by('start_time'):
 		if event.photos().count() > 5:
 			if event.photo_collages.count() == 0:
 				generate_photo_collages(event.pk)
+		report.report_prc = report.report_prc + increment
+		report.save(update_fields=['report_prc'])
 		if not(event.cached_staticmap):
 			if event.geo:
 				if ((event.description != '') & (event.geo != '')):
 					generate_staticmap(event.pk)
+		report.report_prc = report.report_prc + increment
+		report.save(update_fields=['report_prc'])
 
 	generate_year_wordcloud(year)
+
+	report.report_prc = 100
+	report.save(update_fields=['report_prc'])
+
 	generate_report_pdf(year)
 
 @background(schedule=0, queue='reports')

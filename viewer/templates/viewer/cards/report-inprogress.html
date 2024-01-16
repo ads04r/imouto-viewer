@@ -1,1 +1,6 @@
-<i class="fa fa-spinner fa-spin"></i> PDF is being created, please wait...
+<span class="pull-right"><i class="fa fa-spinner fa-spin"></i></span>
+<p>This report is still being generated, please wait... </p>
+<div class="progress">
+	<div class="progress-bar progress-bar-primary" role="progressbar" aria-valuenow="{{ year.report_prc }}" aria-valemin="0" aria-valuemax="100" style="width: {{ year.report_prc }}%">
+	<span class="sr-only">{{ year.report_prc }}% Complete</span>
+</div>
