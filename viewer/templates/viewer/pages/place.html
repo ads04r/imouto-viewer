@@ -25,9 +25,8 @@
                     </div>
                     <div class="box-body">
                         <p>{{ data.address }}</p>
-                        <p>
-{% if data.parent %}Located within <a href="#place_{{ data.parent.uid }}">{{ data.parent.label }}</a>{% endif %}
-                        </p>
+{% if data.parent %}<p>Located within <a href="#place_{{ data.parent.uid }}">{{ data.parent.label }}</a></p>{% endif %}
+{% if data.city %}<p><i class="fa fa-building-o"></i> <a href="#city_{{ data.city.pk }}">{{ data.city }}</a>{% if data.country %}, <a href="#city_{{ data.country.pk }}">{{ data.country }}</a>{% endif %}</p>{% endif %}
                     </div>
                 </div>
             </div>
