@@ -1597,6 +1597,19 @@ function makeSleepAreaChart(canvas, datasets)
 	chart.update();
 }
 
+function splitEvent(event, splittime)
+{
+	var dt = new Date(splittime);
+	var ds = dt.toLocaleTimeString();
+	document.body.style.cursor = 'default';
+	if(splittime.includes(':'))
+	{
+		$('span.split-time').html(ds);
+		$('input#split-time').val(splittime);
+		$('#event_split_modal').modal('show');
+	}
+}
+
 function makeLineChart(lineChartCanvas, data, colstr, timeline=false)
 {
     var labels = []
@@ -1645,7 +1658,17 @@ function makeLineChart(lineChartCanvas, data, colstr, timeline=false)
                     }
                 ]
             },
-            maintainAspectRatio: true
+            maintainAspectRatio: true,
+            onClick: function(e, chart) {
+		var activeElement = lineChart.getElementAtEvent(e);
+                if(activeElement.length >= 1)
+                {
+                    var ix = activeElement[0]._index;
+                    var value = lineChart.data.datasets[0].data[ix];
+                    var ref = window.location.hash.replace('#', '').split('_');
+                    if((ref.length == 2) && (ref[0] == 'event')) { splitEvent(ref[1], value['x']); }
+                }
+            }
         }
     }
     if(data.length > 0) { config.options.scales.xAxes[0].ticks.min = data[0].x; }
@@ -2037,6 +2060,11 @@ function eventScreen(id)
 
         makeMap();
         initialiseGraphics();
+        $("#event-split-button").on('click', function()
+        {
+            $("form#event-split").submit();
+            return false;
+        });
         $("#event-save-form-button").on('click', function()
         {
             var data = [];

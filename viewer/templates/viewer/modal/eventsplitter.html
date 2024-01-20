@@ -1,0 +1,33 @@
+<div class="modal fade nav-tabs-custom" id="event_split_modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+                <p>Select an action...</p>
+                
+                <form id="event-split" action="events/{{ data.pk }}/split" method="POST">
+			{% csrf_token %}
+			<input type="hidden" id="split-time" name="split-time" value=""/>
+			<input type="hidden" id="split-event" name="split-event" value="{{ data.pk }}"/>
+			<div class="form-group">
+				<label>
+					<input name="split-split" id="split-split" value="1" checked="" type="radio"/>
+					Split the event into two, at <span class="split-time"></span>
+				</label><br/>
+				<label>
+					<input name="split-split" id="split-triml" value="2" type="radio"/>
+					Trim the start of the event, before <span class="split-time"></span>
+				</label><br/>
+				<label>
+					<input name="split-split" id="split-splitr" value="3" type="radio"/>
+					Trim the end of the event, after <span class="split-time"></span>
+				</label><br/>
+			</div>
+                </form>
+            
+                <button type="button" id="event-split-button" class="btn btn-primary event-split-form-button">OK</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

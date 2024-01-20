@@ -192,6 +192,34 @@ def event_collage(request, eid):
 		im = data.photo_collages.first().image
 		return HttpResponse(im, content_type='image/jpeg')
 
+def eventsplit(request, eid):
+	cache_key = 'event_' + str(eid)
+	if request.method != 'POST':
+		raise Http404()
+	id = str(request.POST['split-event'])
+	if id != eid:
+		raise Http404()
+	ret = id
+	dt = dateutil.parser.parse(request.POST['split-time'])
+	mode = int(request.POST['split-split'])
+	data = get_object_or_404(Event, pk=id)
+	cache.delete(cache_key)
+
+	if mode == 1:
+		new_event = Event(caption=data.caption, type=data.type, start_time=dt, end_time=data.end_time)
+		data.end_time = dt
+		data.save()
+		new_event.save()
+		ret = str(new_event.pk)
+	if mode == 2:
+		data.start_time = dt
+		data.save()
+	if mode == 3:
+		data.end_time = dt
+		data.save()
+
+	return HttpResponseRedirect('../../#event_' + str(ret))
+
 @csrf_exempt
 def eventdelete(request, eid):
 	cache.delete('dashboard')
