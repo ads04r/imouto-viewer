@@ -1240,6 +1240,21 @@ function placeScreen(id)
     });
 }
 
+function cityScreen(id)
+{
+    $(".content-wrapper").load("./cities/" + id + ".html", function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
+        makeMap();
+    });
+}
+
+function countryScreen(id)
+{
+    $(".content-wrapper").load("./countries/" + id + ".html", function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
+    });
+}
+
 function initialiseGraphics()
 {
     $(".bar-chart").each(function()
@@ -2210,6 +2225,8 @@ function pageRefresh()
     if(page.startsWith('tagrules_')) { tagRulesScreen(page.replace('tagrules_', '')); }
     if(page.startsWith('event_')) { eventScreen(page.replace('event_', '')); }
     if(page.startsWith('place_')) { placeScreen(page.replace('place_', '')); }
+    if(page.startsWith('city_')) { cityScreen(page.replace('city_', '')); }
+    if(page.startsWith('country_')) { countryScreen(page.replace('country_', '')); }
     if(page.startsWith('person_')) { personScreen(page.replace('person_', '')); }
     if(page.startsWith('workout_')) { workoutScreen(page.replace('workout_', '')); }
     if(page.startsWith('report_')) { var parse = page.replace('report_', '').split('_'); reportScreen(parse[0], parse[1]); }

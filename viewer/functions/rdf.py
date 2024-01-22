@@ -3,6 +3,20 @@ from rdflib import Graph, Namespace, URIRef, Literal
 from rdflib.namespace import RDF, RDFS, XSD
 import json, requests, extruct
 
+def get_wikipedia_abstract(url, lang='en'):
+
+	api_uri = 'http://' + lang + '.wikipedia.org/w/api.php'
+	title = url.rstrip('/').split('/')[-1]
+
+	data = requests.get(api_uri, params={'action': 'query', 'format': 'json', 'titles': title, 'prop': 'extracts', 'exintro': True, 'explaintext': True}).json()
+	pages = data['query']['pages']
+	for kk in pages.keys():
+		k = str(kk)
+		if 'extract' in pages[k]:
+			return pages[k]['extract']
+
+	return ''
+
 def get_webpage_data(url, lang='en'):
 
 	r = requests.get(url, headers={"Accept-Language": lang, "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win94; x64; rv:55.0) Gecko/20100101 Firefox/55.0"})

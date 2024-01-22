@@ -73,7 +73,7 @@
                         <table class="table table-condensed">
 {% for city in cities %}
                                 <tr>
-                                        <td><b>{{ city }}</b></td>
+                                        <td><b><a href="#{{ city.slug }}">{{ city }}</a></b></td>
                                 </tr>
 {% endfor %}
                         </table>
