@@ -1,0 +1,90 @@
+{% load static %}
+
+<section class="content-header">
+    <h1>
+        {{ data.label }}
+        <small>City</small>
+    </h1>
+    
+    <ol class="breadcrumb">
+        <li>Cities</li>
+        <li>{{ data.label }}</li>
+    </ol>
+    
+</section>
+
+<section class="content">
+
+    <div class="container-fluid">
+
+        <div class="row">
+
+            <div class="col-xs-12 col-sm-6 col-md-4">
+                <div class="box box-primary">
+                    <div class="box-body box-profile">
+			<h3 class="profile username text-center">{{ data.label }}</h3>
+			<ul class="list-group list-group-unbordered">
+				<li class="list-group-item"><b>Country</b><span class="pull-right"><a href="#{{ data.country.slug }}">{{ data.country }}</a></span></li>
+			</ul>
+                    </div>
+                </div>
+
+{% with geo=data.geo %}
+{% if geo %}
+
+                <div class="box box-primary">
+                    <div class="box-body">
+                        <div id="map{{ data.pk }}" class="eventmap" data-geojson="{{ geo }}"></div>
+                    </div>
+                </div>
+
+{% endif %}
+{% endwith %}
+
+            </div>
+
+            <div class="col-xs-12 col-sm-6 col-md-8">
+
+{% with description=data.description_html %}
+{% if description %}
+
+	                <div class="box box-primary">
+	                    <div class="box-body">
+				{{ description|safe }}
+				<p>See <a href="{{ data.wikipedia }}">Wikipedia</a> for more information.</p>
+	                    </div>
+	                </div>
+
+{% endif %}
+{% endwith %}
+
+{% with locations=data.locations_sorted %}
+{% if locations %}
+
+	                <div class="box box-primary">
+	                    <div class="box-body">
+				<ul class="products-list product-list-in-box">
+                                
+{% for place in locations %}
+{% if place.exists %}
+                                
+	{% include 'viewer/list-items/location.html' %}
+
+{% endif %}
+{% endfor %}
+
+
+{% endif %}
+{% endwith %}
+
+				</ul>
+	                    </div>
+	                </div>
+
+	    </div>
+	</div>
+
+    </div>
+
+</section>
+

@@ -5,7 +5,7 @@ from django.conf import settings
 from django.db.models import F, Count
 import datetime, pytz, dateutil.parser, json, requests, random
 
-from viewer.models import Location, LocationCountry
+from viewer.models import Location, LocationCountry, LocationCity
 from viewer.forms import LocationForm
 from viewer.functions.geo import get_location_address_fragment, get_location_country_code, get_location_wikidata_id
 from viewer.functions.rdf import wikidata_to_wikipedia
@@ -103,3 +103,12 @@ def place_json(request, uid):
 	response = HttpResponse(json.dumps(data_dict), content_type='application/json')
 	return response
 
+def city(request, uid):
+	data = get_object_or_404(LocationCity, pk=uid)
+	context = {'type':'city', 'data':data}
+	return render(request, 'viewer/pages/city.html', context)
+
+def country(request, uid):
+	data = get_object_or_404(LocationCountry, a2=uid)
+	context = {'type':'country', 'data':data}
+	return render(request, 'viewer/pages/country.html', context)

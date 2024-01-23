@@ -17,23 +17,67 @@
 
     <div class="container-fluid">
         <div class="row">
-            <div class="col-xs-12 col-sm-12 col-md-12">
+            <div class="col-xs-12 col-sm-6 col-md-4">
+
                 <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title">
-                            {{ data.label }}</h3>
-                    </div>
-                    <div class="box-body">
-                        <p>{{ data.address }}</p>
-                        <p>
-{% if data.parent %}Located within <a href="#place_{{ data.parent.uid }}">{{ data.parent.label }}</a>{% endif %}
-                        </p>
+                    <div class="box-body box-profile">
+                        {% if data.image %}<img class="profile-user-img img-responsive img-circle" src="places/{{ data.uid }}_thumb.jpg" alt="Profile picture">{% endif %}
+                        <h3 class="profile-username text-center">{{ data.label }}</h3>
+                        <p class="text-muted text-center">{{ data.address }}</p>
+                        <ul class="list-group list-group-unbordered">
+{% if data.parent %}<li class="list-group-item"><b>Located within</b> <span class="pull-right"><a href="#place_{{ data.parent.uid }}">{{ data.parent.label }}</a></span></li>{% endif %}
+{% if data.city %}<li class="list-group-item"><b>City</b> <span class="pull-right"><a href="#{{ data.city.slug }}">{{ data.city }}</a></span></li>{% endif %}
+{% if data.country %}<li class="list-group-item"><b>Country</b> <span class="pull-right"><a href="#{{ data.country.slug }}">{{ data.country }}</a></span></li>{% endif %}
+                        </ul>
+{% if data.tags.count > 0 %}
+{% for tag in data.tags.all %}<a href="#tag_{{ tag.id|safe }}"><span style="background-color: {{ tag.colour }};" class="badge">{{ tag.id }}</span></a> {% endfor %}
+{% endif %}
                     </div>
                 </div>
+
+                <div class="box box-primary">
+                    <div class="box-body">
+                        <div id="map{{ data.pk }}" class="eventmap" data-geojson="{{ data.geo }}"></div>
+                    </div>
+                </div>
+
+{% if data.events.count > 1 %}
+
+                <div class="box box-primary">
+                    <div class="box-body">
+			<canvas class="donut-chart" data-data="{{ data.weekdays.values|escape }}" data-labels="{{ data.weekdays.json|escape }}"></canvas>
+                        <ul class="list-group list-group-unbordered">
+                          <li class="list-group-item"><b>Average visit</b><span class="pull-right">{{ data.average_event }}</span></li>
+                          <li class="list-group-item"><b>Longest visit</b><span class="pull-right">{{ data.longest_event }}</span></li>
+                          {% if data.categories.count > 0 %}<li class="list-group-item"><b>Categories</b><span class="pull-right">{% for category in data.categories.all %}{{ category }}<br/>{% endfor %}</span></li>{% endif %}
+                        </ul>
+
+                    </div>
+                </div>
+
+{% endif %}
+{% if data.schema_classes|length > 1 %}
+
+                <div class="box box-primary">
+                    <div class="box-body no-padding">
+			<table class="table table-inline">
+{% for sc in data.schema_classes %}
+                          <li class="list-group-item">
+				<b>{{ sc.label }}</b>
+				{% if sc.comment %}<br/><small class="muted">{{ sc.comment }}</small>{% endif %}
+                          </li>
+{% endfor %}
+                        </table>
+                    </div>
+                </div>
+
+{% endif %}
+
+                            
             </div>
-        </div>
-        <div class="row">
+
             <div class="col-xs-12 col-sm-6 col-md-8">
+
 
 {% if data.people.count > 0 or data.events.count > 0 %}
             
@@ -89,56 +133,6 @@
 
                     
                         </div>
-                    </div>
-                </div>
-
-{% endif %}
-                            
-            </div>
-
-            <div class="col-xs-12 col-sm-6 col-md-4">
-                <div class="box box-primary">
-                    <div class="box-body">
-                        <div id="map{{ data.pk }}" class="eventmap" data-geojson="{{ data.geo }}"></div>
-                    </div>
-                </div>
-
-{% if data.events.count > 1 %}
-
-                <div class="box box-primary">
-                    <div class="box-body">
-			<canvas class="donut-chart" data-data="{{ data.weekdays.values|escape }}" data-labels="{{ data.weekdays.json|escape }}"></canvas>
-                        <ul class="list-group list-group-unbordered">
-                          <li class="list-group-item"><b>Average visit</b><span class="pull-right">{{ data.average_event }}</span></li>
-                          <li class="list-group-item"><b>Longest visit</b><span class="pull-right">{{ data.longest_event }}</span></li>
-                          {% if data.categories.count > 0 %}<li class="list-group-item"><b>Categories</b><span class="pull-right">{% for category in data.categories.all %}{{ category }}<br/>{% endfor %}</span></li>{% endif %}
-                        </ul>
-{% if data.tags.count > 0 %}
-
-                	<div>
-
-                        {% for tag in data.tags.all %}<a href="#tag_{{ tag.id|safe }}"><span style="background-color: {{ tag.colour }};" class="badge">{{ tag.id }}</span></a> {% endfor %}
-
-	                </div>
-
-{% endif %}
-
-                    </div>
-                </div>
-
-{% endif %}
-{% if data.schema_classes|length > 1 %}
-
-                <div class="box box-primary">
-                    <div class="box-body no-padding">
-			<table class="table table-inline">
-{% for sc in data.schema_classes %}
-                          <li class="list-group-item">
-				<b>{{ sc.label }}</b>
-				{% if sc.comment %}<br/><small class="muted">{{ sc.comment }}</small>{% endif %}
-                          </li>
-{% endfor %}
-                        </table>
                     </div>
                 </div>
 

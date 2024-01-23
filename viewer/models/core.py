@@ -25,6 +25,7 @@ from viewer.functions.geo import get_location_name
 from viewer.functions.location_manager import get_possible_location_events, get_logged_position, getgeoline, getelevation, getspeed, getboundingbox
 from viewer.staticcharts import generate_pie_chart, generate_donut_chart
 from viewer.functions.file_uploads import user_thumbnail_upload_location, photo_thumbnail_upload_location, location_thumbnail_upload_location, year_pdf_upload_location, report_wordcloud_upload_location, report_graph_upload_location, event_collage_upload_location, event_staticmap_upload_location, tag_staticmap_upload_location, year_wordcloud_upload_location
+from viewer.functions.rdf import get_wikipedia_abstract
 
 import random, datetime, pytz, json, markdown, re, os, overpy, holidays
 
@@ -95,6 +96,41 @@ class LocationCountry(models.Model):
 	a3 = models.SlugField(max_length=3, blank=True, null=True)
 	label = models.CharField(max_length=100)
 	wikipedia = models.URLField(blank=True, null=True)
+	cached_description = models.TextField(default='')
+	cached_description_date = models.DateTimeField(blank=True, null=True)
+	@property
+	def slug(self):
+		"""
+		The unique 'slug id' for this LocationCountry object, as would be displayed after the '#' in the URL bar.
+		"""
+		return("country_" + str(self.a2).lower())
+	@property
+	def description(self):
+		"""
+		A textual description of the country, generally taken from Wikipedia
+		"""
+		now = pytz.utc.localize(datetime.datetime.utcnow())
+		cut_off = now - datetime.timedelta(days=28) # If the article hasn't been scraped in over 4 weeks, refresh it
+		if self.cached_description_date == None:
+			self.cached_description = ''
+		else:
+			if self.cached_description_date < cut_off:
+				self.cached_description = ''
+		if self.cached_description != '':
+			return self.cached_description
+		if self.wikipedia == '':
+			return ''
+		if self.wikipedia is None:
+			return
+		ret = get_wikipedia_abstract(self.wikipedia)
+		if ret != '':
+			self.cached_description = ret
+			self.cached_description_date = now
+			self.save(update_fields=['cached_description', 'cached_description_date'])
+		return ret
+	@property
+	def cities_sorted(self):
+		return self.cities.annotate(locs=Count('locations')).exclude(locs=0).order_by('-locs')
 	def __str__(self):
 		return str(self.label)
 	def to_dict(self):
@@ -110,6 +146,14 @@ class LocationCountry(models.Model):
 		if self.wikipedia:
 			ret['wikipedia'] = str(self.wikipedia)
 		return ret
+	def description_html(self):
+		desc = self.description
+		if desc is None:
+			return ''
+		if desc == '':
+			return ''
+		md = markdown.Markdown()
+		return md.convert(desc)
 	def refresh_cities(self):
 		"""
 		Calls the OSM Overpass API to determine all the cities within the country specified, and stores them in Imouto.
@@ -155,6 +199,49 @@ class LocationCity(models.Model):
 	lon = models.FloatField()
 	country = models.ForeignKey(LocationCountry, related_name='cities', null=True, blank=True, on_delete=models.SET_NULL)
 	wikipedia = models.URLField(blank=True, null=True)
+	cached_description = models.TextField(default='')
+	cached_description_date = models.DateTimeField(blank=True, null=True)
+	@property
+	def slug(self):
+		"""
+		The unique 'slug id' for this LocationCity object, as would be displayed after the '#' in the URL bar.
+		"""
+		return("city_" + str(self.pk))
+	@property
+	def description(self):
+		"""
+		A textual description of the city, generally taken from Wikipedia
+		"""
+		now = pytz.utc.localize(datetime.datetime.utcnow())
+		cut_off = now - datetime.timedelta(days=28) # If the article hasn't been scraped in over 4 weeks, refresh it
+		if self.cached_description_date == None:
+			self.cached_description = ''
+		else:
+			if self.cached_description_date < cut_off:
+				self.cached_description = ''
+		if self.cached_description != '':
+			return self.cached_description
+		if self.wikipedia == '':
+			return ''
+		if self.wikipedia is None:
+			return
+		ret = get_wikipedia_abstract(self.wikipedia)
+		if ret != '':
+			self.cached_description = ret
+			self.cached_description_date = now
+			self.save(update_fields=['cached_description', 'cached_description_date'])
+		return ret
+	def description_html(self):
+		desc = self.description
+		if desc is None:
+			return ''
+		if desc == '':
+			return ''
+		md = markdown.Markdown()
+		return md.convert(desc)
+	@property
+	def locations_sorted(self):
+		return self.locations.annotate(ev=Count('events')).order_by('-ev')
 	def __str__(self):
 		return str(self.label)
 	def to_dict(self):
@@ -170,6 +257,22 @@ class LocationCity(models.Model):
 		if self.country:
 			ret['country'] = self.country.to_dict()
 		return ret
+	def geo(self):
+		"""
+		Useful for drawing straight onto a Leaflet map, this function returns the geographical location of the city as a GeoJSON object.
+
+		:return: A GeoJSON object.
+		:rtype: dict
+		"""
+		point = {}
+		point['type'] = "Point"
+		point['coordinates'] = [self.lon, self.lat]
+		ret = {}
+		ret['type'] = "Feature"
+		ret['bbox'] = [self.lon - 0.1, self.lat - 0.1, self.lon + 0.1, self.lat + 0.1]
+		ret['properties'] = {}
+		# ret['geometry'] = point
+		return json.dumps(ret);
 	class Meta:
 		app_label = 'viewer'
 		verbose_name = 'city'
@@ -973,6 +1076,8 @@ class Event(models.Model):
 		return ', '.join(ret)
 	def description_html(self):
 		if self.description == '':
+			return ''
+		if self.description is None:
 			return ''
 		md = markdown.Markdown()
 		return md.convert(self.description)
