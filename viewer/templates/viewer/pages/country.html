@@ -23,10 +23,22 @@
                 <div class="box box-primary">
                     <div class="box-body box-profile">
 			<h3 class="profile username text-center">{{ data.label }}</h3>
+
+{% with cities=data.cities_sorted %}
+{% if cities %}
+<ul class="list-group list-group-unbordered">
+{% for city in cities %}
+<li class="list-group-item"><a href="#{{ city.slug }}">{{ city }}</a><span class="pull-right">{{ city.locs }} places</span></li>
+{% endfor %}
+</ul>
+{% endif %}
+{% endwith %}
+
                     </div>
                 </div>
 
             </div>
+
 
             <div class="col-xs-12 col-sm-6 col-md-8">
 

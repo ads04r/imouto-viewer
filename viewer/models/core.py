@@ -128,6 +128,9 @@ class LocationCountry(models.Model):
 			self.cached_description_date = now
 			self.save(update_fields=['cached_description', 'cached_description_date'])
 		return ret
+	@property
+	def cities_sorted(self):
+		return self.cities.annotate(locs=Count('locations')).exclude(locs=0).order_by('-locs')
 	def __str__(self):
 		return str(self.label)
 	def to_dict(self):
@@ -236,6 +239,9 @@ class LocationCity(models.Model):
 			return ''
 		md = markdown.Markdown()
 		return md.convert(desc)
+	@property
+	def locations_sorted(self):
+		return self.locations.annotate(ev=Count('events')).order_by('-ev')
 	def __str__(self):
 		return str(self.label)
 	def to_dict(self):
