@@ -362,6 +362,10 @@ class Location(models.Model):
 					continue
 				ret.append(sc)
 		return ret
+	def sort_name(self):
+		if str(self).lower().startswith('the '):
+			return str(self)[4:] + ', The'
+		return str(self)
 	def to_dict(self):
 		"""
 		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.
@@ -649,6 +653,12 @@ class Person(models.Model):
 	def full_name(self):
 		label = str(self.given_name) + ' ' + str(self.family_name)
 		label = label.strip()
+		if label == '':
+			label = self.nickname
+		return label
+	def sort_name(self):
+		label = str(self.family_name) + ', ' + str(self.given_name)
+		label = label.strip(' ,')
 		if label == '':
 			label = self.nickname
 		return label
@@ -1055,7 +1065,11 @@ class Event(models.Model):
 				coordinates = [polyline[i - 1], polyline[i]]
 				line = Line(coordinates, '#0000FF', 7)
 				m.add_line(line)
-		im = m.render()
+		try:
+			im = m.render()
+		except:
+			return None
+
 		blob = BytesIO()
 		im.save(blob, 'PNG')
 		self.cached_staticmap.save(event_staticmap_upload_location, File(blob), save=False)
@@ -1113,6 +1127,8 @@ class Event(models.Model):
 		"""
 		return CalendarTask.objects.filter(time_completed__gte=self.start_time, time_completed__lte=self.end_time).order_by('time_completed')
 	def __refresh_geo(self, save=True):
+		if self.cached_staticmap:
+			self.cached_staticmap.delete()
 		try:
 			ret = json.loads(getgeoline(self.start_time, self.end_time))
 		except:

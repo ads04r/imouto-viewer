@@ -29,7 +29,6 @@ INSTALLED_APPS = [
     'colorfield',
     'viewer.apps.ViewerConfig',
     'django_adminlte',
-    'django_adminlte_theme',
     'django.contrib.admin',
     'django.contrib.staticfiles',
 ]

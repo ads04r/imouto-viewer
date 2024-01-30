@@ -65,6 +65,9 @@ def year_report_status(request, ds):
 		task_year = json.loads(task.task_params)[0][0]
 		if task_year == data.year:
 			template = 'viewer/cards/report-pdf-inprogress.html'
+			if not(task.locked_at is None):
+				if task.locked_by_pid_running() == False:
+					template = 'viewer/cards/report-pdf-stopped.html'
 	if data.report_prc < 100:
 		template = "viewer/cards/report-inprogress.html"
 
