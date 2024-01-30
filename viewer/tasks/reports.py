@@ -200,8 +200,6 @@ def generate_report(title, year):
 	report.report_prc = 100
 	report.save(update_fields=['report_prc'])
 
-	generate_report_pdf(year)
-
 @background(schedule=0, queue='reports')
 def generate_report_pdf(year):
 	"""
