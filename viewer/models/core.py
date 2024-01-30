@@ -363,9 +363,9 @@ class Location(models.Model):
 				ret.append(sc)
 		return ret
 	def sort_name(self):
-		if str(self).lower().startswith('the '):
-			return str(self)[4:] + ', The'
-		return str(self)
+		if self.label.lower().startswith('the '):
+			return self.label[4:] + ', The'
+		return self.label
 	def to_dict(self):
 		"""
 		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.

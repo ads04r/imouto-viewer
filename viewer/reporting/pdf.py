@@ -175,18 +175,23 @@ def event_to_indices(event):
 	else:
 		home_city = home.city
 		home_country = home.country
+		if home_country is None:
+			home_country = home.city.country
 	for tag in event.tags.all():
-		ret = ret + '<index item="' + str(tag).capitalize() + '" />'
+		tag_name = str(tag).capitalize()
+		if tag_name == '':
+			continue
+		ret = ret + '<index item="' + tag_name.replace(', ', ',, ') + '" />'
 	for person in event.people.all():
-		ret = ret + '<index item="' + str(person.sort_name()) + '" />'
+		ret = ret + '<index item="' + str(person.sort_name()).replace(', ', ',, ') + '" />'
 	if event.location:
-		ret = ret + '<index item="' + str(event.location.sort_name()) + '" />'
+		ret = ret + '<index item="' + str(event.location.sort_name()).replace(', ', ',, ') + '" />'
 		if event.location.city:
 			if event.location.city != home_city:
-				ret = ret + '<index item="' + str(event.location.city) + '" />'
+				ret = ret + '<index item="' + str(event.location.city).replace(', ', ',, ') + '" />'
 		if event.location.country:
 			if event.location.country != home_country:
-				ret = ret + '<index item="' + str(event.location.country) + '" />'
+				ret = ret + '<index item="' + str(event.location.country).replace(', ', ',, ') + '" />'
 	return ret
 
 def generate_month_story(month, styles):
