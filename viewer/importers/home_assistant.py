@@ -5,7 +5,8 @@ from django.db.models import Q
 from django.core.files import File
 from django.core.cache import cache
 
-from viewer.models import Event, Location, Person, DataReading
+from viewer.models import Event, Person, DataReading
+from viewer.functions.locations import home_location
 
 def import_home_assistant_readings(entity_id, reading_type, days=7):
 	"""
@@ -133,10 +134,7 @@ def import_home_assistant_presence(uid, entity_id, days=7):
 		token = settings.HOME_ASSISTANT_TOKEN
 	except AttributeError:
 		token = ''
-	try:
-		home = Location.objects.get(id=settings.USER_HOME_LOCATION)
-	except AttributeError:
-		home = None
+	home = home_location()
 	person = Person.objects.get(uid=uid)
 	data = []
 	ret = []

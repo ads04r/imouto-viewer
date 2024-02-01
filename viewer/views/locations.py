@@ -9,15 +9,13 @@ from viewer.models import Location, LocationCountry, LocationCity
 from viewer.forms import LocationForm
 from viewer.functions.geo import get_location_address_fragment, get_location_country_code, get_location_wikidata_id
 from viewer.functions.rdf import wikidata_to_wikipedia
+from viewer.functions.locations import home_location
 
 from viewer.tasks.process import fill_cities
 
 def places(request):
 	data = {}
-	try:
-		home = Location.objects.get(pk=settings.USER_HOME_LOCATION)
-	except:
-		home = None
+	home = home_location()
 	datecutoff = pytz.utc.localize(datetime.datetime.utcnow()) - datetime.timedelta(days=60)
 	data['home'] = home
 	data['recent'] = Location.objects.filter(events__start_time__gte=datecutoff).exclude(uid=home.uid).annotate(num_events=Count('events')).order_by('-num_events')

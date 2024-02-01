@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.core.cache import cache
 from django.conf import settings
-from viewer.importers import import_home_assistant_presence, import_home_assistant_readings, import_home_assistant_events
+from viewer.importers.home_assistant import import_home_assistant_presence, import_home_assistant_readings, import_home_assistant_events
 from viewer.models import PersonProperty
 import sys
 

@@ -5,9 +5,11 @@ from reportlab.lib.units import inch, cm
 from reportlab.graphics.shapes import Drawing
 from reportlab.graphics.charts.piecharts import Pie
 from viewer.models.core import Year, Month, Day, Event
+from django.conf import settings
 from tempfile import NamedTemporaryFile
 import random, json, markdown, os
 from viewer.reporting.styles.basic import ImoutoSampleYearTemplate, ImoutoSampleMonthTemplate, getSampleStyleSheet
+from viewer.functions.locations import home_location
 
 def remove_multiple_page_breaks(story):
 
@@ -83,10 +85,22 @@ def generate_year_story(year, styles):
 				story.append(c)
 				story.append(Spacer(cm, cm))
 	for i in range(0, 12):
+		month = Month.objects.get(year=year.year, month=(i + 1))
+		month_story = generate_month_story(month, styles)
+		if len(month_story) < 10:
+			continue
+		month_flowables = []
+		paragraphs = []
+		for item in month_story:
+			item_type = str(item.__class__.__name__)
+			if item_type == 'Paragraph':
+				paragraphs.append(item.getPlainText())
+			if item_type in month_flowables:
+				continue
+			month_flowables.append(item_type)
 		story.append(NextPageTemplate('TitlePage'))
 		story.append(PageBreakIfNotEmpty())
-		month = Month.objects.get(year=year.year, month=(i + 1))
-		for item in generate_month_story(month, styles):
+		for item in month_story:
 			story.append(item)
 	return remove_multiple_page_breaks(story)
 
@@ -165,10 +179,7 @@ def event_to_flowable(event, styles):
 
 def event_to_indices(event):
 	ret = ''
-	try:
-		home = Location.objects.get(pk=settings.USER_HOME_LOCATION)
-	except:
-		home = None
+	home = home_location()
 	if home is None:
 		home_city = None
 		home_country = None

@@ -14,7 +14,7 @@ def home_location():
 	"""
 	try:
 		return Location.objects.get(pk=settings.USER_HOME_LOCATION)
-	except:
+	except AttributeError:
 		return None
 
 def nearest_location(lat, lon):
