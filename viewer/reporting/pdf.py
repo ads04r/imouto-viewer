@@ -38,7 +38,7 @@ def generate_year_story(year, styles):
 	story.append(PageBreakIfNotEmpty())
 	story.append(Paragraph("Contents", style=styles['Heading1']))
 	story.append(TableOfContents())
-	for category in year.get_all_stat_categories():
+	for category in year.get_all_stat_categories() + ['']:
 		stats = []
 		graphs = []
 		charts = []
@@ -73,7 +73,10 @@ def generate_year_story(year, styles):
 		if (len(stats) + len(graphs)) > 0:
 			story.append(NextPageTemplate('StatsPage'))
 			story.append(PageBreakIfNotEmpty())
-			story.append(Paragraph(str(year.year) + " in " + str(category), style=styles['StatsPageTitle']))
+			if len(category) == 0:
+				story.append(Paragraph(str(year.year) + " Miscellaneous", style=styles['StatsPageTitle']))
+			else:
+				story.append(Paragraph(str(year.year) + " in " + str(category).capitalize(), style=styles['StatsPageTitle']))
 			story.append(Spacer(cm, cm))
 			for s in stats:
 				story.append(s)
