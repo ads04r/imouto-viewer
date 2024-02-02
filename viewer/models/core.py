@@ -2098,7 +2098,7 @@ class Day(models.Model):
 					dts = last_sleep
 			except:
 				dts = self.timezone.localize(datetime.datetime(d.year, d.month, d.day, 4, 0, 0))
-			dte = dts + datetime.timedelta(seconds=86400)
+			dte = None
 			return dts, dte
 
 	@property
@@ -2157,6 +2157,8 @@ class Day(models.Model):
 		else:
 			dts = self.wake_time
 			dte = self.bed_time
+		if ((dts is None) or (dte is None)):
+			return datetime.timedelta(seconds=0)
 		return (dte - dts)
 	@property
 	def timezone(self):
@@ -2253,7 +2255,12 @@ class Day(models.Model):
 		The number of steps taken during this particular day, according to the stored data.
 		"""
 		dts, dte = self.__calculate_wake_time()
-		obj = DataReading.objects.filter(type='step-count').filter(start_time__gte=dts, end_time__lt=dte).aggregate(steps=Sum('value'))
+		if dts is None:
+			return 0
+		if dte is None:
+			obj = DataReading.objects.filter(type='step-count').filter(start_time__gte=dts).aggregate(steps=Sum('value'))
+		else:
+			obj = DataReading.objects.filter(type='step-count').filter(start_time__gte=dts, end_time__lt=dte).aggregate(steps=Sum('value'))
 		try:
 			ret = int(obj['steps'])
 		except:
@@ -2266,7 +2273,12 @@ class Day(models.Model):
 		The average mood of the user during thie particular Day. Returns None if no mood data found.
 		"""
 		dts, dte = self.__calculate_wake_time()
-		obj = DataReading.objects.filter(type='mood').filter(start_time__gte=dts, start_time__lte=dte).aggregate(mood=Avg('value'))
+		if dts is None:
+			return None
+		if dte is None:
+			obj = DataReading.objects.filter(type='mood').filter(start_time__gte=dts).aggregate(mood=Avg('value'))
+		else:
+			obj = DataReading.objects.filter(type='mood').filter(start_time__gte=dts, start_time__lte=dte).aggregate(mood=Avg('value'))
 		try:
 			ret = int(float(obj['mood']) + 0.5)
 		except:
@@ -2282,6 +2294,10 @@ class Day(models.Model):
 		:rtype: QuerySet(DataReading)
 		"""
 		dts, dte = self.__calculate_wake_time()
+		if dts is None:
+			return DataReading.objects.none()
+		if dte is None:
+			return DataReading.objects.filter(end_time__gte=dts, type=type)
 		return DataReading.objects.filter(end_time__gte=dts, start_time__lte=dte, type=type)
 
 	def get_heart_information(self, graph=True):
@@ -2296,6 +2312,8 @@ class Day(models.Model):
 			return json.loads(self.cached_heart)
 
 		dts, dte = self.__calculate_wake_time()
+		if dts is None:
+			return {'heart': {}}
 		data = {'date': dts.strftime("%a %-d %b %Y"), 'heart': {}}
 
 		data['prev'] = (self.date - datetime.timedelta(days=1)).strftime('%Y%m%d')
@@ -2316,7 +2334,7 @@ class Day(models.Model):
 		for dr in readings.filter(value__gte=zone_1):
 			zone[1] = zone[1] + int((dr.end_time - dr.start_time).total_seconds())
 		zone[2] = zone[1] - zone[2]
-		zone[0] = int((dte - dts).total_seconds()) - (zone[1] + zone[2])
+		zone[0] = int(self.length.total_seconds()) - (zone[1] + zone[2])
 		data['heart']['day_max_rate'] = readings.aggregate(m=Max('value'))['m']
 		if data['heart']['day_max_rate'] is None:
 			data['heart']['day_max_rate'] = 0
@@ -2339,7 +2357,7 @@ class Day(models.Model):
 
 		last = None
 		values = {}
-		for item in DataReading.objects.filter(start_time__lt=dte, end_time__gte=dts, type='heart-rate').order_by('start_time'):
+		for item in self.data_readings('heart-rate').order_by('start_time'):
 			dtx = int((item.start_time - dts).total_seconds() / 60)
 			if dtx in values:
 				if item.value < values[dtx]:
@@ -2372,16 +2390,26 @@ class Day(models.Model):
 		"""
 		dts, dte = self.__calculate_wake_time()
 		sleep_data = []
+		if dts is None:
+			return {}
 
 		data = {'date': dts.strftime("%a %-d %b %Y")}
 		data['wake_up'] = dts.astimezone(self.timezone).strftime("%Y-%m-%d %H:%M:%S %z")
-		data['bedtime'] = dte.astimezone(self.timezone).strftime("%Y-%m-%d %H:%M:%S %z")
 		data['wake_up_local'] = dts.astimezone(self.timezone).strftime("%I:%M%p").lstrip("0").lower()
-		data['bedtime_local'] = dte.astimezone(self.timezone).strftime("%I:%M%p").lstrip("0").lower()
-		data['length'] = (dte - dts).total_seconds()
+		if not(dte is None):
+			data['bedtime'] = dte.astimezone(self.timezone).strftime("%Y-%m-%d %H:%M:%S %z")
+			data['bedtime_local'] = dte.astimezone(self.timezone).strftime("%I:%M%p").lstrip("0").lower()
+			data['length'] = (dte - dts).total_seconds()
 		data['prev'] = self.yesterday.date.strftime('%Y%m%d')
-		if not(self.today):
+		if not((self.today) or (dte is None)):
 			data['next'] = self.tomorrow.date.strftime('%Y%m%d')
+
+		if dte is None:
+			data['sleep'] = []
+			self.wake_time = dts
+			self.bed_time = dte
+			self.save(update_fields=['wake_time', 'bed_time'])
+			return data
 
 		if not(self.cached_sleep is None):
 			data['sleep'] = json.loads(self.cached_sleep)
@@ -2394,7 +2422,7 @@ class Day(models.Model):
 			return data
 
 		if self.today or self.tomorrow.today:
-			for sleep_info in DataReading.objects.filter(type='sleep', start_time__gt=dts).order_by('start_time'):
+			for sleep_info in self.data_readings('sleep').order_by('start_time'):
 				sleep_data.append(sleep_info)
 		else:
 			dtee = dts + datetime.timedelta(seconds=86400)
@@ -2466,7 +2494,10 @@ class Day(models.Model):
 		d = self.date
 		self.timezone_str = settings.TIME_ZONE
 		dts, dte = self.__calculate_wake_time()
-
+		if dts is None:
+			dts = pytz.utc.localize(datetime.datetime.utcnow())
+		if dte is None:
+			dte = pytz.utc.localize(datetime.datetime.utcnow())
 		data = getboundingbox(dts, dte)
 		if len(data) == 4:
 			try:
@@ -2478,6 +2509,12 @@ class Day(models.Model):
 				pass # Leave at local time if we have an issue
 
 		dts, dte = self.__calculate_wake_time() # Do this again, because the timezone may have changed.
+		if dts is None:
+			if save:
+				self.cached_heart = None
+				self.cached_sleep = None
+				self.save()
+			return True
 		if not(self.today):
 			self.wake_time = dts
 			self.bed_time = dte
