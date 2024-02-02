@@ -1,6 +1,7 @@
 {% load static %}
 {% load tz %}
 {% load class_tag %}
+{% load timedelta %}
 
 <section class="content-header">
     <h1>
@@ -24,7 +25,8 @@
                 <div class="box-body box-profile">
                     <h3 class="profile-username text-center">{{ month }}</h3>
                     <ul class="list-group list-group-unbordered">
-                        <li class="list-group-item"><b>Average sunlight per day</b> <span class="pull-right">{{ month.average_sunlight }}</span></li>
+                        <li class="list-group-item"><b>Average sunlight per day</b> <span class="pull-right">{{ month.average_sunlight|time_delta:"%H:%M" }}</span></li>
+                        <li class="list-group-item"><b>Average awake time per day</b> <span class="pull-right">{{ month.average_wake_time|time_delta:"%H:%M" }}</span></li>
                         <li class="list-group-item"><b>Earliest morning</b> <span class="pull-right"><a href="#{{ month.earliest_morning.slug }}">{{ month.earliest_morning.wake_time|date:"g:ia" }}</a></span></li>
                         <li class="list-group-item"><b>Latest night</b> <span class="pull-right"><a href="#{{ month.latest_night.slug }}">{{ month.latest_night.bed_time|date:"g:ia" }}</a></span></li>
 {% for wc in month.workouts %}

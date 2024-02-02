@@ -1938,6 +1938,12 @@ class Month(models.Model):
 		"""
 		return self.days.annotate(total_sunlight=F('sunset_time')-F('sunrise_time')).aggregate(average_sunlight=Avg('total_sunlight'))['average_sunlight']
 	@property
+	def average_wake_time(self):
+		"""
+		Returns the month's average waking time per day
+		"""
+		return self.days.exclude(wake_time=None).exclude(bed_time=None).annotate(total_wake_time=F('bed_time')-F('wake_time')).aggregate(average_wake_time=Avg('total_wake_time'))['average_wake_time']
+	@property
 	def people(self):
 		"""
 		Every person encountered during this month.
@@ -2090,14 +2096,18 @@ class Day(models.Model):
 					continue
 				if main_wake.length() < wake.length():
 					main_wake = wake
+			if (main_wake.end_time - main_wake.start_time).total_seconds() > 86400:
+				return main_wake.start_time.astimezone(self.timezone), None
 			return main_wake.start_time.astimezone(self.timezone), main_wake.end_time.astimezone(self.timezone)
 		else:
 			try:
 				last_sleep = DataReading.objects.filter(type='sleep').order_by('-end_time')[0].end_time
-				if last_sleep < dte:
+				if ((dts < last_sleep) & (last_sleep < dte)):
 					dts = last_sleep
+				else:
+					dts = None
 			except:
-				dts = self.timezone.localize(datetime.datetime(d.year, d.month, d.day, 4, 0, 0))
+				dts = None
 			dte = None
 			return dts, dte
 
@@ -2114,8 +2124,8 @@ class Day(models.Model):
 		"""
 		if self.today:
 			return False
-		if not(self.wake_time):
-			self.wake_time = self.__dts__()
+		if self.wake_time is None:
+			return (DataReading.objects.filter(type='sleep', start_time__gt=(self.__dts__() + datetime.timedelta(hours=12))).count() > 0)
 		return (DataReading.objects.filter(type='sleep', start_time__gt=(self.wake_time + datetime.timedelta(hours=12))).count() > 0)
 	@property
 	def month(self):
@@ -2165,7 +2175,11 @@ class Day(models.Model):
 		"""
 		Returns the relevant time zone for this particular day (ie it would normally be the same as settings.TIME_ZONE, but the user may be travelling abroad.)
 		"""
-		return pytz.timezone(self.timezone_str)
+		try:
+			ret = pytz.timezone(self.timezone_str)
+		except:
+			ret = pytz.timezone(settings.TIME_ZONE)
+		return ret
 	@property
 	def people(self):
 		"""
@@ -2283,6 +2297,26 @@ class Day(models.Model):
 			ret = int(float(obj['mood']) + 0.5)
 		except:
 			ret = None
+		return ret
+
+	@property
+	def country(self):
+		"""
+		Calculate the country in which the day was mostly spent, based on visited locations.
+		"""
+		try:
+			ret = Location.objects.get(id=settings.USER_HOME_LOCATION).country
+		except:
+			ret = None
+		locations = []
+		for loc in Location.objects.filter(events__in=self.events).distinct():
+			if loc.country is None:
+				continue
+			if loc.country in locations:
+				continue
+			locations.append(loc.country)
+		if len(locations) == 1:
+			ret = locations[0]
 		return ret
 
 	def data_readings(self, type):
@@ -2455,19 +2489,31 @@ class Day(models.Model):
 			home = Location.objects.get(pk=settings.USER_HOME_LOCATION)
 		except:
 			home = None
-		if not(home is None):
+		if home is None:
+			wake_loc = None
+			sleep_loc = None
+		else:
 			wake_loc = (home.lat, home.lon)
 			sleep_loc = (home.lat, home.lon)
-		if not(self.wake_time is None):
-			try:
-				wake_loc = get_logged_position(self.wake_time)
-			except:
-				wake_loc = None
-		if not(self.bed_time is None):
-			try:
-				sleep_loc = get_logged_position(self.bed_time)
-			except:
-				sleep_loc = wake_loc
+
+		try:
+			if self.wake_time is None:
+				logged_pos = get_logged_position(self.timezone.localize(datetime.datetime(self.date.year, self.date.month, self.date.day, 8, 0, 0)))
+			else:
+				logged_pos = get_logged_position(self.wake_time)
+		except:
+			logged_pos = wake_loc
+		wake_loc = logged_pos
+
+		try:
+			if self.bed_time is None:
+				logged_pos = get_logged_position(self.timezone.localize(datetime.datetime(self.date.year, self.date.month, self.date.day, 22, 0, 0)))
+			else:
+				logged_pos = get_logged_position(self.bed_time)
+		except:
+			logged_pos = sleep_loc
+		sleep_loc = logged_pos
+
 		if wake_loc is None:
 			return None
 		if sleep_loc is None:
@@ -2476,12 +2522,12 @@ class Day(models.Model):
 			sun_wake = SunTimes(wake_loc[1], wake_loc[0])
 		except:
 			return None
-		self.sunrise_time = pytz.utc.localize(sun_wake.riseutc(self.date))
+		self.sunrise_time = pytz.utc.localize(sun_wake.riseutc(self.date)).astimezone(self.timezone)
 		try:
 			sun_sleep = SunTimes(sleep_loc[1], sleep_loc[0])
 		except:
 			sun_sleep = sun_wake
-		self.sunset_time = pytz.utc.localize(sun_sleep.setutc(self.date))
+		self.sunset_time = pytz.utc.localize(sun_sleep.setutc(self.date)).astimezone(self.timezone)
 		return(self.sunrise_time, self.sunset_time)
 
 	def refresh(self, save=True):
@@ -2495,9 +2541,9 @@ class Day(models.Model):
 		self.timezone_str = settings.TIME_ZONE
 		dts, dte = self.__calculate_wake_time()
 		if dts is None:
-			dts = pytz.utc.localize(datetime.datetime.utcnow())
+			dts = self.timezone.localize(datetime.datetime(d.year, d.month, d.day, 8, 0, 0))
 		if dte is None:
-			dte = pytz.utc.localize(datetime.datetime.utcnow())
+			dte = self.timezone.localize(datetime.datetime(d.year, d.month, d.day, 22, 0, 0))
 		data = getboundingbox(dts, dte)
 		if len(data) == 4:
 			try:
@@ -2509,18 +2555,12 @@ class Day(models.Model):
 				pass # Leave at local time if we have an issue
 
 		dts, dte = self.__calculate_wake_time() # Do this again, because the timezone may have changed.
-		if dts is None:
-			if save:
-				self.cached_heart = None
-				self.cached_sleep = None
-				self.save()
-			return True
+		suntimes = self.__suntimes()
 		if not(self.today):
 			self.wake_time = dts
 			self.bed_time = dte
-		suntimes = self.__suntimes()
 		try:
-			country = Location.objects.get(id=settings.USER_HOME_LOCATION).country.a2
+			country = self.country.a2
 		except:
 			country = ''
 		if len(country) == 2:
