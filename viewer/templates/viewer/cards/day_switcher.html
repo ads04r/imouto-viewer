@@ -2,14 +2,6 @@
 
                 <div class="box box-primary" id="day_event_{{ event.pk }}">
                     <div class="box-body">
-{% if day.today %}
-                      <div class="text-center">
-                        <div class="btn-group">
-                            <a href="#{{ day.yesterday.slug }}" class="btn btn-default">Previous</a>
-                            <a href="#" class="btn btn-default disabled">Next</a>
-                        </div>
-                      </div>
-{% else %}
                       <div class="day-stats"{% if day.average_mood %} data-mood="{{ day.average_mood }}"{% endif %}></div>
                       <div class="text-center">
                         <div class="btn-group">
@@ -17,7 +9,6 @@
                             <a href="#{{ day.tomorrow.slug }}" class="btn btn-default">Next</a>
                         </div>
                       </div>
-{% endif %}
                     </div>
                 </div>
 

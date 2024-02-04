@@ -2425,56 +2425,55 @@ class Day(models.Model):
 		dts, dte = self.__calculate_wake_time()
 		sleep_data = []
 		if dts is None:
-			return {}
+			return {} # If we don't have a wake time for this event, just return nothing. No data is better than wrong data.
 
 		data = {'date': dts.strftime("%a %-d %b %Y")}
 		data['wake_up'] = dts.astimezone(self.timezone).strftime("%Y-%m-%d %H:%M:%S %z")
 		data['wake_up_local'] = dts.astimezone(self.timezone).strftime("%I:%M%p").lstrip("0").lower()
 		if not(dte is None):
+			# Only fill in bedtime and length of day if we actually know the bedtime.
 			data['bedtime'] = dte.astimezone(self.timezone).strftime("%Y-%m-%d %H:%M:%S %z")
 			data['bedtime_local'] = dte.astimezone(self.timezone).strftime("%I:%M%p").lstrip("0").lower()
 			data['length'] = (dte - dts).total_seconds()
+		# Next, we fill the values for the previous and next days, next only if it exists yet.
 		data['prev'] = self.yesterday.date.strftime('%Y%m%d')
 		if not((self.today) or (dte is None)):
 			data['next'] = self.tomorrow.date.strftime('%Y%m%d')
-
-		if dte is None:
-			data['sleep'] = []
+		# Now we calculate *tomorrow's* wake time, in order to set the end boundary of the sleep data. We can't
+		# call the tomorrow function and then 'wake_time' because it'll be slow, or generate an endless loop.
+		# So we check if a future wake time exists, and use the start time of that. If no future wake time exists,
+		# we use the end time of the very last sleep event
+		next_wake = None
+		if not(dte is None):
+			next_wake_object = DataReading.objects.filter(type='awake', start_time__gte=dte).order_by('start_time').first()
+			if next_wake_object:
+				next_wake = next_wake_object.start_time
+			if next_wake is None:
+				next_sleep_object = DataReading.objects.filter(type='sleep', end_time__gte=dte).order_by('-start_time').first()
+				if next_sleep_object:
+					next_wake = next_sleep_object.end_time
+		# Finally, if we have a next wake time but it's over 24 hours after the current day's bed time, well, we
+		# again assume the data is incomplete, and return nothing.
+		if not(next_wake is None):
+			if (next_wake - dte).total_seconds() >= 86400:
+				next_wake = None
+		if next_wake is None:
+			# If we don't have any sleep data, update the cached wake/sleep times anyway.
 			self.wake_time = dts
 			self.bed_time = dte
 			self.save(update_fields=['wake_time', 'bed_time'])
 			return data
 
-		if not(self.cached_sleep is None):
-			data['sleep'] = json.loads(self.cached_sleep)
-			if 'sleep' in data:
-				if 'end' in data['sleep']:
-					data['tomorrow'] = data['sleep']['end']
-			self.wake_time = dts
-			self.bed_time = dte
-			self.save(update_fields=['wake_time', 'bed_time'])
-			return data
+		for sleep_info in DataReading.objects.filter(type='sleep', start_time__gt=dts, end_time__lte=next_wake).order_by('start_time'):
+			sleep_data.append(sleep_info)
+		data['sleep'] = parse_sleep(sleep_data, self.timezone)
+		if 'end' in data['sleep']:
+			data['tomorrow'] = data['sleep']['end']
 
-		if self.today or self.tomorrow.today:
-			for sleep_info in self.data_readings('sleep').order_by('start_time'):
-				sleep_data.append(sleep_info)
-		else:
-			dtee = dts + datetime.timedelta(seconds=86400)
-			if self.tomorrow:
-				if self.tomorrow.wake_time:
-					dtee = self.tomorrow.wake_time
-			for sleep_info in DataReading.objects.filter(type='sleep', start_time__gt=dts, end_time__lte=dtee).order_by('start_time'):
-				sleep_data.append(sleep_info)
-		if len(sleep_data) > 0:
-			data['sleep'] = parse_sleep(sleep_data)
-			if 'end' in data['sleep']:
-				data['tomorrow'] = data['sleep']['end']
-			self.cached_sleep = json.dumps(data['sleep'])
-
-		if not(self.today):
-			self.wake_time = dts
-			self.bed_time = dte
-			self.save(update_fields=['wake_time', 'bed_time', 'cached_sleep'])
+		self.wake_time = dts
+		self.bed_time = dte
+		self.cached_sleep = json.dumps(data['sleep'])
+		self.save(update_fields=['wake_time', 'bed_time', 'cached_sleep'])
 
 		return data
 

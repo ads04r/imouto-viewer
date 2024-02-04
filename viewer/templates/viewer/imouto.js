@@ -683,8 +683,10 @@ function daySleepReport(date)
 			html = html + "<div class=\"table-responsive\">";
 			html = html + "<table class=\"table no-margin\">";
 			html = html + "<tr><td>Wake up:</td><td>" + data.wake_up_local + "</td></tr>";
-			html = html + "<tr><td>Bed time:</td><td>" + data.bedtime_local + "</td></tr>";
-			html = html + "<tr><td>Wake time:</td><td>" + Math.floor(data.length / (60 * 60)) + " hours</td></tr>";
+			if(data.bedtime){
+				html = html + "<tr><td>Bed time:</td><td>" + data.bedtime_local + "</td></tr>";
+				html = html + "<tr><td>Wake time:</td><td>" + Math.floor(data.length / (60 * 60)) + " hours</td></tr>";
+			}
 			html = html + "</table>";
 			html = html + "</div>";
 		}
@@ -1046,7 +1048,7 @@ function daySummary(date)
 		var html = "";
 		var mood = $(".day-stats").data('mood');
 
-		if((data.wake_up_local) && (data.sleep)){
+		if(data.wake_up_local){
 			html = html + '<table class="table no-margin">';
 			html = html + "<tr>";
 			html = html + "<td>Wake up:</td>";

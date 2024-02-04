@@ -121,7 +121,11 @@ def day_sleep(request, ds):
 	d = int(ds[6:])
 	dt = datetime.date(y, m, d)
 	day = create_or_get_day(dt)
-	data = day.get_sleep_information()
+	if day is None:
+		data = {}
+	else:
+		day.cached_sleep = None
+		data = day.get_sleep_information()
 
 	response = HttpResponse(json.dumps(data), content_type='application/json')
 	return response
