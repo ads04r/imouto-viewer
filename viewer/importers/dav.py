@@ -101,7 +101,7 @@ def import_carddav(url, auth, countrycode='44'):
 			if not(pobj.image):
 				if 'photo' in person.contents:
 					with NamedTemporaryFile(mode='wb') as tf:
-						tf.write(person.contents['photo'][0].value)
+						tf.write(person.contents['photo'][0].value.encode())
 						pobj.image.save('/' + str(pobj.uid) + '.jpg', File(open(tf.name, 'rb')))
 						pobj.save()
 

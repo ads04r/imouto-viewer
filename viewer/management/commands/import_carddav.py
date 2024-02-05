@@ -10,7 +10,7 @@ from requests import request
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from PIL import Image
 import sys, vobject
-from viewer.importers import import_carddav
+from viewer.importers.dav import import_carddav
 
 class Command(BaseCommand):
 	"""
