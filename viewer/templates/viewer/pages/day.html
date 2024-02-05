@@ -19,21 +19,21 @@
 
     <div class="container-fluid">
         <div class="row">
-            <div class="col-xs-12 col-sm-6 col-md-4 col-sm-push-6 col-md-push-8">
+            <div class="col-xs-12 col-sm-6 col-md-4">
 
-		{% include 'viewer/cards/eventcreate.html' %}
 		{% include 'viewer/cards/day_switcher.html' %}
+		{% include 'viewer/cards/eventcreate.html' %}
 		
 		<!--// Bottom of right margin --//-->
 
 		{% if not day.today %}<div class="day-heart-summary"></div>{% endif %}
-		<div class="hidden-xs hidden-sm hidden-md day-weight-summary"></div>
-		<div class="hidden-xs hidden-sm hidden-md day-sleep-summary"></div>
-		<div class="hidden-xs hidden-sm hidden-md day-music-summary"></div>
+		<div class="hidden-xs day-weight-summary"></div>
+		<div class="hidden-xs day-sleep-summary"></div>
+		<div class="hidden-xs day-music-summary"></div>
 		<div class="hidden-xs day-people-summary"></div>
 
             </div>
-            <div class="col-xs-12 col-sm-6 col-md-8 col-sm-pull-6 col-md-pull-4">
+            <div class="col-xs-12 col-sm-6 col-md-8">
 
 {% for event in events %}
 
@@ -117,15 +117,10 @@
 
 {% endfor %}
 
-
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-xs-12 col-sm-6 col-md-8">
-		<!--// Bottom of left column --//-->
-		<div class="hidden-lg hidden-xl day-weight-summary"></div>
-		<div class="hidden-lg hidden-xl day-sleep-summary"></div>
-		<div class="hidden-lg hidden-xl day-music-summary"></div>
+		<!--// Bottom of main column --//-->
+		<div class="hidden-sm hidden-md hidden-lg hidden-xl day-weight-summary"></div>
+		<div class="hidden-sm hidden-md hidden-lg hidden-xl day-sleep-summary"></div>
+		<div class="hidden-sm hidden-md hidden-lg hidden-xl day-music-summary"></div>
 		<div class="hidden-sm hidden-md hidden-lg hidden-xl day-people-summary"></div>
             </div>
         </div>

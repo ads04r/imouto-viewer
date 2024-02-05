@@ -15,6 +15,28 @@
 
     <div class="container-fluid">
         <div class="row">
+            <div class="col-xs-12 col-sm-6 col-md-4">
+
+{% include 'viewer/cards/eventprofile.html' %}
+
+{% if data.subevents.count > 0 %}
+  {% include 'viewer/cards/eventsubevents.html' %}
+{% endif %}
+
+{% if data.similar %}
+  {% include 'viewer/cards/eventsimilar.html' %}
+{% endif %}
+
+{% if data.weather %}
+	{% include 'viewer/cards/weather.html' %}
+{% endif %}
+
+{% if data.workout_categories.count > 0 %}
+	{% include 'viewer/cards/eventhealth.html' %}
+{% endif %}
+
+
+            </div>
             <div class="col-xs-12 col-sm-6 col-md-8">
 
 {% include 'viewer/cards/eventhead.html' %}
@@ -64,43 +86,6 @@
 {% if data.photos.count > 0 %}
   {% include 'viewer/cards/eventphotos.html' %}
 {% endif %}
-
-            </div>
-            <div class="col-xs-12 col-sm-6 col-md-4">
-
-{% if data.location != None and data.geo == '' %}
-  {% include 'viewer/cards/eventmap.html' %}
-{% endif %}
-
-{% include 'viewer/cards/eventstats.html' %}
-
-{% if data.tags.count > 0 %}
-  {% include 'viewer/cards/eventtags.html' %}
-{% endif %}
-
-{% if data.subevents.count > 0 %}
-  {% include 'viewer/cards/eventsubevents.html' %}
-{% endif %}
-
-                <div class="box box-primary">
-                    <div class="box-body">
-                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#admin_event_edit" aria-hidden="true">Edit Event</button>
-                        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#admin_event_delete" aria-hidden="true">Delete</button>
-                    </div>
-                </div>
-
-{% if data.similar %}
-  {% include 'viewer/cards/eventsimilar.html' %}
-{% endif %}
-
-{% if data.weather %}
-	{% include 'viewer/cards/weather.html' %}
-{% endif %}
-
-{% if data.workout_categories.count > 0 %}
-	{% include 'viewer/cards/eventhealth.html' %}
-{% endif %}
-
 
             </div>
         </div>
