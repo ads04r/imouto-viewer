@@ -4,10 +4,27 @@
                     <div class="box-body box-profile">
                         {% if data.image %}<img class="profile-user-img img-responsive img-circle" src="places/{{ data.uid }}_thumb.jpg" alt="Profile picture">{% endif %}
                         <h3 class="profile-username text-center">{{ data.caption }}</h3>
+{% if data.type == 'event' %}
+                        <p class="text-muted text-center">General event</p>
+{% elif data.type == 'loc_prox' %}
+                        <p class="text-muted text-center">Location event</p>
+{% elif data.type == 'life_event' %}
+                        <p class="text-muted text-center">Life event</p>
+{% else %}
                         <p class="text-muted text-center">{{ data.type.capitalize }} event</p>
+{% endif %}
                         <ul class="list-group list-group-unbordered">
+{% if data.type == 'life_event' %}
+	{% if data.length < 86400 %}
+<li class="list-group-item"><b>Date</b> <span class="pull-right"><a href="#day_{{ data.start_time|date:"Ymd" }}">{{ data.start_time|date:"D jS M Y" }}</a></span></li>
+	{% else %}
+<li class="list-group-item"><b>Start date</b> <span class="pull-right"><a href="#day_{{ data.start_time|date:"Ymd" }}">{{ data.start_time|date:"D jS M Y" }}</a></span></li>
+<li class="list-group-item"><b>End date</b> <span class="pull-right"><a href="#day_{{ data.end_time|date:"Ymd" }}">{{ data.end_time|date:"D jS M Y" }}</a></span></li>
+	{% endif %}
+{% else %}
 <li class="list-group-item"><b>Date</b> <span class="pull-right"><a href="#day_{{ data.start_time|date:"Ymd" }}">{{ data.start_time|date:"D jS M Y" }}</a></span></li>
 <li class="list-group-item"><b>Time</b> <span class="pull-right">{{ data.start_time|date:"H:i" }}&ndash;{{ data.end_time|date:"H:i" }}</span></li>
+{% endif %}
 {% if data.location != None %}
 <li class="list-group-item"><b>Location</b> <span class="pull-right"><a href="#place_{{ data.location.uid }}">{{ data.location }}</a></span></li>
 {% endif %}

@@ -1,0 +1,6 @@
+{% if data.type %}
+<a href="photo/{{ photo.pk }}.jpg" target="_blank" class="event_image_select" data-photoid="{{ photo.pk }}" data-eventid="{{ data.pk }}" data-cover="{% if data.cover_photo == photo %}true{% else %}false{% endif %}"><img src="photo/{{ photo.pk }}_thumb.jpg" width="100" height="100" alt="{{ photo.generate_caption }}"></a>
+{% else %}
+<a href="photo/{{ photo.pk }}.jpg" target="_blank" class="event_image_select" data-photoid="{{ photo.pk }}" 
+{% if photo.location.label %} data-photolocationid="{{ photo.location.uid }}" data-photolocation="{{ photo.location.label }}"{% endif %}{% if photo.time %} data-photodateid="{{ photo.time|date:"Ymd" }}" data-photodate="{{ photo.time|date:"l jS F Y" }}" data-phototime="{{ photo.time|date:"g:ia" }}"{% endif %}><img src="photo/{{ photo.pk }}_thumb.jpg" width="100" height="100" alt="{{ photo.generate_caption }}"></a>
+{% endif %}
