@@ -1199,7 +1199,14 @@ function peopleScreen()
 
 function personScreen(id)
 {
-    $(".content-wrapper").load("./people/" + id + ".html", function(response, status, xhr){ if(status == 'error') { errorPage(xhr); return false; } });
+    $(".content-wrapper").load("./people/" + id + ".html", function(response, status, xhr){
+        if(status == 'error')
+        {
+            errorPage(xhr);
+            return false;
+        }
+        activateImageEditor();
+    });
 }
 
 function placesScreen(id)
@@ -1371,30 +1378,47 @@ function activateImageEditor()
 {
 	$('.event_image_select').on('click', function() {
 		var html = '';
-		var eventid = $(this).data('eventid');
 		var photoid = $(this).data('photoid');
+		var eventid = $(this).data('eventid');
+		var locid = $(this).data('photolocationid');
+		var loc = $(this).data('photolocation');
+		var dateid = $(this).data('photodateid');
+		var photodate = $(this).data('photodate');
+		var phototime = $(this).data('phototime');
 		var cover_image = $(this).data('cover');
 		var img = $(this).html();
 		var alt = $('img', this).attr('alt');
 		html = html + '<table class="table">';
 		html = html + '<tr>';
 		html = html + '<td id="event_photo_image">' + img + '</td>';
-		html = html + '<td>';
-		html = html + '<form role="form" id="photo-form" method="POST" action="photo/' + photoid + '.json">';
-		html = html + '<div class="form-group">';
-		html = html + '<label for="form-input-image-caption">Image Caption</label>';
-		html = html + '<input id="form-input-image-caption" name="image_caption" class="form-control" type="text" placeholder="Image caption" value="' + alt + '"/>';
-		html = html + '</div>';
-		html = html + '<div class="checkbox">';
-		html = html + '<label>';
-		if(cover_image) { html = html + '<input type="checkbox" name="event_cover_image" checked="checked"/>'; } else { html = html + '<input type="checkbox" name="event_cover_image"/>'; }
-		html = html + 'Event Cover Image';
-		html = html + '</label>';
-		html = html + '</div>';
-		html = html + '<input type="hidden" name="event_id" value="' + eventid + '"/>';
-		html = html + '<input type="hidden" name="photo_id" value="' + photoid + '"/>';
-		html = html + '</form>';
-		html = html + '</td>';
+		if(eventid)
+		{
+			html = html + '<td>';
+			html = html + '<form role="form" id="photo-form" method="POST" action="photo/' + photoid + '.json">';
+			html = html + '<div class="form-group">';
+			html = html + '<label for="form-input-image-caption">Image Caption</label>';
+			html = html + '<input id="form-input-image-caption" name="image_caption" class="form-control" type="text" placeholder="Image caption" value="' + alt + '"/>';
+			html = html + '</div>';
+			html = html + '<div class="checkbox">';
+			html = html + '<label>';
+			if(cover_image) { html = html + '<input type="checkbox" name="event_cover_image" checked="checked"/>'; } else { html = html + '<input type="checkbox" name="event_cover_image"/>'; }
+			html = html + 'Event Cover Image';
+			html = html + '</label>';
+			html = html + '</div>';
+			html = html + '<input type="hidden" name="event_id" value="' + eventid + '"/>';
+			html = html + '<input type="hidden" name="photo_id" value="' + photoid + '"/>';
+			html = html + '</form>';
+			html = html + '</td>';
+		} else {
+			html = html + '<td>';
+			html = html + '<h4 class="box-title">' + alt + '</h4>';
+			if(dateid) { html = html + '<p>Taken on ' + photodate + ' at ' + phototime + '</p>'; }
+			if(locid) { html = html + '<p>Taken at ' + loc + '</p>'; }
+			html = html + '';
+			html = html + '';
+			html = html + '';
+			html = html + '</td>';
+		}
 		html = html + '</tr>';
 		html = html + '</table>';
 		$('#admin_event_photo_body').html(html);

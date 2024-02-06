@@ -1,0 +1,55 @@
+{% load static %}
+
+                <div class="box box-primary">
+                    <div class="box-body box-profile">
+                        {% if data.image %}<img class="profile-user-img img-responsive img-circle" src="places/{{ data.uid }}_thumb.jpg" alt="Profile picture">{% endif %}
+                        <h3 class="profile-username text-center">{{ data.caption }}</h3>
+{% if data.type == 'event' %}
+                        <p class="text-muted text-center">General event</p>
+{% elif data.type == 'loc_prox' %}
+                        <p class="text-muted text-center">Location event</p>
+{% elif data.type == 'life_event' %}
+                        <p class="text-muted text-center">Life event</p>
+{% else %}
+                        <p class="text-muted text-center">{{ data.type.capitalize }} event</p>
+{% endif %}
+                        <ul class="list-group list-group-unbordered">
+{% if data.type == 'life_event' %}
+	{% if data.length < 86400 %}
+<li class="list-group-item"><b>Date</b> <span class="pull-right"><a href="#day_{{ data.start_time|date:"Ymd" }}">{{ data.start_time|date:"D jS M Y" }}</a></span></li>
+	{% else %}
+<li class="list-group-item"><b>Start date</b> <span class="pull-right"><a href="#day_{{ data.start_time|date:"Ymd" }}">{{ data.start_time|date:"D jS M Y" }}</a></span></li>
+<li class="list-group-item"><b>End date</b> <span class="pull-right"><a href="#day_{{ data.end_time|date:"Ymd" }}">{{ data.end_time|date:"D jS M Y" }}</a></span></li>
+	{% endif %}
+{% else %}
+<li class="list-group-item"><b>Date</b> <span class="pull-right"><a href="#day_{{ data.start_time|date:"Ymd" }}">{{ data.start_time|date:"D jS M Y" }}</a></span></li>
+<li class="list-group-item"><b>Time</b> <span class="pull-right">{{ data.start_time|date:"H:i" }}&ndash;{{ data.end_time|date:"H:i" }}</span></li>
+{% endif %}
+{% if data.location != None %}
+<li class="list-group-item"><b>Location</b> <span class="pull-right"><a href="#place_{{ data.location.uid }}">{{ data.location }}</a></span></li>
+{% endif %}
+<li class="list-group-item"><b>Total Duration</b> <span class="pull-right">{{ data.length_string }}</span></li>
+{% if data.distance > 0 %}
+<li class="list-group-item"><b>Total Distance</b> <span class="pull-right">{{ data.distance }}&nbsp;miles</span></li>
+{% endif %}
+{% if data.music %}
+<li class="list-group-item"><b>Music</b> <span class="pull-right">{{ data.music|length }}&nbsp;tracks</span></span></li>
+{% endif %}
+{% if data.health.steps != None %}
+<li class="list-group-item"><b>Total Steps</b> <span class="pull-right">{{ data.health.steps }}</span></li>
+{% endif %}
+                        </ul>
+{% if data.tags.count > 0 %}
+  {% include 'viewer/cards/eventtags.html' %}
+{% endif %}
+                    </div>
+                    <div class="box-footer"><span class="pull-right">
+                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#admin_event_edit" aria-hidden="true">Edit Event</button>
+                        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#admin_event_delete" aria-hidden="true">Delete</button>
+                    </span></div>
+                </div>
+
+{% if data.location != None and data.geo == '' %}
+  {% include 'viewer/cards/eventmap.html' %}
+{% endif %}
+
