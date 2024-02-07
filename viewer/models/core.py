@@ -2087,7 +2087,9 @@ class Day(models.Model):
 		dts = self.timezone.localize(datetime.datetime(d.year, d.month, d.day, 0, 0, 0))
 		dte = dts + datetime.timedelta(seconds=86400)
 		wakes = DataReading.objects.filter(type='awake', start_time__gte=dts, start_time__lt=dte).order_by('start_time')
-		wakecount = wakes.count()
+		wakecount = 0
+		if self.future_data:
+			wakecount = wakes.count()
 		if wakecount > 0:
 			main_wake = None
 			for wake in wakes:
@@ -2439,19 +2441,10 @@ class Day(models.Model):
 		data['prev'] = self.yesterday.date.strftime('%Y%m%d')
 		if not((self.today) or (dte is None)):
 			data['next'] = self.tomorrow.date.strftime('%Y%m%d')
-		# Now we calculate *tomorrow's* wake time, in order to set the end boundary of the sleep data. We can't
-		# call the tomorrow function and then 'wake_time' because it'll be slow, or generate an endless loop.
-		# So we check if a future wake time exists, and use the start time of that. If no future wake time exists,
-		# we use the end time of the very last sleep event
+		# Now we calculate *tomorrow's* wake time, in order to set the end boundary of the sleep data.
 		next_wake = None
-		if not(dte is None):
-			next_wake_object = DataReading.objects.filter(type='awake', start_time__gte=dte).order_by('start_time').first()
-			if next_wake_object:
-				next_wake = next_wake_object.start_time
-			if next_wake is None:
-				next_sleep_object = DataReading.objects.filter(type='sleep', end_time__gte=dte).order_by('-start_time').first()
-				if next_sleep_object:
-					next_wake = next_sleep_object.end_time
+		if self.future_data:
+			next_wake = self.tomorrow.wake_time
 		# Finally, if we have a next wake time but it's over 24 hours after the current day's bed time, well, we
 		# again assume the data is incomplete, and return nothing.
 		if not(next_wake is None):
@@ -2469,6 +2462,18 @@ class Day(models.Model):
 		data['sleep'] = parse_sleep(sleep_data, self.timezone)
 		if 'end' in data['sleep']:
 			data['tomorrow'] = data['sleep']['end']
+
+		# Extra little easter egg for people who have a dog that wakes them up in the night for a poo... add the wakes during the 'sleep' time
+		night_wakes = []
+		if dte:
+			for night_wake in DataReading.objects.filter(type='awake', start_time__gt=dte, end_time__lte=next_wake).order_by('start_time'):
+				item = {}
+				item['wake'] = night_wake.start_time.strftime("%Y-%m-%d %H:%M:%S %z")
+				item['sleep'] = night_wake.end_time.strftime("%Y-%m-%d %H:%M:%S %z")
+				item['length'] = int((night_wake.end_time - night_wake.start_time).total_seconds())
+				night_wakes.append(item)
+		if len(night_wakes) > 0:
+			data['sleep']['mid_wakes'] = night_wakes
 
 		self.wake_time = dts
 		self.bed_time = dte

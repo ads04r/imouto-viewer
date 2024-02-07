@@ -1010,9 +1010,8 @@ function daySummary(date)
 		if(data.heart){
 
 			html = html + "<div class=\"box box-primary\">";
+			html = html + '<div class="box-header"><h3 class="box-title">Daily Heart Activity</h3></div>';
 			html = html + "<div class=\"box-body\">";
-
-			html = html + "<p>Daily Heart Activity</p>";
 
 			var hsecs = data.heart.heartzonetime[1];
 			var hmins = parseInt(parseFloat(hsecs) / 60.0);
@@ -1082,10 +1081,9 @@ function daySummary(date)
 
 		if(data.sleep){
 
-			html = html + "<div class=\"box box-primary\">";
-			html = html + "<div class=\"box-body\">";
-
-			html = html + "<p>Sleep pattern</p>";
+			html = html + '<div class=\"box box-primary\">';
+			html = html + '<div class="box-header"><h3 class="box-title">Sleep pattern</h3></div>';
+			html = html + '<div class=\"box-body\">';
 
 			html = html + "<div class=\"progress-group\">";
 			html = html + "<div class=\"progress sleep-bar\">";
@@ -1123,6 +1121,28 @@ function daySummary(date)
 			html = html + "</div>";
 
 			html = html + "</div>";
+
+			if(data.sleep.mid_wakes)
+			{
+
+				html = html + '<div class="box-footer">';
+				html = html + '<h5 class="box-title">Wake periods</h5>';
+				html = html + '<table class="table table-condensed">';
+				for(i = 0; i < data.sleep.mid_wakes.length; i++)
+				{
+					dt = new Date(data.sleep.mid_wakes[i].wake);
+					ls = data.sleep.mid_wakes[i].length;
+					lm = parseInt(ls / 60);
+					ls = ls - (lm * 60);
+					html = html + '<tr>';
+					html = html + '<td>' + dt.toLocaleTimeString() + '</td>';
+					html = html + '<td>' + lm + ' minutes, ' + ls + ' seconds</td>';
+					html = html + '</tr>';
+				}
+				html = html + '</table>';
+				html = html + '</div>';
+			}
+
 			html = html + "</div>";
 		}
 
