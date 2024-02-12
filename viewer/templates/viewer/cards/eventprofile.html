@@ -26,7 +26,7 @@
 <li class="list-group-item"><b>Time</b> <span class="pull-right">{{ data.start_time|date:"H:i" }}&ndash;{{ data.end_time|date:"H:i" }}</span></li>
 {% endif %}
 {% if data.location != None %}
-<li class="list-group-item"><b>Location</b> <span class="pull-right"><a href="#place_{{ data.location.uid }}">{{ data.location }}</a></span></li>
+<li class="list-group-item"><b>Location</b> <span class="pull-right"><a href="#place_{{ data.location.uid }}">{{ data.location.label }}</a></span></li>
 {% endif %}
 <li class="list-group-item"><b>Total Duration</b> <span class="pull-right">{{ data.length_string }}</span></li>
 {% if data.distance > 0 %}
@@ -37,6 +37,9 @@
 {% endif %}
 {% if data.health.steps != None %}
 <li class="list-group-item"><b>Total Steps</b> <span class="pull-right">{{ data.health.steps }}</span></li>
+{% endif %}
+{% if data.photos.count > 0 %}
+<li class="list-group-item"><b>Photos Taken</b> <span class="pull-right">{{ data.photos.count }}</span></li>
 {% endif %}
                         </ul>
 {% if data.tags.count > 0 %}
