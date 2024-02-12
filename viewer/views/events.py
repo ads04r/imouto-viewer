@@ -226,8 +226,14 @@ def eventdelete(request, eid):
 	if request.method != 'POST':
 		raise Http404()
 	data = get_object_or_404(Event, pk=eid)
+	dt = data.start_time.date()
 	ret = data.delete()
-	response = HttpResponse(json.dumps(ret), content_type='application/json')
+	if 'event-id' in request.POST:
+		eid_check = str(request.POST['event-id'])
+	if eid == eid_check:
+		response = HttpResponseRedirect('../../#day_' + dt.strftime("%Y%m%d"))
+	else:
+		response = HttpResponse(json.dumps(ret), content_type='application/json')
 	return response
 
 def eventjson(request):

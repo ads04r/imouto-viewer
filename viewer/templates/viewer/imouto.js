@@ -2151,6 +2151,7 @@ function eventScreen(id)
 		$('.delete_person').on('click', function() { return eventPeopleDeleteName($(this).data('id')); });
 	});
 	$('.delete_person').on('click', function() { return eventPeopleDeleteName($(this).data('id')); });
+        $("#event-delete-button").on('click', function(){ $("#event-event-delete").submit(); });
 	activateImageEditor();
     });
 }
