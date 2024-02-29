@@ -73,9 +73,12 @@ def generate_onthisday():
 
 		dt = pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(settings.TIME_ZONE))
 		year = dt.year - i
-		dt = dt.replace(year=year)
-		dts = dt.replace(hour=0, minute=0, second=0) + offset
-		dte = dt.replace(hour=23, minute=59, second=59) + offset
+		try:
+			dt = dt.replace(year=year)
+			dts = dt.replace(hour=0, minute=0, second=0) + offset
+			dte = dt.replace(hour=23, minute=59, second=59) + offset
+		except ValueError: # generally gets triggered every 29th February
+			continue
 
 		events = []
 		places = []
