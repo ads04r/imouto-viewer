@@ -86,6 +86,29 @@
 {% endif %}
 {% endwith %}
 
+{% with tasks=month.tasks_completed %}
+{% if tasks %}
+
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Tasks completed</h3>
+                </div>
+                <div class="box-body no-padding">
+
+                        <table class="table table-condensed">
+{% for task in tasks %}
+                                <tr>
+                                        <td>{{ task }}</td>
+                                </tr>
+{% endfor %}
+                        </table>
+
+                </div>
+            </div>
+
+{% endif %}
+{% endwith %}
+
 {% if history.count > 0 %}
 
             <div class="box box-primary">

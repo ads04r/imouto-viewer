@@ -1981,6 +1981,17 @@ class Month(models.Model):
 		"""
 		return Location.objects.filter(events__in=self.events).distinct()
 	@property
+	def tasks_completed(self):
+		"""
+		Every task listed as 'completed' during this month.
+		"""
+		dts = pytz.utc.localize(datetime.datetime(self.year, self.month, 1, 0, 0, 0))
+		if self.month < 12:
+			dte = pytz.utc.localize(datetime.datetime(self.year, self.month + 1, 1, 0, 0, 0)) - datetime.timedelta(seconds=1)
+		else:
+			dte = pytz.utc.localize(datetime.datetime(self.year + 1, 1, 1, 0, 0, 0)) - datetime.timedelta(seconds=1)
+		return CalendarTask.objects.filter(time_completed__gte=dts, time_completed__lte=dte).order_by('time_completed')
+	@property
 	def life_events(self):
 		"""
 		Every described life event during this month.
@@ -2673,7 +2684,10 @@ class CalendarTask(models.Model):
 	updated_time = models.DateTimeField(auto_now=True)
 	calendar = models.ForeignKey(CalendarFeed, on_delete=models.CASCADE, related_name='tasks')
 	def __str__(self):
-		return(self.taskid)
+		ret = self.caption
+		if len(ret) == 0:
+			ret = self.taskid
+		return(ret)
 	class Meta:
 		app_label = 'viewer'
 		verbose_name = 'calendar task'
