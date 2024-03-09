@@ -965,6 +965,9 @@ class Event(models.Model):
 	geo = models.TextField(default='', blank=True)
 	cached_health = models.TextField(default='', blank=True)
 	cached_staticmap = models.ImageField(blank=True, null=True, upload_to=event_staticmap_upload_location)
+	cached_step_count = models.IntegerField(default=0)
+	cached_distance = models.FloatField(default=0)
+	cached_average_speed = models.FloatField(default=0)
 	elevation = models.TextField(default='', blank=True)
 	speed = models.TextField(default='', blank=True)
 	cover_photo = models.ForeignKey(Photo, null=True,  blank=True, on_delete=models.SET_NULL)
@@ -1105,7 +1108,13 @@ class Event(models.Model):
 			self.elevation = ''
 			self.speed = ''
 		if len(self.cached_health) <= 2:
-			self.__refresh_health(save=False)
+			health = self.__refresh_health(save=False)
+		else:
+			health = json.loads(self.cached_health)
+		if 'steps' in health:
+			self.cached_step_count = health['steps']
+		if 'speedavg' in health:
+			self.cached_average_speed = health['speedavg']
 		if save:
 			self.save()
 	def subevents(self):
@@ -1146,9 +1155,12 @@ class Event(models.Model):
 						lat, lon = get_logged_position(max_hr.start_time)
 						if not(lat is None):
 							ret['geometry']['geometries'].append({"type": "Point", "coordinates": [lon, lat], "properties": {"type": "poi", "time": ds, "label": "Highest heart rate " + str(max_hr.value) + "bpm at " + max_hr.start_time.strftime("%H:%M:%S")}})
+		if 'properties' in ret:
+			if 'distance' in ret['properties']:
+				self.cached_distance = float(int((ret['properties']['distance'] / 1.609) * 100)) / 100
 		self.geo = json.dumps(ret)
 		if save:
-			self.save(update_fields=['geo'])
+			self.save(update_fields=['geo', 'cached_distance'])
 		return self.geo
 	def gpx(self):
 		dt = self.start_time
@@ -1202,12 +1214,16 @@ class Event(models.Model):
 		return(ret)
 
 	def distance(self):
+		if self.cached_distance:
+			return self.cached_distance
 		if not(self.geo):
 			return 0
 		geo = json.loads(self.geo)
 		if 'properties' in geo:
 			if 'distance' in geo['properties']:
-				return (float(int((geo['properties']['distance'] / 1.609) * 100)) / 100)
+				self.cached_distance = (float(int((geo['properties']['distance'] / 1.609) * 100)) / 100)
+				self.save(update_fields=['cached_distance'])
+				return self.cached_distance
 		return 0
 	@property
 	def length(self):
@@ -1418,14 +1434,16 @@ class Event(models.Model):
 			ret['sleep'] = parse_sleep(sleep, self.timezone)
 		if step_count > 0:
 			ret['steps'] = step_count
+			self.cached_step_count = ret['steps']
 		if speed_count > 0:
 			ret['speedavg'] = int(speed_total / speed_count)
+			self.cached_average_speed = ret['speedavg']
 			ret['speedavgmoving'] = int(speed_total / speed_move_count)
 			ret['speedmax'] = int(speed_max)
 			ret['speedmoving'] = self.length_string(int(speed_move_time))
 		self.cached_health = json.dumps(ret)
 		if save:
-			self.save(update_fields=['cached_health'])
+			self.save(update_fields=['cached_health', 'cached_average_speed', 'cached_step_count'])
 		return ret
 	def populate_people_from_photos(self):
 		for photo in self.photos():
