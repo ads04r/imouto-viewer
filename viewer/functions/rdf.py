@@ -3,6 +3,10 @@ from rdflib import Graph, Namespace, URIRef, Literal
 from rdflib.namespace import RDF, RDFS, XSD
 import json, requests, extruct
 
+def rdf_serialize(object, format='turtle'):
+
+	return ""
+
 def get_wikipedia_abstract(url, lang='en'):
 
 	api_uri = 'http://' + lang + '.wikipedia.org/w/api.php'

@@ -971,6 +971,31 @@ class Event(models.Model):
 	elevation = models.TextField(default='', blank=True)
 	speed = models.TextField(default='', blank=True)
 	cover_photo = models.ForeignKey(Photo, null=True,  blank=True, on_delete=models.SET_NULL)
+	"""The URI of this object for RDF serialization."""
+	@property
+	def uri(self):
+		if hasattr(settings, 'USER_RDF_NAMESPACE'):
+			return settings.USER_RDF_NAMESPACE + 'event/' + str(self.pk)
+		if hasattr(settings, 'RDF_NAMESPACE'):
+			return settings.RDF_NAMESPACE + 'event/' + str(self.pk)
+		return None
+	"""The RDF type(s) of this object for RDF serialization."""
+	@property
+	def rdf_types(self):
+		ret = []
+		if hasattr(settings, 'RDF_NAMESPACE'):
+			ret.append(settings.RDF_NAMESPACE + 'Event')
+			if self.type == 'journey':
+				ret.append(settings.RDF_NAMESPACE + 'JourneyEvent')
+			if self.type == 'loc_prox':
+				ret.append(settings.RDF_NAMESPACE + 'LocationEvent')
+			if self.type == 'calendar':
+				ret.append(settings.RDF_NAMESPACE + 'CalendarEvent')
+			if self.type == 'sleepover':
+				ret.append(settings.RDF_NAMESPACE + 'SleepEvent')
+			if self.type == 'photos':
+				ret.append(settings.RDF_NAMESPACE + 'PhotoEvent')
+		return ret
 	"""The Photo object that best illustrates this Event."""
 	@property
 	def show_hearttab(self):
