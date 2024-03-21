@@ -56,8 +56,6 @@ class Command(BaseCommand):
 		else:
 
 			ret = import_photo_directory(full_path, tz)
-			for p in ret:
-				precache_photo_thumbnail(p.id)
 			sys.stderr.write(self.style.SUCCESS(str(len(ret)) + " new photo(s) added.\n"))
 			ret = bubble_photo_locations() + locate_photos_by_exif()
 			if ret > 0:
