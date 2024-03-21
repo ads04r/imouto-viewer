@@ -125,5 +125,6 @@ def check_watched_directories():
 				last_photo = photo.time
 			if photo.time < last_photo:
 				last_photo = photo.time
+			precache_photo_thumbnail(photo.id)
 	if not(last_photo is None):
 		locate_photos_by_exif(since=last_photo - datetime.timedelta(seconds=1), reassign=False)
