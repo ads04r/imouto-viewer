@@ -1,11 +1,132 @@
 from w3lib.html import get_base_url
 from rdflib import Graph, Namespace, URIRef, Literal
 from rdflib.namespace import RDF, RDFS, XSD
-import json, requests, extruct
+from django.shortcuts import get_object_or_404
+from django.conf import settings
+import json, requests, extruct, datetime
+
+def rdf_make_object_uri(object):
+
+	uri = None
+	if not(hasattr(object, 'pk')):
+		return uri
+	if hasattr(settings, 'RDF_NAMESPACE'):
+		uri = URIRef(settings.RDF_NAMESPACE + str(object.__class__.__name__).lower() + '/' + str(object.pk))
+	if hasattr(settings, 'USER_RDF_NAMESPACE'):
+		uri = URIRef(settings.USER_RDF_NAMESPACE + str(object.__class__.__name__).lower() + '/' + str(object.pk))
+	if hasattr(object, 'uri'):
+		uri = URIRef(getattr(object, 'uri'))
+	return uri
 
 def rdf_serialize(object, format='turtle'):
 
-	return ""
+	uri = None
+	types = []
+	exclude = []
+	if hasattr(settings, 'RDF_NAMESPACE'):
+		uri = URIRef(settings.RDF_NAMESPACE + str(object.__class__.__name__).lower() + '/' + str(object.pk))
+		types.append(URIRef(settings.RDF_NAMESPACE + str(object.__class__.__name__)))
+	if hasattr(settings, 'USER_RDF_NAMESPACE'):
+		uri = URIRef(settings.USER_RDF_NAMESPACE + str(object.__class__.__name__).lower() + '/' + str(object.pk))
+	if hasattr(object, 'uri'):
+		uri = URIRef(getattr(object, 'uri'))
+	if hasattr(object, 'rdf_types'):
+		for type in getattr(object, 'rdf_types'):
+			types.append(type)
+	if hasattr(object, 'rdf_exclude'):
+		exclude = getattr(object, 'rdf_exclude')
+	if uri is None:
+		return ""
+	g = Graph()
+	g.bind('imouto', settings.RDF_NAMESPACE)
+	g.add((uri, RDFS.label, Literal(str(object))))
+	for type in types:
+		g.add((uri, RDF.type, URIRef(type)))
+	for field in object._meta.fields:
+		if field.name.startswith('cached_'):
+			continue
+		if field.name in exclude:
+			continue
+		pred = URIRef(settings.RDF_NAMESPACE + field.name)
+		classname = str(field.__class__.__name__)
+		try:
+			value = field.value_from_object(object)
+		except:
+			value = None
+		if value is None:
+			continue
+		if isinstance(value, datetime.datetime):
+			g.add((uri, pred, Literal(value.strftime('%Y-%m-%dT%H:%M:%S%z'), datatype=XSD.dateTime)))
+			continue
+		if isinstance(value, datetime.date):
+			g.add((uri, pred, Literal(value.strftime('%Y-%m-%d'), datatype=XSD.date)))
+			continue
+		if classname == 'URLField':
+			g.add((uri, pred, URIRef(value)))
+			continue
+		if classname == 'CharField':
+			g.add((uri, pred, Literal(value)))
+			continue
+		if classname == 'SlugField':
+			g.add((uri, pred, Literal(value)))
+			continue
+		if classname == 'IntegerField':
+			g.add((uri, pred, Literal(value, datatype=XSD.integer)))
+			continue
+		if classname == 'FloatField':
+			g.add((uri, pred, Literal(value, datatype=XSD.float)))
+			continue
+		if classname == 'BooleanField':
+			g.add((uri, pred, Literal(str(value).lower(), datatype=XSD.boolean)))
+			continue
+		link_uri = rdf_make_object_uri(value)
+		if classname == 'ForeignKey':
+			value = get_object_or_404(field.related_model, pk=field.value_from_object(object))
+			link_uri = rdf_make_object_uri(value)
+		if not(link_uri is None):
+			print(link_uri)
+			g.add((uri, pred, URIRef(link_uri)))
+			continue
+	for prop in list(object._meta._property_names):
+		if prop == 'uri':
+			continue
+		if prop == 'pk':
+			continue
+		if prop.startswith('rdf_'):
+			continue
+		if prop in exclude:
+			continue
+		try:
+			value = getattr(object, prop)
+		except:
+			value = None
+		if value is None:
+			continue
+		pred = URIRef(settings.RDF_NAMESPACE + prop)
+		if value.__class__.__name__ == 'QuerySet':
+			for item in value.all():
+				link_uri = rdf_make_object_uri(item)
+				if not(link_uri is None):
+					g.add((uri, pred, URIRef(link_uri)))
+			continue
+		link_uri = rdf_make_object_uri(value)
+		if not(link_uri is None):
+			g.add((uri, pred, URIRef(link_uri)))
+			continue
+		if isinstance(value, datetime.datetime):
+			g.add((uri, pred, Literal(value.strftime('%Y-%m-%dT%H:%M:%S%z'), datatype=XSD.dateTime)))
+			continue
+		if isinstance(value, str):
+			g.add((uri, pred, Literal(value)))
+			continue
+		if isinstance(value, bool):
+			g.add((uri, pred, Literal(str(value).lower(), datatype=XSD.boolean)))
+			continue
+		if isinstance(value, int):
+			g.add((uri, pred, Literal(str(value), datatype=XSD.integer)))
+			continue
+
+	return(g.serialize(format=format))
 
 def get_wikipedia_abstract(url, lang='en'):
 

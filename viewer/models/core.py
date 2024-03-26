@@ -339,6 +339,14 @@ class Location(models.Model):
 	image = models.ImageField(blank=True, null=True, upload_to=location_thumbnail_upload_location)
 	weather_location = models.ForeignKey(WeatherLocation, on_delete=models.CASCADE, null=True, blank=True)
 	parent = models.ForeignKey('self', on_delete=models.SET_NULL, related_name="children", null=True, blank=True)
+	"""The URI of this object for RDF serialization."""
+	@property
+	def uri(self):
+		if hasattr(settings, 'USER_RDF_NAMESPACE'):
+			return settings.USER_RDF_NAMESPACE + 'place/' + str(self.uid)
+		if hasattr(settings, 'RDF_NAMESPACE'):
+			return settings.RDF_NAMESPACE + 'place/' + str(self.uid)
+		return None
 	@property
 	def is_home(self):
 		"""
@@ -604,6 +612,14 @@ class Person(models.Model):
 	wikipedia = models.URLField(blank=True, null=True)
 	image = models.ImageField(blank=True, null=True, upload_to=user_thumbnail_upload_location)
 	significant = models.BooleanField(default=True)
+	"""The URI of this object for RDF serialization."""
+	@property
+	def uri(self):
+		if hasattr(settings, 'USER_RDF_NAMESPACE'):
+			return settings.USER_RDF_NAMESPACE + 'people/' + str(self.uid)
+		if hasattr(settings, 'RDF_NAMESPACE'):
+			return settings.RDF_NAMESPACE + 'people/' + str(self.uid)
+		return None
 	def to_dict(self):
 		"""
 		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.
@@ -979,6 +995,10 @@ class Event(models.Model):
 		if hasattr(settings, 'RDF_NAMESPACE'):
 			return settings.RDF_NAMESPACE + 'event/' + str(self.pk)
 		return None
+	"""Properties to exclude from RDF serialization."""
+	@property
+	def rdf_exclude(self):
+		return ['geo', 'speed', 'elevation']
 	"""The RDF type(s) of this object for RDF serialization."""
 	@property
 	def rdf_types(self):
@@ -1557,6 +1577,14 @@ class Year(models.Model):
 		The unique 'slug id' for this Year object, as would be displayed after the '#' in the URL bar.
 		"""
 		return("year_" + datetime.date(self.year, 1, 1).strftime('%Y'))
+	"""The URI of this object for RDF serialization."""
+	@property
+	def uri(self):
+		if hasattr(settings, 'USER_RDF_NAMESPACE'):
+			return settings.USER_RDF_NAMESPACE + 'year/' + str(self.year)
+		if hasattr(settings, 'RDF_NAMESPACE'):
+			return settings.RDF_NAMESPACE + 'year/' + str(self.year)
+		return None
 	@property
 	def this_year(self):
 		"""
@@ -1865,6 +1893,14 @@ class Month(models.Model):
 		The unique 'slug id' for this Month object, as would be displayed after the '#' in the URL bar.
 		"""
 		return("month_" + datetime.date(self.year, self.month, 1).strftime('%Y%m'))
+	"""The URI of this object for RDF serialization."""
+	@property
+	def uri(self):
+		if hasattr(settings, 'USER_RDF_NAMESPACE'):
+			return settings.USER_RDF_NAMESPACE + 'month/' + str(self.year) + '/' + str(self.month).zfill(2)
+		if hasattr(settings, 'RDF_NAMESPACE'):
+			return settings.RDF_NAMESPACE + 'month/' + str(self.year) + '/' + str(self.month).zfill(2)
+		return None
 	@property
 	def this_month(self):
 		"""
