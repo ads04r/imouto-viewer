@@ -201,6 +201,14 @@ class LocationCity(models.Model):
 	wikipedia = models.URLField(blank=True, null=True)
 	cached_description = models.TextField(default='')
 	cached_description_date = models.DateTimeField(blank=True, null=True)
+	"""The URI of this object for RDF serialization."""
+	@property
+	def uri(self):
+		if hasattr(settings, 'USER_RDF_NAMESPACE'):
+			return settings.USER_RDF_NAMESPACE + 'city/' + str(self.label).lower()
+		if hasattr(settings, 'RDF_NAMESPACE'):
+			return settings.RDF_NAMESPACE + 'city/' + str(self.label).lower()
+		return None
 	@property
 	def slug(self):
 		"""

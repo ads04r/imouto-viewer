@@ -70,6 +70,10 @@ def rdf_serialize(object, format='turtle'):
 		if classname == 'SlugField':
 			g.add((uri, pred, Literal(value)))
 			continue
+		if classname == 'TextField':
+			if value:
+				g.add((uri, pred, Literal(value)))
+			continue
 		if classname == 'IntegerField':
 			g.add((uri, pred, Literal(value, datatype=XSD.integer)))
 			continue
