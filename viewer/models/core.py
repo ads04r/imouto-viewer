@@ -2419,19 +2419,25 @@ class Day(models.Model):
 			ret = locations[0]
 		return ret
 
-	def data_readings(self, type):
+	def data_readings(self, type=''):
 		"""
 		Returns all DataReading object of the type specified, logged on this particular day.
 
-		:param type: The type of readings to return.
+		:param type: The type of readings to return (empty string returns all readings).
 		:return: A QuerySet of DataReading objects.
 		:rtype: QuerySet(DataReading)
 		"""
 		dts, dte = self.__calculate_wake_time()
+		if self.future_data:
+			dte, dummy = self.tomorrow.__calculate_wake_time()
 		if dts is None:
 			return DataReading.objects.none()
 		if dte is None:
+			if type == '':
+				return DataReading.objects.filter(end_time__gte=dts)
 			return DataReading.objects.filter(end_time__gte=dts, type=type)
+		if type == '':
+			return DataReading.objects.filter(end_time__gte=dts, start_time__lte=dte)
 		return DataReading.objects.filter(end_time__gte=dts, start_time__lte=dte, type=type)
 
 	def get_heart_information(self, graph=True):

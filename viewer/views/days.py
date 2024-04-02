@@ -130,6 +130,27 @@ def day_sleep(request, ds):
 	response = HttpResponse(json.dumps(data), content_type='application/json')
 	return response
 
+def day_data(request, ds):
+
+	if len(ds) != 8:
+		raise Http404()
+	y = int(ds[0:4])
+	m = int(ds[4:6])
+	d = int(ds[6:])
+	dt = datetime.date(y, m, d)
+	try:
+		day = Day.objects.get(date=dt)
+	except:
+		day = Day(date=dt)
+		day.save()
+
+	data = []
+	for item in day.data_readings().order_by('start_time'):
+		data.append({"date": item.start_time.astimezone(tz=pytz.timezone(settings.TIME_ZONE)).strftime("%Y-%m-%d"), "start_time": item.start_time.astimezone(tz=pytz.timezone(settings.TIME_ZONE)).strftime("%H:%M:%S"), "end_time": item.end_time.astimezone(tz=pytz.timezone(settings.TIME_ZONE)).strftime("%H:%M:%S"), "type": item.type, "value": item.value})
+
+	response = HttpResponse(json.dumps(data), content_type='application/json')
+	return response
+
 def day_people(request, ds):
 
 	if len(ds) != 8:
