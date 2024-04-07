@@ -118,7 +118,7 @@ def check_watched_directories():
 		if f.watched_directory.importer == 'jpg':
 			f.import_time = pytz.utc.localize(datetime.datetime.utcnow())
 			f.save(update_fields=['import_time'])
-			photo = import_photo_file(f.path)
+			photo = import_photo_file(f.path, pytz.timezone(settings.TIME_ZONE))
 			if photo.time is None:
 				continue
 			if last_photo is None:
