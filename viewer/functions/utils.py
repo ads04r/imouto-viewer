@@ -338,7 +338,10 @@ def generate_dashboard():
 		if not(pp.person.significant):
 			continue
 		dtp = pp.person.next_birthday
-		ttb = (dtp - dtd).days
+		if dtp is None:
+			ttb = 365
+		else:
+			ttb = (dtp - dtd).days
 		if ttb <= 14:
 			person_age = pp.person.age
 			if not(person_age is None):

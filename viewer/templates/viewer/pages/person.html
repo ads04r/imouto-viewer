@@ -44,6 +44,14 @@
                     <p class="text-muted">{{ data.next_birthday|date:"jS F" }}</p>
 
 {% endif %}
+{% if data.deathday %}
+
+                    <hr>
+                    
+                    <strong><i class="fa fa-cloud margin-r-5"></i> Died</strong>
+                    <p class="text-muted">{{ data.deathday|date:"jS F Y" }}</p>
+
+{% else %}
 {% if data.home != None %}
 
                     <hr>
@@ -51,6 +59,7 @@
                     <strong><i class="fa fa-home margin-r-5"></i> Home</strong>
                     <p class="text-muted"><a href="#place_{{ data.home.uid }}">{{ data.home.label }}</a><br><small>{{ data.home.address }}</small></p>
 
+{% endif %}
 {% endif %}
                     
                 </div>

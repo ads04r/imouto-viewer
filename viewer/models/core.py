@@ -659,9 +659,22 @@ class Person(models.Model):
 			ret = None
 		return ret
 	@property
+	def deathday(self):
+		dd = self.get_property('deathday')
+		if len(dd) == 0:
+			return None
+		try:
+			ret = datetime.datetime.strptime(dd[0], '%Y-%m-%d').date()
+		except:
+			ret = None
+		return ret
+	@property
 	def next_birthday(self):
 		bd = self.get_property('birthday')
+		dd = self.get_property('deathday')
 		if len(bd) == 0:
+			return None
+		if len(dd) > 0:
 			return None
 		now = datetime.datetime.now().date()
 		dt = datetime.datetime.strptime(str(now.year) + bd[0][4:], '%Y-%m-%d').date()
