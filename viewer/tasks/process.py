@@ -1,6 +1,7 @@
 import datetime, pytz, os
 from background_task import background
 from background_task.models import Task
+from django.conf import settings
 
 from viewer.models import WatchedDirectory, Photo
 
