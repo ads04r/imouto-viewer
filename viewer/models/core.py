@@ -2032,6 +2032,12 @@ class Month(models.Model):
 			dt = dt + datetime.timedelta(days=1)
 		return ret
 	@property
+	def average_sleep(self):
+		"""
+		Returns the month's average daily sleep per night
+		"""
+		return datetime.timedelta(seconds=86400) - self.days.annotate(total_wake=F('bed_time')-F('wake_time')).aggregate(average_wake=Avg('total_wake'))['average_wake']
+	@property
 	def average_sunlight(self):
 		"""
 		Returns the month's average daily sunlight
