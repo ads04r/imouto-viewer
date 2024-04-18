@@ -40,6 +40,7 @@ def people(request):
 		if not(person is None):
 			data['calls'].append([person, number['messages']])
 	data['all'] = Person.objects.annotate(days=Count(Cast('event__start_time', DateField()), distinct=True)).annotate(last_seen=Max('event__start_time')).order_by('given_name', 'family_name')
+	data['deceased'] = Person.objects.filter(significant=True, properties__key='deathday').annotate(days=Count(Cast('event__start_time', DateField()), distinct=True)).annotate(last_seen=Max('event__start_time')).order_by('given_name', 'family_name')
 	if request.method == 'POST':
 		cache.delete('dashboard')
 		form = PersonForm(request.POST, request.FILES)

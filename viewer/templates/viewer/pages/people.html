@@ -18,6 +18,7 @@
                     <ul class="nav nav-tabs">
                         <li class="active"><a href="#tab-people-recent" data-toggle="tab">Summary</a></li>
                         <li><a href="#tab-people-main" data-toggle="tab">Important People</a></li>
+                        {% if data.deceased.count > 0 %}<li><a href="#tab-people-deceased" data-toggle="tab">In Memoriam</a></li>{% endif %}
                         <li><a href="#tab-people-all" data-toggle="tab">All People</a></li>
                         <li class="pull-right">
                                 <div class="box-tools"><a class="btn btn-primary btn-xs" data-toggle="modal" data-target="#admin_people_add" aria-hidden="true" href="#"><i class="fa fa-plus"></i></a></div>
@@ -206,11 +207,13 @@
                         </p>
                         </div>
 
-                        <div class="tab-pane" id="tab-people-all">
+{% if data.deceased.count > 0 %}
+
+                        <div class="tab-pane" id="tab-people-deceased">
                         <p>
                             <ul class="products-list product-list-in-box">
                                 
-{% for person in data.all %}
+{% for person in data.deceased %}
 {% if person.days > 0 %}
                                 
                                 <li class="item">
@@ -221,11 +224,37 @@
                                         <a class="product-title personlink" href="#person_{{ person.uid }}">
                                             {{ person.full_name }}</a>
                                         <span class="product-description">
-                                            Last met {{ person.last_seen|date:"l jS F Y" }}, {{ person.days }} encounters total.</span>
+                                            Last met {{ person.last_seen|date:"l jS F Y" }}, died {{ person.deathday|date:"l jS F Y" }}.</span>
                                     </div>
                                 </li>
                                 
 {% endif %}
+{% endfor %}
+                                
+                            </ul>
+                        </p>
+                        </div>
+
+{% endif %}
+
+                        <div class="tab-pane" id="tab-people-all">
+                        <p>
+                            <ul class="products-list product-list-in-box">
+                                
+{% for person in data.all %}
+                                
+                                <li class="item">
+                                    <div class="product-img">
+                                        {% if person.image %}<img src="people/{{ person.uid }}_thumb.jpg"/>{% endif %}
+                                    </div>
+                                    <div class="product-info">
+                                        <a class="product-title personlink" href="#person_{{ person.uid }}">
+                                            {{ person.full_name }}</a>
+                                        <span class="product-description">
+                                            {% if person.days %}Last met {{ person.last_seen|date:"l jS F Y" }}, {% endif %}{{ person.days }} encounters total.</span>
+                                    </div>
+                                </li>
+                                
 {% endfor %}
                                 
                             </ul>
