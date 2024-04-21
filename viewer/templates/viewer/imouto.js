@@ -479,6 +479,14 @@ function reportScreen(id, page='misc')
     });
 }
 
+function questionIndexScreen()
+{
+    var url = "./questionnaires.html";
+    $(".content-wrapper").load(url, function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
+    });
+}
+
 function array_shuffle(array)
 {
 	for (var i = array.length - 1; i > 0; i--)
@@ -2255,6 +2263,7 @@ function pageRefresh()
     if(page == '') { homeScreen(); return true; }
     if(page == 'timeline') { timelineScreen(); return true; }
     if(page == 'files') { uploadScreen(); return true; }
+    if(page == 'questionnaires') { questionIndexScreen(); return true; }
     if(page == 'import-web') { importWebScreen(); return true; }
     if(page == 'reports') { reportsScreen(); return true; }
     if(page == 'onthisday') { anniversaryScreen(); return true; }

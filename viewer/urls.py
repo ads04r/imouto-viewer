@@ -75,5 +75,6 @@ urlpatterns = [
     path('create-first-event', views.create_first_event),
     path('mood', views.mood),
     path('webhook/<path>', views.webhook),
+    path('questionnaires.html', views.questionnaires),
 ]
 

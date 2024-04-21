@@ -11,4 +11,5 @@ from viewer.views.tags import *
 from viewer.views.months import *
 from viewer.views.webhook import *
 from viewer.views.years import *
+from viewer.views.questionnaires import *
 from viewer.views.rdf import *
