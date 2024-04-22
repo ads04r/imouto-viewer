@@ -1,5 +1,5 @@
 from django.forms import ModelForm, ImageField, TextInput, Textarea, Select, DateInput, CheckboxInput, FileInput, URLInput
-from viewer.models import Location, Event, EventWorkoutCategory, LifePeriod, WatchedDirectory, Person
+from viewer.models import Location, Event, EventWorkoutCategory, LifePeriod, WatchedDirectory, Person, Questionnaire
 from django.db.models import Sum, Count
 import datetime, pytz
 
@@ -99,3 +99,13 @@ class WatchedDirectoryForm(ModelForm):
 			'source': TextInput(attrs={'class': 'form-control'}),
 			'file_regex': TextInput(attrs={'class': 'form-control'}),
 		}
+
+class QuestionnaireForm(ModelForm):
+	class Meta:
+		model = Questionnaire
+		fields = ['label', 'random_order']
+		widgets = {
+			'label': TextInput(attrs={'class': 'form-control'}),
+			'random_order': CheckboxInput(attrs={'class': 'checkbox'}),
+		}
+

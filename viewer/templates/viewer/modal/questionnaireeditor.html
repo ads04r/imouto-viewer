@@ -1,0 +1,29 @@
+<div class="modal fade nav-tabs-custom" id="q-add" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+                <form id="q-edit" action="questionnaires.html" method="POST" enctype="multipart/form-data">{% csrf_token %}
+
+
+                              <table class="table table-hover">
+{% for field in form %}
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td>
+                                  <td>{{ field }}</td>
+                                </tr>
+{% endfor %}
+
+                              </table>                        
+                </form>
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="q-save-form-button">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -19,7 +19,18 @@
                 <div class="box box-primary">
                     <div class="box-body">
 
+{% with items=items %}
+{% if items.count == 0 %}
+			<p>No questionnaires added yet.</p>
+{% else %}
+{% endif %}
+{% endwith %}
 
+                    </div>
+                    <div class="box-footer">
+			<span class="pull-right">
+				<a class="btn btn-success" data-toggle="modal" data-target="#q-add" aria-hidden="true">New Questionnaire</a>
+			</span>
                     </div>
                 </div>
 
@@ -29,3 +40,4 @@
 
 </section>
 
+{% include 'viewer/modal/questionnaireeditor.html' %}
