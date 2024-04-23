@@ -484,6 +484,32 @@ function questionIndexScreen()
     var url = "./questionnaires.html";
     $(".content-wrapper").load(url, function(response, status, xhr){
         if(status == 'error') { errorPage(xhr); return false; }
+        $("#q-save-form-button").on('click', function(){
+            $("#q-edit").submit();
+        });
+        $(".q-delete-form-button").on('click', function(){
+
+            var id = $(this).data('q-id');
+            var url = "questionnaires/" + id + "/delete";
+
+            $("#q_box_id_" + id).remove();
+            $("#admin_q_delete_" + id).modal('hide');
+
+            $.ajax({
+                url: url,
+                dataType: 'json',
+                method: 'POST',
+                success: function(data) { }
+            });
+        });
+    });
+}
+
+function questionEditScreen(id)
+{
+    var url = "./questionnaires/" + id + "/edit.html";
+    $(".content-wrapper").load(url, function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
     });
 }
 
@@ -2287,6 +2313,7 @@ function pageRefresh()
     if(page.startsWith('workout_')) { workoutScreen(page.replace('workout_', '')); }
     if(page.startsWith('report_')) { var parse = page.replace('report_', '').split('_'); reportScreen(parse[0], parse[1]); }
     if(page.startsWith('watched_directory_')) { watchedDirectoryScreen(page.replace('watched_directory_', '')); }
+    if(page.startsWith('questionnaire_')) { var parse = page.replace('questionnaire_', '').split('_'); questionEditScreen(parse[0], parse[1]); }
 
     if(page.startsWith('health-')) { healthReportScreen(page.replace('health-', '')); }
 
