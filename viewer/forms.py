@@ -1,5 +1,5 @@
-from django.forms import ModelForm, ImageField, TextInput, Textarea, Select, DateInput, CheckboxInput, FileInput, URLInput
-from viewer.models import Location, Event, EventWorkoutCategory, LifePeriod, WatchedDirectory, Person, Questionnaire
+from django.forms import ModelForm, ImageField, TextInput, Textarea, Select, DateInput, CheckboxInput, FileInput, URLInput, HiddenInput
+from viewer.models import Location, Event, EventWorkoutCategory, LifePeriod, WatchedDirectory, Person, Questionnaire, QuestionnaireQuestion
 from django.db.models import Sum, Count
 import datetime, pytz
 
@@ -107,5 +107,14 @@ class QuestionnaireForm(ModelForm):
 		widgets = {
 			'label': TextInput(attrs={'class': 'form-control'}),
 			'random_order': CheckboxInput(attrs={'class': 'checkbox'}),
+		}
+
+class QuestionForm(ModelForm):
+	class Meta:
+		model = QuestionnaireQuestion
+		fields = ['question', 'ordering']
+		widgets = {
+			'question': TextInput(attrs={'class': 'form-control'}),
+			'ordering': HiddenInput(),
 		}
 
