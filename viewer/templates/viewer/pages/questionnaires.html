@@ -27,14 +27,10 @@
 
                         <div class="post" id="q_box_id_{{ item.pk }}">
                             <div class="user-block">
-                                <span class="pull-right">
-                                        <a class="btn btn-success btn-xs" href="#questionnaireview_{{ item.pk }}">Answer</a>
-                                        <a class="btn btn-primary btn-xs" href="#questionnaire_{{ item.pk }}">Edit</a>
-                                        <a class="btn btn-danger btn-xs" data-toggle="modal" data-target="#admin_q_delete_{{ item.pk }}" aria-hidden="true" href="#">Delete</a>
-                                </span>
                                 <span class="username no-image">{{ item.label }}</span>
-                                <span class="description no-image">{{ item.questions.count }} questions
-				{% if item.last_taken %}| Last taken: {{ item.last_taken|date:"D jS M, g:ia" }}{% endif %}
+                                <span class="description no-image">{% if item.description %}<p>{{ item.description }}</p>{% endif %}<p>{{ item.question_count }} questions
+				{% if item.last_taken %}| Last taken: {{ item.last_taken|date:"D jS M, g:ia" }}{% endif %}</p>
+                                <span class="pull-right"><a class="btn btn-primary" href="#questionnaire_{{ item.pk }}">Take Questionnaire</a></span>
 				</span>
                             </div>
 
@@ -45,11 +41,6 @@
 {% endwith %}
 
                     </div>
-                    <div class="box-footer">
-			<span class="pull-right">
-				<a class="btn btn-success" data-toggle="modal" data-target="#q-add" aria-hidden="true">New Questionnaire</a>
-			</span>
-                    </div>
                 </div>
 
             </div>
@@ -57,26 +48,3 @@
     </div>
 
 </section>
-
-{% include 'viewer/modal/questionnaireeditor.html' %}
-
-{% for item in items.all %}
-
-<div class="modal fade nav-tabs-custom" id="admin_q_delete_{{ item.pk }}" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-body">
-
-                <h1>Are you sure?</h1>
-                <p>This will delete "{{ item.label }}" and cannot be undone.</p>
-
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-danger q-delete-form-button" data-q-id="{{ item.pk }}">Delete</button>
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-{% endfor %}

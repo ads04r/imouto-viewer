@@ -507,9 +507,12 @@ function questionIndexScreen()
 
 function questionEditScreen(id)
 {
-    var url = "./questionnaires/" + id + "/edit.html";
+    var url = "./questionnaires/" + id + ".html";
     $(".content-wrapper").load(url, function(response, status, xhr){
         if(status == 'error') { errorPage(xhr); return false; }
+        $('#questionnairesubmit').on('click', function(){
+            $('#questionnaireform').submit();
+        });
     });
 }
 

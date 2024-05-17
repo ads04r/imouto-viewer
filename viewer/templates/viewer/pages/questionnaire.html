@@ -16,26 +16,35 @@
         <div class="row">
             <div class="col-xs-12 col-sm-12 col-md-12">
 
-
                 <div class="box box-primary">
                     <div class="box-body">
+			<form id="questionnaireform" action="questionnaires/{{ item.pk }}.html" method="POST">{% csrf_token %}
 
 {% with items=item.questions %}
 {% if items.count == 0 %}
                         <p>No questions added yet.</p>
 {% else %}
+                        <div class="post">
+                            <div class="user-block">
+                                <span class="username no-image">{{ item.label }}</span>
+                                <span class="description no-image">
+					<p>{{ item.intro_text }}</p>
+                                </span>
+                            </div>
+
+                        </div>
 {% for item in items.all %}
 
                         <div class="post" id="qq_box_id_{{ item.pk }}">
                             <div class="user-block">
-                                <span class="pull-right">
-                                  <a href="#" class="btn btn-primary"><i class="fa fa-edit"></i></a>
-                                  <a class="btn btn-danger" data-toggle="modal" data-target="#admin_qq_delete_{{ item.pk }}" aria-hidden="true" href="#"><i class="fa fa-times"></i></a>
-                                </span>
                                 <span class="username no-image">{{ item.question }}</span>
                                 <span class="description no-image">
-					<ul>
-					</ul>
+
+					<div class="form-group">
+{% for answer in item.answers.all %}
+						<label><input type="radio" name="val{{ item.pk }}" value="{{ answer.pk }}"> {{ answer }}</label><br/>
+{% endfor %}
+					</div>
                                 </span>
                             </div>
 
@@ -45,11 +54,12 @@
 {% endif %}
 {% endwith %}
 
+			</form>
 
                     </div>
                     <div class="box-footer">
 			<span class="pull-right">
-				<a class="btn btn-success" data-toggle="modal" data-target="#q-add" aria-hidden="true">New Question</a>
+				<a id="questionnairesubmit" class="btn btn-primary">Submit Answers</a>
 			</span>
                     </div>
                 </div>
@@ -59,30 +69,3 @@
     </div>
 
 </section>
-
-{% with items=item.questions %}
-{% for item in items.all %}
-
-<div class="modal fade nav-tabs-custom" id="admin_qq_delete_{{ item.pk }}" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-body">
-
-                <h1>Are you sure?</h1>
-                <p>This will delete this question and cannot be undone.</p>
-
-		<samp>{{ item.question }}</samp>
-
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-danger qq-delete-form-button" data-qq-id="{{ item.pk }}">Delete</button>
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-{% endfor %}
-{% endwith %}
-
-{% include 'viewer/modal/questioneditor.html' %}

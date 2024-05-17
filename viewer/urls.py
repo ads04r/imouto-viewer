@@ -77,7 +77,5 @@ urlpatterns = [
     path('webhook/<path>', views.webhook),
     path('questionnaires.html', views.questionnaires),
     path('questionnaires/<id>.html', views.questionnaireview),
-    path('questionnaires/<id>/edit.html', views.questionnaireedit),
-    path('questionnaires/<id>/delete', views.questionnairedelete),
 ]
 
