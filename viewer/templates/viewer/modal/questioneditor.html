@@ -6,14 +6,40 @@
                 <form id="q-edit" action="questionnaires.html" method="POST" enctype="multipart/form-data">{% csrf_token %}
 
 
-                              <table class="table table-hover">
+                              <table class="table table-hover" id="qa-answer-table">
 {% for field in form %}
+{% if forloop.counter < 2 %}
                                 <tr class="form-row">
                                   <td>{{ field.errors }}</td>
                                   <td>{{ field.label_tag }}</td>
                                   <td>{{ field }}</td>
                                 </tr>
+{% endif %}
 {% endfor %}
+
+                                <tr class="form-row">
+                                  <td></td>
+                                  <td><label for="id_question_answer_1">Answers:</label></td>
+                                  <td data-iteration="1">
+                                      <input id="id_question_answer_1" class="form-control" type="text" name="answer1"><br/>
+                                      <div class="row">
+                                        <div class="col-xs-8">
+                                          <select id="id_question_answer_type_1" class="form-control" name="answertype1">
+{% for item in options %}
+{% if forloop.counter == 1 %}
+                                            <option selected="selected">{{ item }}</option>
+{% else %}
+                                            <option>{{ item }}</option>
+{% endif %}
+{% endfor %}
+                                          </select>
+                                        </div>
+                                        <div class="col-xs-4">
+                                          <input id="id_question_answer_value_1" class="form-control" type="text" name="answervalue1"><br/>
+                                        </div>
+                                      </div>
+                                  </td>
+                                </tr>
 
                               </table>                        
                 </form>

@@ -45,7 +45,7 @@ def questionnaireedit(request, id):
 
 	data = get_object_or_404(Questionnaire, pk=id)
 	form = QuestionForm()
-	context = {'item': data, 'form': form}
+	context = {'item': data, 'form': form, 'options': list(DataReading.objects.order_by().values_list('type', flat=True).distinct())}
 	template = 'viewer/pages/questionnaire.html'
 	return render(request, template, context)
 
