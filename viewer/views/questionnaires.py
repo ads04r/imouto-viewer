@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from viewer.models import Questionnaire, QuestionnaireQuestion, QuestionnaireAnswer, DataReading
 from viewer.forms import QuestionnaireForm, QuestionForm
 
-import json
+import json, datetime, pytz
 
 def questionnaires(request):
 
@@ -28,10 +28,26 @@ def questionnaires(request):
 def questionnaireview(request, id):
 
 	data = get_object_or_404(Questionnaire, pk=id)
+	now = pytz.utc.localize(datetime.datetime.utcnow())
 
 	if request.method == 'POST':
 		cache.delete('dashboard')
-		return HttpResponse(json.dumps(request.POST), content_type='application/json')
+		result = data.parse_request(request.POST)
+		if 'status' in result:
+			if result['status']:
+				for kk in result['results'].keys():
+					k = str(kk)
+					v = result['results'][k]
+					try:
+						item = DataReading(start_time=now, end_time=now, type=k, value=v)
+						item.save()
+					except:
+						item = None
+				if not(item is None):
+					data.last_taken = now
+					data.save(update_fields=['last_taken'])
+					return HttpResponseRedirect('../#questionnaires')
+		raise Http404("Invalid form data.")
 
 	context = {'item': data, 'form': None}
 	template = 'viewer/pages/questionnaire.html'
