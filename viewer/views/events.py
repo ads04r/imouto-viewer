@@ -6,7 +6,7 @@ from django.db.models import Q, F
 from django.conf import settings
 import datetime, pytz, dateutil.parser, json, requests, random
 
-from viewer.models import Person, Photo, Event, EventWorkoutCategory, CalendarAppointment
+from viewer.models import Person, Photo, Event, EventWorkoutCategory, CalendarAppointment, LifePeriod
 from viewer.forms import EventForm, QuickEventForm
 from viewer.tasks.reports import generate_photo_collages
 from viewer.tasks.datacrunching import regenerate_similar_events, generate_similar_events
@@ -40,6 +40,7 @@ def events(request):
 
 	data = {}
 	data['life'] = Event.objects.filter(type='life_event').order_by('-start_time')
+	data['periods'] = LifePeriod.objects.order_by('start_time')
 	form = EventForm()
 	context = {'type':'view', 'data':data, 'form':form, 'categories':EventWorkoutCategory.objects.all()}
 	return render(request, 'viewer/pages/calendar.html', context)

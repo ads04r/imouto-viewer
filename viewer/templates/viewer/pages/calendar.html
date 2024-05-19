@@ -18,6 +18,7 @@
                     <ul class="nav nav-tabs">
                         <li class="active"><a href="#tab-calendar-all" data-toggle="tab">Calendar</a></li>
                         <li><a href="#tab-calendar-event" data-toggle="tab">Life Events</a></li>
+                        <li><a href="#tab-calendar-periods" data-toggle="tab">Life Periods</a></li>
 			<li class="pull-right">
 				<div class="box-tools">
 					<a class="btn btn-primary btn-xs" data-toggle="modal" data-target="#admin_event_add" aria-hidden="true" href="#"><i class="fa fa-plus"></i></a>
@@ -62,6 +63,20 @@
 
 {% endfor %}
                         
+                        </div>
+                        <div class="tab-pane" id="tab-calendar-periods">
+
+{% for period in data.periods %}
+
+                        <div class="post">
+                            <div class="user-block">
+                                <span class="username no-image">{{ period }}</span>
+                                <span class="description no-image">{{ period.start_time }} &mdash; {{ period.end_time }}</span>
+                            </div>
+                        </div>
+
+{% endfor %}
+
                         </div>
                     </div>
 
