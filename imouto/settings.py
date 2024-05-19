@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'haystack',
     'colorfield',
     'viewer.apps.ViewerConfig',
+    'django.contrib.admindocs',
     'django_adminlte',
     'django.contrib.admin',
     'django.contrib.staticfiles',
