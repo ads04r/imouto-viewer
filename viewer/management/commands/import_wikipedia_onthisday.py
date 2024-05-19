@@ -56,11 +56,11 @@ class Command(BaseCommand):
 				event_date = dt.replace(year=y)
 				parsed = parsed[1].split('[')
 				text = parsed[0].strip()
-				events.append([event_date, 'world_events', text])
+				events.append([event_date, text])
 
 		if len(events) > 0:
 
-			HistoricalEvent.objects.filter(date__month=dt.month, date__day=dt.day).delete()
+			HistoricalEvent.objects.filter(date__month=dt.month, date__day=dt.day, category='world_events').delete()
 			for event in events:
-				item = HistoricalEvent(date=event[0], category=event[1], description=event[2])
+				item = HistoricalEvent(date=event[0], category='world_events', description=event[1])
 				item.save()
