@@ -2,18 +2,19 @@ from django.http import HttpResponse, Http404, HttpResponseRedirect, HttpRespons
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
-from django.db.models import Q, F
+from django.db.models import Q, F, Count
 from django.conf import settings
 import datetime, pytz, dateutil.parser, json, requests, random
 
 from viewer.models import Person, Photo, Event, EventWorkoutCategory, CalendarAppointment, LifePeriod
-from viewer.forms import EventForm, QuickEventForm
+from viewer.forms import EventForm, QuickEventForm, LifePeriodForm
 from viewer.tasks.reports import generate_photo_collages
 from viewer.tasks.datacrunching import regenerate_similar_events, generate_similar_events
 
 from viewer.functions.moonshine import get_moonshine_tracks
 from viewer.functions.locations import join_location_events
 from viewer.functions.location_manager import getgeoline, getelevation, getspeed
+from viewer.functions.utils import generate_life_grid
 
 def events(request):
 	if request.method == 'POST':
@@ -42,7 +43,8 @@ def events(request):
 	data['life'] = Event.objects.filter(type='life_event').order_by('-start_time')
 	data['periods'] = LifePeriod.objects.order_by('start_time')
 	form = EventForm()
-	context = {'type':'view', 'data':data, 'form':form, 'categories':EventWorkoutCategory.objects.all()}
+	periodform = LifePeriodForm()
+	context = {'type':'view', 'data':data, 'form':form, 'periodform': periodform, 'categories':EventWorkoutCategory.objects.all()}
 	return render(request, 'viewer/pages/calendar.html', context)
 
 def event(request, eid):
@@ -285,3 +287,22 @@ def create_first_event(request):
 		event.save()
 		return HttpResponseRedirect('./#event_' + str(event.pk))
 	return HttpResponseRedirect('./')
+
+def life_period(request):
+
+	if request.method != 'POST':
+		return HttpResponseNotAllowed(['POST'])
+
+	cache.delete('dashboard')
+
+	form = LifePeriodForm(request.POST)
+	if form.is_valid():
+
+		life_period = form.save(commit=False)
+		#life_period.colour = ('#' + str("%06x" % random.randint(0, 0xFFFFFF)).upper())
+		life_period.save()
+
+		return HttpResponseRedirect('./#events')
+	else:
+		raise Http404(form.errors)
+

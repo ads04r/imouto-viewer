@@ -76,13 +76,13 @@ class EventForm(ModelForm):
 class LifePeriodForm(ModelForm):
 	class Meta:
 		model = LifePeriod
-		fields = ['caption', 'type', 'description', 'start_time', 'end_time']
+		fields = ['caption', 'type', 'description', 'colour', 'start_time', 'end_time']
 		widgets = {
 			'caption': TextInput(attrs={'class': 'form-control'}),
 			'type': TextInput(attrs={'class': 'form-control'}),
 			'description': Textarea(attrs={'class': 'form-control'}),
-			'start_time': DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD HH:MM:SS'}),
-			'end_time': DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD HH:MM:SS'}),
+			'start_time': DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD'}),
+			'end_time': DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD'}),
 		}
 
 class WatchedDirectoryForm(ModelForm):

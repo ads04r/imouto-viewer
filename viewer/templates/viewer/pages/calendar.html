@@ -12,18 +12,18 @@
 
     <div class="container-fluid">
         <div class="row">
-            <div class="col-xs-12 col-sm-12 col-md-12">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-3">
+
+{% include 'viewer/cards/eventperiodcreate.html' %}
+
+            </div>
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-9">
 
                 <div class="nav-tabs-custom">
                     <ul class="nav nav-tabs">
                         <li class="active"><a href="#tab-calendar-all" data-toggle="tab">Calendar</a></li>
                         <li><a href="#tab-calendar-event" data-toggle="tab">Life Events</a></li>
                         <li><a href="#tab-calendar-periods" data-toggle="tab">Life Periods</a></li>
-			<li class="pull-right">
-				<div class="box-tools">
-					<a class="btn btn-primary btn-xs" data-toggle="modal" data-target="#admin_event_add" aria-hidden="true" href="#"><i class="fa fa-plus"></i></a>
-				</div>
-			</li>
                     </ul>
                     <div class="tab-content">
                         <div class="active tab-pane" id="tab-calendar-all">
@@ -93,3 +93,4 @@
 </section>
 
 {% include 'viewer/modal/eventeditor.html' %}
+{% include 'viewer/modal/periodeditor.html' %}
