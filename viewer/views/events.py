@@ -41,7 +41,7 @@ def events(request):
 
 	data = {}
 	data['life'] = Event.objects.filter(type='life_event').order_by('-start_time')
-	data['periods'] = LifePeriod.objects.order_by('start_time')
+	data['periods'] = LifePeriod.objects.order_by('type', 'start_time')
 	form = EventForm()
 	periodform = LifePeriodForm()
 	context = {'type':'view', 'data':data, 'form':form, 'periodform': periodform, 'categories':EventWorkoutCategory.objects.all()}
@@ -299,7 +299,6 @@ def life_period(request):
 	if form.is_valid():
 
 		life_period = form.save(commit=False)
-		#life_period.colour = ('#' + str("%06x" % random.randint(0, 0xFFFFFF)).upper())
 		life_period.save()
 
 		return HttpResponseRedirect('./#events')

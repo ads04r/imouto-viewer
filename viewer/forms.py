@@ -1,6 +1,7 @@
-from django.forms import ModelForm, ImageField, TextInput, Textarea, Select, DateInput, CheckboxInput, FileInput, URLInput, HiddenInput
+from django.forms import ModelForm, ImageField, TextInput, Textarea, Select, DateInput, CheckboxInput, FileInput, URLInput, HiddenInput, CharField
 from viewer.models import Location, Event, EventWorkoutCategory, LifePeriod, WatchedDirectory, Person, Questionnaire, QuestionnaireQuestion
 from django.db.models import Sum, Count
+from colorfield.fields import ColorWidget
 import datetime, pytz
 
 class LocationForm(ModelForm):
@@ -81,6 +82,7 @@ class LifePeriodForm(ModelForm):
 			'caption': TextInput(attrs={'class': 'form-control'}),
 			'type': TextInput(attrs={'class': 'form-control'}),
 			'description': Textarea(attrs={'class': 'form-control'}),
+#			'colour': CharField(widget=ColorWidget),
 			'start_time': DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD'}),
 			'end_time': DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD'}),
 		}

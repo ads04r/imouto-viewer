@@ -833,6 +833,8 @@ function eventsScreen()
             $("#period-edit").submit();
             return false;
         });
+        var colpicker = new JSColor($("#id_colour")[0], {});
+	//colpicker.show();
 
     });
 }
