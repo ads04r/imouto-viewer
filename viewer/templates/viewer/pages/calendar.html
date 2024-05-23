@@ -69,10 +69,12 @@
 {% for period in data.periods %}
 
                         <div class="post">
+                            <div class="pull-right"><span class="label label-primary">{{ period.type }}</span></div>
                             <div class="user-block">
                                 <span class="username no-image">{{ period }}</span>
                                 <span class="description no-image">{{ period.start_time }} &mdash; {{ period.end_time }}</span>
                             </div>
+                            {% if period.description %}<p>{{ period.description }}</p>{% endif %}
                         </div>
 
 {% endfor %}
