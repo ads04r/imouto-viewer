@@ -1,6 +1,7 @@
-from django.forms import ModelForm, ImageField, TextInput, Textarea, Select, DateInput, CheckboxInput, FileInput, URLInput, HiddenInput
+from django.forms import ModelForm, ImageField, TextInput, Textarea, Select, DateInput, CheckboxInput, FileInput, URLInput, HiddenInput, CharField
 from viewer.models import Location, Event, EventWorkoutCategory, LifePeriod, WatchedDirectory, Person, Questionnaire, QuestionnaireQuestion
 from django.db.models import Sum, Count
+from colorfield.fields import ColorWidget
 import datetime, pytz
 
 class LocationForm(ModelForm):
@@ -76,13 +77,14 @@ class EventForm(ModelForm):
 class LifePeriodForm(ModelForm):
 	class Meta:
 		model = LifePeriod
-		fields = ['caption', 'type', 'description', 'start_time', 'end_time']
+		fields = ['caption', 'type', 'description', 'colour', 'start_time', 'end_time']
 		widgets = {
 			'caption': TextInput(attrs={'class': 'form-control'}),
 			'type': TextInput(attrs={'class': 'form-control'}),
 			'description': Textarea(attrs={'class': 'form-control'}),
-			'start_time': DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD HH:MM:SS'}),
-			'end_time': DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD HH:MM:SS'}),
+#			'colour': CharField(widget=ColorWidget),
+			'start_time': DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD'}),
+			'end_time': DateInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD'}),
 		}
 
 class WatchedDirectoryForm(ModelForm):

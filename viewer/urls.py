@@ -8,7 +8,7 @@ urlpatterns = [
     path('stats.html', views.dashboard),
     path('stats.json', views.dashboard_json),
     path('onthisday.html', views.onthisday),
-    path('life_grid.html', views.life_grid),
+    path('life_grid.html', views.life_period),
     path('upload.html', views.importer),
     path('import-web.html', views.webimporter),
     path('import-web.json', views.parse_rdf),

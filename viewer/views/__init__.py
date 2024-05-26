@@ -2,7 +2,6 @@ from viewer.views.days import *
 from viewer.views.events import *
 from viewer.views.health import *
 from viewer.views.landing_pages import *
-from viewer.views.life_grid import *
 from viewer.views.locations import *
 from viewer.views.misc import *
 from viewer.views.people import *
