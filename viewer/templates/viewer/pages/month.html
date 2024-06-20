@@ -2,6 +2,8 @@
 {% load tz %}
 {% load class_tag %}
 {% load timedelta %}
+{% load humanize %}
+{% load html_calendar %}
 
 <section class="content-header">
     <h1>
@@ -24,20 +26,18 @@
             <div class="box box-primary">
                 <div class="box-body box-profile">
                     <h3 class="profile-username text-center">{{ month }}</h3>
+
                     <ul class="list-group list-group-unbordered">
                         <li class="list-group-item"><b>Average sunlight per day</b> <span class="pull-right">{{ month.average_sunlight|time_delta:"%H:%M" }}</span></li>
 {% with awt=month.average_wake_time %}{% if awt %}<li class="list-group-item"><b>Average awake time per day</b> <span class="pull-right">{{ awt|time_delta:"%H:%M" }}</span></li>{% endif %}{% endwith %}
 {% with event=month.earliest_morning %}{% if event %}<li class="list-group-item"><b>Earliest morning</b> <span class="pull-right"><a href="#{{ event.slug }}">{{ event.wake_time|date:"g:ia" }}</a></span></li>{% endif %}{% endwith %}
 {% with event=month.latest_night %}{% if event %}<li class="list-group-item"><b>Latest night</b> <span class="pull-right"><a href="#{{ event.slug }}">{{ event.bed_time|date:"g:ia" }}</a></span></li>{% endif %}{% endwith %}
 {% with ast=month.average_sleep %}{% if ast %}<li class="list-group-item"><b>Average sleep per night</b> <span class="pull-right">{{ ast|time_delta:"%H:%M" }}</span></li>{% endif %}{% endwith %}
-{% for wc in month.workouts %}
-                        <li class="list-group-item"><b>{{ wc.0 }} distance</b> <span class="pull-right">{{ wc.1 }} miles</span></li>
-{% endfor %}
                     </ul>
 
-<div class="chart">
-<canvas class="donut-chart" style="height: 160px" data-labels="{{ month.location_categories_chart.0|escape }}" data-data="{{ month.location_categories_chart.1|escape }}"></canvas>
-</div>
+{% include 'viewer/cards/month_switcher.html' %}
+
+			{{ month|calendar }}
 
                 </div>
                 <div class="box-footer">
@@ -63,6 +63,18 @@
 			</div>
                 </div>
             </div>
+
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Types of Places</h3>
+                </div>
+                <div class="box-body no-padding">
+			<div class="chart">
+			<canvas class="donut-chart" style="height: 160px" data-labels="{{ month.location_categories_chart.0|escape }}" data-data="{{ month.location_categories_chart.1|escape }}"></canvas>
+			</div>
+                </div>
+            </div>
+
 
 {% with cities=month.cities %}
 {% if cities %}
@@ -128,7 +140,7 @@
 {% endif %}
 
             </div>
-            <div class="col-xs-12 col-sm-6 col-md-8">
+            <div class="col-xs-12 col-sm-12 col-md-8">
 
 {% for event in month.life_events %}
 
@@ -175,21 +187,85 @@
 
 {% endif %}
 {% endwith %}
-{% with event=month.longest_journey %}
+{% with workouts=month.workouts %}
+{% if workouts %}
+
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Health</h3>
+                </div>
+                <div class="box-body no-padding">
+
+                        <table class="table table-condensed">
+
+{% with graph=month.weight_graph %}
+{% if graph.1 %}
+				<tr>
+                                        <th>Weight</th>
+					<td colspan="2">
+						<div class="chart">
+							<canvas class="scatter-chart" style="height: 160px" data-data="{{ graph|escape }}"></canvas>
+						</div>
+					</td>
+				</tr>
+{% endif %}
+{% endwith %}
+{% for wc in workouts %}
+                                <tr>
+                                        <th>{{ wc.0 }}&nbsp;distance</th>
+					<td style="width:100%;"><div class="progress progress-xs" style="width: 100%; background-color: rgba(0, 0, 0, 0)"><div class="progress-bar progress-bar-primary" style="width: {{ wc.2 }}%;"></div></div></td>
+                                        <td><span class="pull-right">{{ wc.1 }}&nbsp;miles</span></td>
+                                </tr>
+{% endfor %}
+{% with steps=month.steps %}
+{% if steps > 0 %}
+				<tr>
+					<th>Total steps</th>
+					<td colspan="2"><span class="pull-right">{{ steps|intcomma }}</span></td>
+				</tr>
+{% endif %}
+{% endwith %}
+                        </table>
+
+                </div>
+            </div>
+
+{% endif %}
+{% endwith %}
+{% with event=longest_journey %}
 {% if event %}
 
                 <div class="box box-primary" id="day_event_{{ event.pk }}">
                     <div class="box-header with-border">
-                        <h3 class="box-title">Longest Journey</h3>
-                        <span class="pull-right">{{ event.start_time|date:"l g:ia" }}</span>
+                        <h3 class="box-title">Travel</h3>
                     </div>
-                    <div class="box-body">
+                    <div class="box-body no-padding">
+
+			<table class="table table-condensed">
+			<tr>
+				<td colspan="2">
 
                 {% include 'viewer/cards/event.html' %}
 
-                    </div>
-                    <div class="box-footer">
-                        <a class="btn btn-primary btn-xs" href="#event_{{ event.pk }}">Read more</a>
+				</td>
+			</tr>
+			<tr>
+				<th>Longest journey</th>
+                        	<td><span class="pull-right"><a href="#event_{{ event.pk }}">{{ event.start_time|date:"l jS F" }}</a></span></td>
+			</tr>
+			<tr>
+				<th>Longest journey length</th>
+                        	<td><span class="pull-right">{{ event.distance }} miles</span></td>
+			</tr>
+			<tr>
+				<th>Longest journey time</th>
+                        	<td><span class="pull-right">{{ event.length_string }}</span></td>
+			</tr>
+			<tr>
+				<th>Total distance travelled</th>
+                        	<td><span class="pull-right">{{ month.distance|intcomma }} miles</span></td>
+			</tr>
+			</table>
                     </div>
                 </div>
 

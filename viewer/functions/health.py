@@ -7,6 +7,26 @@ from django.conf import settings
 
 from viewer.models import create_or_get_day
 
+def get_weight_history(days):
+	"""
+	Returns the stored weight values for the last [n] days.
+
+	:param days: The number of days worth of history to return.
+	:return: A list of two-value lists consisting of a time offset and a weight in kg.
+	:rtype: list
+	"""
+	dte = pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(settings.TIME_ZONE)).replace(hour=0, minute=0, second=0)
+	dts = dte - datetime.timedelta(days=days)
+	data = DataReading.objects.filter(start_time__gte=dts, type='weight').order_by('start_time')
+	ret = []
+	last = 0
+	if data.count() > 0:
+		last = int(time.mktime(data[0].start_time.timetuple()))
+	for item in data:
+		dt = int(time.mktime(item.start_time.timetuple()))
+		ret.append([(dt - last), float(item.value) / 1000])
+	return ret
+
 def get_heart_history(days):
 	"""
 	Returns the stored heart rate values for the last [n] days.
@@ -26,6 +46,30 @@ def get_heart_history(days):
 		dt = int(time.mktime(item.start_time.timetuple()))
 		ret.append([(dt - last), item.value])
 	return ret
+
+def get_weight_graph(dts, dte):
+	"""
+	Returns the stored weight values for a time range, for the purpose of drawing a graph.
+
+	:param dts: A Python datetime object representing the start time of the range being queried.
+	:param dte: A Python datetime object representing the end time of the range.
+	:return: A list of two-value lists consisting of graph co-ordinates, with time on the x-axis and weight in kg on the y-axis.
+	:rtype: list
+	"""
+	key = 'weightgraph_' + dts.strftime("%Y%m%d%H%M%S") + dte.strftime("%Y%m%d%H%M%S")
+	ret = cache.get(key)
+	if not(ret is None):
+		return ret
+
+	ret = []
+	for item in DataReading.objects.filter(start_time__lt=dte, end_time__gte=dts, type='weight').order_by('start_time'):
+		dtx = item.start_time.astimezone(pytz.utc)
+		item = {'x': dtx.strftime("%Y-%m-%dT%H:%M:%S"), 'y': float(item.value) / 1000}
+		ret.append(item)
+
+	cache.set(key, ret, timeout=86400)
+
+	return(ret)
 
 def get_heart_graph(dt):
 	"""

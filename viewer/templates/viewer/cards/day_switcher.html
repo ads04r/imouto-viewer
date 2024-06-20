@@ -6,7 +6,11 @@
                       <div class="text-center">
                         <div class="btn-group">
                             <a href="#{{ day.yesterday.slug }}" class="btn btn-default">Previous</a>
+{% if day.tomorrow %}
                             <a href="#{{ day.tomorrow.slug }}" class="btn btn-default">Next</a>
+{% else %}
+                            <a href="#{{ day.tomorrow.slug }}" class="btn btn-default" disabled>Next</a>
+{% endif %}
                         </div>
                       </div>
                     </div>

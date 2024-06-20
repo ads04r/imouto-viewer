@@ -1771,13 +1771,19 @@ class Year(models.Model):
 		return im
 	def workouts(self):
 		ret = []
+		home = Location.objects.get(pk=settings.USER_HOME_LOCATION)
+		max = 0.0
 		for wc in EventWorkoutCategory.objects.all():
-			item = [str(wc), 0.0, str(wc.icon)]
+			item = [str(wc), 0.0, 0, str(wc.icon)]
 			for event in self.events.filter(type='journey', workout_categories=wc):
 				item[1] = item[1] + event.distance()
 			if item[1] > 0.0:
 				item[1] = float(int(item[1] * 100)) / 100
+				if item[1] > max:
+					max = item[1]
 				ret.append(item)
+		for i in range(0, len(ret)):
+			ret[i][2] = int((ret[i][1] / max) * 100.0)
 		return ret
 	def location_categories(self):
 		categories = {}
@@ -1982,6 +1988,22 @@ class Month(models.Model):
 		"""
 		return LocationCity.objects.filter(locations__events__in=self.events).exclude(locations__pk=settings.USER_HOME_LOCATION).distinct()
 	@property
+	def steps(self):
+		"""
+		The number of steps taken during this particular month, according to the stored data.
+		"""
+		dts = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(self.year, self.month, 1, 0, 0, 0))
+		if self.month == 12:
+			dte = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(self.year + 1, 1, 1, 0, 0, 0))
+		else:
+			dte = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(self.year, self.month + 1, 1, 0, 0, 0))
+		obj = DataReading.objects.filter(type='step-count').filter(start_time__gte=dts, end_time__lt=dte).aggregate(steps=Sum('value'))
+		try:
+			ret = int(obj['steps'])
+		except:
+			ret = 0
+		return ret
+	@property
 	def earliest_morning(self):
 		"""
 		The day with the earliest wake_time in this month.
@@ -2113,13 +2135,19 @@ class Month(models.Model):
 		return Event.objects.filter(start_time__gte=dts, start_time__lte=dte, type="life_event").order_by('start_time')
 	def workouts(self):
 		ret = []
+		home = Location.objects.get(pk=settings.USER_HOME_LOCATION)
+		max = 0.0
 		for wc in EventWorkoutCategory.objects.all():
-			item = [str(wc), 0.0]
+			item = [str(wc), 0.0, 0, str(wc.icon)]
 			for event in self.events.filter(type='journey', workout_categories=wc):
 				item[1] = item[1] + event.distance()
 			if item[1] > 0.0:
 				item[1] = float(int(item[1] * 100)) / 100
+				if item[1] > max:
+					max = item[1]
 				ret.append(item)
+		for i in range(0, len(ret)):
+			ret[i][2] = int((ret[i][1] / max) * 100.0)
 		return ret
 	def location_categories(self):
 		categories = {}
@@ -2150,6 +2178,11 @@ class Month(models.Model):
 				ret = event
 				dist = new_dist
 		return ret
+	def distance(self):
+		ret = 0
+		for event in self.events.filter(type='journey').distinct():
+			ret = ret + event.distance()
+		return int(ret)
 	def reportable_events(self):
 		exclude = []
 		dts = pytz.utc.localize(datetime.datetime(self.year, 1, 1, 0, 0, 0))
@@ -2159,6 +2192,20 @@ class Month(models.Model):
 				if not(event.id in exclude):
 					exclude.append(event.id)
 		return self.events.exclude(type='life_event').exclude(cached_staticmap=None).exclude(description=None).exclude(description='').exclude(id__in=exclude).union(self.events.exclude(type='life_event').exclude(photo_collages=None).exclude(id__in=exclude))
+	def weight_graph(self):
+		dts = self.days.first().wake_time
+		if dts is None:
+			return []
+		dte = dts + datetime.timedelta(days=self.days.count())
+
+		ret = []
+		for item in DataReading.objects.filter(start_time__lt=dte, end_time__gte=dts, type='weight').order_by('start_time'):
+			dtx = item.start_time.astimezone(pytz.utc)
+			item = {'x': dtx.strftime("%Y-%m-%dT%H:%M:%S"), 'y': float(item.value) / 1000}
+			ret.append(item)
+
+		return(json.dumps(ret))
+
 	def __str__(self):
 		return(datetime.date(self.year, self.month, 1).strftime('%B %Y'))
 	class Meta:
