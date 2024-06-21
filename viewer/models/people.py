@@ -6,6 +6,9 @@ from viewer.models.core import Person
 
 import datetime, pytz, os
 
+import logging
+logger = logging.getLogger(__name__)
+
 class PersonCategory(models.Model):
 	"""This class represents a category of people. It can be something simple
 	like 'work colleagues' and 'friends' or it can be more specific, such as

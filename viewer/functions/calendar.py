@@ -1,5 +1,8 @@
 from viewer.models import CalendarAppointment
 
+import logging
+logger = logging.getLogger(__name__)
+
 def event_label(start_time, end_time):
 	"""
 	Returns a human readable string based on any known calendar events that are active during the specified time window.

@@ -6,6 +6,9 @@ from django.conf import settings
 from geopy import distance
 from dateutil import parser
 
+import logging
+logger = logging.getLogger(__name__)
+
 def home_location():
 	"""
 	Return the user's home location from settings (as a Location object, rather than the primary key as an integer)

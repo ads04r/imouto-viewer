@@ -7,6 +7,9 @@ import datetime, pytz, dateutil.parser, json, requests, random
 
 from viewer.models import Photo, Event
 
+import logging
+logger = logging.getLogger(__name__)
+
 @csrf_exempt
 def photo_json(request, uid):
 	if request.method == 'POST':

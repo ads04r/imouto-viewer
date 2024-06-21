@@ -1,5 +1,3 @@
-#import django, os, csv, socket, json, re, random, glob, sys, exifread, vobject, io, base64, imaplib, email, email.header, email.parser, email.message, requests
-#import datetime, pytz, pymysql, math
 import django, datetime, pytz
 from django.conf import settings
 from django.db.models import Q
@@ -9,6 +7,9 @@ from tempfile import NamedTemporaryFile
 
 from viewer.functions.monica import get_monica_contact_data, get_last_monica_activity, get_last_monica_call, assign_monica_avatar, create_monica_call, create_monica_activity_from_event
 from viewer.models import Event, RemoteInteraction, PersonProperty
+
+import logging
+logger = logging.getLogger(__name__)
 
 def export_monica_calls(from_date=None):
 	dtsd = from_date

@@ -4,6 +4,9 @@ from django.core.cache import cache
 from django.conf import settings
 from geopy import distance
 
+import logging
+logger = logging.getLogger(__name__)
+
 def get_location_name(lat, lon):
 	"""
 	Given a query point, returns a human-readable name for the location.

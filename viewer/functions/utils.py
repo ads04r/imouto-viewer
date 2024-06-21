@@ -1,9 +1,11 @@
-import datetime, pytz, json, requests
-from background_task.models import Task
-from django.db.models import Sum, Count, F, ExpressionWrapper, DurationField, fields
+import datetime, pytz, json
+from django.db.models import Sum, Count, F, ExpressionWrapper, fields
 from django.conf import settings
 
-from viewer.models import *
+from viewer.models import create_or_get_day, LifePeriod, HistoricalEvent, RemoteInteraction, Photo, Location, Person, PersonProperty, DataReading, Event, EventTag, EventWorkoutCategory, CalendarTask
+
+import logging
+logger = logging.getLogger(__name__)
 
 def __display_timeline_event(event):
 

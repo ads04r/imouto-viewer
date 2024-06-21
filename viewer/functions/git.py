@@ -1,6 +1,9 @@
 from dateutil import parser
 import requests, json, sys
 
+import logging
+logger = logging.getLogger(__name__)
+
 def get_recent_gitea_commits(username, token, api_url, since=None):
 
 	url = api_url + "/user/repos?token=" + token

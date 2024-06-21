@@ -29,6 +29,9 @@ from viewer.functions.rdf import get_wikipedia_abstract
 
 import random, datetime, pytz, json, markdown, re, os, overpy, holidays
 
+import logging
+logger = logging.getLogger(__name__)
+
 @Field.register_lookup
 class WeekdayLookup(Transform):
 	lookup_name = 'wd'

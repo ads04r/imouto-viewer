@@ -13,6 +13,9 @@ from viewer.forms import WorkoutCategoryForm
 from viewer.functions.health import get_sleep_history
 from viewer.functions.utils import imouto_json_serializer
 
+import logging
+logger = logging.getLogger(__name__)
+
 def health_data(datatypes):
 	item = {'date': ''}
 	filter = None

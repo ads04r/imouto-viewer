@@ -1,6 +1,9 @@
 from django.db import models
 import re, os, datetime, pytz
 
+import logging
+logger = logging.getLogger(__name__)
+
 class WatchedDirectory(models.Model):
 	path = models.CharField(max_length=1024, null=False)
 	recursive = models.BooleanField(default=False)

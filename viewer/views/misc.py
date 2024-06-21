@@ -12,6 +12,9 @@ from viewer.functions.rdf import get_webpage_data, microdata_to_rdf, get_rdf_peo
 from viewer.functions.location_manager import get_location_manager_import_queue, get_location_manager_process_queue
 from viewer.forms import WatchedDirectoryForm
 
+import logging
+logger = logging.getLogger(__name__)
+
 def upload_file(request):
 	if request.method != 'POST':
 		return HttpResponseNotAllowed(['POST'])

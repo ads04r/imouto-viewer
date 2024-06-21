@@ -10,6 +10,9 @@ from viewer.models import Person, RemoteInteraction, Location, PersonProperty
 from viewer.forms import PersonForm
 from viewer.functions.people import explode_properties
 
+import logging
+logger = logging.getLogger(__name__)
+
 def people(request):
 	data = {}
 	datecutoff = pytz.utc.localize(datetime.datetime.utcnow()) - datetime.timedelta(days=365)

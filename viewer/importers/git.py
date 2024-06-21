@@ -7,6 +7,9 @@ from django.core.cache import cache
 from viewer.functions.git import get_recent_github_commits, get_recent_gitea_commits
 from viewer.models import GitCommit
 
+import logging
+logger = logging.getLogger(__name__)
+
 def import_github_history(since=None):
 	"""
 	Calls the public Github API to determine a list of commits pushed by the user, and imports these

@@ -5,6 +5,9 @@ from viewer.models import DataReading
 
 import datetime, pytz, json
 
+import logging
+logger = logging.getLogger(__name__)
+
 @csrf_exempt
 def webhook(request, path=''):
 	if request.method != 'POST':

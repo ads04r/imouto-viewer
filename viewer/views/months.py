@@ -5,6 +5,9 @@ from django.conf import settings
 from viewer.models import Month, Day, HistoricalEvent, create_or_get_month
 from viewer.tasks.reports import generate_staticmap
 
+import logging
+logger = logging.getLogger(__name__)
+
 def month(request, ds):
 
 	if len(ds) != 6:

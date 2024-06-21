@@ -1,14 +1,19 @@
 from background_task import background
 from django.conf import settings
+from django.core.files import File
 from tempfile import NamedTemporaryFile
-import datetime, pytz, os, random, json
+from PIL import Image
+from io import BytesIO
+import datetime, pytz, os, random
 
-from viewer.models import Event, Year, create_or_get_year
-from viewer.functions.utils import *
+from viewer.models import Event, Year, create_or_get_year, Photo, PhotoCollage
 from viewer.reporting.generation import generate_year_travel, generate_year_photos, generate_year_comms, generate_year_music, generate_year_movies, generate_year_health
 from viewer.reporting.pdf import generate_year_pdf
 from viewer.functions.file_uploads import photo_collage_upload_location, year_pdf_upload_location
 from viewer.eventcollage import make_collage
+
+import logging
+logger = logging.getLogger(__name__)
 
 @background(schedule=0, queue='reports')
 def generate_staticmap(event_id):

@@ -5,6 +5,9 @@ from django.shortcuts import get_object_or_404
 from django.conf import settings
 import json, requests, extruct, datetime
 
+import logging
+logger = logging.getLogger(__name__)
+
 def rdf_make_object_uri(object):
 
 	uri = None

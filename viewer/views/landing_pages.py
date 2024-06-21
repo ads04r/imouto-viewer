@@ -11,15 +11,20 @@ from viewer.forms import EventForm, QuickEventForm
 from viewer.functions.locations import home_location
 from viewer.functions.utils import get_timeline_events, generate_dashboard, generate_onthisday, imouto_json_serializer
 
+import logging
+logger = logging.getLogger(__name__)
 
 def index(request):
 	context = {'type':'index', 'data':[]}
+	logger.info("HTML frame requested")
 	return render(request, 'viewer/index.html', context)
 
 def dashboard(request):
+	logger.info("Dashboard requested")
 	key = 'dashboard'
 	ret = cache.get(key)
 	if ret is None:
+		logger.debug("Generating dashboard")
 		data = generate_dashboard()
 		context = {'type':'view', 'data':data}
 		if len(data) == 0:
@@ -29,6 +34,9 @@ def dashboard(request):
 		else:
 			ret = render(request, 'viewer/pages/dashboard.html', context)
 			cache.set(key, ret, timeout=86400)
+		logger.debug("Dashboard generated")
+	else:
+		logger.debug("Getting cached dashboard")
 	return ret
 
 def dashboard_json(request):

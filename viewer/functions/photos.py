@@ -1,6 +1,9 @@
 import datetime, pytz, sys, os
-from viewer.models import *
+from viewer.models import Photo, Event, Location
 from viewer.functions.locations import nearest_location
+
+import logging
+logger = logging.getLogger(__name__)
 
 def locate_photos_by_exif(since=None, reassign=False):
 

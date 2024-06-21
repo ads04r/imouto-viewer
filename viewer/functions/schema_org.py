@@ -4,6 +4,9 @@ from viewer.models import LocationCategory, SchemaOrgClass
 from viewer.functions.rdf import uris_of_type
 import requests
 
+import logging
+logger = logging.getLogger(__name__)
+
 def import_schema_org(url="https://schema.org/version/latest/schemaorg-current-https.ttl", lang='en'):
 
 	r = requests.get(url, headers={"Accept-Language": lang, "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win94; x64; rv:55.0) Gecko/20100101 Firefox/55.0"})

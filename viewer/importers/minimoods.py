@@ -5,6 +5,9 @@ import os, csv, datetime
 
 from viewer.importers.core import import_data
 
+import logging
+logger = logging.getLogger(__name__)
+
 def import_mood_file(path):
 	"""
 	Import Mini-Moods data into Imouto's database. Mini-Moods is an Android app available from F-Droid.

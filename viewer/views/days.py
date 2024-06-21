@@ -13,6 +13,9 @@ from viewer.functions.locations import nearest_location
 from viewer.functions.location_manager import get_possible_location_events
 from viewer.functions.calendar import event_label
 
+import logging
+logger = logging.getLogger(__name__)
+
 def day(request, ds):
 
 	if len(ds) != 8:

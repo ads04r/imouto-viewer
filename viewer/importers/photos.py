@@ -9,6 +9,9 @@ from viewer.functions.people import find_person_by_picasaid as find_person
 from viewer.functions.geo import convert_to_degrees
 from viewer.functions.location_manager import get_logged_position
 
+import logging
+logger = logging.getLogger(__name__)
+
 def import_photo_file(filepath, tzinfo=pytz.UTC):
 	"""
 	Imports a photo into the lifelog data as a Photo object. During import, the function attempts to

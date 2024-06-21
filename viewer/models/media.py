@@ -1,5 +1,8 @@
 from django.db import models
 
+import logging
+logger = logging.getLogger(__name__)
+
 class Media(models.Model):
 	type = models.SlugField(max_length=16)
 	unique_id = models.SlugField(max_length=128)
