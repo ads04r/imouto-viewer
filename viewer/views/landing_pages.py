@@ -62,6 +62,7 @@ def timeline(request):
 		dt = Event.objects.order_by('-start_time')[0].start_time
 	except:
 		return render(request, 'viewer/pages/setup.html', {})
+	logger.info("Timeline requested")
 	ds = dt.strftime("%Y%m%d")
 	form = QuickEventForm()
 	context = {'type':'view', 'data':{'current': ds}, 'form':form}
@@ -79,16 +80,22 @@ def timelineitem(request, ds):
 	dsq = dtq.strftime("%Y%m%d")
 	dsn = dtn.strftime("%Y%m%d")
 
+	logger.info("Timeline items requested for " + dtq.strftime("%Y-%m-%d"))
 	context = {'type':'view', 'data':{'label': dtq.strftime("%A %-d %B"), 'id': dsq, 'next': dsn, 'events': events}}
 	return render(request, 'viewer/pages/timeline_event.html', context)
 
 def onthisday(request, format='html'):
+	logger.info("On This Day requested")
 	key = 'onthisday_' + datetime.date.today().strftime("%Y%m%d")
 	data = cache.get(key)
 	if data is None:
+		logger.debug("Generating On This Day")
 		data = generate_onthisday()
 		if len(data) == 0:
 			return render(request, 'viewer/pages/setup.html', {})
 		cache.set(key, data, timeout=86400)
+		logger.debug("On This Day generated")
+	else:
+		logger.debug("Getting cached On This Day")
 	context = {'type':'view', 'data':data}
 	return render(request, 'viewer/pages/onthisday.html', context)

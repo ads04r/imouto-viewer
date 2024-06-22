@@ -19,6 +19,7 @@ def upload_file(request):
 	if request.method != 'POST':
 		return HttpResponseNotAllowed(['POST'])
 	url = settings.LOCATION_MANAGER_URL + '/import'
+	logger.info("File sent for import")
 	files = {'uploaded_file': request.FILES['uploadformfile']}
 	data = {'file_source': request.POST['uploadformfilesource']}
 
@@ -76,6 +77,7 @@ def search(request):
 	query = data['query']
 	ret = []
 
+	logger.info("Search for '" + query + "' requested")
 	cache_key = 'search_' + query
 	sq = cache.get(cache_key)
 	if sq is None:
@@ -104,6 +106,7 @@ def parse_rdf(request):
 		raise Http404()
 	query = json.loads(request.body)
 	url = query['url']
+	logger.info("Parsing RDF from " + url)
 	if 'wikipedia.org/wiki/' in url:
 		p = url.strip('/').split('/')
 		url = 'https://dbpedia.org/data/' + p[-1] + '.rdf'
