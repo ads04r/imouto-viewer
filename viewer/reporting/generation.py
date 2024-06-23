@@ -9,6 +9,9 @@ from viewer.models import DataReading, RemoteInteraction
 from viewer.models import Location, Person, Photo
 from viewer.functions.moonshine import get_moonshine_artist_image
 
+import logging
+logger = logging.getLogger(__name__)
+
 def generate_year_travel(year):
 
 	countries = year.countries.count()

@@ -8,6 +8,9 @@ from viewer.tasks.reports import generate_report, generate_report_pdf
 
 import os, json
 
+import logging
+logger = logging.getLogger(__name__)
+
 def year(request, ds):
 
 	if len(ds) != 4:

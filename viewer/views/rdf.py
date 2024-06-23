@@ -3,6 +3,9 @@ from django.shortcuts import get_object_or_404
 from viewer.models import Event, Year
 from viewer.functions.rdf import rdf_serialize
 
+import logging
+logger = logging.getLogger(__name__)
+
 def event_rdf(request, eid):
 	data = get_object_or_404(Event, id=eid)
 	rdf = rdf_serialize(data, format='pretty-xml')

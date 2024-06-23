@@ -14,6 +14,9 @@ from viewer.importers.location import upload_file
 from viewer.importers.photos import import_photo_file
 from viewer.importers.minimoods import import_mood_file
 
+import logging
+logger = logging.getLogger(__name__)
+
 @background(schedule=0, queue='process')
 def generate_location_events(min_duration=300):
 	"""

@@ -9,6 +9,9 @@ from viewer.forms import QuestionnaireForm, QuestionForm
 
 import json, datetime, pytz
 
+import logging
+logger = logging.getLogger(__name__)
+
 def questionnaires(request):
 
 	if request.method == 'POST':

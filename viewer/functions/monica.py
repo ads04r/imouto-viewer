@@ -4,6 +4,9 @@ from django.core.cache import cache
 from django.conf import settings
 from dateutil import parser
 
+import logging
+logger = logging.getLogger(__name__)
+
 def __find_person_by_monica_hash(hash):
 	"""
 	Given a Monica hash ID, returns the corresponding data stored in the Monica instance.

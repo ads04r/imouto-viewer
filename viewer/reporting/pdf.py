@@ -11,6 +11,9 @@ import random, json, markdown, os
 from viewer.reporting.styles.basic import ImoutoSampleYearTemplate, ImoutoSampleMonthTemplate, getSampleStyleSheet
 from viewer.functions.locations import home_location
 
+import logging
+logger = logging.getLogger(__name__)
+
 def remove_multiple_page_breaks(story):
 
 	ret = []

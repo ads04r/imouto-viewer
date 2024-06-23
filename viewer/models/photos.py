@@ -2,6 +2,9 @@ from django.db import models
 
 from viewer.models.core import Event, Photo
 
+import logging
+logger = logging.getLogger(__name__)
+
 class PhotoCollage(models.Model):
 	image = models.ImageField(blank=True, null=True) # , upload_to=photo_collage_upload_location)
 	event = models.ForeignKey(Event, null=True, blank=True, on_delete=models.SET_NULL, related_name='photo_collages')

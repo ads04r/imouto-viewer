@@ -4,6 +4,9 @@ from fitparse import FitFile
 
 from viewer.models import Day, DataReading, ImportedFile
 
+import logging
+logger = logging.getLogger(__name__)
+
 def upload_file(temp_file, file_source, format=''):
 	"""
 	Uploads a file to the configured location manager. When calling this function you need to pass a string

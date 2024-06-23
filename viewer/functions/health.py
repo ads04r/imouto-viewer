@@ -7,6 +7,9 @@ from django.conf import settings
 
 from viewer.models import create_or_get_day
 
+import logging
+logger = logging.getLogger(__name__)
+
 def get_weight_history(days):
 	"""
 	Returns the stored weight values for the last [n] days.

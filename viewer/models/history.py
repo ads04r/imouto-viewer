@@ -1,6 +1,9 @@
 from django.db import models
 import datetime
 
+import logging
+logger = logging.getLogger(__name__)
+
 class HistoricalEvent(models.Model):
 	date = models.DateField()
 	"""The date thie HistoricalEvent happened"""

@@ -6,6 +6,9 @@ from django.core.cache import cache
 
 from viewer.models import DataReading
 
+import logging
+logger = logging.getLogger(__name__)
+
 def __parse_scale_csv(filepath):
 
 	headers = []

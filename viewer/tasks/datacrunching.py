@@ -1,11 +1,10 @@
 from background_task import background
-from django.db.models import Count
-from django.conf import settings
-import datetime, pytz, os
 
 from viewer.models import Event, EventSimilarity
-from viewer.functions.utils import *
 from viewer.functions.geo import journey_similarity
+
+import logging
+logger = logging.getLogger(__name__)
 
 @background(schedule=0, queue='datacrunching')
 def regenerate_similar_events(event_id):

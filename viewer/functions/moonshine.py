@@ -3,6 +3,9 @@ from viewer.models import *
 from django.conf import settings
 from dateutil import parser
 
+import logging
+logger = logging.getLogger(__name__)
+
 def get_moonshine_artist_image(mbid):
 
 	if not(hasattr(settings, 'MOONSHINE_URL')):

@@ -7,6 +7,9 @@ from dateutil import tz
 
 from viewer.models import RemoteInteraction
 
+import logging
+logger = logging.getLogger(__name__)
+
 def import_sms_from_imap(host, username, password, inbox='INBOX', countrycode='44'):
 	"""
 	For users using the Android app 'SMS Backup+', this function gets the user's text messages that have been stored on

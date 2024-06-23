@@ -1,4 +1,7 @@
-from viewer.models import *
+from viewer.models import Event, Person, PersonProperty
+
+import logging
+logger = logging.getLogger(__name__)
 
 def explode_properties(person):
 	prop = {}

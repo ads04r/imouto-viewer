@@ -9,6 +9,9 @@ from ics import Calendar
 
 from viewer.models import Location, Person, PersonProperty, CalendarFeed, CalendarTask, CalendarAppointment
 
+import logging
+logger = logging.getLogger(__name__)
+
 def import_carddav(url, auth, countrycode='44'):
 	"""
 	Imports CardDAV data from a web URL, and creates or augments Person objects accordingly.

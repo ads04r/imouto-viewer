@@ -6,6 +6,9 @@ from viewer.models.core import Location, WeatherLocation
 
 import random, datetime, pytz, json, markdown, re, os
 
+import logging
+logger = logging.getLogger(__name__)
+
 class WeatherReading(models.Model):
 	time = models.DateTimeField()
 	location = models.ForeignKey(WeatherLocation, on_delete=models.CASCADE, related_name='readings')

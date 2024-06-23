@@ -5,6 +5,9 @@ from dateutil import parser
 import datetime, pytz, json, re, sys, os, requests
 import Fred as fred
 
+import logging
+logger = logging.getLogger(__name__)
+
 def get_logged_position(dt):
 	"""
 	Given a date, returns the point that the user was near at the time specified.

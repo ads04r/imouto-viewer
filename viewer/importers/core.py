@@ -3,6 +3,9 @@ from django.conf import settings
 
 from viewer.models import DataReading
 
+import logging
+logger = logging.getLogger(__name__)
+
 def import_data(data):
 	"""
 	Import generic sensor data into Imouto's database.

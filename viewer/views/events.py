@@ -16,6 +16,9 @@ from viewer.functions.locations import join_location_events
 from viewer.functions.location_manager import getgeoline, getelevation, getspeed
 from viewer.functions.utils import generate_life_grid
 
+import logging
+logger = logging.getLogger(__name__)
+
 def events(request):
 	if request.method == 'POST':
 		cache.delete('dashboard')

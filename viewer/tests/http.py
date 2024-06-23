@@ -43,10 +43,6 @@ class JSONQueuesTest(unittest.TestCase):
 	def test_details(self):
 		if connection.connection and not connection.is_usable():
 			del connections._connections.default
-		r = self.client.get('/viewer/report_queue.json')
-		self.assertEqual(r.status_code, 200)
-		if connection.connection and not connection.is_usable():
-			del connections._connections.default
 		r = self.client.get('/viewer/process')
 		self.assertEqual(r.status_code, 200)
 		if connection.connection and not connection.is_usable():
@@ -68,19 +64,11 @@ class StaticPagesTest(unittest.TestCase):
 		self.assertEqual(r.status_code, 200)
 		if connection.connection and not connection.is_usable():
 			del connections._connections.default
-		r = self.client.get('/viewer/life_grid.html')
-		self.assertEqual(r.status_code, 200)
-		if connection.connection and not connection.is_usable():
-			del connections._connections.default
 		r = self.client.get('/viewer/upload.html')
 		self.assertEqual(r.status_code, 200)
 		if connection.connection and not connection.is_usable():
 			del connections._connections.default
 		r = self.client.get('/viewer/timeline.html')
-		self.assertEqual(r.status_code, 200)
-		if connection.connection and not connection.is_usable():
-			del connections._connections.default
-		r = self.client.get('/viewer/reports.html')
 		self.assertEqual(r.status_code, 200)
 		if connection.connection and not connection.is_usable():
 			del connections._connections.default

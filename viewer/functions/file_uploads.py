@@ -1,3 +1,6 @@
+import logging
+logger = logging.getLogger(__name__)
+
 def user_thumbnail_upload_location(instance, filename):
 	return 'people/' + str(instance.pk) + '/' + filename
 

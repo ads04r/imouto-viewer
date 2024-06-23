@@ -4,6 +4,9 @@ from fitparse import FitFile
 
 from viewer.models import Day, DataReading, ImportedFile
 
+import logging
+logger = logging.getLogger(__name__)
+
 def import_fit(parseable_fit_input):
 	"""
 	Reads data in ANT-FIT format, typically used by Garmin fitness trackers, and generates DataValues based on the information contained within.

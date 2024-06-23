@@ -13,6 +13,9 @@ from viewer.functions.locations import home_location
 
 from viewer.tasks.process import fill_cities
 
+import logging
+logger = logging.getLogger(__name__)
+
 def places(request):
 	data = {}
 	home = home_location()

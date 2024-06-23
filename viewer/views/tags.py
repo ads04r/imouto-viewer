@@ -6,6 +6,9 @@ import datetime, pytz, dateutil.parser, json, requests, random
 
 from viewer.models import Location, Event, EventWorkoutCategory, EventTag, AutoTag, TagCondition, TagLocationCondition, TagTypeCondition, TagWorkoutCondition
 
+import logging
+logger = logging.getLogger(__name__)
+
 def tags(request):
 
 	data = EventTag.objects.annotate(num_events=Count('events')).order_by('-num_events')
