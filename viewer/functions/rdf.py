@@ -26,6 +26,7 @@ def rdf_serialize(object, format='turtle'):
 	uri = None
 	types = []
 	exclude = []
+	triples = []
 	if hasattr(settings, 'RDF_NAMESPACE'):
 		uri = URIRef(settings.RDF_NAMESPACE + str(object.__class__.__name__).lower() + '/' + str(object.pk))
 		types.append(URIRef(settings.RDF_NAMESPACE + str(object.__class__.__name__)))
@@ -38,11 +39,21 @@ def rdf_serialize(object, format='turtle'):
 			types.append(type)
 	if hasattr(object, 'rdf_exclude'):
 		exclude = getattr(object, 'rdf_exclude')
+	if hasattr(object, 'rdf_include'):
+		triples = getattr(object, 'rdf_include')
 	if uri is None:
 		return ""
 	g = Graph()
 	g.bind('imouto', settings.RDF_NAMESPACE)
 	g.add((uri, RDFS.label, Literal(str(object))))
+	for triple in triples:
+		if len(triple) != 3:
+			continue
+		if '://' in triple[2]:
+			t_obj = URIRef(triple[2])
+		else:
+			t_obj = Literal(triple[2])
+		g.add((URIRef(triple[0]), URIRef(triple[1]), t_obj))
 	for type in types:
 		g.add((uri, RDF.type, URIRef(type)))
 	for field in object._meta.fields:

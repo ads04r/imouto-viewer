@@ -14,6 +14,7 @@ urlpatterns = [
     path('import-web.json', views.parse_rdf),
     path('timeline.html', views.timeline),
     path('timeline/<ds>.html', views.timelineitem),
+    path('reports.json', views.year_reports_json),
     path('years/progress/<ds>.html', views.year_report_status),
     path('years/<ds>.html', views.year),
     path('years/<ds>.pdf', views.year_report),

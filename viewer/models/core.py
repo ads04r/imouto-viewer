@@ -208,9 +208,9 @@ class LocationCity(models.Model):
 	@property
 	def uri(self):
 		if hasattr(settings, 'USER_RDF_NAMESPACE'):
-			return settings.USER_RDF_NAMESPACE + 'city/' + str(self.label).lower()
+			return settings.USER_RDF_NAMESPACE + 'city/' + str(self.label).lower().replace(" ", "_")
 		if hasattr(settings, 'RDF_NAMESPACE'):
-			return settings.RDF_NAMESPACE + 'city/' + str(self.label).lower()
+			return settings.RDF_NAMESPACE + 'city/' + str(self.label).lower().replace(" ", "_")
 		return None
 	@property
 	def slug(self):
@@ -1609,6 +1609,41 @@ class Year(models.Model):
 		if hasattr(settings, 'RDF_NAMESPACE'):
 			return settings.RDF_NAMESPACE + 'year/' + str(self.year)
 		return None
+	"""Additional triples for RDF serialization."""
+	@property
+	def rdf_include(self):
+		categories = []
+		triples = []
+		uri = self.uri
+		if uri is None:
+			return []
+		if hasattr(settings, 'USER_RDF_NAMESPACE'):
+			ns = settings.USER_RDF_NAMESPACE
+		if hasattr(settings, 'RDF_NAMESPACE'):
+			ns = settings.RDF_NAMESPACE
+		for property in self.properties.all():
+			category = property.category
+			if category == '':
+				category = 'misc'
+			key = str(property.pk)
+			category_uri = uri + '/section/' + category
+			property_uri = category_uri + '/' + key
+			if not category_uri in categories:
+				categories.append(category_uri)
+			triples.append([category_uri, ns + "hasReportStat", property_uri])
+			triples.append([property_uri, "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", ns + "LifeReportStat"])
+			triples.append([property_uri, "http://www.w3.org/2000/01/rdf-schema#label", str(property.key)])
+			if property.description:
+				triples.append([property_uri, "http://www.w3.org/2000/01/rdf-schema#comment", str(property.description)])
+			triples.append([property_uri, ns + "statValue", str(property.value)])
+		for category in categories:
+			triples.append([category, "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", ns + "LifeReportSection"])
+			triples.append([uri, ns + "hasReportSection", category])
+		return triples
+	"""Properties to exclude from RDF serialization."""
+	@property
+	def rdf_exclude(self):
+		return ['events', 'report_prc', 'this_year']
 	@property
 	def this_year(self):
 		"""

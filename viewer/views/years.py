@@ -75,3 +75,16 @@ def year_report_status(request, ds):
 		template = "viewer/cards/report-inprogress.html"
 
 	return render(request, template, context);
+
+def year_reports_json(request):
+	data = []
+	for year in Year.objects.order_by('-year'):
+		if year.report_prc < 100:
+			continue
+		item = {'id': year.pk, 'uri': year.uri, 'label': year.caption, 'year': year.year, 'pdf': False}
+		if year.cached_pdf:
+			if os.path.exists(str(year.cached_pdf.file)):
+				item['pdf'] = True
+		data.append(item)
+	response = HttpResponse(json.dumps(data), content_type='application/json')
+	return response
