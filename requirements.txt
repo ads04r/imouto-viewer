@@ -31,7 +31,7 @@ entrypoints==0.3
 ExifRead==2.1.2
 extruct==0.16.0
 fitparse==1.2.0
-fonttools==4.38.0
+fonttools==4.43.0
 fpdf==1.7.2
 Fred-Frechet==1.9.25
 furo==2023.3.27
