@@ -1637,6 +1637,31 @@ class Year(models.Model):
 			if property.description:
 				triples.append([property_uri, "http://www.w3.org/2000/01/rdf-schema#comment", str(property.description)])
 			triples.append([property_uri, ns + "statValue", str(property.value)])
+		for chart in self.charts.all():
+			category = chart.category
+			if category == '':
+				category = 'misc'
+			key = str(chart.pk)
+			category_uri = uri + '/section/' + category
+			chart_uri = category_uri + '/charts/' + key
+			if not category_uri in categories:
+				categories.append(category_uri)
+			triples.append([category_uri, ns + "hasReportChart", chart_uri])
+			triples.append([chart_uri, "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", ns + "LifeReportChart"])
+			triples.append([chart_uri, "http://www.w3.org/2000/01/rdf-schema#label", str(chart.text)])
+			i = 1
+			for item in json.loads(chart.data):
+				item_uri = chart_uri + '/' + str(i)
+				triples.append([chart_uri, ns + "hasItem", item_uri])
+				triples.append([item_uri, "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", ns + "LifeReportChartItem"])
+				triples.append([item_uri, ns + "ordering", str(i)])
+				if 'text' in item:
+					triples.append([item_uri, "http://www.w3.org/2000/01/rdf-schema#label", str(item['text'])])
+				if 'value' in item:
+					triples.append([item_uri, ns + "chartValue", str(item['value'])])
+				i = i + 1
+			if chart.description:
+				triples.append([chart_uri, "http://www.w3.org/2000/01/rdf-schema#comment", str(chart.description)])
 		for category in categories:
 			triples.append([category, "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", ns + "LifeReportSection"])
 			triples.append([uri, ns + "hasReportSection", category])
