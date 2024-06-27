@@ -59,7 +59,7 @@ def rdf_serialize(object, format='turtle'):
 	for field in object._meta.fields:
 		if field.name.startswith('cached_'):
 			continue
-		if field.name in exclude:
+		if str(field.name) in exclude:
 			continue
 		pred = URIRef(settings.RDF_NAMESPACE + field.name)
 		classname = str(field.__class__.__name__)

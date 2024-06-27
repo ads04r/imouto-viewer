@@ -7,6 +7,7 @@ from django.db.models.fields import DurationField
 from django.contrib.staticfiles import finders
 from django.conf import settings
 from django.dispatch import receiver
+from django.utils.functional import cached_property
 from django.utils.html import strip_tags
 from polymorphic.models import PolymorphicModel
 from colorfield.fields import ColorField
@@ -2004,11 +2005,12 @@ class Month(models.Model):
 			m = m + 12
 			y = y - 1
 		return create_or_get_month(year=y, month=m)
-	@property
+	@cached_property
 	def days(self):
 		"""
 		Every day in this month.
 		"""
+		logger.debug("Generating list of days")
 		dts = datetime.date(self.year, self.month, 1)
 		if self.month < 12:
 			dte = datetime.date(self.year, self.month + 1, 1)
@@ -2019,17 +2021,19 @@ class Month(models.Model):
 			create_or_get_day(dt)
 			dt = dt + datetime.timedelta(days=1)
 		return Day.objects.filter(date__gte=dts, date__lt=dte).order_by('date')
-	@property
+	@cached_property
 	def cities(self):
 		"""
 		Every city visited in this month.
 		"""
+		logger.debug("Generating list of cities")
 		return LocationCity.objects.filter(locations__events__in=self.events).exclude(locations__pk=settings.USER_HOME_LOCATION).distinct()
-	@property
+	@cached_property
 	def steps(self):
 		"""
 		The number of steps taken during this particular month, according to the stored data.
 		"""
+		logger.debug("Counting month steps")
 		dts = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(self.year, self.month, 1, 0, 0, 0))
 		if self.month == 12:
 			dte = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(self.year + 1, 1, 1, 0, 0, 0))
@@ -2041,11 +2045,12 @@ class Month(models.Model):
 		except:
 			ret = 0
 		return ret
-	@property
+	@cached_property
 	def earliest_morning(self):
 		"""
 		The day with the earliest wake_time in this month.
 		"""
+		logger.debug("Calculating earliest morning")
 		dts = datetime.date(self.year, self.month, 1)
 		if self.month < 12:
 			dte = datetime.date(self.year, self.month + 1, 1)
@@ -2066,11 +2071,12 @@ class Month(models.Model):
 				ret = day
 			dt = dt + datetime.timedelta(days=1)
 		return ret
-	@property
+	@cached_property
 	def latest_night(self):
 		"""
 		The day with the latest bed_time in this month.
 		"""
+		logger.debug("Calculating latest night")
 		dts = datetime.date(self.year, self.month, 1)
 		if self.month < 12:
 			dte = datetime.date(self.year, self.month + 1, 1)
@@ -2091,32 +2097,36 @@ class Month(models.Model):
 				ret = day
 			dt = dt + datetime.timedelta(days=1)
 		return ret
-	@property
+	@cached_property
 	def average_sleep(self):
 		"""
 		Returns the month's average daily sleep per night
 		"""
+		logger.debug("Calculating average sleep")
 		r = self.days.annotate(total_wake=F('bed_time')-F('wake_time')).aggregate(average_wake=Avg('total_wake'))['average_wake']
 		if r is None:
 			return None
 		return datetime.timedelta(seconds=86400) - r
-	@property
+	@cached_property
 	def average_sunlight(self):
 		"""
 		Returns the month's average daily sunlight
 		"""
+		logger.debug("Calculating average daily sunlight")
 		return self.days.annotate(total_sunlight=F('sunset_time')-F('sunrise_time')).aggregate(average_sunlight=Avg('total_sunlight'))['average_sunlight']
-	@property
+	@cached_property
 	def average_wake_time(self):
 		"""
 		Returns the month's average waking time per day
 		"""
+		logger.debug("Calculating average daily wake time")
 		return self.days.exclude(wake_time=None).exclude(bed_time=None).annotate(total_wake_time=F('bed_time')-F('wake_time')).aggregate(average_wake_time=Avg('total_wake_time'))['average_wake_time']
-	@property
+	@cached_property
 	def people(self):
 		"""
 		Every person encountered during this month.
 		"""
+		logger.debug("Listing month people")
 		dtsd = datetime.date(self.year, self.month, 1)
 		if self.month < 12:
 			dted = datetime.date(self.year, self.month + 1, 1)
@@ -2132,46 +2142,52 @@ class Month(models.Model):
 		if dte is None:
 			dte = pytz.utc.localize(datetime.datetime(dted.year, dted.month, dted.day, 23, 59, 59))
 		return Person.objects.filter(event__end_time__gt=dts, event__start_time__lt=dte).annotate(event_count=Count('event')).order_by('-event_count')
-	@property
+	@cached_property
 	def events(self):
 		"""
 		Every described event during this month.
 		"""
+		logger.debug("Listing month events")
 		dts = pytz.utc.localize(datetime.datetime(self.year, self.month, 1, 0, 0, 0))
 		if self.month < 12:
 			dte = pytz.utc.localize(datetime.datetime(self.year, self.month + 1, 1, 0, 0, 0) - datetime.timedelta(seconds=1))
 		else:
 			dte = pytz.utc.localize(datetime.datetime(self.year + 1, 1, 1, 0, 0, 0) - datetime.timedelta(seconds=1))
 		return Event.objects.filter(end_time__gte=dts, start_time__lte=dte).exclude(type='life_event').order_by('start_time')
-	@property
+	@cached_property
 	def locations(self):
 		"""
 		Every location visited during this month.
 		"""
+		logger.debug("Listing month locations")
 		return Location.objects.filter(events__in=self.events).distinct()
-	@property
+	@cached_property
 	def tasks_completed(self):
 		"""
 		Every task listed as 'completed' during this month.
 		"""
+		logger.debug("Listing completed tasks")
 		dts = pytz.utc.localize(datetime.datetime(self.year, self.month, 1, 0, 0, 0))
 		if self.month < 12:
 			dte = pytz.utc.localize(datetime.datetime(self.year, self.month + 1, 1, 0, 0, 0)) - datetime.timedelta(seconds=1)
 		else:
 			dte = pytz.utc.localize(datetime.datetime(self.year + 1, 1, 1, 0, 0, 0)) - datetime.timedelta(seconds=1)
 		return CalendarTask.objects.filter(time_completed__gte=dts, time_completed__lte=dte).order_by('time_completed')
-	@property
+	@cached_property
 	def life_events(self):
 		"""
 		Every described life event during this month.
 		"""
+		logger.debug("Generating life events")
 		dts = pytz.utc.localize(datetime.datetime(self.year, self.month, 1, 0, 0, 0))
 		if self.month < 12:
 			dte = pytz.utc.localize(datetime.datetime(self.year, self.month + 1, 1, 0, 0, 0)) - datetime.timedelta(seconds=1)
 		else:
 			dte = pytz.utc.localize(datetime.datetime(self.year + 1, 1, 1, 0, 0, 0)) - datetime.timedelta(seconds=1)
 		return Event.objects.filter(start_time__gte=dts, start_time__lte=dte, type="life_event").order_by('start_time')
+	@cached_property
 	def workouts(self):
+		logger.debug("Generating month workout data")
 		ret = []
 		home = Location.objects.get(pk=settings.USER_HOME_LOCATION)
 		max = 0.0
@@ -2187,7 +2203,9 @@ class Month(models.Model):
 		for i in range(0, len(ret)):
 			ret[i][2] = int((ret[i][1] / max) * 100.0)
 		return ret
+	@cached_property
 	def location_categories(self):
+		logger.debug("Finding location categories")
 		categories = {}
 		for loc in Location.objects.filter(events__in=self.events.filter(type='loc_prox').exclude(location__pk=settings.USER_HOME_LOCATION)).annotate(time_spent=F('events__end_time')-F('events__start_time')).annotate(total_time=Sum('time_spent')).order_by('-total_time'):
 			for c in loc.categories.all():
@@ -2196,18 +2214,23 @@ class Month(models.Model):
 				categories[c.pk][1] = categories[c.pk][1] + int(loc.total_time.total_seconds())
 		return list(categories.values())
 	def location_categories_chart(self):
+		logger.debug("Generating location category chart")
 		ret = [[], []]
-		for item in self.location_categories():
+		for item in self.location_categories:
 			ret[0].append(str(item[0]))
 			ret[1].append(item[1])
 		return (json.dumps(ret[0]), json.dumps(ret[1]))
+	@cached_property
 	def new_people(self):
+		logger.debug("Finding new people this month")
 		ret = []
 		for person in self.people.all():
 			if person.first_month(self.year) == self.month:
 				ret.append(person)
 		return ret
+	@cached_property
 	def longest_journey(self):
+		logger.debug("Finding longest journey")
 		ret = None
 		dist = 0
 		for event in self.events.filter(type='journey'):
@@ -2216,12 +2239,16 @@ class Month(models.Model):
 				ret = event
 				dist = new_dist
 		return ret
+	@cached_property
 	def distance(self):
+		logger.debug("Calculating total distance")
 		ret = 0
 		for event in self.events.filter(type='journey').distinct():
 			ret = ret + event.distance()
 		return int(ret)
+	@cached_property
 	def reportable_events(self):
+		logger.debug("Finding reportable events")
 		exclude = []
 		dts = pytz.utc.localize(datetime.datetime(self.year, 1, 1, 0, 0, 0))
 		dte = pytz.utc.localize(datetime.datetime(self.year + 1, 1, 1, 0, 0, 0)) - datetime.timedelta(seconds=1)
@@ -2230,7 +2257,9 @@ class Month(models.Model):
 				if not(event.id in exclude):
 					exclude.append(event.id)
 		return self.events.exclude(type='life_event').exclude(cached_staticmap=None).exclude(description=None).exclude(description='').exclude(id__in=exclude).union(self.events.exclude(type='life_event').exclude(photo_collages=None).exclude(id__in=exclude))
+	@cached_property
 	def weight_graph(self):
+		logger.debug("Generating month weight graph")
 		dts = self.days.first().wake_time
 		if dts is None:
 			return []

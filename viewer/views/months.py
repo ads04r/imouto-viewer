@@ -17,7 +17,7 @@ def month(request, ds):
 	obj = create_or_get_month(m, y)
 
 	history = HistoricalEvent.objects.filter(date__month=m, date__year=y).order_by('date')
-	longest_journey = obj.longest_journey()
+	longest_journey = obj.longest_journey
 	if not(longest_journey is None):
 		generate_staticmap(longest_journey.pk)
 
