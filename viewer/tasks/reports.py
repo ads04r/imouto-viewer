@@ -22,7 +22,10 @@ def generate_staticmap(event_id):
 
 	:param event_id: The ID (primary key) of the Event for which to create a static map.
 	"""
-	event = Event.objects.get(pk=event_id)
+	try:
+		event = Event.objects.get(pk=event_id)
+	except:
+		return False # The event has been deleted since this task was scheduled.
 	if event.cached_staticmap:
 		return False # There's already a map.
 	if not(event.geo):

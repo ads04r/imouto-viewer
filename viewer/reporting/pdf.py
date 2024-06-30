@@ -218,7 +218,7 @@ def generate_month_story(month, styles):
 	row = []
 	max_people_per_row = 4
 	photo_size = 2
-	people = month.new_people()
+	people = month.new_people
 	for person in people:
 		if not(person.image or person.significant):
 			continue
@@ -238,7 +238,7 @@ def generate_month_story(month, styles):
 	story.append(PageBreakIfNotEmpty())
 
 	story.append(Spacer(cm, cm))
-	for workout in month.workouts():
+	for workout in month.workouts:
 		story.append(Table([
 			[Paragraph(workout[0] + " distance", style=styles['StatisticTitle'])], 
 			[Paragraph(str(workout[1]) + " miles", style=styles['StatisticValue'])], 
@@ -259,13 +259,13 @@ def generate_month_story(month, styles):
 		story.append(item)
 		story.append(Spacer(cm, cm))
 	lc_data = [[], []]
-	lc = month.location_categories()
+	lc = month.location_categories
 	for item in lc:
 		lc_data[0].append(str(item[0]))
 		lc_data[1].append(item[1])
 	if len(lc) > 0:
 		story.append(graph_to_flowable("Most visited places", lc_data, styles))
-	longest_journey = month.longest_journey()
+	longest_journey = month.longest_journey
 	if longest_journey:
 		tf = NamedTemporaryFile(delete=False)
 		im = longest_journey.staticmap()
@@ -303,12 +303,12 @@ def generate_month_story(month, styles):
 	if life_events.count() > 0:
 		story.append(NextPageTemplate('EventsPage'))
 		story.append(PageBreakIfNotEmpty())
-	for event in month.reportable_events().order_by('start_time'):
+	for event in month.reportable_events.order_by('start_time'):
 		if event.description:
 			story.append(event_to_flowable(event, styles))
 	story.append(NextPageTemplate('FullPage'))
 	story.append(PageBreakIfNotEmpty())
-	for event in month.reportable_events().order_by('start_time'):
+	for event in month.reportable_events.order_by('start_time'):
 		if event.photo_collages.count() >= 1:
 			story.append(Image(str(event.photo_collages.first().image.file), width=18*cm, height=25*cm))
 

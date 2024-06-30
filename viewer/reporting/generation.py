@@ -35,7 +35,7 @@ def generate_year_health(year):
 	if steps:
 		steps_per_day = int(float(steps) / days)
 
-	for workout in year.workouts():
+	for workout in year.workouts:
 		prop = year.add_property(key=workout[0] + ' distance', value=workout[1], category='health', icon=workout[2])
 		prop.description='miles'
 		prop.save(update_fields=['description'])

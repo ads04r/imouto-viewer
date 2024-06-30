@@ -1789,6 +1789,7 @@ class Year(models.Model):
 		ret.save()
 		return ret
 
+	@cached_property
 	def words(self):
 		text = ''
 		for event in self.life_events.all():
@@ -1821,7 +1822,7 @@ class Year(models.Model):
 		if self.cached_wordcloud:
 			im = Image.open(self.cached_wordcloud.path)
 			return im
-		text = self.words()
+		text = self.words
 		stopwords = set()
 		for word in set(STOPWORDS):
 			stopwords.add(word)
@@ -1833,6 +1834,7 @@ class Year(models.Model):
 		self.cached_wordcloud.save(report_wordcloud_upload_location, File(blob), save=False)
 		self.save(update_fields=['cached_wordcloud'])
 		return im
+	@cached_property
 	def workouts(self):
 		ret = []
 		home = Location.objects.get(pk=settings.USER_HOME_LOCATION)
@@ -1849,6 +1851,7 @@ class Year(models.Model):
 		for i in range(0, len(ret)):
 			ret[i][2] = int((ret[i][1] / max) * 100.0)
 		return ret
+	@cached_property
 	def location_categories(self):
 		categories = {}
 		for loc in Location.objects.filter(events__in=self.events.filter(type='loc_prox').exclude(location__pk=settings.USER_HOME_LOCATION)).annotate(time_spent=F('events__end_time')-F('events__start_time')).annotate(total_time=Sum('time_spent')).order_by('-total_time'):
@@ -1857,9 +1860,10 @@ class Year(models.Model):
 					categories[c.pk] = [c, 0]
 				categories[c.pk][1] = categories[c.pk][1] + int(loc.total_time.total_seconds())
 		return list(categories.values())
+	@cached_property
 	def location_categories_chart(self):
 		ret = [[], []]
-		for item in self.location_categories():
+		for item in self.location_categories:
 			ret[0].append(str(item[0]))
 			ret[1].append(item[1])
 		return (json.dumps(ret[0]), json.dumps(ret[1]))
@@ -2180,6 +2184,18 @@ class Month(models.Model):
 			dte = pytz.utc.localize(datetime.datetime(self.year + 1, 1, 1, 0, 0, 0) - datetime.timedelta(seconds=1))
 		return Event.objects.filter(end_time__gte=dts, start_time__lte=dte).exclude(type='life_event').order_by('start_time')
 	@cached_property
+	def events_count(self):
+		"""
+		A count of the month's events for when we don't want to pull all of them from the database
+		"""
+		logger.debug("Counting month events")
+		dts = pytz.utc.localize(datetime.datetime(self.year, self.month, 1, 0, 0, 0))
+		if self.month < 12:
+			dte = pytz.utc.localize(datetime.datetime(self.year, self.month + 1, 1, 0, 0, 0) - datetime.timedelta(seconds=1))
+		else:
+			dte = pytz.utc.localize(datetime.datetime(self.year + 1, 1, 1, 0, 0, 0) - datetime.timedelta(seconds=1))
+		return Event.objects.filter(end_time__gte=dts, start_time__lte=dte).count()
+	@cached_property
 	def locations(self):
 		"""
 		Every location visited during this month.
@@ -2238,6 +2254,7 @@ class Month(models.Model):
 					categories[c.pk] = [c, 0]
 				categories[c.pk][1] = categories[c.pk][1] + int(loc.total_time.total_seconds())
 		return list(categories.values())
+	@cached_property
 	def location_categories_chart(self):
 		logger.debug("Generating location category chart")
 		ret = [[], []]
@@ -2258,8 +2275,15 @@ class Month(models.Model):
 		logger.debug("Finding longest journey")
 		ret = None
 		dist = 0
-		for event in self.events.filter(type='journey'):
+		dts = pytz.utc.localize(datetime.datetime(self.year, self.month, 1, 0, 0, 0))
+		if self.month < 12:
+			dte = pytz.utc.localize(datetime.datetime(self.year, self.month + 1, 1, 0, 0, 0) - datetime.timedelta(seconds=1))
+		else:
+			dte = pytz.utc.localize(datetime.datetime(self.year + 1, 1, 1, 0, 0, 0) - datetime.timedelta(seconds=1))
+		for event in Event.objects.filter(end_time__gte=dts, start_time__lte=dte, type='journey'):
+			logger.debug("... checking " + str(event.pk) + ' / ' + str(event))
 			new_dist = event.distance()
+			logger.debug("    " + str(new_dist) + " miles")
 			if new_dist > dist:
 				ret = event
 				dist = new_dist

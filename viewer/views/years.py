@@ -16,9 +16,9 @@ def year(request, ds):
 	if len(ds) != 4:
 		raise Http404()
 	y = int(ds)
-	obj = create_or_get_year(y)
 
 	if request.method == 'POST':
+		obj = create_or_get_year(y)
 		data = {}
 		year = int(request.POST['createreportyear'])
 		title = request.POST['createreporttitle']
@@ -28,6 +28,9 @@ def year(request, ds):
 		obj.save(update_fields=['caption'])
 		generate_report_pdf(year)
 		return HttpResponseRedirect('../#year_' + str(year))
+
+	logger.info("Year " + ds + " requested")
+	obj = create_or_get_year(y)
 
 	context = {'type':'view', 'caption': str(obj), 'year': obj}
 	template = 'viewer/pages/year.html'

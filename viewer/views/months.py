@@ -14,6 +14,7 @@ def month(request, ds):
 		raise Http404()
 	y = int(ds[0:4])
 	m = int(ds[4:])
+	logger.info("Month " + ds + " requested")
 	obj = create_or_get_month(m, y)
 
 	history = HistoricalEvent.objects.filter(date__month=m, date__year=y).order_by('date')
