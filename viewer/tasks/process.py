@@ -29,10 +29,12 @@ def calculate_journey_distances(max=100):
 		return # If there's already an instance of this task running or queued, don't start another.
 	logger.info("Task calculate_journey_distances beginning")
 	i = 0
-	for event in Event.objects.filter(type='journey', cached_distance=0):
+	for event in Event.objects.filter(type='journey', cached_distance=0).order_by('-start_time'):
+		event.refresh()
 		distance = event.distance()
-		logger.debug("Event " + str(event.pk) + " distance is " + str(distance))
-		i = i + 1
+		if distance > 0:
+			logger.debug("Event " + str(event.pk) + " distance is " + str(distance))
+			i = i + 1
 		if i >= max:
 			break
 
