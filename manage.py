@@ -16,5 +16,5 @@ def main():
 if __name__ == '__main__':
 	try:
 		main()
-	except:
-		logger.exception("Uncaught exception: {0}".format(str(value)))
+	except Exception as e:
+		logger.exception(e)
