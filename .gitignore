@@ -1,6 +1,6 @@
 *.pyc
 __pycache__
-viewer/migrations
+viewer/migrations/__pycache__
 viewer/static/viewer/cycling.json
 viewer/static/viewer/script
 viewer/static/libraries
