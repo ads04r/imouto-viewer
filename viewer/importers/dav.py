@@ -201,7 +201,10 @@ def import_calendar_feed(url, username=None, password=None):
 
 		label = str(event.name)
 		description = str(event.description)
-		data = str(event.serialize())
+		try:
+			data = str(event.serialize())
+		except:
+			data = ''
 		location = str(event.location)
 		try:
 			loc = Location.objects.get(label__icontains=location)
@@ -217,7 +220,11 @@ def import_calendar_feed(url, username=None, password=None):
 		try:
 			item = CalendarAppointment.objects.get(eventid=id, calendar=feed)
 		except:
-			item = CalendarAppointment(eventid=id, calendar=feed)
+			try:
+				item = CalendarAppointment.objects.get(eventid=id) # In case the item moves from one calendar to another
+				item.calendar = feed
+			except:
+				item = CalendarAppointment(eventid=id, calendar=feed)
 			ret.append(item)
 
 		item.start_time = start_time
