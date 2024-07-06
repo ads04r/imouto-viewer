@@ -1,0 +1,13 @@
+{% load static %}
+
+                      <div class="text-center" style="margin-bottom: 1em;">
+                        <div class="btn-group">
+                            <a href="#{{ year.previous.slug }}" class="btn btn-default">Previous</a>
+{% if year.next %}
+                            <a href="#{{ year.next.slug }}" class="btn btn-default">Next</a>
+{% else %}
+                            <a href="#{{ year.next.slug }}" class="btn btn-default" disabled>Next</a>
+{% endif %}
+                        </div>
+                      </div>
+

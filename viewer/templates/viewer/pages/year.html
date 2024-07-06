@@ -23,6 +23,8 @@
                 <div class="box-body box-profile">
                     <h3 class="profile-username text-center">{{ year }}</h3>
 
+{% include 'viewer/cards/year_switcher.html' %}
+
 			<table class="table table-condensed">
 				<tr>
 {% for month in year.months %}

@@ -1739,6 +1739,15 @@ class Year(models.Model):
 		Every city visited in this year.
 		"""
 		return LocationCity.objects.filter(locations__events__in=self.events).exclude(locations__pk=settings.USER_HOME_LOCATION).distinct()
+	@cached_property
+	def tasks_completed(self):
+		"""
+		Every task listed as 'completed' during this year.
+		"""
+		logger.debug("Listing completed tasks")
+		dts = pytz.utc.localize(datetime.datetime(self.year, 1, 1, 0, 0, 0))
+		dte = pytz.utc.localize(datetime.datetime(self.year + 1, 1, 1, 0, 0, 0)) - datetime.timedelta(seconds=1)
+		return CalendarTask.objects.filter(time_completed__gte=dts, time_completed__lte=dte).order_by('time_completed')
 	def get_stat_categories(self):
 		ret = []
 		for item in list(self.properties.values('category').distinct()) + list(self.graphs.values('category').distinct()):
@@ -1834,6 +1843,20 @@ class Year(models.Model):
 		self.cached_wordcloud.save(report_wordcloud_upload_location, File(blob), save=False)
 		self.save(update_fields=['cached_wordcloud'])
 		return im
+	@cached_property
+	def steps(self):
+		"""
+		The number of steps taken during this particular year, according to the stored data.
+		"""
+		logger.debug("Counting year steps")
+		dts = pytz.utc.localize(datetime.datetime(self.year, 1, 1, 0, 0, 0))
+		dte = pytz.utc.localize(datetime.datetime(self.year + 1, 1, 1, 0, 0, 0)) - datetime.timedelta(seconds=1)
+		obj = DataReading.objects.filter(type='step-count').filter(start_time__gte=dts, end_time__lt=dte).aggregate(steps=Sum('value'))
+		try:
+			ret = int(obj['steps'])
+		except:
+			ret = 0
+		return ret
 	@cached_property
 	def workouts(self):
 		ret = []
@@ -1988,9 +2011,11 @@ class Month(models.Model):
 		The unique 'slug id' for this Month object, as would be displayed after the '#' in the URL bar.
 		"""
 		return("month_" + datetime.date(self.year, self.month, 1).strftime('%Y%m'))
-	"""The URI of this object for RDF serialization."""
 	@property
 	def uri(self):
+		"""
+		The URI of this object for RDF serialization.
+		"""
 		if hasattr(settings, 'USER_RDF_NAMESPACE'):
 			return settings.USER_RDF_NAMESPACE + 'month/' + str(self.year) + '/' + str(self.month).zfill(2)
 		if hasattr(settings, 'RDF_NAMESPACE'):
