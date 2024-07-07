@@ -3,7 +3,7 @@ from django.shortcuts import render, get_object_or_404
 from django.conf import settings
 from background_task.models import Task
 
-from viewer.models import Year, create_or_get_year
+from viewer.models import Year, YearProperty, create_or_get_year
 from viewer.tasks.reports import generate_report, generate_report_pdf
 
 import os, json
@@ -19,15 +19,32 @@ def year(request, ds):
 
 	if request.method == 'POST':
 		obj = create_or_get_year(y)
-		data = {}
-		year = int(request.POST['createreportyear'])
-		title = request.POST['createreporttitle']
-		if obj.year != year:
-			raise Http404
-		obj.caption = title
-		obj.save(update_fields=['caption'])
-		generate_report_pdf(year)
-		return HttpResponseRedirect('../#year_' + str(year))
+		if 'createreportyear' in request.POST:
+			year = int(request.POST['createreportyear'])
+			title = request.POST['createreporttitle']
+			if obj.year != year:
+				raise Http404
+			obj.caption = title
+			obj.save(update_fields=['caption'])
+			generate_report_pdf(year)
+			return HttpResponseRedirect('../#year_' + str(year))
+		if 'statname' in request.POST:
+			key = request.POST['statname']
+			value = int(request.POST['statvalue'])
+			category = request.POST['statcategoryid']
+			description = ''
+			if 'stattext' in request.POST:
+				description = request.POST['stattext']
+			try:
+				stat = YearProperty.objects.get(year=obj, key=key, category=category)
+			except:
+				stat = YearProperty(year=obj, key=key, category=category)
+			stat.value = value
+			if description != '':
+				stat.description = description
+			stat.save()
+			return HttpResponseRedirect('../#year_' + str(obj.year))
+		raise Http404()
 
 	logger.info("Year " + ds + " requested")
 	obj = create_or_get_year(y)

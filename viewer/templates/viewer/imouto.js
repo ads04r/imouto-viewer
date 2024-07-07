@@ -863,6 +863,16 @@ function yearScreen(id)
             var data = canvas.data('data');
             if(type == 'donut') { makeDonutChart(canvas[0].getContext('2d'), data[1], data[0]); }
         });
+        $("#addyearstatsubmit").on('click', function() { $("#addyearstatform").submit(); return false; });
+        $('.addyearstat').on('click', function() {
+          var category = $(this).data('category');
+          $("#statcategoryid").val(category);
+          $("#statname").val("");
+          $("#statvalue").val("");
+          $("#stattext").val("");
+          $("#addyearstat").modal('show');
+          return false;
+        });
         initialiseGraphics();
         $('#generateyearpdfsubmit').on('click', function() { $('#generateyearpdfform').submit(); return false; });
         createTimer(updateReportStatus, 1000);

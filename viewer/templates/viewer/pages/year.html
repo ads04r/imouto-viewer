@@ -43,7 +43,7 @@
                     </ul>
 
 <div class="chart">
-<canvas class="donut-chart" style="height: 160px" data-labels="{{ year.location_categories_chart.0|escape }}" data-data="{{ year.location_categories_chart.1|escape }}"></canvas>
+<canvas class="donut-chart" style="height: 320px" data-labels="{{ year.location_categories_chart.0|escape }}" data-data="{{ year.location_categories_chart.1|escape }}"></canvas>
 </div>
 
                 </div>
@@ -51,7 +51,7 @@
                 </div>
             </div>
 
-{% with counries=year.countries %}
+{% with countries=year.countries %}
 {% if countries %}
 
             <div class="box box-primary">
@@ -96,7 +96,7 @@
 
                     </div>
                     <div class="box-footer">
-                        <a class="btn btn-primary btn-xs" href="#event_{{ event.pk }}">Read more</a>
+                        <a class="btn btn-primary btn-xs pull-right" href="#event_{{ event.pk }}">Read more</a>
                     </div>
                 </div>
 
@@ -108,32 +108,51 @@
                     <div class="box-header with-border">
                         <h3 class="box-title">{{ year.year }} in {{ category }}</h3>
                     </div>
-                    <div class="box-body">
+                    <div class="box-body no-padding">
+
+{% with graphs=year.graphs.all %}
+{% if graphs %}
+
                         <div class="row">
 
-{% for graph in year.graphs.all %}
+{% for graph in graphs %}
 {% if graph.category == category %}
 
 <div class="col-xs-12 col-sm-6">
+<div style="padding: 1em !important;">
 <h4>{{ graph.key }}</h4>
 <canvas class="report-graph" data-type="{{ graph.type }}" data-data="{{ graph.data }}"/>
 </div>
-
-{% endif %}
-{% endfor %}
-
-<div class="col-xs-12 col-sm-12">
-<dl class="dl-horizontal">
-{% for property in year.properties.distinct %}
-{% if property.category == category %}
-	<dt>{{ property.key }}</dt>
-	<dd><nobr><strong>{{ property.value }}</strong>{% if property.description %}&nbsp;<small>&nbsp;({{ property.description }})</small>{% endif %}</nobr></dd>
-{% endif %}
-{% endfor %}
-</dl>
 </div>
 
+{% endif %}
+{% endfor %}
+
                         </div>
+
+{% endif %}
+{% endwith %}
+{% with properties=year.properties.distinct %}
+{% if properties %}
+
+<table class="table table-condensed">
+{% for property in properties %}
+{% if property.category == category %}
+	<tr>
+		<td width="100%">{{ property.key }}</td>
+		<td><nobr><strong>{{ property.value }}</strong>{% if property.description %}&nbsp;<small>&nbsp;({{ property.description }})</small>{% endif %}</nobr></td>
+	</tr>
+{% endif %}
+{% endfor %}
+</table>
+
+{% endif %}
+{% endwith %}
+
+
+                    </div>
+                    <div class="box-footer">
+                        <a class="btn btn-success btn-xs pull-right addyearstat" data-category="{{ category }}" href="#">Add statistic</a>
                     </div>
                 </div>
 
@@ -145,4 +164,5 @@
 
 </section>
 
+{% include 'viewer/modal/addyearstat.html' %}
 {% include 'viewer/modal/createyearreport.html' %}

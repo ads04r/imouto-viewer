@@ -1,0 +1,31 @@
+<div class="modal fade nav-tabs-custom" id="addyearstat" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+		<form id="addyearstatform" action="years/{{ year.year }}.html" method="POST">
+
+                              <table class="table table-hover">
+                                <tr class="form-row">
+                                  <td>Stat description:</td><td><input class="form-control" type="text" id="statname" placeholder="Number of pies eaten" name="statname"/></td>
+                                </tr>
+                                <tr class="form-row">
+                                  <td>Value:</td><td><input class="form-control" type="text" id="statvalue" name="statvalue"/></td>
+                                </tr>
+                                <tr class="form-row">
+                                  <td>Extra text (eg units):</td><td><input class="form-control" type="text" id="stattext" name="stattext"/></td>
+                                </tr>
+
+                              </table>{% csrf_token %}<input type="hidden" id="statcategoryid" name="statcategoryid"/>
+
+		</form>
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" id="addyearstatsubmit">Create</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
