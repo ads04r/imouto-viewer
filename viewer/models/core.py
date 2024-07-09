@@ -1282,6 +1282,17 @@ class Event(models.Model):
 							item = [pt[1], pt[0]]
 							ret.append(item)
 		return(ret)
+	def simplified_coordinates(self):
+		data = self.coordinates()
+		l = len(data)
+		if l <= 100:
+			return data
+		ratio = float(l) / 100.0
+		ret = []
+		for i in range(0, 100):
+			ix = int(float(i) * ratio)
+			ret.append(data[ix])
+		return ret
 
 	def distance(self):
 		if self.cached_distance:

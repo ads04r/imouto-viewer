@@ -2,6 +2,7 @@ import datetime, pytz, json, re, sys, os, requests
 from django.core.cache import cache
 from django.conf import settings
 from geopy import distance
+from frechetdist import frdist
 
 import logging
 logger = logging.getLogger(__name__)
@@ -215,9 +216,45 @@ def get_location_address_fragment(lat, lon, fragment='country'):
 			return f['place_name']
 	return ''
 
+def stretch_array(source_array, target_length):
+	ret = []
+	source_length = len(source_array)
+	extend_by = target_length - source_length
+	if extend_by <= 0:
+		return source_array
+	c = int(source_length / (extend_by + 1))
+	j = 0
+	for i in range(0, source_length):
+		ret.append(source_array[i])
+		j = j + 1
+		if j > c:
+			j = 0
+			ret.append(source_array[i])
+	return ret
+
 def journey_similarity(event1, event2):
-	# Disabled while we search for a good replacement for cvxopt
-	return 100.0
+	"""
+	Uses the frechedist library to compute the similarity between the routes of two journey events.
+
+	:param event1: The first event to be compared.
+	:param event2: The second event to be compared.
+	:return: A value between 0 (routes are identical) and 100 (routes couldn't be more different)
+	:rtype: float
+
+	"""
+	ec1 = event1.simplified_coordinates()
+	ec2 = event2.simplified_coordinates()
+	l1 = len(ec1)
+	l2 = len(ec2)
+	if l1 == 0:
+		return 100.0
+	if l2 == 0:
+		return 100.0
+	if l1 != l2:
+		return 100.0
+	if l1 != 100:
+		return 100.0
+	return frdist(ec1, ec2)
 
 def convert_to_degrees(value):
 	"""

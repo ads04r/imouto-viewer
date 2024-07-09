@@ -25,6 +25,7 @@ ExifRead==2.1.2
 extruct==0.17.0
 fitparse==1.2.0
 fonttools==4.53.1
+frechetdist==0.6
 geographiclib==1.52
 geopy==1.20.0
 holidays==0.27.1
@@ -49,6 +50,7 @@ packaging==24.1
 photocollage==1.4.4
 piexif==1.1.3
 pillow==10.3.0
+PyMySQL==1.1.1
 pyparsing==3.1.2
 pyRdfa3==3.6.2
 python-dateutil==2.8.2
