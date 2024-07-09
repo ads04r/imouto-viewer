@@ -1543,9 +1543,13 @@ class Event(models.Model):
 				for tag in e.tags.all():
 					self.tags.add(tag)
 
-	@property
+	@cached_property
 	def similar(self):
-		return list(self.similar_to.filter(diff_value__lt=0.1).order_by('diff_value').values('event1', 'event1__caption', 'event1__start_time', 'diff_value'))
+		filter = list(self.similar_to.filter(diff_value__lt=0.05).order_by('diff_value').values('event1', 'event1__caption', 'event1__start_time', 'diff_value'))[0:50]
+		if len(filter) == 0:
+			return filter
+		threshold = float(filter[-1]['diff_value'])
+		return list(self.similar_to.filter(diff_value__lte=threshold).order_by('-event1__start_time').values('event1', 'event1__caption', 'event1__start_time', 'diff_value'))[0:10]
 	def __str__(self):
 		if self.caption == '':
 			return "Event " + str(self.pk)
@@ -1688,7 +1692,7 @@ class Year(models.Model):
 		"""
 		dt = datetime.datetime.now().date()
 		return (dt.year == self.year)
-	@property
+	@cached_property
 	def next(self):
 		"""
 		Returns the Year object representing the year after the one represented by this one.
@@ -1696,7 +1700,7 @@ class Year(models.Model):
 		if self.this_year:
 			return None
 		return create_or_get_year(year=self.year + 1)
-	@property
+	@cached_property
 	def previous(self):
 		"""
 		Returns the Year object representing the year before the one represented by this one.
