@@ -1,5 +1,4 @@
 import datetime, pytz, json, re, sys, os, requests
-import Fred as fred
 from django.core.cache import cache
 from django.conf import settings
 from geopy import distance
@@ -217,42 +216,8 @@ def get_location_address_fragment(lat, lon, fragment='country'):
 	return ''
 
 def journey_similarity(event1, event2):
-	"""
-	Uses the Fred library to compute the similarity between the routes of two journey events.
-
-	:param event1: The first event to be compared.
-	:param event2: The second event to be compared.
-	:return: A value between 0 (routes are identical) and 100 (routes couldn't be more different)
-	:rtype: float
-
-	"""
-	ec1 = event1.coordinates()
-	ec2 = event2.coordinates()
-	if len(ec1) == 0:
-		return 100.0
-	if len(ec2) == 0:
-		return 100.0
-	d1 = event1.distance()
-	d2 = event2.distance()
-	ddiff = abs(d1 - d2)
-	if ddiff > 5:
-		return 100.0
-	p1 = (ec1[0][0], ec1[0][1])
-	p2 = (ec2[0][0], ec2[0][1])
-	p3 = (ec1[-1][0], ec1[-1][1])
-	p4 = (ec2[-1][0], ec2[-1][1])
-	start_dist = distance.distance(p1, p2).miles
-	end_dist = distance.distance(p3, p4).miles
-	if start_dist > 1.5:
-		return 100.0
-	if end_dist > 1.5:
-		return 100.0
-
-	c1 = fred.Curve(ec1)
-	c2 = fred.Curve(ec2)
-	diff = ((fred.continuous_frechet(c1, c2).value) * 100)
-
-	return diff
+	# Disabled while we search for a good replacement for cvxopt
+	return 100.0
 
 def convert_to_degrees(value):
 	"""

@@ -3,7 +3,6 @@ from geopy import distance
 from django.conf import settings
 from dateutil import parser
 import datetime, pytz, json, re, sys, os, requests
-import Fred as fred
 
 import logging
 logger = logging.getLogger(__name__)
