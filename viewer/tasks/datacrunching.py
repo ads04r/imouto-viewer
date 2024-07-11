@@ -1,10 +1,44 @@
 from background_task import background
 
-from viewer.models import Event, EventSimilarity
+from viewer.models import Event, EventSimilarity, Photo
 from viewer.functions.geo import journey_similarity
+from django.conf import settings
 
-import logging
+import logging, cv2
 logger = logging.getLogger(__name__)
+
+@background(schedule=0, queue='datacrunching')
+def count_photo_faces(photo_id):
+
+	if not hasattr(settings, "FACE_DETECTOR"):
+		return # If there is no face detector configured, this task cannot function.
+	photo = Photo.objects.get(id=photo_id)
+	face_cascade = cv2.CascadeClassifier(settings.FACE_DETECTOR)
+	img = cv2.imread(photo.file.path)
+	grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+	faces = face_cascade.detectMultiScale(grey, 1.3, 5)
+	face_count = len(faces)
+	if photo.face_count == face_count:
+		return
+	photo.face_count = face_count
+	photo.save(update_fields=['face_count'])
+
+@background(schedule=0, queue='datacrunching')
+def count_event_faces(event_id):
+
+	if not hasattr(settings, "FACE_DETECTOR"):
+		return # If there is no face detector configured, this task cannot function.
+	event = Event.objects.get(id=event_id)
+	face_cascade = cv2.CascadeClassifier(settings.FACE_DETECTOR)
+	for photo in event.photos():
+		img = cv2.imread(photo.file.path)
+		grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+		faces = face_cascade.detectMultiScale(grey, 1.3, 5)
+		face_count = len(faces)
+		if photo.face_count == face_count:
+			continue
+		photo.face_count = face_count
+		photo.save(update_fields=['face_count'])
 
 @background(schedule=0, queue='datacrunching')
 def regenerate_similar_events(event_id):
