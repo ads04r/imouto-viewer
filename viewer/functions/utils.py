@@ -243,7 +243,10 @@ def generate_dashboard():
 	total_steps = 0
 	for i in range(0, 7):
 		dtbase = last_record - datetime.timedelta(days=(7 - i))
-		dt = dtbase.tzinfo.localize(datetime.datetime(dtbase.year, dtbase.month, dtbase.day, 0, 0, 0))
+		try:
+			dt = dtbase.tzinfo.localize(datetime.datetime(dtbase.year, dtbase.month, dtbase.day, 0, 0, 0))
+		except:
+			dt = dtbase
 		obj = DataReading.objects.filter(type='step-count').filter(start_time__gte=dt, end_time__lt=(dt + datetime.timedelta(days=1))).aggregate(Sum('value'))
 		try:
 			steps = int(obj['value__sum'])
@@ -298,7 +301,10 @@ def generate_dashboard():
 	sleepdata = []
 	for i in range(0, 7):
 		dtbase = last_record - datetime.timedelta(days=(7 - i))
-		dt = dtbase.tzinfo.localize(datetime.datetime(dtbase.year, dtbase.month, dtbase.day, 16, 0, 0))
+		try:
+			dt = dtbase.tzinfo.localize(datetime.datetime(dtbase.year, dtbase.month, dtbase.day, 16, 0, 0))
+		except:
+			dt = dtbase
 		total_sleep = 0
 		deep_sleep = 0
 		obj = DataReading.objects.filter(type='sleep').filter(value=1).filter(start_time__gte=(dt - datetime.timedelta(days=1))).filter(end_time__lt=dt)
