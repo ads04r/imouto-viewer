@@ -109,7 +109,7 @@ def event(request, eid):
 	count_event_faces(eid)
 
 	form = EventForm(instance=data)
-	context = {'type':'event', 'data':data, 'form':form, 'people':Person.objects.all(), 'categories':EventWorkoutCategory.objects.all()}
+	context = {'type':'event', 'data':data, 'form':form, 'people':Person.objects.order_by('-significant', 'given_name', 'family_name'), 'categories':EventWorkoutCategory.objects.all()}
 	music = cache.get(cache_key + '_music')
 	if music is None:
 		music = get_moonshine_tracks(data.start_time, data.end_time)
