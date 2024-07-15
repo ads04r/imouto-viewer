@@ -3,13 +3,15 @@
         <div class="modal-content">
             <div class="modal-body">
 
-                <form id="person-add" action="people.html" method="POST" enctype="multipart/form-data">{% csrf_token %}
+                <form id="person-add" action="{% if form.instance.pk %}people/{{ form.instance.uid }}.html{% else %}people.html{% endif %}" method="POST" enctype="multipart/form-data">{% csrf_token %}
 
                     <div role="tabpanel">
                         <ul class="nav nav-tabs">
                             <li class="active"><a href="#basic" data-toggle="tab">Basic</a></li>
+{% if not form.instance.pk %}
                             <li><a href="#advanced" data-toggle="tab">Detail</a></li>
                             <li><a href="#link" data-toggle="tab">Misc</a></li>
+{% endif %}
                         </ul>
                     </div>
                     <div class="tab-content">
@@ -27,28 +29,29 @@
                               </table>
                         
                         </div>
+{% if not form.instance.pk %}
                         <div class="tab-pane" id="advanced">
 
                               <table class="table table-hover">
                                 <tr class="form-row">
                                   <td></td>
-                                  <td>Birthday:</td><td><div class="input-group"><div class="input-group-addon"><i class="fa fa-calendar"></i></div><input id="id_birthday" class="form-control" type="text" name="birthday" placeholder="YYYY-MM-DD (use 0000 if year unknown)"/></div></td>
+                                  <td><label for="id_birthday">Birthday:</label></td><td><div class="input-group"><div class="input-group-addon"><i class="fa fa-calendar"></i></div><input id="id_birthday" class="form-control" type="text" name="birthday" placeholder="YYYY-MM-DD (use 0000 if year unknown)"/></div></td>
                                 </tr>
                                 <tr class="form-row">
                                   <td></td>
-                                  <td>Home location:</td><td><select id="id_home" class="form-control" name="home"><option selected value="">---------</option>{% for place in places %}<option value="{{ place.uid }}">{{ place.label }}</option>{% endfor %}</select></div></td>
+                                  <td><label for="id_home">Home location:</label></td><td><select id="id_home" class="form-control" name="home"><option selected value="">---------</option>{% for place in places %}<option value="{{ place.uid }}">{{ place.label }}</option>{% endfor %}</select></div></td>
                                 </tr>
                                 <tr class="form-row">
                                   <td></td>
-                                  <td>Home phone:</td><td><div class="input-group"><div class="input-group-addon"><i class="fa fa-phone"></i></div><input id="id_phone_home" class="form-control" type="text" name="homephone"/></div></td>
+                                  <td><label for="id_phone_home">Home phone:</label></td><td><div class="input-group"><div class="input-group-addon"><i class="fa fa-phone"></i></div><input id="id_phone_home" class="form-control" type="text" name="homephone"/></div></td>
                                 </tr>
                                 <tr class="form-row">
                                   <td></td>
-                                  <td>Work phone:</td><td><div class="input-group"><div class="input-group-addon"><i class="fa fa-phone"></i></div><input id="id_phone_work" class="form-control" type="text" name="workphone"/></div></td>
+                                  <td><label for="id_phone_work">Work phone:</label></td><td><div class="input-group"><div class="input-group-addon"><i class="fa fa-phone"></i></div><input id="id_phone_work" class="form-control" type="text" name="workphone"/></div></td>
                                 </tr>
                                 <tr class="form-row">
                                   <td></td>
-                                  <td>Mobile phone:</td><td><div class="input-group"><div class="input-group-addon"><i class="fa fa-phone"></i></div><input id="id_phone_mobile" class="form-control" type="text" name="mobilephone"/></div></td>
+                                  <td><label for="id_phone_mobile">Mobile phone:</label></td><td><div class="input-group"><div class="input-group-addon"><i class="fa fa-phone"></i></div><input id="id_phone_mobile" class="form-control" type="text" name="mobilephone"/></div></td>
                                 </tr>
                               </table>
 
@@ -58,7 +61,7 @@
                               <table class="table table-hover">
                                 <tr class="form-row">
                                   <td></td>
-                                  <td>Homepage:</td><td><input id="id_homepage" class="form-control" type="url" name="homepage" maxlength="200"/></td>
+                                  <td><label for="id_homepage">Homepage:</label></td><td><input id="id_homepage" class="form-control" type="url" name="homepage" maxlength="200"/></td>
                                 </tr>
 {% for field in form %}
 {% if forloop.counter == 7 %}
@@ -71,6 +74,7 @@
                               </table>
 
                         </div>
+{% endif %}
                     </div>
 
                 </form>

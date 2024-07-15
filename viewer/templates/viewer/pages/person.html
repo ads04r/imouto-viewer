@@ -24,6 +24,7 @@
                         <li class="list-group-item"><b>Places met</b> <span class="pull-right">{{ data.get_stats.places }}</span></li>
                         <li class="list-group-item"><b>Photos</b> <span class="pull-right">{{ data.get_stats.photos }}</span></li>
                     </ul>
+                    <span class="pull-right"><a class="btn btn-primary btn-xs" data-toggle="modal" data-target="#admin_people_add" aria-hidden="true">Edit Details</a></span>
                 </div>
             </div>
 
@@ -179,3 +180,4 @@
 </section>
 
 {% include 'viewer/modal/imageeditor.html' %}
+{% include 'viewer/modal/personeditor.html' %}

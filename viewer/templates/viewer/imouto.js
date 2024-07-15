@@ -1216,6 +1216,11 @@ function personScreen(id)
             errorPage(xhr);
             return false;
         }
+        $(".save-form-button").on('click', function()
+        {
+            $("#person-add").submit();
+            return true;
+        });
         activateImageEditor();
     });
 }

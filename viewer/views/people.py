@@ -82,16 +82,34 @@ def people(request):
 	ret = render(request, 'viewer/pages/people.html', context)
 	return ret
 
-
 def person(request, uid):
+
 	key = 'person_' + str(uid) + '_' + datetime.date.today().strftime("%Y%m%d")
+	if request.method == 'POST':
+		data = get_object_or_404(Person, uid=uid)
+		cache.delete('dashboard')
+		cache.delete(key)
+		form = PersonForm(request.POST, request.FILES, instance=data)
+
+		if form.is_valid():
+			post = form.save(commit=False)
+			id = form.cleaned_data['uid']
+			if form.cleaned_data.get('uploaded_image'):
+				post.image = request.FILES['uploaded_image']
+			post.save()
+			return HttpResponseRedirect('../#person_' + str(id))
+		else:
+			raise Http404(form.errors)
+
 	ret = cache.get(key)
 	if ret is None:
 		data = get_object_or_404(Person, uid=uid)
-		context = {'type':'person', 'data':data, 'properties':explode_properties(data)}
+		form = PersonForm(instance=data)
+		context = {'type':'person', 'data':data, 'form':form, 'properties':explode_properties(data)}
 		ret = render(request, 'viewer/pages/person.html', context)
 		cache.set(key, ret, timeout=86400)
 	return ret
+
 
 def person_photo(request, uid):
 	data = get_object_or_404(Person, uid=uid)

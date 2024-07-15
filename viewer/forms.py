@@ -30,6 +30,11 @@ class LocationForm(ModelForm):
 		}
 
 class PersonForm(ModelForm):
+	def __init__(self, *args, **kwargs):
+		super(PersonForm, self).__init__(*args, **kwargs)
+		instance = getattr(self, 'instance', None)
+		if instance and instance.pk:
+			self.fields['uid'].disabled = True
 	class Meta:
 		model = Person
 		fields = ['uid', 'given_name', 'family_name', 'nickname', 'image', 'significant', 'wikipedia']
