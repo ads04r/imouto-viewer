@@ -33,6 +33,9 @@
 {% for tag in data.tags.all %}<a href="#tag_{{ tag.id|safe }}"><span style="background-color: {{ tag.colour }};" class="badge">{{ tag.id }}</span></a> {% endfor %}
 {% endif %}
                     </div>
+                    <div class="box-footer">
+                        <span class="pull-right"><a class="btn btn-primary btn-xs" data-toggle="modal" data-target="#admin_places_add" aria-hidden="true">Edit Place</a></span>
+                    </div>
                 </div>
 
                 <div class="box box-primary">
@@ -64,7 +67,7 @@
 {% for sc in data.schema_classes %}
                           <li class="list-group-item">
 				<b>{{ sc.label }}</b>
-				{% if sc.comment %}<br/><small class="muted">{{ sc.comment }}</small>{% endif %}
+				{% if sc.comment %}<br/><small class="muted">{{ sc.comment|safe }}</small>{% endif %}
                           </li>
 {% endfor %}
                         </table>
@@ -144,3 +147,4 @@
     </div>
 
 </section>
+{% include 'viewer/modal/placeeditor.html' %}

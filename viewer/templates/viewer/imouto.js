@@ -1257,6 +1257,11 @@ function placeScreen(id)
         if(status == 'error') { errorPage(xhr); return false; }
         makeMap();
         initialiseGraphics();
+        $(".save-form-button").on('click', function()
+        {
+            $("#place-add").submit();
+            return true;
+        });
     });
 }
 

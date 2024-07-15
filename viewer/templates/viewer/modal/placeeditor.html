@@ -3,12 +3,14 @@
         <div class="modal-content">
             <div class="modal-body">
 
-                <form id="place-add" action="places.html" method="POST" enctype="multipart/form-data">{% csrf_token %}
+                <form id="place-add" action="{% if form.instance.pk %}places/{{ form.instance.uid }}.html{% else %}places.html{% endif %}" method="POST" enctype="multipart/form-data">{% csrf_token %}
 
                     <div role="tabpanel">
                         <ul class="nav nav-tabs">
                             <li class="active"><a href="#label" data-toggle="tab">Label</a></li>
+{% if not form.instance.pk %}
                             <li><a href="#loc" data-toggle="tab">Location</a></li>
+{% endif %}
                             <li><a href="#link" data-toggle="tab">Links</a></li>
                         </ul>
                     </div>
@@ -20,16 +22,11 @@
 {% if forloop.counter < 6 %}
                                 <tr class="form-row">
                                   <td>{{ field.errors }}</td>
-                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                  <td>{{ field.label_tag }}</td>
+                                  <td>{{ field }}</td>
                                 </tr>
 {% endif %}
 {% endfor %}
-                                <tr class="form-row">
-                                  <td></td>
-                                  <td><label for="id_workout_type">Categories:</label></td>
-                                  <td><input type="text" id="id_location_categories" class="form-control" name="location_categories" /></td>
-                                </tr>
-
                               </table>
                         
                         </div>

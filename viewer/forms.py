@@ -5,6 +5,11 @@ from colorfield.fields import ColorWidget
 import datetime, pytz
 
 class LocationForm(ModelForm):
+	def __init__(self, *args, **kwargs):
+		super(LocationForm, self).__init__(*args, **kwargs)
+		instance = getattr(self, 'instance', None)
+		if instance and instance.pk:
+			self.fields['uid'].disabled = True
 	class Meta:
 		model = Location
 		fields = ['uid', 'label', 'full_label', 'address', 'phone', 'description', 'lat', 'lon', 'url', 'wikipedia', 'image', 'creation_time', 'destruction_time', 'parent']
