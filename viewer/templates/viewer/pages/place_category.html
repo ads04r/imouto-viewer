@@ -1,0 +1,57 @@
+{% load static %}
+
+<section class="content-header">
+    <h1>
+        {{ data.category }}
+        <small>Place Category</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="#places">Places</a></li>
+        <li><a href="#place_categories">Categories</a></li>
+        <li>{{ data.label }}</li>
+    </ol>
+</section>
+
+<section class="content">
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-12 col-sm-6 col-md-4">
+
+                <div class="box box-primary" id="day_event_{{ event.pk }}">
+                    <div class="box-body box-profile">
+
+                        <h3 class="profile-username text-center">{{ data.caption }}</h3>
+                        <p class="text-muted text-center">Place Category</p>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xs-12 col-sm-6 col-md-8">
+                <div class="box box-primary" id="day_event_{{ event.pk }}">
+                    <div class="box-body">
+
+                        <p>
+                            <ul class="products-list product-list-in-box">
+
+{% for place in data.locations.all %}
+
+	{% if place.exists %}
+        {% include 'viewer/list-items/location.html' %}
+	{% endif %}
+
+{% endfor %}
+
+                            </ul>
+                        </p>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</section>
+

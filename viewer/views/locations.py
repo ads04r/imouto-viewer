@@ -5,7 +5,7 @@ from django.conf import settings
 from django.db.models import F, Count
 import datetime, pytz, dateutil.parser, json, requests, random
 
-from viewer.models import Location, LocationCountry, LocationCity
+from viewer.models import Location, LocationCountry, LocationCity, LocationCategory
 from viewer.forms import LocationForm
 from viewer.functions.geo import get_location_address_fragment, get_location_country_code, get_location_wikidata_id
 from viewer.functions.rdf import wikidata_to_wikipedia
@@ -91,6 +91,12 @@ def place(request, uid):
 		context = {'type':'place', 'form': form, 'data':data}
 		ret = render(request, 'viewer/pages/place.html', context)
 		cache.set(key, ret, timeout=86400)
+	return ret
+
+def place_category(request, uid):
+	data = get_object_or_404(LocationCategory, pk=uid)
+	context = {'type':'place_category', 'data':data}
+	ret = render(request, 'viewer/pages/place_category.html', context)
 	return ret
 
 def place_photo(request, uid):
