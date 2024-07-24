@@ -23,9 +23,37 @@
 
                         <h3 class="profile-username text-center">{{ data.caption }}</h3>
                         <p class="text-muted text-center">Place Category</p>
+			{% if data.description %}<p>{{ data.description }}</p>{% endif %}
 
                     </div>
+                    <div class="box-footer">
+                        <span class="pull-right"><a class="btn btn-primary btn-xs" data-toggle="modal" data-target="#admin_placecats_add" aria-hidden="true">Edit Category</a></span>
+                    </div>
                 </div>
+
+{% if data.schema_map %}
+
+                <div class="box box-primary">
+                    <div class="box-header with-border"><h3 class="box-title">Schema.org</h3></div>
+                    <div class="box-body no-padding">
+                        <table class="table table-inline">
+                          <li class="list-group-item">
+                                <b><a href="{{ data.schema_map.uri }}">{{ data.schema_map.label }}</a></b>
+                                {% if data.schema_map.comment %}<br/><small class="muted">{{ data.schema_map.comment|safe }}</small>{% endif %}
+                          </li>
+{% for sc in data.schema_map.ancestors %}
+                          <li class="list-group-item">
+                                <b><a href="{{ sc.uri }}">{{ sc.label }}</a></b>
+				<span class="pull-right"><small class="text-muted">Broader category</small></span>
+                          </li>
+{% endfor %}
+                        </table>
+                    </div>
+                </div>
+
+{% endif %}
+
+
             </div>
 
             <div class="col-xs-12 col-sm-6 col-md-8">
@@ -55,3 +83,4 @@
 
 </section>
 
+{% include 'viewer/modal/placecateditor.html' %}

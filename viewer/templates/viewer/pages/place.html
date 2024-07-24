@@ -31,7 +31,7 @@
                         </ul>
 {% if data.description %}<p class="text-muted">{{ data.description }}</p>{% endif %}
 {% if data.categories.count > 0 %}<p>Categories: 
-{% for category in data.categories.all %}<a href="#placecategory_{{ category.pk }}">{{ category }}</a>{% endfor %}
+{% for category in data.categories.all %}<a href="#placecategory_{{ category.pk }}">{{ category }}</a> {% endfor %}
 </p>{% endif %}
 {% if data.tags.count > 0 %}<p>
 {% for tag in data.tags.all %}<a href="#tag_{{ tag.id|safe }}"><span style="background-color: {{ tag.colour }};" class="badge">{{ tag.id }}</span></a> {% endfor %}

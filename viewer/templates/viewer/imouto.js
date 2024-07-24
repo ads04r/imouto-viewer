@@ -1274,6 +1274,11 @@ function placeCategoryScreen(id)
 {
     $(".content-wrapper").load("./places/categories/" + id + ".html", function(response, status, xhr){
         if(status == 'error') { errorPage(xhr); return false; }
+        $(".save-form-button").on('click', function()
+        {
+            $("#placecat-add").submit();
+            return true;
+        });
     });
 }
 

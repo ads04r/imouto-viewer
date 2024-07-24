@@ -386,6 +386,11 @@ class Location(models.Model):
 		if self.label.lower().startswith('the '):
 			return self.label[4:] + ', The'
 		return self.label
+	def categories_as_string(self):
+		ret = []
+		for category in self.categories.all():
+			ret.append(str(category))
+		return ', '.join(ret)
 	def to_dict(self):
 		"""
 		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.

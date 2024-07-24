@@ -6,7 +6,7 @@ from django.db.models import F, Count
 import datetime, pytz, dateutil.parser, json, requests, random
 
 from viewer.models import Location, LocationCountry, LocationCity, LocationCategory
-from viewer.forms import LocationForm
+from viewer.forms import LocationForm, LocationCategoryForm
 from viewer.functions.geo import get_location_address_fragment, get_location_country_code, get_location_wikidata_id
 from viewer.functions.rdf import wikidata_to_wikipedia
 from viewer.functions.locations import home_location
@@ -33,6 +33,9 @@ def places(request):
 		if form.is_valid():
 			post = form.save(commit=False)
 			id = form.cleaned_data['uid']
+			categories = []
+			if 'categories' in request.POST:
+				categories = request.POST['categories'].split(',')
 			if form.cleaned_data.get('uploaded_image'):
 				post.image = request.FILES['uploaded_image']
 			country = None
@@ -56,6 +59,17 @@ def places(request):
 			if not(country is None):
 				post.country = country
 			post.save()
+			post.categories.clear()
+			for category_label_dirty in categories:
+				category_label = category_label_dirty.strip().title()
+				if len(category_label) == 0:
+					continue
+				try:
+					category = LocationCategory.objects.get(caption=category_label)
+				except:
+					category = LocationCategory(caption=category_label)
+					category.save()
+				post.categories.add(category)
 
 			fill_cities()
 			return HttpResponseRedirect('./#place_' + str(id))
@@ -76,9 +90,23 @@ def place(request, uid):
 		if form.is_valid():
 			post = form.save(commit=False)
 			id = form.cleaned_data['uid']
+			categories = []
+			if 'categories' in request.POST:
+				categories = request.POST['categories'].split(',')
 			if form.cleaned_data.get('uploaded_image'):
 				post.image = request.FILES['uploaded_image']
 			post.save()
+			post.categories.clear()
+			for category_label_dirty in categories:
+				category_label = category_label_dirty.strip().title()
+				if len(category_label) == 0:
+					continue
+				try:
+					category = LocationCategory.objects.get(caption=category_label)
+				except:
+					category = LocationCategory(caption=category_label)
+					category.save()
+				post.categories.add(category)
 
 			fill_cities()
 			return HttpResponseRedirect('../#place_' + str(id))
@@ -95,7 +123,17 @@ def place(request, uid):
 
 def place_category(request, uid):
 	data = get_object_or_404(LocationCategory, pk=uid)
-	context = {'type':'place_category', 'data':data}
+	if request.method == 'POST':
+		form = LocationCategoryForm(request.POST, request.FILES, instance=data)
+		if form.is_valid():
+			post = form.save(commit=False)
+			post.save()
+
+			return HttpResponseRedirect('../../#placecategory_' + str(uid))
+		else:
+			raise Http404(form.errors)
+	form = LocationCategoryForm(instance=data)
+	context = {'type': 'place_category', 'data': data, 'form': form}
 	ret = render(request, 'viewer/pages/place_category.html', context)
 	return ret
 
