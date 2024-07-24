@@ -5,7 +5,17 @@ class Command(BaseCommand):
 	"""
 	Command for importing the latest schema.org vocabulary and matching the classes within to Imouto location categories.
 	"""
+	def add_arguments(self, parser):
+
+		parser.add_argument("-u", "--url", action="store", dest="url", default="", help="")
+		parser.add_argument("-l", "--lang", action="store", dest="lang", default="en", help="")
+
 	def handle(self, *args, **kwargs):
 
-		import_schema_org()
+		url = kwargs['url']
+		lang = kwargs['lang']
+		if url == '':
+			import_schema_org(lang=lang)
+		else:
+			import_schema_org(url=url, lang=lang)
 		match_categories()
