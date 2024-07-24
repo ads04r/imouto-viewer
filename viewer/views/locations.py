@@ -27,6 +27,7 @@ def places(request):
 	else:
 		data['overseas'] = Location.objects.exclude(country=None).exclude(country=home.country).order_by('label')
 	data['all'] = Location.objects.annotate(num_events=Count('events')).order_by('label')
+	data['categories'] = LocationCategory.objects.order_by('caption')
 	if request.method == 'POST':
 		cache.delete('dashboard')
 		form = LocationForm(request.POST, request.FILES)
