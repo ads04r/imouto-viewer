@@ -11,7 +11,7 @@
                                         </span>
                                         <span class="product-description">
 {% if place.categories.count > 0 %}
-                                            {% for category in place.categories.all %}{{ category }}{% endfor %}
+                                            {{ place.categories_as_string }}
 {% else %}
                                             Uncategorised
 {% endif %}

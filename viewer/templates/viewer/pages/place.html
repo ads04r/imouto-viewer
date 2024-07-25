@@ -29,9 +29,13 @@
 {% if data.city %}<li class="list-group-item"><b>City</b> <span class="pull-right"><a href="#{{ data.city.slug }}">{{ data.city }}</a></span></li>{% endif %}
 {% if data.country %}<li class="list-group-item"><b>Country</b> <span class="pull-right"><a href="#{{ data.country.slug }}">{{ data.country }}</a></span></li>{% endif %}
                         </ul>
-{% if data.tags.count > 0 %}
+{% if data.description %}<p class="text-muted">{{ data.description }}</p>{% endif %}
+{% if data.categories.count > 0 %}<p>Categories: 
+{% for category in data.categories.all %}<a href="#placecategory_{{ category.pk }}">{{ category }}</a> {% endfor %}
+</p>{% endif %}
+{% if data.tags.count > 0 %}<p>
 {% for tag in data.tags.all %}<a href="#tag_{{ tag.id|safe }}"><span style="background-color: {{ tag.colour }};" class="badge">{{ tag.id }}</span></a> {% endfor %}
-{% endif %}
+</p>{% endif %}
                     </div>
                     <div class="box-footer">
                         <span class="pull-right"><a class="btn btn-primary btn-xs" data-toggle="modal" data-target="#admin_places_add" aria-hidden="true">Edit Place</a></span>
@@ -62,11 +66,12 @@
 {% if data.schema_classes|length > 1 %}
 
                 <div class="box box-primary">
+                    <div class="box-header with-border"><h3 class="box-title">Schema.org classes</h3></div>
                     <div class="box-body no-padding">
 			<table class="table table-inline">
 {% for sc in data.schema_classes %}
                           <li class="list-group-item">
-				<b>{{ sc.label }}</b>
+				<b><a href="{{ sc.uri }}">{{ sc.label }}</a></b>
 				{% if sc.comment %}<br/><small class="muted">{{ sc.comment|safe }}</small>{% endif %}
                           </li>
 {% endfor %}

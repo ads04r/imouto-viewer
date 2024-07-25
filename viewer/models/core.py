@@ -386,6 +386,11 @@ class Location(models.Model):
 		if self.label.lower().startswith('the '):
 			return self.label[4:] + ', The'
 		return self.label
+	def categories_as_string(self):
+		ret = []
+		for category in self.categories.all():
+			ret.append(str(category))
+		return ', '.join(ret)
 	def to_dict(self):
 		"""
 		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.
@@ -3268,6 +3273,7 @@ class LocationCategory(models.Model):
 	for things like 'pub' and 'cinema' but can also be 'friends houses', etc.
 	"""
 	caption = models.CharField(max_length=255, default='', blank=True)
+	description = models.TextField(default='', blank=True)
 	locations = models.ManyToManyField(Location, related_name='categories')
 	colour = ColorField(default='#777777')
 	schema_map = models.ForeignKey(SchemaOrgClass, on_delete=models.SET_NULL, related_name='categories', null=True, blank=True)

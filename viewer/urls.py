@@ -56,6 +56,7 @@ urlpatterns = [
     path('places/<uid>.json', views.place_json),
     path('places/<uid>_thumb.jpg', views.place_thumbnail),
     path('places/<uid>.jpg', views.place_photo),
+    path('places/categories/<uid>.html', views.place_category),
     path('countries/<uid>.html', views.country),
     path('cities/<uid>.html', views.city),
     path('people.html', views.people),

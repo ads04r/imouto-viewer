@@ -1,0 +1,30 @@
+<div class="modal fade" id="admin_placecats_add" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+			<form id="placecat-add" action="{% if form.instance.pk %}places/categories/{{ form.instance.id }}.html{% else %}place_categories.html{% endif %}" method="POST" enctype="multipart/form-data">{% csrf_token %}
+
+                              <table class="table table-hover">
+{% for field in form %}
+{% if forloop.counter < 6 %}
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td>
+                                  <td>{{ field }}</td>
+                                </tr>
+{% endif %}
+{% endfor %}
+                              </table>
+
+			</form>
+
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary save-form-button">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

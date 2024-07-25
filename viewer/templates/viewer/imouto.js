@@ -1270,6 +1270,18 @@ function placeScreen(id)
     });
 }
 
+function placeCategoryScreen(id)
+{
+    $(".content-wrapper").load("./places/categories/" + id + ".html", function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
+        $(".save-form-button").on('click', function()
+        {
+            $("#placecat-add").submit();
+            return true;
+        });
+    });
+}
+
 function cityScreen(id)
 {
     $(".content-wrapper").load("./cities/" + id + ".html", function(response, status, xhr){
@@ -2274,6 +2286,7 @@ function pageRefresh()
     if(page.startsWith('tagrules_')) { tagRulesScreen(page.replace('tagrules_', '')); }
     if(page.startsWith('event_')) { eventScreen(page.replace('event_', '')); }
     if(page.startsWith('place_')) { placeScreen(page.replace('place_', '')); }
+    if(page.startsWith('placecategory_')) { placeCategoryScreen(page.replace('placecategory_', '')); }
     if(page.startsWith('city_')) { cityScreen(page.replace('city_', '')); }
     if(page.startsWith('country_')) { countryScreen(page.replace('country_', '')); }
     if(page.startsWith('person_')) { personScreen(page.replace('person_', '')); }

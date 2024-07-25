@@ -19,6 +19,7 @@
                         <li><a href="#tab-places-overseas" data-toggle="tab">Overseas</span></a></li>
                         <li><a href="#tab-places-all" data-toggle="tab">Current</span></a></li>
                         <li><a href="#tab-places-destroyed" data-toggle="tab">Historical</a></li>
+                        <li><a href="#tab-places-categories" data-toggle="tab">Categories</a></li>
                         <li class="pull-right">
 				<div class="box-tools"><a class="btn btn-primary btn-xs" data-toggle="modal" data-target="#admin_places_add" aria-hidden="true" href="#"><i class="fa fa-plus"></i></a></div>
                         </li>
@@ -84,6 +85,21 @@
 	{% include 'viewer/list-items/location.html' %}
                                 
 {% endif %}
+{% endif %}
+{% endfor %}
+                                
+                            </ul>
+                        </p>
+                        </div>
+                        <div class="tab-pane" id="tab-places-categories">
+                        <p>
+                            <ul class="products-list product-list-in-box">
+                                
+{% for category in data.categories %}
+{% if category.locations.count > 0 %}
+
+	{% include 'viewer/list-items/locationcategory.html' %}
+
 {% endif %}
 {% endfor %}
                                 
