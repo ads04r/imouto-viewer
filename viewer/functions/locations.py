@@ -42,6 +42,29 @@ def nearest_location(lat, lon):
 			ret = loc
 	return ret
 
+def nearest_amenities(lat, lon, dist=50):
+	"""
+	Query OpenStreetMap to get the nearest amenities to the point specified.
+
+	:param lat: The latitude of the query point.
+	:param lon: The longitude of the query point.
+	:param dist: The distance from the query point to search.
+	:return: A list of dictionaries, each representing an amenity listed in OpenStreetMap.
+	:rtype: list
+
+	"""
+	query = "nwr[amenity](around:" + str(dist) + "," + str(lat) + "," + str(lon) + "); out;"
+	api = overpy.Overpass()
+	result = api.query(query)
+	ret = []
+	for node in result.nodes:
+		item = dict(node.tags)
+		if 'name' in item:
+			item['lat'] = float(node.lat)
+			item['lon'] = float(node.lon)
+			ret.append(item)
+	return ret
+
 def nearest_city(lat, lon):
 	"""
 	Return the nearest known city to the query position given.
