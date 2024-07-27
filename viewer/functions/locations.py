@@ -103,21 +103,28 @@ def create_location_events(minlength=300):
 	dte = pytz.utc.localize(datetime.datetime.utcnow()).replace(hour=0, minute=0, second=0) + datetime.timedelta(days=1)
 	ret = []
 	while dts < dte:
+		logger.debug("Checking stop events")
 		data = getstopevents(dts)
 		dt_check = dts.replace(hour=0, minute=0, second=0)
 		dts = dts + datetime.timedelta(days=1)
 
 		last_item = ''
 		for item in data:
+			logger.debug("   Found event from " + item['timestart'])
 			if item['timestart'] == last_item:
+				logger.debug("      ...ignoring")
 				continue
 			last_item = item['timestart']
 
+			logger.debug("      ...searching for nearest location to " + str(item['lat']) + ', ' + str(item['lon']))
 			loc = nearest_location(item['lat'], item['lon'])
 			if loc == None:
+				logger.debug("         ...None returned, skipping")
 				continue
 			if loc.pk == home_id:
+				logger.debug("         ...matches home")
 				continue
+			logger.debug("         ...matches " + str(loc))
 
 			start_time = parser.parse(item['timestart'])
 			end_time = parser.parse(item['timeend'])
@@ -125,16 +132,20 @@ def create_location_events(minlength=300):
 			dur = (end_time - start_time).total_seconds()
 
 			if start_time < dt_check:
+				logger.debug("            start time is before " + str(dt_check) + ", skipping")
 				continue
-			if dist > 50:
+			if dist > 90:
+				logger.debug("            " + str(dist) + "m away, skipping")
 				continue
 			if dur < minlength:
+				logger.debug("            event is less than " + str(minlength) + " seconds, skipping")
 				continue
 
 			caption = event_label(start_time, end_time)
 			if caption == '':
 				caption = loc.label
 
+			logger.debug("            creating event")
 			try:
 				ev = Event.objects.get(start_time=start_time, end_time=end_time, type='loc_prox')
 			except:

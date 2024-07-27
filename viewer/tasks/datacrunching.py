@@ -33,7 +33,10 @@ def count_event_faces(event_id):
 		return # If there is no face detector configured, this task cannot function.
 	logger.info("Task count_event_faces beginning")
 
-	event = Event.objects.get(id=event_id)
+	try:
+		event = Event.objects.get(id=event_id)
+	except:
+		return # The event has been deleted
 	logger.debug("Working with event " + str(event))
 	face_cascade = cv2.CascadeClassifier(settings.FACE_DETECTOR)
 	for photo in event.photos():
