@@ -20,6 +20,7 @@ from dateutil import parser
 from xml.dom import minidom
 from tzfpy import get_tz
 from suntimes import SunTimes
+from urllib.parse import urlparse
 
 from viewer.health import parse_sleep, max_heart_rate
 from viewer.functions.geo import get_location_name
@@ -88,6 +89,16 @@ class GitCommit(models.Model):
 	comment = models.TextField()
 	additions = models.IntegerField(blank=True, null=True)
 	deletions = models.IntegerField(blank=True, null=True)
+	@property
+	def repo_name(self):
+		if self.repo_url:
+			return urlparse(self.repo_url).path.strip('/')
+		return None
+	@property
+	def repo_url_parsed(self):
+		if self.repo_url:
+			return urlparse(self.repo_url)
+		return None
 	def __str__(self):
 		return str(self.hash)
 	class Meta:
@@ -102,6 +113,11 @@ class LocationCountry(models.Model):
 	wikipedia = models.URLField(blank=True, null=True)
 	cached_description = models.TextField(default='')
 	cached_description_date = models.DateTimeField(blank=True, null=True)
+	@property
+	def wikipedia_parsed(self):
+		if self.wikipedia:
+			return urlparse(self.wikipedia)
+		return None
 	@property
 	def slug(self):
 		"""
@@ -214,6 +230,11 @@ class LocationCity(models.Model):
 			return settings.RDF_NAMESPACE + 'city/' + str(self.label).lower().replace(" ", "_")
 		return None
 	@property
+	def wikipedia_parsed(self):
+		if self.wikipedia:
+			return urlparse(self.wikipedia)
+		return None
+	@property
 	def slug(self):
 		"""
 		The unique 'slug id' for this LocationCity object, as would be displayed after the '#' in the URL bar.
@@ -312,6 +333,11 @@ class SchemaOrgClass(models.Model):
 	parent = models.ForeignKey('self', on_delete=models.SET_NULL, related_name='children', null=True, blank=True)
 	comment = models.TextField()
 	@property
+	def uri_parsed(self):
+		if self.uri:
+			return urlparse(self.uri)
+		return None
+	@property
 	def ancestors(self):
 		ret = []
 		p = self
@@ -351,6 +377,11 @@ class Location(models.Model):
 	image = models.ImageField(blank=True, null=True, upload_to=location_thumbnail_upload_location)
 	weather_location = models.ForeignKey(WeatherLocation, on_delete=models.CASCADE, null=True, blank=True)
 	parent = models.ForeignKey('self', on_delete=models.SET_NULL, related_name="children", null=True, blank=True)
+	@property
+	def url_parsed(self):
+		if self.url:
+			return urlparse(self.url)
+		return None
 	"""The URI of this object for RDF serialization."""
 	@property
 	def uri(self):
@@ -629,6 +660,11 @@ class Person(models.Model):
 	wikipedia = models.URLField(blank=True, null=True)
 	image = models.ImageField(blank=True, null=True, upload_to=user_thumbnail_upload_location)
 	significant = models.BooleanField(default=True)
+	@property
+	def wikipedia_parsed(self):
+		if self.wikipedia:
+			return urlparse(self.wikipedia)
+		return None
 	"""The URI of this object for RDF serialization."""
 	@property
 	def uri(self):
@@ -2988,6 +3024,11 @@ class RemoteInteraction(models.Model):
 
 class CalendarFeed(models.Model):
 	url = models.URLField()
+	@property
+	def url_parsed(self):
+		if self.url:
+			return urlparse(self.url)
+		return None
 	def __str__(self):
 		return(str(self.url))
 	class Meta:
