@@ -1,15 +1,16 @@
 {% load static %}
 
 	        <div class="box box-primary">
+                  <div class="box-header with-border">
+                    <h3 class="box-title"><a href="{{ event.repo_url }}">{{ event.repo_name }}</a></h3>
+                    <span class="pull-right">{{ event.commit_date|date:"l, g:ia" }}</span>
+                  </div>
                   <div class="box-body">
-	            <p>{{ event.comment }}</p>
 {% if event.additions %}
                     <p class="pull-right"><span class="label label-success"><i class="fa fa-plus"></i> {{ event.additions }}</span>&nbsp;<span class="label label-danger"><i class="fa fa-minus"></i> {{ event.deletions }}</span></p>
 {% endif %}
-	            <p><small>{{ event.commit_date|date:"l, g:ia" }} {{ event.hash }}</small></p>
-                  </div>
-                  <div class="box-footer">
-                    <a class="btn btn-secondary btn-xs" href="{{ event.repo_url }}">Git Repository</a>
+	            <p>{{ event.comment }}</p>
+	            <p class="text-muted">{{ event.hash }}</p>
                   </div>
 	        </div>
 
