@@ -668,7 +668,7 @@ function daySleepReport(date)
 
 			html = html + "<br/>";
 			html = html + "<div class=\"pull-right\">";
-			html = html + "<span style=\"margin-left: 1em; white-space: nowrap;\"><i class=\"fa fa-square-o\"></i>&nbsp;Awake</span>";
+			//html = html + "<span style=\"margin-left: 1em; white-space: nowrap;\"><i class=\"fa fa-square-o\"></i>&nbsp;Awake</span>";
 			html = html + "<span style=\"margin-left: 1em; white-space: nowrap;\"><i style=\"color: #ABC1D8;\" class=\"fa fa-square\"></i>&nbsp;Light&nbsp;sleep</span>";
 			html = html + "<span style=\"margin-left: 1em; white-space: nowrap;\"><i style=\"color: #3C8DBC;\" class=\"fa fa-square\"></i>&nbsp;Deep&nbsp;sleep</span>";
 			html = html + "</div>";
@@ -988,7 +988,12 @@ function daySummary(date)
 
 		}
 
-		if(html != '') { $(".day-weight-summary").html(html); }
+		if(html != '') {
+                    $(".day-weight-summary").each(function(){
+                        var checkid = $(this).data("day");
+                        if(checkid == date) { $(this).html(html); }
+                    });
+                }
             }
         });
         $.ajax({
@@ -1106,7 +1111,7 @@ function daySummary(date)
 
 			html = html + "<br/>";
 			html = html + "<div class=\"pull-right\">";
-			html = html + "<span style=\"margin-left: 1em; white-space: nowrap;\"><i class=\"fa fa-square-o\"></i>&nbsp;Awake</span>";
+			//html = html + "<span style=\"margin-left: 1em; white-space: nowrap;\"><i class=\"fa fa-square-o\"></i>&nbsp;Awake</span>";
 			html = html + "<span style=\"margin-left: 1em; white-space: nowrap;\"><i style=\"color: #ABC1D8;\" class=\"fa fa-square\"></i>&nbsp;Light&nbsp;sleep</span>";
 			html = html + "<span style=\"margin-left: 1em; white-space: nowrap;\"><i style=\"color: #3C8DBC;\" class=\"fa fa-square\"></i>&nbsp;Deep&nbsp;sleep</span>";
 			html = html + "</div>";
@@ -1137,7 +1142,12 @@ function daySummary(date)
 			html = html + "</div>";
 		}
 
-		if(html != '') { $(".day-sleep-summary").html(html); }
+		if(html != '') {
+                    $(".day-sleep-summary").each(function(){
+                        var checkid = $(this).data("day");
+                        if(checkid == date) { $(this).html(html); }
+                    });
+                }
             }
         });
         $.ajax({
@@ -1175,7 +1185,12 @@ function daySummary(date)
 
 		}
 
-		if(html != '') { $(".day-music-summary").html(html); }
+		if(html != '') {
+                    $(".day-music-summary").each(function(){
+                        var checkid = $(this).data("day");
+                        if(checkid == date) { $(this).html(html); }
+                    });
+                }
             }
         });
         $.ajax({
@@ -1190,7 +1205,12 @@ function daySummary(date)
 			if(data[i].image) { html = html + '<a href="#person_' + data[i].id + '"><img class="img-circle img-bordered-sm" width="50" height="50" src="people/' + data[i].id + '_thumb.jpg"></a>'; }
 		}
 
-		if(html != '') { $(".day-people-summary").html(html); }
+		if(html != '') {
+                    $(".day-people-summary").each(function(){
+                        var checkid = $(this).data("day");
+                        if(checkid == date) { $(this).html(html); }
+                    });
+                }
             }
         });
 }

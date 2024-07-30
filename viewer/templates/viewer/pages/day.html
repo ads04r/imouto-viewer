@@ -27,10 +27,10 @@
 		<!--// Bottom of right margin --//-->
 
 		{% if not day.today %}<div class="day-heart-summary"></div>{% endif %}
-		<div class="hidden-xs day-weight-summary"></div>
-		<div class="hidden-xs day-sleep-summary"></div>
-		<div class="hidden-xs day-music-summary"></div>
-		<div class="hidden-xs day-people-summary"></div>
+		<div data-day="{{ day.date|date:"Ymd" }}" class="hidden-xs day-weight-summary"></div>
+		<div data-day="{{ day.date|date:"Ymd" }}" class="hidden-xs day-sleep-summary"></div>
+		<div data-day="{{ day.date|date:"Ymd" }}" class="hidden-xs day-music-summary"></div>
+		<div data-day="{{ day.date|date:"Ymd" }}" class="hidden-xs day-people-summary"></div>
 
             </div>
             <div class="col-xs-12 col-sm-6 col-md-8">
@@ -118,10 +118,10 @@
 {% endfor %}
 
 		<!--// Bottom of main column --//-->
-		<div class="hidden-sm hidden-md hidden-lg hidden-xl day-weight-summary"></div>
-		<div class="hidden-sm hidden-md hidden-lg hidden-xl day-sleep-summary"></div>
-		<div class="hidden-sm hidden-md hidden-lg hidden-xl day-music-summary"></div>
-		<div class="hidden-sm hidden-md hidden-lg hidden-xl day-people-summary"></div>
+		<div data-day="{{ day.date|date:"Ymd" }}" class="hidden-sm hidden-md hidden-lg hidden-xl day-weight-summary"></div>
+		<div data-day="{{ day.date|date:"Ymd" }}" class="hidden-sm hidden-md hidden-lg hidden-xl day-sleep-summary"></div>
+		<div data-day="{{ day.date|date:"Ymd" }}" class="hidden-sm hidden-md hidden-lg hidden-xl day-music-summary"></div>
+		<div data-day="{{ day.date|date:"Ymd" }}" class="hidden-sm hidden-md hidden-lg hidden-xl day-people-summary"></div>
             </div>
         </div>
     </div>
