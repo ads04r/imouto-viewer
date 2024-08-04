@@ -200,9 +200,9 @@ def event_to_indices(event):
 			continue
 		ret = ret + '<index item="' + tag_name.replace(', ', ',, ') + '" />'
 	for person in event.people.all():
-		ret = ret + '<index item="' + str(person.sort_name()).replace(', ', ',, ') + '" />'
+		ret = ret + '<index item="' + str(person.sort_name).replace(', ', ',, ') + '" />'
 	if event.location:
-		ret = ret + '<index item="' + str(event.location.sort_name()).replace(', ', ',, ') + '" />'
+		ret = ret + '<index item="' + str(event.location.sort_name).replace(', ', ',, ') + '" />'
 		if event.location.city:
 			if event.location.city != home_city:
 				ret = ret + '<index item="' + str(event.location.city).replace(', ', ',, ') + '" />'
@@ -225,7 +225,7 @@ def generate_month_story(month, styles):
 		tf = NamedTemporaryFile(delete=False)
 		im = person.thumbnail(100)
 		im.save(tf, format='JPEG')
-		row.append([Image(tf.name, width=photo_size*cm, height=photo_size*cm), Paragraph(str(person.full_name()), style=ParagraphStyle('Centred', parent=styles['Normal'], alignment=1))])
+		row.append([Image(tf.name, width=photo_size*cm, height=photo_size*cm), Paragraph(str(person.full_name), style=ParagraphStyle('Centred', parent=styles['Normal'], alignment=1))])
 		if len(row) >= max_people_per_row:
 			table.append(row)
 			row = []

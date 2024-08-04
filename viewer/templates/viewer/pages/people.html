@@ -43,7 +43,7 @@
 			                                    </div>
 			                                    <div class="product-info">
 			                                        <a class="product-title personlink" href="#person_{{ person.uid }}">
-			                                            {{ person.full_name }}</a>
+			                                            {{ person.name }}</a>
 			                                        <span class="product-description">
 			                                            Met {{ person.days }} days in the last 12 months</span>
 			                                    </div>
@@ -73,7 +73,7 @@
 			                                    </div>
 			                                    <div class="product-info">
 			                                        <a class="product-title personlink" href="#person_{{ person.uid }}">
-			                                            {{ person.full_name }}</a>
+			                                            {{ person.name }}</a>
 			                                        <span class="product-description">
 			                                            Last met {{ person.last_seen|date:"l jS F Y" }}</span>
 			                                    </div>
@@ -105,7 +105,7 @@
 			                                    </div>
 			                                    <div class="product-info">
 			                                        <a class="product-title personlink" href="#person_{{ person.0.uid }}">
-			                                            {{ person.0.full_name }}</a>
+			                                            {{ person.0.name }}</a>
 			                                        <span class="product-description">
 			                                            {{ person.1 }} calls in the last 12 months</span>
 			                                    </div>
@@ -133,7 +133,7 @@
 			                                    </div>
 			                                    <div class="product-info">
 			                                        <a class="product-title personlink" href="#person_{{ person.0.uid }}">
-			                                            {{ person.0.full_name }}</a>
+			                                            {{ person.0.name }}</a>
 			                                        <span class="product-description">
 			                                            {{ person.1 }} messages in the last 12 months</span>
 			                                    </div>
@@ -163,7 +163,7 @@
 			                                    </div>
 			                                    <div class="product-info">
 			                                        <a class="product-title personlink" href="#person_{{ person.uid }}">
-			                                            {{ person.full_name }}</a>
+			                                            {{ person.name }}</a>
 			                                        <span class="product-description">
 			                                            {{ person.photo_count }} photos in the last 12 months</span>
 			                                    </div>
@@ -194,7 +194,7 @@
                                     </div>
                                     <div class="product-info">
                                         <a class="product-title personlink" href="#person_{{ person.uid }}">
-                                            {{ person.full_name }}</a>
+                                            {{ person.name }}</a>
                                         <span class="product-description">
                                             Last met {{ person.last_seen|date:"l jS F Y" }}, {{ person.days }} encounters total.</span>
                                     </div>
@@ -222,7 +222,7 @@
                                     </div>
                                     <div class="product-info">
                                         <a class="product-title personlink" href="#person_{{ person.uid }}">
-                                            {{ person.full_name }}</a>
+                                            {{ person.name }}</a>
                                         <span class="product-description">
                                             Last met {{ person.last_seen|date:"l jS F Y" }}, died {{ person.deathday|date:"l jS F Y" }}.</span>
                                     </div>
@@ -249,7 +249,7 @@
                                     </div>
                                     <div class="product-info">
                                         <a class="product-title personlink" href="#person_{{ person.uid }}">
-                                            {{ person.full_name }}</a>
+                                            {{ person.name }}</a>
                                         <span class="product-description">
                                             {% if person.days %}Last met {{ person.last_seen|date:"l jS F Y" }}, {% endif %}{{ person.days }} encounters total.</span>
                                     </div>

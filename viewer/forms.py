@@ -48,13 +48,13 @@ class PersonForm(ModelForm):
 			self.fields['uid'].disabled = True
 	class Meta:
 		model = Person
-		fields = ['uid', 'given_name', 'family_name', 'nickname', 'image', 'significant', 'wikipedia']
+		fields = ['uid', 'display_name', 'given_name', 'family_name', 'image', 'significant', 'wikipedia']
 		labels = {'significant': 'Important'}
 		widgets = {
 			'uid': TextInput(attrs={'class': 'form-control'}),
 			'given_name': TextInput(attrs={'class': 'form-control'}),
 			'family_name': TextInput(attrs={'class': 'form-control'}),
-			'nickname': TextInput(attrs={'class': 'form-control'}),
+			'display_name': TextInput(attrs={'class': 'form-control'}),
 			'wikipedia': URLInput(attrs={'class': 'form-control'}),
 			'significant': CheckboxInput(attrs={'class': 'checkbox'}),
 		}

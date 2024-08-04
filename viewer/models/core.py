@@ -656,7 +656,7 @@ class Person(models.Model):
 	uid = models.SlugField(primary_key=True, max_length=32)
 	given_name = models.CharField(null=True, blank=True, max_length=128)
 	family_name = models.CharField(null=True, blank=True, max_length=128)
-	nickname = models.CharField(null=True, blank=True, max_length=128)
+	display_name = models.CharField(null=True, blank=True, max_length=128)
 	wikipedia = models.URLField(blank=True, null=True)
 	image = models.ImageField(blank=True, null=True, upload_to=user_thumbnail_upload_location)
 	significant = models.BooleanField(default=True)
@@ -680,7 +680,7 @@ class Person(models.Model):
 		:return: The properties of the object as a dict
 		:rtype: dict
 		"""
-		ret = {'id': self.uid, 'name': self.name(), 'full_name': self.full_name()}
+		ret = {'id': self.uid, 'name': self.name, 'full_name': self.full_name}
 		if not(self.birthday is None):
 			if self.birthday:
 				ret['birthday'] = self.birthday.strftime("%Y-%m-%d")
@@ -688,10 +688,28 @@ class Person(models.Model):
 		if not(home is None):
 			ret['home'] = home.to_dict()
 		return ret
+	@property
 	def name(self):
-		label = self.nickname
+		label = self.display_name
 		if ((label == '') or (label is None)):
-			label = self.full_name()
+			label = self.full_name
+			if len(label) > 0:
+				self.display_name = label
+				self.save(update_fields=['display_name'])
+		return label
+	@property
+	def full_name(self):
+		label = str(self.given_name) + ' ' + str(self.family_name)
+		label = label.strip()
+		if label == '':
+			label = self.display_name
+		return label
+	@property
+	def sort_name(self):
+		label = str(self.display_name)
+		if label == '':
+			label = str(self.family_name) + ', ' + str(self.given_name)
+			label = label.strip(' ,')
 		return label
 	@property
 	def birthday(self):
@@ -732,18 +750,6 @@ class Person(models.Model):
 		if bd is None:
 			return None
 		return self.next_birthday.year - bd.year - 1
-	def full_name(self):
-		label = str(self.given_name) + ' ' + str(self.family_name)
-		label = label.strip()
-		if label == '':
-			label = self.nickname
-		return label
-	def sort_name(self):
-		label = str(self.family_name) + ', ' + str(self.given_name)
-		label = label.strip(' ,')
-		if label == '':
-			label = self.nickname
-		return label
 	def home(self):
 		ret = None
 		dt = pytz.utc.localize(datetime.datetime.utcnow())
@@ -832,13 +838,13 @@ class Person(models.Model):
 		event = Event.objects.filter(people=self, end_time__gte=dts, start_time__lte=dte).order_by('start_time').first()
 		return int(event.start_time.month)
 	def __str__(self):
-		return self.name()
+		return self.name
 	class Meta:
 		app_label = 'viewer'
 		verbose_name = 'person'
 		verbose_name_plural = 'people'
 		indexes = [
-			models.Index(fields=['nickname']),
+			models.Index(fields=['display_name']),
 			models.Index(fields=['given_name', 'family_name']),
 		]
 

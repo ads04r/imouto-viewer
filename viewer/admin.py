@@ -2,8 +2,8 @@ from django.contrib import admin
 from .models import *
 
 class PersonAdmin(admin.ModelAdmin):
-	list_display = ['full_name', 'nickname', 'significant']
-	ordering = ['-significant', 'family_name', 'given_name', 'nickname']
+	list_display = ['name', 'full_name', 'significant']
+	ordering = ['-significant', 'display_name', 'family_name', 'given_name']
 
 class LocationAdmin(admin.ModelAdmin):
 	list_display = ['label', 'address', 'exists', 'city', 'country']

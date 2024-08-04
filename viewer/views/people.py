@@ -42,18 +42,14 @@ def people(request):
 			person = None
 		if not(person is None):
 			data['calls'].append([person, number['messages']])
-	data['all'] = Person.objects.annotate(days=Count(Cast('event__start_time', DateField()), distinct=True)).annotate(last_seen=Max('event__start_time')).order_by('given_name', 'family_name')
-	data['deceased'] = Person.objects.filter(significant=True, properties__key='deathday').annotate(days=Count(Cast('event__start_time', DateField()), distinct=True)).annotate(last_seen=Max('event__start_time')).order_by('given_name', 'family_name')
+	data['all'] = Person.objects.annotate(days=Count(Cast('event__start_time', DateField()), distinct=True)).annotate(last_seen=Max('event__start_time')).order_by('display_name')
+	data['deceased'] = Person.objects.filter(significant=True, properties__key='deathday').annotate(days=Count(Cast('event__start_time', DateField()), distinct=True)).annotate(last_seen=Max('event__start_time')).order_by('display_name')
 	if request.method == 'POST':
 		cache.delete('dashboard')
 		form = PersonForm(request.POST, request.FILES)
 		if form.is_valid():
 			post = form.save(commit=False)
 			id = form.cleaned_data['uid']
-			#m = []
-			#for k in form.cleaned_data.keys():
-			#	m.append(str(k))
-			#return HttpResponse(json.dumps(m), content_type='application/json')
 			if form.cleaned_data.get('image'):
 				post.image = request.FILES['image']
 			post.save()

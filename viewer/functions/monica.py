@@ -104,10 +104,8 @@ def create_monica_person(person):
 		data['first_name'] = person.given_name
 	if person.family_name:
 		data['last_name'] = person.family_name
-	if person.nickname:
-		data['nickname'] = person.nickname
 	if data['first_name'] is None:
-		data['first_name'] = data['nickname']
+		data['first_name'] = person.name
 	if data['first_name'] is None:
 		data['first_name'] = ''
 	if person.next_birthday:

@@ -41,7 +41,7 @@ def find_person_by_picasaid(picasaid, name=''):
 	if name != '':
 
 		for person in Person.objects.all():
-			fn = person.full_name()
+			fn = person.full_name
 			if fn == name:
 				ret = person
 				break

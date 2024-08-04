@@ -54,11 +54,11 @@ def import_carddav(url, auth, countrycode='44'):
 		if pobj is None:
 			ct = 0
 			for ptest in Person.objects.all():
-				if ptest.full_name() == name:
+				if ptest.full_name == name:
 					ct = ct + 1
 					pobj = ptest
 					continue
-				if ptest.name() == name:
+				if ptest.name == name:
 					ct = ct + 1
 					pobj = ptest
 					continue
