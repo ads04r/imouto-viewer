@@ -1234,6 +1234,8 @@ class Event(models.Model):
 			self.cached_average_speed = health['speedavg']
 		if save:
 			self.save()
+		for wc in self.workout_categories.all():
+			wc.recalculate_stats()
 	def subevents(self):
 		return Event.objects.filter(start_time__gte=self.start_time, end_time__lte=self.end_time).exclude(id=self.id).order_by('start_time')
 	def weather(self):
