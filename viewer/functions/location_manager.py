@@ -185,6 +185,37 @@ def getstopevents(dt, loc_manager=None):
 
 	return data
 
+def getamenities(dt, loc_manager=None):
+	"""
+	Queries the location manager for the amenities the user was near on the specified date.
+
+	:param dt: A Python date (or datetime) representing the day being queried.
+	:param loc_manager: (Optional) The URL of an Imouto Location Manager server. If omitted, we use the LOCATION_MANAGER_URL setting.
+	:return: A list of dicts representing the amenities.
+	:rtype: list
+
+	"""
+	address = settings.LOCATION_MANAGER_URL
+	if not(loc_manager is None):
+		address = loc_manager
+	if not('://' in address):
+		address = 'http://' + address
+	url = address + '/event/' + dt.strftime("%Y-%m-%d")
+	try:
+		r = requests.get(url)
+		data = json.loads(r.text)
+	except:
+		data = []
+
+	ret = []
+	for item in data:
+		if not 'amenities' in item:
+			continue
+		for place in item['amenities']:
+			if not place in ret:
+				ret.append(place)
+	return ret
+
 def getboundingbox(dts, dte, loc_manager=None):
 
 	address = settings.LOCATION_MANAGER_URL

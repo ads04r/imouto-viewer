@@ -10,7 +10,7 @@ from viewer.forms import EventForm
 
 from viewer.functions.moonshine import get_moonshine_tracks
 from viewer.functions.locations import nearest_location
-from viewer.functions.location_manager import get_possible_location_events
+from viewer.functions.location_manager import get_possible_location_events, getamenities
 from viewer.functions.calendar import event_label
 
 import logging
@@ -175,6 +175,20 @@ def day_people(request, ds):
 		if person.image:
 			info['image'] = True
 		data.append(info)
+
+	response = HttpResponse(json.dumps(data), content_type='application/json')
+	return response
+
+def day_amenities(request, ds):
+
+	if len(ds) != 8:
+		raise Http404()
+	y = int(ds[0:4])
+	m = int(ds[4:6])
+	d = int(ds[6:])
+	dt = datetime.date(y, m, d)
+
+	data = getamenities(dt)
 
 	response = HttpResponse(json.dumps(data), content_type='application/json')
 	return response
