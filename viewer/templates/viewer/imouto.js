@@ -310,15 +310,23 @@ function onLocEventMapClick(e)
     var RES = 100000;
     var lat = Math.round(e.latlng.lat * RES) / RES;
     var lon = Math.round(e.latlng.lng * RES) / RES;
+
+    updateSelectMap(lat, lon, true);
+}
+
+function updateSelectMap(lat, lon, findNearest)
+{
     var canvas = $('#location_event_select');
     var slug = canvas.data('date').replace('day_', '')
     var url = 'days/' + slug + '/locevents.json';
     var data = {}
     var csrf = $('input[name="csrfmiddlewaretoken"]').val();
 
+    data['lat'] = lat;
+    data['lon'] = lon;
+    data['lookup'] = findNearest;
+
     canvas.html('<i class="fa fa-refresh fa-spin"></i>');
-    data['lat'] = lat
-    data['lon'] = lon
 
     $.ajax({
         url: url,
@@ -924,6 +932,14 @@ function dayScreen(id)
         });
 
         daySummary(id);
+	$("#amenityselect").on('change', function() {
+		var ll = JSON.parse($("#amenityselect").val());
+		if(ll.length == 2) { updateSelectMap(ll[0], ll[1], false); }
+	 });
+	var initll = JSON.parse($("#amenityselect").val());
+	if(initll.length == 2) { updateSelectMap(initll[0], initll[1], false); }
+        var heightstring = parseInt(window.innerHeight * 0.6) + 'px';
+        $('#mapselect').css('min-height', heightstring);
         makeMap();
 
         var lat = {{ home.lat }};
@@ -939,6 +955,10 @@ function dayScreen(id)
 
         // The following block is required because we've foolishly put a leaflet map in a tab in a modal.
         $("#day_locevent_add").on('shown.bs.modal', function() 
+        {
+            map.invalidateSize();
+        });
+        $("a[href='#loc']").on('shown.bs.tab', function() 
         {
             map.invalidateSize();
         });
@@ -2055,6 +2075,10 @@ function tagRulesScreen(id)
 
 		        // The following block is required because we've foolishly put a leaflet map in a tab in a modal.
 		        $("#create-condition-location").on('shown.bs.modal', function() 
+		        {
+		                map.invalidateSize();
+		        });
+		        $("a[href='#loc']").on('shown.bs.tab', function() 
 		        {
 		            map.invalidateSize();
 		        });

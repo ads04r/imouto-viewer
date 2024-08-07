@@ -29,6 +29,7 @@ urlpatterns = [
     path('days/<ds>/people.json', views.day_people),
     path('days/<ds>/events.json', views.day_events),
     path('days/<ds>/music.json', views.day_music),
+    path('days/<ds>/amenities.json', views.day_amenities),
     path('days/<ds>/data.json', views.day_data),
     path('days/<ds>/createlocevents.json', views.day_loceventscreate),
     path('days/<ds>/locevents.json', views.day_locevents),

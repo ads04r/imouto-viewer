@@ -3,11 +3,37 @@
         <div class="modal-content">
             <div class="modal-body">
 
+                    <div role="tabpanel">
+                        <ul class="nav nav-tabs">
+                            <li class="active"><a href="#label" data-toggle="tab">OpenStreetMap</a></li>
+                            <li><a href="#loc" data-toggle="tab">Manual</a></li>
+                        </ul>
+                    </div>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="label">
+
+				<label for="amenityselect">Amenity</label>
+				<select size="1" id="amenityselect" class="form-control">
+{% for amenity in amenities %}
+					<option value="[{{ amenity.lat }}, {{ amenity.lon }}]">{{ amenity.name }}</option>
+{% endfor %}
+				</select>
+
+                        </div>
+                        <div class="tab-pane" id="loc">
 
                               
 			<div id="mapselect" class="mapselect"></div>
+                        
+                        </div>
+                    </div>
+
+		    <div>
+
 {% csrf_token %}
-			<div id="location_event_select" data-date="{{ day.slug }}"><p>Select a point on the map to search for location events.</p></div>
+			<div id="location_event_select" data-date="{{ day.slug }}"><p style="margin-top: 1em;">Select a location or click on the map to search for events.</p></div>
+
+                    </div>
                 
             </div>
             <div class="modal-footer">
@@ -17,4 +43,12 @@
         </div>
     </div>
 </div>
+
+
+
+
+
+
+
+
 
