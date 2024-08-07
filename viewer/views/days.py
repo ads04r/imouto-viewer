@@ -59,7 +59,8 @@ def day(request, ds):
 	dss = str(day)
 	events = sorted(events, key=lambda x: x.start_time if x.__class__.__name__ == 'Event' else (x.time_completed if x.__class__.__name__ == 'CalendarTask' else (x.commit_date if x.__class__.__name__ == 'GitCommit' else (x['time'] if isinstance(x, (dict)) else x.time))))
 	appointments = day.calendar
-	context = {'type':'view', 'caption': dss, 'events':events, 'day': day, 'potential_joins': potential_joins, 'appointments': appointments, 'categories':EventWorkoutCategory.objects.all()}
+	amenities = getamenities(day.date)
+	context = {'type':'view', 'caption': dss, 'events':events, 'day': day, 'potential_joins': potential_joins, 'appointments': appointments, 'categories':EventWorkoutCategory.objects.all(), 'amenities': amenities}
 	context['form'] = EventForm()
 	return render(request, 'viewer/pages/day.html', context)
 
@@ -233,8 +234,9 @@ def day_loceventscreate(request, ds):
 		loc = None
 		if item['value']:
 			if 'location' in item:
-				if item['location'] > 0:
-					loc = Location.objects.get(id=item['location'])
+				if isinstance(item['location'], int):
+					if item['location'] > 0:
+						loc = Location.objects.get(id=item['location'])
 			event = Event(type='loc_prox', caption=item['text'], location=loc, start_time=dts, end_time=dte)
 			event.save()
 			event.auto_tag()
@@ -254,13 +256,18 @@ def day_locevents(request, ds):
 	d = int(ds[6:])
 	dt = datetime.date(y, m, d)
 	data = json.loads(request.body)
+	lookup = False
+	if 'lookup' in data:
+		lookup = data['lookup'];
 	if not('lat' in data):
 		raise Http404()
 	if not('lon' in data):
 		raise Http404()
 	ret = []
 	epoch = pytz.utc.localize(datetime.datetime(1970, 1, 1, 0, 0, 0))
-	loc = nearest_location(data['lat'], data['lon'])
+	loc = None
+	if lookup:
+		loc = nearest_location(data['lat'], data['lon'])
 	for item in get_possible_location_events(dt, data['lat'], data['lon']):
 		result = {"start_time": item['start_time'].astimezone(pytz.UTC).strftime("%Y-%m-%d %H:%M:%S"), "end_time": item['end_time'].astimezone(pytz.UTC).strftime("%Y-%m-%d %H:%M:%S")}
 		result['display_text'] = (item['start_time'].strftime("%-I:%M%p") + ' to ' + item['end_time'].strftime("%-I:%M%p")).lower()
