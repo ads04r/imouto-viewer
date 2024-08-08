@@ -937,6 +937,7 @@ function dayScreen(id)
 		if(ll.length == 2) { updateSelectMap(ll[0], ll[1], false); }
 	 });
 	var initll = JSON.parse($("#amenityselect").val());
+	if(initll == null) { initll = []; }
 	if(initll.length == 2) { updateSelectMap(initll[0], initll[1], false); }
         var heightstring = parseInt(window.innerHeight * 0.6) + 'px';
         $('#mapselect').css('min-height', heightstring);
