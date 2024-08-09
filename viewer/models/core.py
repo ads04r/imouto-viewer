@@ -2486,6 +2486,23 @@ class Day(models.Model):
 			dte = None
 			return dts, dte
 
+	def onthisday(self):
+		ret = []
+		for i in range(1, 15):
+			dd = datetime.date(self.date.year - i, self.date.month, self.date.day)
+			ret.append(dd.strftime("%Y%m%d"))
+		return ret
+
+	@cached_property
+	def interesting(self):
+		if self.people.count() > 0:
+			return True
+		if self.events.filter(type='journey').count() > 0:
+			return True
+		if self.photos.count() > 0:
+			return True
+		return False
+
 	@cached_property
 	def photos(self):
 		dts = self.wake_time

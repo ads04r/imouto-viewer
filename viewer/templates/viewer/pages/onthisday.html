@@ -14,7 +14,7 @@
     <div class="container-fluid">
 
         <div class="row">
-            <div class="col-xs-12 col-sm-6 col-md-3">
+            <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4">
 
             <div class="box box-primary">
                 <div class="box-body box-profile">
@@ -37,9 +37,11 @@
             </div>
 
             </div>
-            <div class="col-xs-12 col-sm-6 col-md-9">
+            <div class="col-xs-12 col-sm-6 col-md-6 col-lg-8">
 
-<div id="onthisday" data-date="{{ data.date|date:"Ymd" }}"></div>
+{% for id in data.onthisday %}
+<div class="dynamic-card" data-path="days/{{ id }}/card.html"></div>
+{% endfor %}
 
             </div>
         </div>
