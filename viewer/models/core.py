@@ -2486,6 +2486,55 @@ class Day(models.Model):
 			dte = None
 			return dts, dte
 
+	def onthisday(self):
+		ret = []
+		for i in range(1, 15):
+			dd = datetime.date(self.date.year - i, self.date.month, self.date.day)
+			ret.append(dd.strftime("%Y%m%d"))
+		return ret
+
+	@cached_property
+	def interesting(self):
+		if self.people.count() > 0:
+			return True
+		if self.events.filter(type='journey').count() > 0:
+			return True
+		if self.photos.count() > 0:
+			return True
+		return False
+
+	@cached_property
+	def photos(self):
+		dts = self.wake_time
+		dte = self.bed_time
+		if dts is None:
+			return Photo.objects.none()
+		if dte is None:
+			return Photo.objects.none()
+		return Photo.objects.filter(time__gte=dts, time__lte=dte)
+
+	@cached_property
+	def year_progress(self):
+		dy = float(self.date.strftime("%j"))
+		year = int(self.date.year)
+		try:
+			dd = datetime.datetime(year, 2, 29)
+			y = 366.0
+		except:
+			y = 365.0
+		return int((dy / y) * 100.0)
+
+	@property
+	def relative_year(self):
+		year = int(self.date.year)
+		this_year = int(pytz.utc.localize(datetime.datetime.utcnow()).astimezone(tz=pytz.timezone(settings.TIME_ZONE)).year)
+		diff = this_year - year
+		if diff == 0:
+			return "This year"
+		if diff == 1:
+			return "Last year"
+		return str(diff) + " years ago"
+
 	@property
 	def today(self):
 		"""

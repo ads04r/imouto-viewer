@@ -65,83 +65,10 @@ def get_timeline_events(dt):
 		dtq = dtq - datetime.timedelta(hours=24)
 	return events
 
-def generate_onthisday():
+def get_today():
 
-	ret = []
-
-	for i in range(1, 20):
-
-		offset = datetime.timedelta(hours=4)
-
-		dt = pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(settings.TIME_ZONE))
-		year = dt.year - i
-		try:
-			dt = dt.replace(year=year)
-			dts = dt.replace(hour=0, minute=0, second=0) + offset
-			dte = dt.replace(hour=23, minute=59, second=59) + offset
-		except ValueError: # generally gets triggered every 29th February
-			continue
-
-		events = []
-		places = []
-		people = []
-		history = []
-		for event in HistoricalEvent.objects.filter(date=dts.date()):
-			history.append(event)
-		journeys = []
-		for event in Event.objects.filter(end_time__gte=dts, start_time__lte=dte):
-			for person in event.people.all():
-				if not(person in people):
-					people.append(person)
-			if not(event.location is None):
-				if event.location.label != 'Home':
-					if not(event.location in places):
-						places.append(event.location)
-			if event.type == 'journey':
-				if ((event.distance() > 10) or (len(event.description) > 0)):
-					journeys.append(event)
-					continue
-			if len(str(event.description)) > 0:
-				events.append(event)
-				continue
-			if event.type == 'life_event' or event.type == 'event':
-				events.append(event)
-		tweets = []
-		for tweet in RemoteInteraction.objects.filter(type='microblogpost', address='', time__gte=dts, time__lte=dte):
-			tweets.append(tweet)
-		photos = []
-		for photo in Photo.objects.filter(time__gte=dts, time__lte=dte):
-			photos.append(photo)
-			for person in photo.people.all():
-				if not(person in people):
-					people.append(person)
-
-		if len(events) > 0 or len(photos) > 0 or len(places) > 0 or len(journeys) > 0:
-			item = {}
-			item['year'] = dts.year
-			item['id'] = "day_" + dts.strftime("%Y%m%d")
-			if i == 1:
-				item['label'] = 'Last year'
-			else:
-				item['label'] = str(i) + ' years ago'
-			item['events'] = events
-			item['photos'] = photos
-			item['places'] = places
-			item['people'] = people
-			item['tweets'] = tweets
-			item['journeys'] = journeys
-			item['history'] = history
-			countries = []
-			for loc in places:
-				if loc.country in countries:
-					continue
-				countries.append(loc.country)
-			if len(countries) > 0:
-				item['country'] = countries[0]
-
-			ret.append(item)
-
-	return ret
+	dt = pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(settings.TIME_ZONE)).date()
+	return create_or_get_day(dt)
 
 def generate_dashboard():
 

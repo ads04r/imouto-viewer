@@ -5,7 +5,7 @@ from django.db.models import F
 from django.conf import settings
 import datetime, pytz, dateutil.parser, json, requests, random
 
-from viewer.models import Day, Location, Event, EventWorkoutCategory, create_or_get_day
+from viewer.models import Day, Location, Event, EventWorkoutCategory, HistoricalEvent, create_or_get_day
 from viewer.forms import EventForm
 
 from viewer.functions.moonshine import get_moonshine_tracks
@@ -63,6 +63,20 @@ def day(request, ds):
 	context = {'type':'view', 'caption': dss, 'events':events, 'day': day, 'potential_joins': potential_joins, 'appointments': appointments, 'categories':EventWorkoutCategory.objects.all(), 'amenities': amenities}
 	context['form'] = EventForm()
 	return render(request, 'viewer/pages/day.html', context)
+
+def day_card(request, ds):
+
+	if len(ds) != 8:
+		raise Http404()
+	y = int(ds[0:4])
+	m = int(ds[4:6])
+	d = int(ds[6:])
+	dt = datetime.date(y, m, d)
+	day = create_or_get_day(dt)
+	dss = str(day)
+	context = {'type':'view', 'caption': dss, 'day': day, 'history': HistoricalEvent.objects.filter(date=dt)}
+	context['form'] = EventForm()
+	return render(request, 'viewer/cards/day.html', context)
 
 def day_music(request, ds):
 

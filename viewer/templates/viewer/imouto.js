@@ -63,6 +63,7 @@ function anniversaryScreen()
     $(".content-wrapper").load("./onthisday.html", function(response, status, xhr){
         if(status == 'error') { errorPage(xhr); return false; }
         initialiseGraphics();
+        loadDynamicCards();
     });
 }
 
@@ -1336,6 +1337,14 @@ function countryScreen(id)
     $(".content-wrapper").load("./countries/" + id + ".html", function(response, status, xhr){
         if(status == 'error') { errorPage(xhr); return false; }
     });
+}
+
+function loadDynamicCards()
+{
+	$('.dynamic-card').each(function() {
+		var path = $(this).data('path');
+		$(this).load(path);
+	});
 }
 
 function initialiseGraphics()
