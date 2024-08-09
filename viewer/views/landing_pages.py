@@ -9,7 +9,7 @@ from viewer.models import Event
 from viewer.forms import EventForm, QuickEventForm
 
 from viewer.functions.locations import home_location
-from viewer.functions.utils import get_timeline_events, generate_dashboard, generate_onthisday, imouto_json_serializer
+from viewer.functions.utils import get_timeline_events, generate_dashboard, get_today, imouto_json_serializer
 
 import logging
 logger = logging.getLogger(__name__)
@@ -86,16 +86,6 @@ def timelineitem(request, ds):
 
 def onthisday(request, format='html'):
 	logger.info("On This Day requested")
-	key = 'onthisday_' + datetime.date.today().strftime("%Y%m%d")
-	data = cache.get(key)
-	if data is None:
-		logger.debug("Generating On This Day")
-		data = generate_onthisday()
-		if len(data) == 0:
-			return render(request, 'viewer/pages/setup.html', {})
-		cache.set(key, data, timeout=86400)
-		logger.debug("On This Day generated")
-	else:
-		logger.debug("Getting cached On This Day")
+	data = get_today()
 	context = {'type':'view', 'data':data}
 	return render(request, 'viewer/pages/onthisday.html', context)

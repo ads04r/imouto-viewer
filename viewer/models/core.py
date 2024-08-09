@@ -2486,6 +2486,38 @@ class Day(models.Model):
 			dte = None
 			return dts, dte
 
+	@cached_property
+	def photos(self):
+		dts = self.wake_time
+		dte = self.bed_time
+		if dts is None:
+			return Photo.objects.none()
+		if dte is None:
+			return Photo.objects.none()
+		return Photo.objects.filter(time__gte=dts, time__lte=dte)
+
+	@cached_property
+	def year_progress(self):
+		dy = float(self.date.strftime("%j"))
+		year = int(self.date.year)
+		try:
+			dd = datetime.datetime(year, 2, 29)
+			y = 366.0
+		except:
+			y = 365.0
+		return int((dy / y) * 100.0)
+
+	@property
+	def relative_year(self):
+		year = int(self.date.year)
+		this_year = int(pytz.utc.localize(datetime.datetime.utcnow()).astimezone(tz=pytz.timezone(settings.TIME_ZONE)).year)
+		diff = this_year - year
+		if diff == 0:
+			return "This year"
+		if diff == 1:
+			return "Last year"
+		return str(diff) + " years ago"
+
 	@property
 	def today(self):
 		"""

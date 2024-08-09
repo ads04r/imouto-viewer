@@ -23,6 +23,7 @@ urlpatterns = [
     path('years/<ds>.ttl', views.year_ttl),
     path('months/<ds>.html', views.month),
     path('days/<ds>.html', views.day),
+    path('days/<ds>/card.html', views.day_card),
     path('days/<ds>/heart.json', views.day_heart),
     path('days/<ds>/sleep.json', views.day_sleep),
     path('days/<ds>/weight.json', views.day_weight),
