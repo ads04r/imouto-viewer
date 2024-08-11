@@ -2543,6 +2543,10 @@ class Day(models.Model):
 		return str(diff) + " years ago"
 
 	@property
+	def places(self):
+		return Location.objects.filter(events__in=self.events).exclude(id=settings.USER_HOME_LOCATION).distinct()
+
+	@property
 	def today(self):
 		"""
 		Determines if this day represents today in real time.
