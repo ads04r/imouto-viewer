@@ -35,6 +35,15 @@
             </div>
             <div class="col-xs-12 col-sm-6 col-md-8">
 
+{% for event in day.life_events %}
+{% if event.cover_photo %}
+{% with data=event %}
+
+{% include 'viewer/cards/eventhead.html' %}
+
+{% endwith %}
+{% endif %}
+{% endfor %}
 {% for event in events %}
 
 	{% localtime off %}

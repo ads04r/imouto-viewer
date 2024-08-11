@@ -2488,18 +2488,25 @@ class Day(models.Model):
 
 	def onthisday(self):
 		ret = []
-		for i in range(1, 15):
+		user_born = settings.USER_DATE_OF_BIRTH
+		i = 1
+		while True:
 			dd = datetime.date(self.date.year - i, self.date.month, self.date.day)
+			if dd < user_born:
+				break
 			ret.append(dd.strftime("%Y%m%d"))
+			i = i + 1
 		return ret
 
 	@cached_property
 	def interesting(self):
+		if self.life_events.count() > 0:
+			return True
 		if self.people.count() > 0:
 			return True
-		if self.events.filter(type='journey').count() > 0:
-			return True
 		if self.photos.count() > 0:
+			return True
+		if self.events.filter(type='journey').count() > 0:
 			return True
 		return False
 
@@ -2618,7 +2625,15 @@ class Day(models.Model):
 		d = self.date
 		dts = self.__dts__()
 		dte = self.__dte__()
-		return Event.objects.filter(end_time__gte=dts, end_time__lte=dte).exclude(type='life_event').order_by('start_time')
+		return Event.objects.filter(end_time__gte=dts, start_time__lte=dte).exclude(type='life_event').order_by('start_time')
+	@property
+	def life_events(self):
+		"""
+		Every 'life_event' that includes this particular day.
+		"""
+		dts = self.__dts__()
+		dte = self.__dte__()
+		return Event.objects.filter(end_time__gte=dts, start_time__lte=dte).filter(type='life_event').order_by('caption')
 	@property
 	def calendar(self):
 		"""
