@@ -1593,13 +1593,9 @@ class Event(models.Model):
 				for tag in e.tags.all():
 					self.tags.add(tag)
 
-	@cached_property
+	@property
 	def similar(self):
-		filter = list(self.similar_to.filter(diff_value__lt=0.05).order_by('diff_value').values('event1', 'event1__caption', 'event1__start_time', 'diff_value'))[0:50]
-		if len(filter) == 0:
-			return filter
-		threshold = float(filter[-1]['diff_value'])
-		return list(self.similar_to.filter(diff_value__lte=threshold).order_by('-event1__start_time').values('event1', 'event1__caption', 'event1__start_time', 'diff_value'))[0:10]
+		return Event.objects.filter(pk__in=[x[1] for x in sorted(list(self.similar_to.filter(route_diff__lt=100, length_diff__lt=1.2, position_diff__lt=0.5).order_by('route_diff').values_list('route_diff', 'event1__pk')) + list(self.similar_from.filter(route_diff__lt=100, length_diff__lt=1.2, position_diff__lt=0.5).order_by('route_diff').values_list('route_diff', 'event2__pk')), key=lambda x: x[0])[0:20]]).order_by('-start_time')[0:10]
 	def __str__(self):
 		if self.caption == '':
 			return "Event " + str(self.pk)
@@ -3157,7 +3153,12 @@ class CalendarAppointment(models.Model):
 class EventSimilarity(models.Model):
 	event1 = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="similar_from")
 	event2 = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="similar_to")
-	diff_value = models.FloatField()
+	route_diff = models.FloatField()
+	length_diff = models.FloatField()
+	position_diff = models.FloatField()
+	@property
+	def diff_value(self):
+		return self.route_diff
 	def __str__(self):
 		return "Similarity between " + str(self.event1) + " and " + str(self.event2)
 	class Meta:
@@ -3165,7 +3166,7 @@ class EventSimilarity(models.Model):
 		verbose_name = 'event similarity'
 		verbose_name_plural = 'event similarities'
 		indexes = [
-			models.Index(fields=['diff_value'])
+			models.Index(fields=['route_diff'])
 		]
 		constraints = [
 			models.UniqueConstraint(fields=['event1', 'event2'], name='events to compare')

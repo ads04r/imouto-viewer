@@ -1,7 +1,6 @@
 import datetime, pytz, json, re, sys, os, requests
 from django.core.cache import cache
 from django.conf import settings
-from geopy import distance
 from frechetdist import frdist
 
 import logging

@@ -3,8 +3,9 @@ from background_task import background
 from viewer.models import Event, EventSimilarity, Photo
 from viewer.functions.geo import journey_similarity
 from django.conf import settings
+from geopy import distance
 
-import logging, cv2
+import logging, cv2, json
 logger = logging.getLogger(__name__)
 
 @background(schedule=0, queue='datacrunching')
@@ -66,19 +67,38 @@ def regenerate_similar_events(event_id):
 	for e2 in events:
 		if e1 == e2:
 			continue
-		diff = journey_similarity(e1, e2)
+		dist1 = e1.distance()
+		dist2 = e2.distance()
+		data1 = json.loads(e1.geo)
+		data2 = json.loads(e2.geo)
+		route_diff = journey_similarity(e1, e2)
+		if dist1 > dist2:
+			if dist2 == 0.0:
+				length_diff = dist1
+			else:
+				length_diff = dist1 / dist2
+		else:
+			if dist1 == 0.0:
+				length_diff = dist2
+			else:
+				length_diff = dist2 / dist1
+		position_diff = 100.0
+		if (('bbox' in data1) & ('bbox' in data2)):
+			avglat1 = data1['bbox'][3] + ((data1['bbox'][1] - data1['bbox'][3]) / 2)
+			avglat2 = data2['bbox'][3] + ((data2['bbox'][1] - data2['bbox'][3]) / 2)
+			avglon1 = data1['bbox'][0] + ((data1['bbox'][2] - data1['bbox'][0]) / 2)
+			avglon2 = data2['bbox'][0] + ((data2['bbox'][2] - data2['bbox'][0]) / 2)
+			position_diff = distance.distance((avglat1, avglon1), (avglat2, avglon2)).km
 
 		try:
-			es = EventSimilarity(event1=e1, event2=e2, diff_value=diff)
+			es = EventSimilarity(event1=e1, event2=e2, route_diff=route_diff, length_diff=length_diff, position_diff=position_diff)
 			es.save()
-			print(es)
 		except:
 			pass
 
 		try:
-			es = EventSimilarity(event1=e2, event2=e1, diff_value=diff)
+			es = EventSimilarity(event1=e2, event2=e1, route_diff=route_diff, length_diff=length_diff, position_diff=position_diff)
 			es.save()
-			print(es)
 		except:
 			pass
 
