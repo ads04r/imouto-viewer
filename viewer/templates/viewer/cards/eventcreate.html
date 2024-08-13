@@ -10,6 +10,7 @@
                               <a class="btn btn-app" data-toggle="modal" data-target="#day_locevent_add" aria-hidden="true" href="#loc"><i class="fa fa-map-marker"></i>Location Event</a>
                               {% if potential_joins %}<a class="btn btn-app" data-toggle="modal" data-target="#day_journeyevent_add" aria-hidden="true" href="#loc"><i class="fa fa-road"></i>Journey Event</a>{% endif %}
                               {% if appointments.count > 0 %}<a class="btn btn-app" data-toggle="modal" data-target="#day_appointmentevent_add" aria-hidden="true" href="#loc"><i class="fa fa-calendar"></i>Calendar Event</a>{% endif %}
+                              {% if imported_files.count > 0 %}<a class="btn btn-app" data-toggle="modal" data-target="#day_fileevent_add" aria-hidden="true" href="#"><i class="fa fa-file"></i>File Event</a>{% endif %}
                               <a class="btn btn-app" data-toggle="modal" data-target="#admin_event_add" aria-hidden="true" href="#"><i class="fa fa-cog"></i>Manual Event</a>
 
                       </div>

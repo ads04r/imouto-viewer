@@ -1,0 +1,32 @@
+<div class="modal fade nav-tabs-custom" id="day_fileevent_add" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+	<form action="events/add_file_event" method="POST">
+            <div class="modal-body">
+
+                <label for="join_events">Event timespan:</label>
+		<select class="form-control" id="add_file_event" name="add_file_event">
+{% for f in imported_files %}
+			<option value="{{ f.pk }}">{{ f.earliest_timestamp|date:"g:ia" }} to {{ f.latest_timestamp|date:"g:ia" }}</option>
+{% endfor %}
+                </select>
+
+                <label for="id_file_workout_type">Workout type:</label>
+                <select id="id_file_workout_type" class="form-control" name="workout_type">
+                                      <option selected="selected" value="">---------</option>
+{% for category in categories %}
+                                      <option value="{{ category.id }}">{{ category.label }}</option>
+{% endfor %}
+                </select>
+{% csrf_token %}
+
+                
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+	</form>
+        </div>
+    </div>
+</div>

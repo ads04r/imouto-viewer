@@ -6,7 +6,7 @@ from django.db.models import Q, F, Count
 from django.conf import settings
 import datetime, pytz, dateutil.parser, json, requests, random
 
-from viewer.models import Person, Photo, Event, EventWorkoutCategory, CalendarAppointment, LifePeriod
+from viewer.models import Person, Photo, Event, EventWorkoutCategory, CalendarAppointment, LifePeriod, ImportedFile
 from viewer.forms import EventForm, QuickEventForm, LifePeriodForm
 from viewer.tasks.reports import generate_photo_collages
 from viewer.tasks.datacrunching import regenerate_similar_events, generate_similar_events, count_event_faces
@@ -171,6 +171,27 @@ def event_addappointmentevent(request):
 		event.auto_tag()
 		ds = event.start_time.strftime("%Y%m%d")
 		return HttpResponseRedirect('../#day_' + str(ds))
+
+def event_addfileevent(request):
+	if request.method != 'POST':
+		return HttpResponseNotAllowed(['POST'])
+	file_id = str(request.POST['add_file_event'])
+	try:
+		catid = str(request.POST['workout_type'])
+	except:
+		catid = ''
+	imported_file = get_object_or_404(ImportedFile, pk=file_id)
+	caption = 'Journey'
+	if len(catid) > 0:
+		caption = catid.title()
+	event = Event(caption=caption, start_time=imported_file.earliest_timestamp, end_time=imported_file.latest_timestamp, type='journey', location=None, description='')
+	event.save()
+	if len(catid) > 0:
+		for category in EventWorkoutCategory.objects.filter(id=catid):
+			event.workout_categories.add(category)
+	event.auto_tag()
+
+	return HttpResponseRedirect('../#event_' + str(event.pk))
 
 def event_staticmap(request, eid):
 	data = get_object_or_404(Event, id=eid)

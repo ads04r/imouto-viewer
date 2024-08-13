@@ -5,7 +5,7 @@ from django.db.models import F
 from django.conf import settings
 import datetime, pytz, dateutil.parser, json, requests, random
 
-from viewer.models import Day, Location, Event, EventWorkoutCategory, HistoricalEvent, create_or_get_day
+from viewer.models import Day, Location, Event, EventWorkoutCategory, HistoricalEvent, ImportedFile, create_or_get_day
 from viewer.forms import EventForm
 
 from viewer.functions.moonshine import get_moonshine_tracks
@@ -60,7 +60,8 @@ def day(request, ds):
 	events = sorted(events, key=lambda x: x.start_time if x.__class__.__name__ == 'Event' else (x.time_completed if x.__class__.__name__ == 'CalendarTask' else (x.commit_date if x.__class__.__name__ == 'GitCommit' else (x['time'] if isinstance(x, (dict)) else x.time))))
 	appointments = day.calendar
 	amenities = getamenities(day.date)
-	context = {'type':'view', 'caption': dss, 'events':events, 'day': day, 'potential_joins': potential_joins, 'appointments': appointments, 'categories':EventWorkoutCategory.objects.all(), 'amenities': amenities}
+	imported_files = ImportedFile.objects.filter(latest_timestamp__gte=pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(day.date.year, day.date.month, day.date.day, 0, 0, 0)), earliest_timestamp__lte=pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(day.date.year, day.date.month, day.date.day, 23, 59, 59))).order_by('earliest_timestamp')
+	context = {'type':'view', 'caption': dss, 'events':events, 'day': day, 'potential_joins': potential_joins, 'appointments': appointments, 'categories':EventWorkoutCategory.objects.all(), 'amenities': amenities, 'imported_files': imported_files}
 	context['form'] = EventForm()
 	return render(request, 'viewer/pages/day.html', context)
 
