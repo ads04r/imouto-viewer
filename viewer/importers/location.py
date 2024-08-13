@@ -2,8 +2,6 @@ import django, requests, datetime, pytz, math
 from django.conf import settings
 from fitparse import FitFile
 
-from viewer.models import Day, DataReading, ImportedFile
-
 import logging
 logger = logging.getLogger(__name__)
 

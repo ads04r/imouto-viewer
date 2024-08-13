@@ -14,6 +14,8 @@ def import_fit(parseable_fit_input):
 	:param parseable_fit_input: A path to an ANT-FIT file.
 	"""
 	data = []
+	earliest_timestamp = None
+	latest_timestamp = None
 	fit = FitFile(parseable_fit_input)
 	for record in fit.get_messages('record'):
 		item = {}
@@ -30,6 +32,14 @@ def import_fit(parseable_fit_input):
 			item[k] = v
 		if item['timestamp']['value'].tzinfo is None or item['timestamp']['value'].utcoffset(item['timestamp']['value']) is None:
 			item['timestamp']['value'] = pytz.utc.localize(item['timestamp']['value']) # If no timestamp, we assume UTC
+		if earliest_timestamp is None:
+			earliest_timestamp = item['timestamp']['value']
+		if latest_timestamp is None:
+			latest_timestamp = item['timestamp']['value']
+		if item['timestamp']['value'] < earliest_timestamp:
+			earliest_timestamp = item['timestamp']['value']
+		if item['timestamp']['value'] > latest_timestamp:
+			latest_timestamp = item['timestamp']['value']
 		newitem = {}
 		newitem['date'] = item['timestamp']['value']
 		if 'heart_rate' in item:
@@ -83,7 +93,9 @@ def import_fit(parseable_fit_input):
 	for f in ImportedFile.objects.all():
 		if f.path == parseable_fit_input:
 			f.import_time = pytz.utc.localize(datetime.datetime.utcnow())
-			f.save()
+			f.earliest_timestamp = earliest_timestamp
+			f.latest_timestamp = latest_timestamp
+			f.save(update_fields=['import_time', 'earliest_timestamp', 'latest_timestamp'])
 
 	for dt in days:
 		Day.objects.filter(date=dt).delete()
