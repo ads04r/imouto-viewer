@@ -105,13 +105,16 @@ def event(request, eid):
 			else:
 				raise Http404(form.errors)
 
+	logger.info("Event " + str(eid) + " requested")
 	data = get_object_or_404(Event, pk=eid)
+	logger.debug("    ... " + str(data))
 	count_event_faces(eid)
 
 	form = EventForm(instance=data)
 	context = {'type':'event', 'data':data, 'form':form, 'people':Person.objects.order_by('-significant', 'given_name', 'family_name'), 'categories':EventWorkoutCategory.objects.all()}
 	music = cache.get(cache_key + '_music')
 	if music is None:
+		logger.debug("        Loading music data for " + str(data))
 		music = get_moonshine_tracks(data.start_time, data.end_time)
 		if len(music) > 0:
 			cache.set(cache_key + '_music', music, 86400)
@@ -123,6 +126,7 @@ def event(request, eid):
 	template = 'viewer/pages/event.html'
 	if data.type=='life_event':
 		template = 'viewer/pages/life_event.html'
+	logger.debug("        Calling render for " + str(data))
 	return render(request, template, context)
 
 def event_addjourney(request):
