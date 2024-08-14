@@ -1943,7 +1943,7 @@ class Year(models.Model):
 				if not(c.pk in categories):
 					categories[c.pk] = [c, 0]
 				categories[c.pk][1] = categories[c.pk][1] + int(loc.total_time.total_seconds())
-		return list(categories.values())
+		return sorted(list(categories.values()), key=lambda x: x[1], reverse=True)
 	@cached_property
 	def location_categories_chart(self):
 		ret = [[], []]
