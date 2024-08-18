@@ -13,8 +13,9 @@ from viewer.tasks.datacrunching import regenerate_similar_events, generate_simil
 
 from viewer.functions.moonshine import get_moonshine_tracks
 from viewer.functions.locations import join_location_events
-from viewer.functions.location_manager import getgeoline, getelevation, getspeed
+from viewer.functions.location_manager import getgeoline, getelevation, getspeed, getboundingbox
 from viewer.functions.utils import generate_life_grid
+from viewer.functions.geo import get_area_name
 
 import logging
 logger = logging.getLogger(__name__)
@@ -188,6 +189,11 @@ def event_addfileevent(request):
 	caption = 'Journey'
 	if len(catid) > 0:
 		caption = catid.title()
+	bbox = getboundingbox(imported_file.earliest_timestamp, imported_file.latest_timestamp)
+	if len(bbox) == 4:
+		location_text = get_area_name(bbox[1], bbox[0], bbox[3], bbox[2])
+		if len(location_text) > 0:
+			caption = caption + ' in ' + location_text
 	event = Event(caption=caption, start_time=imported_file.earliest_timestamp, end_time=imported_file.latest_timestamp, type='journey', location=None, description='')
 	event.save()
 	if len(catid) > 0:
