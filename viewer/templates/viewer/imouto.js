@@ -1343,6 +1343,7 @@ function loadDynamicCards()
 {
 	$('.dynamic-card').each(function() {
 		var path = $(this).data('path');
+		$(this).html('<div class="row"><div class="col-xs-1 col-sm-3 col-md-5"></div><div class="col-xs-10 col-sm-6 col-md-2"><div class="box box-primary"><div class="box-body text-center"><i class="fa fa-spin fa-refresh"></i>&nbsp;Loading</div></div></div></div>');
 		$(this).load(path);
 	});
 }
