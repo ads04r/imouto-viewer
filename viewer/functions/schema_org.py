@@ -1,6 +1,6 @@
 from rdflib import Graph, Namespace, URIRef, Literal
 from rdflib.namespace import RDF, RDFS, XSD
-from viewer.models import LocationCategory, SchemaOrgClass
+from viewer.models import LocationCategory, SchemaOrgClass, SchemaOrgRelation
 from viewer.functions.rdf import uris_of_type
 import requests
 
@@ -31,6 +31,7 @@ def import_schema_org(url="https://schema.org/version/latest/schemaorg-current-h
 		item.comment = comment
 		item.save()
 
+	SchemaOrgRelation.objects.all().delete()
 	for s, p, o in g.triples((None, RDFS.subClassOf, None)):
 		child_uri = str(s)
 		parent_uri = str(o)
@@ -46,8 +47,8 @@ def import_schema_org(url="https://schema.org/version/latest/schemaorg-current-h
 			parent_item = None
 		if parent_item is None:
 			continue
-		child_item.parent = parent_item
-		child_item.save(update_fields=['parent'])
+		rel = SchemaOrgRelation(broader=parent_item, narrower=child_item)
+		rel.save()
 
 def match_categories():
 
