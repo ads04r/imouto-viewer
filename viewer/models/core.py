@@ -330,7 +330,6 @@ class WeatherLocation(models.Model):
 class SchemaOrgClass(models.Model):
 	label = models.CharField(max_length=256, null=False)
 	uri = models.URLField(null=False)
-	parent = models.ForeignKey('self', on_delete=models.SET_NULL, related_name='children', null=True, blank=True)
 	comment = models.TextField()
 	@property
 	def uri_parsed(self):
@@ -340,20 +339,41 @@ class SchemaOrgClass(models.Model):
 	@property
 	def ancestors(self):
 		ret = []
-		p = self
-		while True:
-			if p.parent is None:
-				break
-			if p.parent.label == 'Thing':
-				break
-			ret.append(p.parent.pk)
-			p = p.parent
-		return SchemaOrgClass.objects.filter(pk__in=ret).order_by('label')
+		queue = [self.pk]
+		while len(queue) > 0:
+			e = queue.pop()
+			if e in ret:
+				continue
+			if e in queue:
+				continue
+			ret.append(e)
+			for parent_node in SchemaOrgClass.objects.filter(relations_narrower__in=SchemaOrgClass.objects.get(pk=e).relations_broader.all()):
+				id = parent_node.pk
+				if id in queue:
+					continue
+				if id in ret:
+					continue
+				queue.append(id)
+		return SchemaOrgClass.objects.filter(pk__in=ret).exclude(pk=self.pk).exclude(label='Thing').order_by('label')
+
+	@property
+	def children(self):
+		return SchemaOrgClass.objects.filter(relations_broader__in=self.relations_narrower.all())
 	def __str__(self):
 		return self.label
 	class Meta:
 		verbose_name = "schema.org class"
 		verbose_name_plural = "schema.org classes"
+
+class SchemaOrgRelation(models.Model):
+	broader = models.ForeignKey(SchemaOrgClass, on_delete=models.CASCADE, related_name="relations_narrower")
+	narrower = models.ForeignKey(SchemaOrgClass, on_delete=models.CASCADE, related_name="relations_broader")
+	def __str__(self):
+		return str(self.broader) + ' is broader than ' + str(self.narrower)
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'schema.org relation'
+		verbose_name_plural = 'schema.org relations'
 
 class Location(models.Model):
 	"""This is a class representing a named location significant to the user. It does not need to be validated by any
