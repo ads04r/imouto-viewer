@@ -14,6 +14,7 @@ class ImoutoBaseConfiguration(unittest.TestCase):
 		loc_manager_exists = hasattr(settings, "LOCATION_MANAGER_URL")
 		self.assertEqual(loc_manager_exists, True)
 		if loc_manager_exists:
+			self.assertEqual(hasattr(settings, "LOCATION_MANAGER_TOKEN"), True)
 			url = settings.LOCATION_MANAGER_URL
 			r = requests.get(url)
 			self.assertEqual(r.status_code, 200)

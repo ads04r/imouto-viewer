@@ -197,10 +197,11 @@ def import_photo_directory(path, tzinfo=pytz.UTC):
 			op = op + '\t'.join(row) + '\n'
 
 		url = settings.LOCATION_MANAGER_URL + '/import'
+		bearer_token = settings.LOCATION_MANAGER_TOKEN
 		files = {'uploaded_file': op}
 		data = {'file_source': 'photo', 'file_format': 'csv'}
 
-		r = requests.post(url, files=files, data=data)
+		r = requests.post(url, headers={'Authorization': 'Token ' + bearer_token}, files=files, data=data)
 		st = r.status_code
 
 	return ret

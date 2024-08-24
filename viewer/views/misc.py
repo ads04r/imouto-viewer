@@ -19,11 +19,12 @@ def upload_file(request):
 	if request.method != 'POST':
 		return HttpResponseNotAllowed(['POST'])
 	url = settings.LOCATION_MANAGER_URL + '/import'
+	bearer_token = settings.LOCATION_MANAGER_TOKEN
 	logger.info("File sent for import")
 	files = {'uploaded_file': request.FILES['uploadformfile']}
 	data = {'file_source': request.POST['uploadformfilesource']}
 
-	r = requests.post(url, files=files, data=data)
+	r = requests.post(url, headers={'Authorization': 'Token ' + bearer_token}, files=files, data=data)
 	r.raise_for_status()
 	return HttpResponseRedirect('./#files')
 

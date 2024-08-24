@@ -17,10 +17,11 @@ def upload_file(temp_file, file_source, format=''):
 	:rtype: bool
 	"""
 	url = str(settings.LOCATION_MANAGER_URL).rstrip('/') + '/import'
+	bearer_token = settings.LOCATION_MANAGER_TOKEN
 	if format == '':
-		r = requests.post(url, data={'file_source': file_source}, files={'uploaded_file': (temp_file, open(temp_file, 'rb'))})
+		r = requests.post(url, headers={'Authorization': 'Token ' + bearer_token}, data={'file_source': file_source}, files={'uploaded_file': (temp_file, open(temp_file, 'rb'))})
 	else:
-		r = requests.post(url, data={'file_source': file_source, 'file_format': format}, files={'uploaded_file': (temp_file, open(temp_file, 'rb'))})
+		r = requests.post(url, headers={'Authorization': 'Token ' + bearer_token}, data={'file_source': file_source, 'file_format': format}, files={'uploaded_file': (temp_file, open(temp_file, 'rb'))})
 	if r.status_code == 200:
 		return True
 	return False

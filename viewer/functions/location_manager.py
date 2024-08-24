@@ -56,13 +56,14 @@ def get_possible_location_events(date, lat, lon):
 
 	return ret
 
-def getgeoline(dts, dte, loc_manager=None):
+def getgeoline(dts, dte, loc_manager=None, token=None):
 	"""
 	Queries the location manager for the user's route between two times.
 
 	:param dts: A Python datetime representing the start of the time period being queried.
 	:param dte: A Python datetime representing the end of the time period being queried.
 	:param loc_manager: (Optional) The URL of an Imouto Location Manager server. If omitted, we use the LOCATION_MANAGER_URL setting.
+	:param token: (Optional) The auth token for the Imouto Location Manager server. If omitted, we use the LOCATION_MANAGER_TOKEN setting.
 	:return: The raw output from the location manager, which should be a dict containing GeoJSON polyline, among other things.
 	:rtype: dict
 
@@ -70,6 +71,9 @@ def getgeoline(dts, dte, loc_manager=None):
 	address = settings.LOCATION_MANAGER_URL
 	if not(loc_manager is None):
 		address = loc_manager
+	bearer_token = settings.LOCATION_MANAGER_TOKEN
+	if not(token is None):
+		bearer_token = token
 	if not('://' in address):
 		address = 'http://' + address
 
@@ -77,7 +81,7 @@ def getgeoline(dts, dte, loc_manager=None):
 	url = address + "/route/" + id + "?format=json"
 	data = {}
 	try:
-		with requests.get(url) as r:
+		with requests.get(url, headers={'Authorization': 'Token ' + bearer_token}) as r:
 			data = json.loads(r.text)
 	except:
 		data = {}
@@ -91,13 +95,14 @@ def getgeoline(dts, dte, loc_manager=None):
 					return json.dumps(data['geo'])
 	return ""
 
-def getelevation(dts, dte, loc_manager=None):
+def getelevation(dts, dte, loc_manager=None, token=None):
 	"""
 	Queries the location manager for the user's elevation between two times.
 
 	:param dts: A Python datetime representing the start of the time period being queried.
 	:param dte: A Python datetime representing the end of the time period being queried.
 	:param loc_manager: (Optional) The URL of an Imouto Location Manager server. If omitted, we use the LOCATION_MANAGER_URL setting.
+	:param token: (Optional) The auth token for the Imouto Location Manager server. If omitted, we use the LOCATION_MANAGER_TOKEN setting.
 	:return: A list containing a sequence of two-element {x, y} dicts, useful for drawing an elevation graph.
 	:rtype: list
 
@@ -105,6 +110,9 @@ def getelevation(dts, dte, loc_manager=None):
 	address = settings.LOCATION_MANAGER_URL
 	if not(loc_manager is None):
 		address = loc_manager
+	bearer_token = settings.LOCATION_MANAGER_TOKEN
+	if not(token is None):
+		bearer_token = token
 	if not('://' in address):
 		address = 'http://' + address
 
@@ -112,7 +120,7 @@ def getelevation(dts, dte, loc_manager=None):
 	url = address + "/elevation/" + id + "?format=json"
 	data = []
 	try:
-		with requests.get(url) as r:
+		with requests.get(url, headers={'Authorization': 'Token ' + bearer_token}) as r:
 			for item in json.loads(r.text):
 				data.append({'x': item[1], 'y': item[2]})
 	except:
@@ -121,13 +129,14 @@ def getelevation(dts, dte, loc_manager=None):
 		return json.dumps(data)
 	return ""
 
-def getspeed(dts, dte, loc_manager=None):
+def getspeed(dts, dte, loc_manager=None, token=None):
 	"""
 	Queries the location manager for the user's speed between two times.
 
 	:param dts: A Python datetime representing the start of the time period being queried.
 	:param dte: A Python datetime representing the end of the time period being queried.
 	:param loc_manager: (Optional) The URL of an Imouto Location Manager server. If omitted, we use the LOCATION_MANAGER_URL setting.
+	:param token: (Optional) The auth token for the Imouto Location Manager server. If omitted, we use the LOCATION_MANAGER_TOKEN setting.
 	:return: A list containing a sequence of two-element {x, y} dicts, useful for drawing a graph with speed on the y-axis and time on the x-axis.
 	:rtype: list
 
@@ -135,6 +144,9 @@ def getspeed(dts, dte, loc_manager=None):
 	address = settings.LOCATION_MANAGER_URL
 	if not(loc_manager is None):
 		address = loc_manager
+	bearer_token = settings.LOCATION_MANAGER_TOKEN
+	if not(token is None):
+		bearer_token = token
 	if not('://' in address):
 		address = 'http://' + address
 
@@ -144,7 +156,7 @@ def getspeed(dts, dte, loc_manager=None):
 	last_dist = 0
 	last_time = dts
 	try:
-		with requests.get(url) as h:
+		with requests.get(url, headers={'Authorization': 'Token ' + bearer_token}) as h:
 			for item in json.loads(h.text):
 				dt = datetime.datetime.strptime(re.sub('\.[0-9]+', '', item[0]), "%Y-%m-%dT%H:%M:%S%z")
 				time_diff = (dt - last_time).total_seconds()
@@ -161,12 +173,13 @@ def getspeed(dts, dte, loc_manager=None):
 		return json.dumps(data)
 	return ""
 
-def getstopevents(dt, loc_manager=None):
+def getstopevents(dt, loc_manager=None, token=None):
 	"""
 	Queries the location manager for the times during a day when the user was stationary.
 
 	:param dt: A Python date (or datetime) representing the day being queried.
 	:param loc_manager: (Optional) The URL of an Imouto Location Manager server. If omitted, we use the LOCATION_MANAGER_URL setting.
+	:param token: (Optional) The auth token for the Imouto Location Manager server. If omitted, we use the LOCATION_MANAGER_TOKEN setting.
 	:return: A list containing a sequence of dicts containing the start and end times, as well as the average latitude and longitude.
 	:rtype: list
 
@@ -174,23 +187,27 @@ def getstopevents(dt, loc_manager=None):
 	address = settings.LOCATION_MANAGER_URL
 	if not(loc_manager is None):
 		address = loc_manager
+	bearer_token = settings.LOCATION_MANAGER_TOKEN
+	if not(token is None):
+		bearer_token = token
 	if not('://' in address):
 		address = 'http://' + address
 	url = address + '/event/' + dt.strftime("%Y-%m-%d")
 	try:
-		r = requests.get(url)
+		r = requests.get(url, headers={'Authorization': 'Token ' + bearer_token})
 		data = json.loads(r.text)
 	except:
 		data = []
 
 	return data
 
-def getamenities(dt, loc_manager=None):
+def getamenities(dt, loc_manager=None, token=None):
 	"""
 	Queries the location manager for the amenities the user was near on the specified date.
 
 	:param dt: A Python date (or datetime) representing the day being queried.
 	:param loc_manager: (Optional) The URL of an Imouto Location Manager server. If omitted, we use the LOCATION_MANAGER_URL setting.
+	:param token: (Optional) The auth token for the Imouto Location Manager server. If omitted, we use the LOCATION_MANAGER_TOKEN setting.
 	:return: A list of dicts representing the amenities.
 	:rtype: list
 
@@ -198,11 +215,14 @@ def getamenities(dt, loc_manager=None):
 	address = settings.LOCATION_MANAGER_URL
 	if not(loc_manager is None):
 		address = loc_manager
+	bearer_token = settings.LOCATION_MANAGER_TOKEN
+	if not(token is None):
+		bearer_token = token
 	if not('://' in address):
 		address = 'http://' + address
 	url = address + '/event/' + dt.strftime("%Y-%m-%d")
 	try:
-		r = requests.get(url)
+		r = requests.get(url, headers={'Authorization': 'Token ' + bearer_token})
 		data = json.loads(r.text)
 	except:
 		data = []
@@ -216,17 +236,20 @@ def getamenities(dt, loc_manager=None):
 				ret.append(place)
 	return ret
 
-def getboundingbox(dts, dte, loc_manager=None):
+def getboundingbox(dts, dte, loc_manager=None, token=None):
 
 	address = settings.LOCATION_MANAGER_URL
 	if not(loc_manager is None):
 		address = loc_manager
+	bearer_token = settings.LOCATION_MANAGER_TOKEN
+	if not(token is None):
+		bearer_token = token
 	if not('://' in address):
 		address = 'http://' + address
 	id = dts.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S") + dte.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S")
 	url = address + '/bbox/' + id
 	try:
-		r = requests.get(url)
+		r = requests.get(url, headers={'Authorization': 'Token ' + bearer_token})
 		data = json.loads(r.text)
 	except:
 		data = [None, None, None, None]
@@ -234,43 +257,49 @@ def getboundingbox(dts, dte, loc_manager=None):
 		return []
 	return data
 
-def get_location_manager_import_queue(loc_manager=None):
+def get_location_manager_import_queue(loc_manager=None, token=None):
 
 	address = settings.LOCATION_MANAGER_URL
 	if not(loc_manager is None):
 		address = loc_manager
+	bearer_token = settings.LOCATION_MANAGER_TOKEN
+	if not(token is None):
+		bearer_token = token
 	if not('://' in address):
 		address = 'http://' + address
 	url = address + '/import'
 	try:
-		r = requests.get(url)
+		r = requests.get(url, headers={'Authorization': 'Token ' + bearer_token})
 		data = json.loads(r.text)
 	except:
 		data = {"tasks": [], "sources": {}}
 	return data
 
-def get_location_manager_process_queue(loc_manager=None):
+def get_location_manager_process_queue(loc_manager=None, token=None):
 
 	address = settings.LOCATION_MANAGER_URL
 	if not(loc_manager is None):
 		address = loc_manager
+	bearer_token = settings.LOCATION_MANAGER_TOKEN
+	if not(token is None):
+		bearer_token = token
 	if not('://' in address):
 		address = 'http://' + address
 	url = address + '/process'
 	try:
-		r = requests.get(url)
+		r = requests.get(url, headers={'Authorization': 'Token ' + bearer_token})
 		data = json.loads(r.text)
 	except:
 		data = {"tasks": [], "stats": {}}
 	return data
 
-def get_location_manager_report_queue(loc_manager=None):
+def get_location_manager_report_queue(loc_manager=None, token=None):
 
 	ret = []
-	data = get_location_manager_process_queue(loc_manager)
+	data = get_location_manager_process_queue(loc_manager, token)
 	if 'tasks' in data:
 		ret = ret + data['tasks']
-	data = get_location_manager_import_queue(loc_manager)
+	data = get_location_manager_import_queue(loc_manager, token)
 	if 'tasks' in data:
 		ret = ret + data['tasks']
 	return ret
