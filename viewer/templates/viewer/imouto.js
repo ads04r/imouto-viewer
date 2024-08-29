@@ -1275,6 +1275,8 @@ function placesScreen(id)
 
         var lat = {{ home.lat }};
         var lon = {{ home.lon }};
+        var heightstring = parseInt(window.innerHeight * 0.5) + 'px';
+        $('#mapselect').css('min-height', heightstring);
         var map = L.map('mapselect', {center: [lat, lon], zoom: 13});
         L.tileLayer('{{ tiles }}', {
             attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
