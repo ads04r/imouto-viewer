@@ -28,22 +28,33 @@ def get_logged_position(dt):
 
 	return (None, None)
 
-def get_possible_location_events(date, lat, lon):
+def get_possible_location_events(date, lat, lon, loc_manager=None, token=None):
 	"""
 	Given a date and a query point, returns a list of times the user was near the query point on the day specified.
 
 	:param date: A date (not datetime).
 	:param lat: The latitude of the query point.
 	:param lon: The longitude of the query point.
+	:param loc_manager: (Optional) The URL of an Imouto Location Manager server. If omitted, we use the LOCATION_MANAGER_URL setting.
+	:param token: (Optional) The auth token for the Imouto Location Manager server. If omitted, we use the LOCATION_MANAGER_TOKEN setting.
 	:return: A list of dictionaries containing start_time and end_time of potential events.
 	:rtype: list[dict]
 
 	"""
+	address = settings.LOCATION_MANAGER_URL
+	if not(loc_manager is None):
+		address = loc_manager
+	bearer_token = settings.LOCATION_MANAGER_TOKEN
+	if not(token is None):
+		bearer_token = token
+	if not('://' in address):
+		address = 'http://' + address
+
 	ds = date.strftime("%Y-%m-%d")
-	url = settings.LOCATION_MANAGER_URL + '/event/' + ds + '/' + str(lat) + '/' + str(lon)
+	url = address + '/event/' + ds + '/' + str(lat) + '/' + str(lon)
 	try:
-		r = requests.get(url)
-		data = json.loads(r.text)
+		with requests.get(url, headers={'Authorization': 'Token ' + bearer_token}) as r:
+			data = json.loads(r.text)
 	except:
 		data = []
 
