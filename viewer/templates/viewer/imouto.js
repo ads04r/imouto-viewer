@@ -1472,14 +1472,16 @@ function activateImageEditor()
 		var photodate = $(this).data('photodate');
 		var phototime = $(this).data('phototime');
 		var cover_image = $(this).data('cover');
+		var face_count = parseInt($(this).data('facecount'));
 		var img = $(this).html();
 		var alt = $('img', this).attr('alt');
 		html = html + '<table class="table">';
 		html = html + '<tr>';
-		html = html + '<td id="event_photo_image">' + img + '</td>';
+		html = html + '<td id="event_photo_image"><a target="_blank" href="photo/' + photoid + '.jpg">' + img + '</a></td>';
+		html = html + '<td>';
+		info = [];
 		if(eventid)
 		{
-			html = html + '<td>';
 			html = html + '<form role="form" id="photo-form" method="POST" action="photo/' + photoid + '.json">';
 			html = html + '<div class="form-group">';
 			html = html + '<label for="form-input-image-caption">Image Caption</label>';
@@ -1494,17 +1496,17 @@ function activateImageEditor()
 			html = html + '<input type="hidden" name="event_id" value="' + eventid + '"/>';
 			html = html + '<input type="hidden" name="photo_id" value="' + photoid + '"/>';
 			html = html + '</form>';
-			html = html + '</td>';
+			if(dateid) { info.push('Taken on ' + photodate + ' at ' + phototime); }
+			if(locid) { info.push('Taken at ' + loc); }
 		} else {
-			html = html + '<td>';
 			html = html + '<h4 class="box-title">' + alt + '</h4>';
-			if(dateid) { html = html + '<p>Taken on ' + photodate + ' at ' + phototime + '</p>'; }
-			if(locid) { html = html + '<p>Taken at ' + loc + '</p>'; }
-			html = html + '';
-			html = html + '';
-			html = html + '';
-			html = html + '</td>';
+			if(dateid) { info.push('Taken on ' + photodate + ' at ' + phototime); }
+			if(locid) { info.push('Taken at ' + loc); }
 		}
+		if(face_count > 1) { info.push(face_count + ' faces detected'); }
+		if(face_count == 1) { info.push(face_count + ' face detected'); }
+		if(info.length > 0) { html = html + '<ul><li> ' + info.join('</li><li> ') + '</li></ul>'; }
+		html = html + '</td>';
 		html = html + '</tr>';
 		html = html + '</table>';
 		$('#admin_event_photo_body').html(html);
