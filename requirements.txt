@@ -13,7 +13,7 @@ cycler==0.12.1
 databind==4.5.2
 databind.core==4.5.2
 databind.json==4.5.2
-dateparser==1.0.0
+dateparser==1.2.0
 Deprecated==1.2.14
 Django==4.2.15
 django-adminlte2==0.4.3
