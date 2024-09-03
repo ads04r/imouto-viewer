@@ -1,5 +1,5 @@
-import datetime, pytz, json, sys, requests, os
-from viewer.models import *
+import datetime, pytz, json, requests
+from viewer.models import Event, Person, PersonProperty
 from django.core.cache import cache
 from django.conf import settings
 from dateutil import parser
@@ -328,9 +328,9 @@ def get_monica_activity_data():
 		token = ''
 	data = []
 	if url == '':
-		return ret
+		return data
 	if token == '':
-		return ret
+		return data
 	page = 1
 	while True:
 		r = requests.get(url, headers={'Authorization': 'Bearer ' + token}, params={'page': page})
@@ -365,9 +365,9 @@ def get_monica_contact_data():
 		token = ''
 	data = []
 	if url == '':
-		return ret
+		return data
 	if token == '':
-		return ret
+		return data
 	page = 1
 	while True:
 		r = requests.get(url, headers={'Authorization': 'Bearer ' + token}, params={'with': 'contactfields', 'page': page})
@@ -402,9 +402,9 @@ def get_monica_journal_data():
 		token = ''
 	data = []
 	if url == '':
-		return ret
+		return data
 	if token == '':
-		return ret
+		return data
 	page = 1
 	while True:
 		r = requests.get(url, headers={'Authorization': 'Bearer ' + token}, params={'with': 'contactfields', 'page': page})
@@ -439,9 +439,9 @@ def get_monica_call_data():
 		token = ''
 	data = []
 	if url == '':
-		return ret
+		return data
 	if token == '':
-		return ret
+		return data
 	page = 1
 	while True:
 		r = requests.get(url, headers={'Authorization': 'Bearer ' + token}, params={'page': page})

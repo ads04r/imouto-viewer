@@ -1,8 +1,8 @@
 import datetime, pytz, json
-from django.db.models import Sum, Count, F, ExpressionWrapper, fields
+from django.db.models import Sum, Count
 from django.conf import settings
 
-from viewer.models import create_or_get_day, LifePeriod, HistoricalEvent, RemoteInteraction, Photo, Location, Person, PersonProperty, DataReading, Event, EventTag, EventWorkoutCategory, CalendarTask
+from viewer.models import create_or_get_day, LifePeriod, RemoteInteraction, Photo, Location, Person, PersonProperty, DataReading, Event, EventTag, EventWorkoutCategory, CalendarTask
 
 import logging
 logger = logging.getLogger(__name__)
@@ -77,8 +77,9 @@ def generate_dashboard():
 
 	try:
 		user_dob = settings.USER_DATE_OF_BIRTH
-		user_age = (now.date() - user_dob).total_seconds() / (86400 * 365.25)
 	except:
+		user_dob = None
+	if user_dob is None:
 		return {'error': 'USER_DATE_OF_BIRTH must be set.'}
 	try:
 		last_contact = RemoteInteraction.objects.all().order_by('-time')[0].time
@@ -87,9 +88,6 @@ def generate_dashboard():
 			last_contact = Event.objects.all().order_by('-end_time')[0].end_time
 		except:
 			return {}
-	user_heart_max = int(220.0 - user_age)
-	user_heart_low = int((220.0 - user_age) * 0.5)
-	user_heart_high = int((220.0 - user_age) * 0.7)
 
 	contactdata = []
 	stats['messages'] = len(RemoteInteraction.objects.filter(type='sms', time__gte=(last_contact - datetime.timedelta(days=7))))
@@ -205,7 +203,6 @@ def generate_dashboard():
 	days = []
 
 	if DataReading.objects.filter(type='heart-rate', start_time__gte=(last_record - datetime.timedelta(days=7))).count() > 0:
-		duration = ExpressionWrapper(F('end_time') - F('start_time'), output_field=fields.BigIntegerField())
 
 		for i in range(0, 7):
 			dtbase = last_record - datetime.timedelta(days=(7 - i))

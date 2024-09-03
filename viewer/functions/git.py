@@ -1,5 +1,5 @@
 from dateutil import parser
-import requests, json, sys
+import requests, json
 
 import logging
 logger = logging.getLogger(__name__)

@@ -1,5 +1,5 @@
-from rdflib import Graph, Namespace, URIRef, Literal
-from rdflib.namespace import RDF, RDFS, XSD
+from rdflib import Graph, URIRef
+from rdflib.namespace import RDFS
 from viewer.models import LocationCategory, SchemaOrgClass, SchemaOrgRelation
 from viewer.functions.rdf import uris_of_type
 import requests

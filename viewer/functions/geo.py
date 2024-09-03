@@ -1,4 +1,4 @@
-import datetime, pytz, json, re, sys, os, requests
+import json, requests
 from django.core.cache import cache
 from django.conf import settings
 from frechetdist import frdist
@@ -82,7 +82,6 @@ def get_area_address(n, w, s, e):
 			if l < c:
 				c = l
 			text.append(addr)
-	label = ''
 	ix = -1
 
 	for i in range(0, c):

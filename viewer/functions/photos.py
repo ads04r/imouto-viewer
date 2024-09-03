@@ -1,4 +1,4 @@
-import datetime, pytz, sys, os
+import datetime, pytz
 from viewer.models import Photo, Event, Location
 from viewer.functions.locations import nearest_location
 

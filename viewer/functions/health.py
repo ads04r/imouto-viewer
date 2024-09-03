@@ -1,7 +1,5 @@
-import datetime, time, pytz, sys, os
-from viewer.models import DataReading, Event, Day
-from viewer.health import parse_sleep
-from django.db.models import F, ExpressionWrapper, DurationField
+import datetime, time, pytz
+from viewer.models import DataReading
 from django.core.cache import cache
 from django.conf import settings
 

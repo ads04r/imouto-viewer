@@ -1,8 +1,6 @@
-from django.core.cache import cache
-from geopy import distance
 from django.conf import settings
 from dateutil import parser
-import datetime, pytz, json, re, sys, os, requests
+import datetime, pytz, json, re, requests
 
 import logging
 logger = logging.getLogger(__name__)
