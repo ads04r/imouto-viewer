@@ -9,7 +9,7 @@ from viewer.functions.photos import locate_photos_by_exif
 from viewer.functions.locations import create_location_events, fill_country_cities, fill_location_cities
 from viewer.functions.location_manager import get_location_manager_report_queue
 
-from viewer.importers.upload import import_fit
+from viewer.importers.fitfile import import_fit
 from viewer.importers.location import upload_file
 from viewer.importers.photos import import_photo_file
 from viewer.importers.minimoods import import_mood_file

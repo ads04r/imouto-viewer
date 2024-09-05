@@ -1,8 +1,5 @@
-import django, datetime, pytz, csv
+import datetime, pytz, csv
 from django.conf import settings
-from django.db.models import Q
-from django.core.files import File
-from django.core.cache import cache
 
 from viewer.models import DataReading
 

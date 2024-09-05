@@ -1,8 +1,4 @@
-import django, imaplib, email, email.header, email.parser, email.message, datetime, pytz
-from django.conf import settings
-from django.db.models import Q
-from django.core.files import File
-from django.core.cache import cache
+import imaplib, email, email.header, email.parser, email.message, datetime
 from dateutil import tz
 
 from viewer.models import RemoteInteraction
@@ -46,11 +42,9 @@ def import_sms_from_imap(host, username, password, inbox='INBOX', countrycode='4
 			if rv != 'OK':
 				continue
 			msg = email.message_from_string(data[0][1].decode('utf-8'))
-			decode = email.header.decode_header(msg['Subject'])[0]
-			subject = decode[0]
+			email.header.decode_header(msg['Subject'])
 			dtpl = email.utils.parsedate_tz(msg['Date'])
 			dt = datetime.datetime(*dtpl[0:6], tzinfo=tz.tzoffset('FLT', dtpl[9]))
-			ds = dt.astimezone(pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
 			body = msg.get_payload()
 			if((type(body)) is list):
 				body = body[0]
@@ -125,11 +119,9 @@ def import_calls_from_imap(host, username, password, inbox='INBOX', countrycode=
 			if rv != 'OK':
 				continue
 			msg = email.message_from_string(data[0][1].decode('utf-8'))
-			decode = email.header.decode_header(msg['Subject'])[0]
-			subject = decode[0]
+			email.header.decode_header(msg['Subject'])
 			dtpl = email.utils.parsedate_tz(msg['Date'])
 			dt = datetime.datetime(*dtpl[0:6], tzinfo=tz.tzoffset('FLT', dtpl[9]))
-			ds = dt.astimezone(pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
 			body = msg.get_payload()
 			if((type(body)) is list):
 				body = body[0]

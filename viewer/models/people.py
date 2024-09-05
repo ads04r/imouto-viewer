@@ -1,10 +1,7 @@
 from django.db import models
-from django.db.models import Field
 from colorfield.fields import ColorField
 
 from viewer.models.core import Person
-
-import datetime, pytz, os
 
 import logging
 logger = logging.getLogger(__name__)

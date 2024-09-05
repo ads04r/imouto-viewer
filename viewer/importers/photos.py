@@ -1,8 +1,5 @@
-import django, datetime, pytz, os, exifread, requests
+import datetime, pytz, os, exifread, requests
 from django.conf import settings
-from django.db.models import Q
-from django.core.files import File
-from django.core.cache import cache
 
 from viewer.models import Photo
 from viewer.functions.people import find_person_by_picasaid as find_person
@@ -106,7 +103,6 @@ def import_picasa_faces(picasafile):
 				if len(parse) == 2:
 					contacts[parse[0]] = find_person(parse[0], parse[1])
 			if ((line[0:6] == 'faces=') & (lf != '')):
-				item = []
 				for segment in line[6:].split(';'):
 					structure = segment.split(',')
 					if not(lf in faces):
@@ -175,7 +171,7 @@ def import_photo_directory(path, tzinfo=pytz.UTC):
 			continue
 		ret.append(photo)
 
-	faces = import_picasa_faces(picasafile)
+	import_picasa_faces(picasafile)
 
 	gps_data = []
 	for photo_path in ret:
@@ -201,8 +197,7 @@ def import_photo_directory(path, tzinfo=pytz.UTC):
 		files = {'uploaded_file': op}
 		data = {'file_source': 'photo', 'file_format': 'csv'}
 
-		r = requests.post(url, headers={'Authorization': 'Token ' + bearer_token}, files=files, data=data)
-		st = r.status_code
+		requests.post(url, headers={'Authorization': 'Token ' + bearer_token}, files=files, data=data)
 
 	return ret
 

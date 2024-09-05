@@ -5,7 +5,7 @@ from viewer.models import DataReading, Event
 from io import StringIO
 import os, sys, datetime, shutil, sqlite3, pytz, csv, xmltodict, json
 from viewer.models import RemoteInteraction
-from viewer.importers.upload import import_fit
+from viewer.importers.fitfile import import_fit
 
 class Command(BaseCommand):
 	"""

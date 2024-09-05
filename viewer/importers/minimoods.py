@@ -1,9 +1,7 @@
-import django
-from django.conf import settings
 from dateutil import parser
 import os, csv, datetime
 
-from viewer.importers.core import import_data
+from viewer.importers.genericsensor import import_data
 
 import logging
 logger = logging.getLogger(__name__)

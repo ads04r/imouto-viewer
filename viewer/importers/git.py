@@ -1,8 +1,5 @@
-import django, datetime, pytz
+import datetime, pytz
 from django.conf import settings
-from django.db.models import Q
-from django.core.files import File
-from django.core.cache import cache
 
 from viewer.functions.git import get_recent_github_commits, get_recent_gitea_commits
 from viewer.models import GitCommit

@@ -1,5 +1,5 @@
 from django.db import models
-import re, os, datetime, pytz
+import os, datetime, pytz
 
 import logging
 logger = logging.getLogger(__name__)

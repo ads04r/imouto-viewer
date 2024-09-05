@@ -1,5 +1,4 @@
-import django, requests, datetime, pytz, math
-from django.conf import settings
+import datetime, pytz, math
 from fitparse import FitFile
 
 from viewer.models import Day, DataReading, ImportedFile

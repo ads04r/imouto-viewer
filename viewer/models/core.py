@@ -26,7 +26,7 @@ from viewer.health import parse_sleep, max_heart_rate
 from viewer.functions.geo import get_location_name
 from viewer.functions.location_manager import get_possible_location_events, get_logged_position, getgeoline, getelevation, getspeed, getboundingbox
 from viewer.staticcharts import generate_pie_chart, generate_donut_chart
-from viewer.functions.file_uploads import user_thumbnail_upload_location, photo_thumbnail_upload_location, location_thumbnail_upload_location, year_pdf_upload_location, report_wordcloud_upload_location, report_graph_upload_location, event_collage_upload_location, event_staticmap_upload_location, tag_staticmap_upload_location, year_wordcloud_upload_location
+from viewer.functions.file_uploads import user_thumbnail_upload_location, photo_thumbnail_upload_location, location_thumbnail_upload_location, year_pdf_upload_location, report_wordcloud_upload_location, report_graph_upload_location, event_staticmap_upload_location, tag_staticmap_upload_location, year_wordcloud_upload_location
 from viewer.functions.rdf import get_wikipedia_abstract
 
 import random, datetime, pytz, json, markdown, re, os, overpy, holidays
@@ -1341,7 +1341,6 @@ class Event(models.Model):
 				xml.appendChild(trk)
 		return(root.toprettyxml(indent='\t'))
 	def coordinates(self):
-		dt = self.start_time
 		ret = []
 		if self.geo:
 			g = json.loads(self.geo)
@@ -1941,7 +1940,6 @@ class Year(models.Model):
 	@cached_property
 	def workouts(self):
 		ret = []
-		home = Location.objects.get(pk=settings.USER_HOME_LOCATION)
 		max = 0.0
 		for wc in EventWorkoutCategory.objects.all():
 			item = [str(wc), 0.0, 0, str(wc.icon)]
@@ -2336,7 +2334,6 @@ class Month(models.Model):
 	def workouts(self):
 		logger.debug("Generating month workout data")
 		ret = []
-		home = Location.objects.get(pk=settings.USER_HOME_LOCATION)
 		max = 0.0
 		for wc in EventWorkoutCategory.objects.all():
 			item = [str(wc), 0.0, 0, str(wc.icon)]
@@ -2541,7 +2538,7 @@ class Day(models.Model):
 		dy = float(self.date.strftime("%j"))
 		year = int(self.date.year)
 		try:
-			dd = datetime.datetime(year, 2, 29)
+			datetime.datetime(year, 2, 29)
 			y = 366.0
 		except:
 			y = 365.0
@@ -2642,7 +2639,6 @@ class Day(models.Model):
 		"""
 		Every described event on this particular day.
 		"""
-		d = self.date
 		dts = self.__dts__()
 		dte = self.__dte__()
 		return Event.objects.filter(end_time__gte=dts, start_time__lte=dte).exclude(type='life_event').order_by('start_time')
@@ -2659,7 +2655,6 @@ class Day(models.Model):
 		"""
 		Every calendar appointment scheduled on this particular day.
 		"""
-		d = self.date
 		dts = self.__dts__()
 		dte = self.__dte__()
 		return CalendarAppointment.objects.filter(end_time__gte=dts, end_time__lte=dte).values('id', 'eventid', 'caption')
@@ -2668,7 +2663,6 @@ class Day(models.Model):
 		"""
 		Every microblogpost (typically tweets, could be toots) made on this particular day.
 		"""
-		d = self.date
 		dts = self.__dts__()
 		dte = self.__dte__()
 		return RemoteInteraction.objects.filter(time__gte=dts, time__lte=dte, type='microblogpost', address='').order_by('time')
@@ -2677,7 +2671,6 @@ class Day(models.Model):
 		"""
 		Every Git commit made on this particular day.
 		"""
-		d = self.date
 		dts = self.__dts__()
 		dte = self.__dte__()
 		return GitCommit.objects.filter(commit_date__gte=dts, commit_date__lte=dte).order_by('commit_date')
@@ -2686,7 +2679,6 @@ class Day(models.Model):
 		"""
 		Every task marked as 'completed' on this particular day.
 		"""
-		d = self.date
 		dts = self.__dts__()
 		dte = self.__dte__()
 		return CalendarTask.objects.filter(time_completed__gte=dts, time_completed__lte=dte).order_by('time_completed')
@@ -2695,7 +2687,6 @@ class Day(models.Model):
 		"""
 		Every SMS message sent or received on this particular day.
 		"""
-		d = self.date
 		dts = self.__dts__()
 		dte = self.__dte__()
 		return RemoteInteraction.objects.filter(time__gte=dts, time__lte=dte, type='sms').order_by('time')
@@ -2825,7 +2816,6 @@ class Day(models.Model):
 
 		data['heart']['abs_max_rate'] = max_rate
 
-		max = 0
 		zone = [0, 0, 0]
 		readings = self.data_readings('heart-rate')
 		for dr in readings.filter(value__gte=zone_2):
@@ -3022,7 +3012,7 @@ class Day(models.Model):
 				pass # Leave at local time if we have an issue
 
 		dts, dte = self.__calculate_wake_time() # Do this again, because the timezone may have changed.
-		suntimes = self.__suntimes()
+		self.__suntimes()
 		if not(self.today):
 			self.wake_time = dts
 			self.bed_time = dte

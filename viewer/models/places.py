@@ -1,10 +1,6 @@
 from django.db import models
-from django.db.models import Field, IntegerField, F
-from colorfield.fields import ColorField
 
-from viewer.models.core import Location, WeatherLocation
-
-import random, datetime, pytz, json, markdown, re, os
+from viewer.models.core import WeatherLocation
 
 import logging
 logger = logging.getLogger(__name__)

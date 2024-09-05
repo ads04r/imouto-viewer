@@ -1,9 +1,7 @@
-import django, vobject, requests
-from django.conf import settings
-from requests.auth import HTTPBasicAuth, HTTPDigestAuth
+import vobject, requests
+from requests.auth import HTTPBasicAuth
 from django.db.models import Q
 from django.core.files import File
-from django.core.cache import cache
 from tempfile import NamedTemporaryFile
 from ics import Calendar
 

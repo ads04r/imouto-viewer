@@ -1,8 +1,5 @@
-import django, datetime, pytz
+import datetime, pytz
 from django.conf import settings
-from django.db.models import Q
-from django.core.files import File
-from django.core.cache import cache
 from tempfile import NamedTemporaryFile
 
 from viewer.functions.monica import get_monica_contact_data, get_last_monica_activity, get_last_monica_call, assign_monica_avatar, create_monica_call, create_monica_activity_from_event

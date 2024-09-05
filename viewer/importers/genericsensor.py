@@ -1,6 +1,3 @@
-import django
-from django.conf import settings
-
 from viewer.models import DataReading
 
 import logging

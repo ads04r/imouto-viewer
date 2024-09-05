@@ -1,9 +1,6 @@
-import django, datetime, pytz, requests, json
+import datetime, pytz, requests, json
 from django.conf import settings
 from dateutil.parser import parse as dateparse
-from django.db.models import Q
-from django.core.files import File
-from django.core.cache import cache
 
 from viewer.models import Event, Person, DataReading
 from viewer.functions.locations import home_location

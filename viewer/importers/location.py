@@ -1,6 +1,5 @@
-import django, requests, datetime, pytz, math
+import requests
 from django.conf import settings
-from fitparse import FitFile
 
 import logging
 logger = logging.getLogger(__name__)
