@@ -282,7 +282,7 @@ def generate_dashboard():
 	birthdays = sorted(birthdays, key=lambda p: p[1])
 
 	tasks = []
-	for task in CalendarTask.objects.filter(time_due__gte=now, time_due__lt=(now + datetime.timedelta(days=7))):
+	for task in CalendarTask.objects.filter(time_completed=None, time_due__gte=now, time_due__lt=(now + datetime.timedelta(days=7))):
 		tasks.append(task)
 
 	workouts = []
