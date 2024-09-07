@@ -949,7 +949,7 @@ function dayScreen(id)
         var map = L.map('mapselect', {center: [lat, lon], zoom: 13});
         L.tileLayer('{{ tiles }}', {
             attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
-            maxZoom: 16
+            maxZoom: {{ max_zoom }}
         }).addTo(map);
         //$('#id_lat').val(lat);
         //$('#id_lon').val(lon);
@@ -1280,7 +1280,7 @@ function placesScreen(id)
         var map = L.map('mapselect', {center: [lat, lon], zoom: 13});
         L.tileLayer('{{ tiles }}', {
             attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
-            maxZoom: 16
+            maxZoom: {{ max_zoom }}
         }).addTo(map);
         $('#id_lat').val(lat);
         $('#id_lon').val(lon);
@@ -1602,7 +1602,7 @@ function makeMap()
             L.geoJSON(data, {onEachFeature: function(f, l){buildRouteMap(f.geometry, map);}});
             L.tileLayer('{{ tiles }}', {
                 attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
-                maxZoom: 16, minZoom: 2
+                maxZoom: {{ max_zoom }}, minZoom: 2
             }).addTo(map);
             map.fitBounds(bb);
     });
@@ -1991,7 +1991,7 @@ function initialiseJourneyMap(mapdiv)
         });
         L.tileLayer('{{ tiles }}', {
             attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/" target="_top">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/" target="_top">CC-BY-SA</a>',
-            maxZoom: 16
+            maxZoom: {{ max_zoom }}
         }).addTo(map);
         $.ajax({
             url: url,
@@ -2078,7 +2078,7 @@ function tagRulesScreen(id)
 		        var map = L.map('mapselect', {center: [lat, lon], zoom: 13});
 		        L.tileLayer('{{ tiles }}', {
 		            attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
-		            maxZoom: 16
+		            maxZoom: {{ max_zoom }}
 		        }).addTo(map);
 		        map.on('click', function(e){
 			    var RES = 100000;

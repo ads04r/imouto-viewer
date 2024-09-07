@@ -420,6 +420,11 @@ class Location(models.Model):
 		except:
 			home = -1
 		return (self.pk == home)
+	@property
+	def occupants(self):
+		if self.exists():
+			return Person.objects.filter(properties__in=PersonProperty.objects.filter(key='livesat', value=self.pk)).distinct()
+		return Person.objects.none()
 	def schema_classes(self):
 		ret = []
 		for c in self.categories.all():

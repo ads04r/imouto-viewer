@@ -28,11 +28,20 @@
 {% if data.parent %}<li class="list-group-item"><b>Located within</b> <span class="pull-right"><a href="#place_{{ data.parent.uid }}">{{ data.parent.label }}</a></span></li>{% endif %}
 {% if data.city %}<li class="list-group-item"><b>City</b> <span class="pull-right"><a href="#{{ data.city.slug }}">{{ data.city }}</a></span></li>{% endif %}
 {% if data.country %}<li class="list-group-item"><b>Country</b> <span class="pull-right"><a href="#{{ data.country.slug }}">{{ data.country }}</a></span></li>{% endif %}
+{% if data.categories.count > 0 %}<li class="list-group-item"><b>Categories</b><span class="pull-right">{% for category in data.categories.all %}<a href="#placecategory_{{ category.pk }}">{{ category }}</a> {% endfor %}</span></li>{% endif %}
                         </ul>
 {% if data.description %}<p class="text-muted">{{ data.description }}</p>{% endif %}
-{% if data.categories.count > 0 %}<p>Categories: 
-{% for category in data.categories.all %}<a href="#placecategory_{{ category.pk }}">{{ category }}</a> {% endfor %}
-</p>{% endif %}
+
+{% if data.occupants.count > 0 %}
+                        <div class="timeline-people-row">
+                    {% for person in data.occupants %}
+                        {% if person.image %}
+                            <a href="#person_{{ person.uid }}"><img src="people/{{ person.uid }}_thumb.jpg" width="50" height="50" alt="{{ person.full_name }}"></a>
+                        {% endif %}
+                    {% endfor %}
+                        </div>
+{% endif %}
+
 {% if data.tags.count > 0 %}<p>
 {% for tag in data.tags.all %}<a href="#tag_{{ tag.id|safe }}"><span style="background-color: {{ tag.colour }};" class="badge">{{ tag.id }}</span></a> {% endfor %}
 </p>{% endif %}

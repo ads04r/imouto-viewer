@@ -51,10 +51,13 @@ def dashboard_json(request):
 	return response
 
 def script(request):
-	context = {'tiles': 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', 'home': home_location()}
+	context = {'tiles': 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', 'max_zoom': 17, 'home': home_location()}
 	if hasattr(settings, 'MAP_TILES'):
 		if settings.MAP_TILES != '':
 			context['tiles'] = str(settings.MAP_TILES)
+	if hasattr(settings, 'MAX_ZOOM'):
+		if settings.MAX_ZOOM != '':
+			context['max_zoom'] = str(settings.MAX_ZOOM)
 	return render(request, 'viewer/imouto.js', context=context, content_type='text/javascript')
 
 def timeline(request):
