@@ -115,3 +115,6 @@ HAYSTACK_CONNECTIONS = {
 HAYSTACK_LIMIT_TO_REGISTERED_MODELS = False
 
 FILE_UPLOAD_HANDLERS = ["django.core.files.uploadhandler.TemporaryFileUploadHandler"]
+
+TESSERACT_BINARY = "/usr/bin/tesseract"
+TESSERACT_LANGUAGE = "eng"

@@ -888,6 +888,7 @@ class Photo(models.Model):
 	location = models.ForeignKey(Location, null=True, blank=True, on_delete=models.CASCADE, related_name="photos")
 	cached_thumbnail = models.ImageField(blank=True, null=True, upload_to=photo_thumbnail_upload_location)
 	face_count = models.IntegerField(null=True, blank=True)
+	detected_text = models.TextField(null=True, blank=True)
 	def to_dict(self):
 		"""
 		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.

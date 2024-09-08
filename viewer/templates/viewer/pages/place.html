@@ -65,7 +65,6 @@
                         <ul class="list-group list-group-unbordered">
                           <li class="list-group-item"><b>Average visit</b><span class="pull-right">{{ data.average_event }}</span></li>
                           <li class="list-group-item"><b>Longest visit</b><span class="pull-right">{{ data.longest_event }}</span></li>
-                          {% if data.categories.count > 0 %}<li class="list-group-item"><b>Categories</b><span class="pull-right">{% for category in data.categories.all %}{{ category }}<br/>{% endfor %}</span></li>{% endif %}
                         </ul>
 
                     </div>

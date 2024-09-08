@@ -169,7 +169,7 @@ def import_photo_directory(path, tzinfo=pytz.UTC):
 		p = import_photo_file(photo, tzinfo)
 		if p is None:
 			continue
-		ret.append(photo)
+		ret.append(p)
 
 	import_picasa_faces(picasafile)
 

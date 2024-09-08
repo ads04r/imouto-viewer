@@ -2,11 +2,28 @@ from background_task import background
 
 from viewer.models import Event, EventSimilarity, Photo
 from viewer.functions.geo import journey_similarity
+from viewer.functions.ocr import get_text_in_image
 from django.conf import settings
 from geopy import distance
 
-import logging, cv2, json
+import logging, cv2, json, os
 logger = logging.getLogger(__name__)
+
+@background(schedule=0, queue='datacrunching')
+def scan_photo_for_text(photo_id):
+
+	if not hasattr(settings, "TESSERACT_BINARY"):
+		return # If there is no OCR configured, this task cannot function.
+	logger.info("Task scan_photo_for_text beginning")
+	photo = Photo.objects.get(id=photo_id)
+	photo_path = str(photo.file.path)
+	logger.debug("Working with file " + photo_path)
+	if not os.path.exists(photo_path):
+		logger.warning("File " + photo_path + " (Photo object " + str(photo.pk) + ") is missing")
+		return
+	text = get_text_in_image(photo_path)
+	photo.detected_text = text
+	photo.save(update_fields=['detected_text'])
 
 @background(schedule=0, queue='datacrunching')
 def count_photo_faces(photo_id):
@@ -26,6 +43,31 @@ def count_photo_faces(photo_id):
 		return
 	photo.face_count = face_count
 	photo.save(update_fields=['face_count'])
+
+@background(schedule=0, queue='datacrunching')
+def scan_event_for_text(event_id):
+
+	if not hasattr(settings, "TESSERACT_BINARY"):
+		return # If there is no OCR configured, this task cannot function.
+	logger.info("Task scan_event_for_text beginning")
+
+	try:
+		event = Event.objects.get(id=event_id)
+	except:
+		return # The event has been deleted
+	logger.debug("Working with event " + str(event))
+	for photo in event.photos():
+		photo_path = str(photo.file.path)
+		logger.debug(" ... " + photo_path)
+		if not os.path.exists(photo_path):
+			logger.warning("File " + photo_path + " (Photo object " + str(photo.pk) + ") is missing")
+			continue
+		try:
+			text = get_text_in_image(photo_path)
+		except:
+			text = ""
+		photo.detected_text = text
+		photo.save(update_fields=['detected_text'])
 
 @background(schedule=0, queue='datacrunching')
 def count_event_faces(event_id):

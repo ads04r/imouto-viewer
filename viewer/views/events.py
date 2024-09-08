@@ -9,7 +9,7 @@ import datetime, pytz, dateutil.parser, json, requests, random
 from viewer.models import Person, Photo, Event, EventWorkoutCategory, CalendarAppointment, LifePeriod, ImportedFile
 from viewer.forms import EventForm, QuickEventForm, LifePeriodForm
 from viewer.tasks.reports import generate_photo_collages
-from viewer.tasks.datacrunching import regenerate_similar_events, generate_similar_events, count_event_faces
+from viewer.tasks.datacrunching import regenerate_similar_events, generate_similar_events, count_event_faces, scan_event_for_text
 
 from viewer.functions.moonshine import get_moonshine_tracks
 from viewer.functions.locations import join_location_events
@@ -109,7 +109,9 @@ def event(request, eid):
 	logger.info("Event " + str(eid) + " requested")
 	data = get_object_or_404(Event, pk=eid)
 	logger.debug("    ... " + str(data))
-	count_event_faces(eid)
+	if data.photos().count() > 0:
+		count_event_faces(eid)
+		scan_event_for_text(eid)
 
 	form = EventForm(instance=data)
 	context = {'type':'event', 'data':data, 'form':form, 'people':Person.objects.order_by('-significant', 'given_name', 'family_name'), 'categories':EventWorkoutCategory.objects.all()}
