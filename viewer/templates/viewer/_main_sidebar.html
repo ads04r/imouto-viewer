@@ -7,7 +7,14 @@
     <ul class="sidebar-menu">
 
       <li class="header">VIEWS</li>
-      <li><a class="viewlink" href="#"><i class="fa fa-dashboard"></i> <span>Summary</span></a></li>
+      <li class="active">
+          <a class="viewlink" href="#"><i class="fa fa-home"></i> <span>Home</span><span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span></a>
+          <ul class="treeview-menu">
+              <li><a class="viewlink" href="#"><i class="fa fa-dashboard"></i> <span>Summary</span></a></li>
+              <li><a class="viewlink" href="#day_{{ today.date|date:"Ymd" }}"><i class="fa fa-calendar-o"></i> <span>Today</span></a></li>
+              <li><a class="viewlink" href="#day_{{ today.yesterday.date|date:"Ymd" }}"><i class="fa fa-calendar-o"></i> <span>Yesterday</span></a></li>
+          </ul>
+      </li>
       <li>
           <a class="viewlink" href="#"><i class="fa fa-heart"></i> <span>Health</span><span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span></a>
           <ul class="treeview-menu">
@@ -22,7 +29,7 @@
       <li><a class="viewlink" href="#timeline"><i class="fa fa-clock-o"></i> <span>Timeline</span></a></li>
       <li><a class="viewlink" href="#onthisday"><i class="fa fa-birthday-cake"></i> <span>On This Day</span></a></li>
       <li class="header">CATEGORIES</li>
-      <li><a class="sectionlink" href="#events"><i class="fa fa-calendar-o"></i> <span>Events</span></a></li>
+      <li><a class="sectionlink" href="#events"><i class="fa fa-calendar"></i> <span>Events</span></a></li>
       <li><a class="sectionlink" href="#places"><i class="fa fa-map-marker"></i> <span>Places</span></a></li>
       <li><a class="sectionlink" href="#people"><i class="fa fa-user-o"></i> <span>People</span></a></li>
       <li><a class="sectionlink" href="#tags"><i class="fa fa-tag"></i> <span>Tags</span></a></li>

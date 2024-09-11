@@ -42,9 +42,11 @@ class WeekdayLookup(Transform):
 	def output_field(self):
 		return IntegerField()
 
-def create_or_get_day(query_date):
+def create_or_get_day(query_date=None):
 
 	dt = None
+	if query_date is None:
+		dt = datetime.datetime.now().date()
 	if isinstance(query_date, datetime.datetime):
 		dt = query_date.date()
 	if isinstance(query_date, datetime.date):

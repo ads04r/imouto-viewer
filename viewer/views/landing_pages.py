@@ -5,7 +5,7 @@ from django.db.models import Q, F
 from django.conf import settings
 import datetime, pytz, dateutil.parser, json, requests, random
 
-from viewer.models import Event
+from viewer.models import Event, create_or_get_day
 from viewer.forms import EventForm, QuickEventForm
 
 from viewer.functions.locations import home_location
@@ -15,7 +15,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 def index(request):
-	context = {'type':'index', 'data':[]}
+	context = {'type':'index', 'data':[], 'today': create_or_get_day()}
 	logger.info("HTML frame requested")
 	return render(request, 'viewer/index.html', context)
 
