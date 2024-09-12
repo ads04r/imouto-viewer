@@ -2392,12 +2392,11 @@ class Month(models.Model):
 		else:
 			dte = pytz.utc.localize(datetime.datetime(self.year + 1, 1, 1, 0, 0, 0) - datetime.timedelta(seconds=1))
 		for event in Event.objects.filter(end_time__gte=dts, start_time__lte=dte, type='journey'):
-			logger.debug("... checking " + str(event.pk) + ' / ' + str(event))
 			new_dist = event.distance()
-			logger.debug("    " + str(new_dist) + " miles")
 			if new_dist > dist:
 				ret = event
 				dist = new_dist
+		logger.debug("... " + str(ret))
 		return ret
 	@cached_property
 	def distance(self):
