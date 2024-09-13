@@ -16,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 def index(request):
 	context = {'type':'index', 'data':[], 'today': create_or_get_day()}
+	if context['today']:
+		context['today'].yesterday.get_sleep_information() # Pre-cache so we never end up with any part-processed data
 	logger.info("HTML frame requested")
 	return render(request, 'viewer/index.html', context)
 
