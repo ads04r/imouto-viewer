@@ -95,6 +95,7 @@ class ImportedFile(models.Model):
 	file_size = models.IntegerField(default=0)
 	earliest_timestamp = models.DateTimeField(null=True, blank=True, default=None)
 	latest_timestamp = models.DateTimeField(null=True, blank=True, default=None)
+	activity = models.CharField(max_length=64, null=True, blank=True)
 	@property
 	def path(self):
 		return os.path.join(self.watched_directory.path, self.relative_path)

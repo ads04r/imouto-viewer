@@ -15,12 +15,18 @@ def import_fit(parseable_fit_input):
 	data = []
 	earliest_timestamp = None
 	latest_timestamp = None
+	activity = None
 	fit = FitFile.from_file(parseable_fit_input)
 	for record in fit.records:
 		try:
 			name = str(record.message.name)
 		except:
 			name = ''
+		if name == 'sport':
+			for recitem in record.message.fields:
+				if recitem.get_name() == 'name':
+					activity = recitem.get_value()
+			continue
 		if name != 'record':
 			continue
 		item = {}
@@ -104,8 +110,8 @@ def import_fit(parseable_fit_input):
 			f.import_time = pytz.utc.localize(datetime.datetime.utcnow())
 			f.earliest_timestamp = earliest_timestamp
 			f.latest_timestamp = latest_timestamp
-			f.save(update_fields=['import_time', 'earliest_timestamp', 'latest_timestamp'])
+			f.activity = activity
+			f.save(update_fields=['activity', 'import_time', 'earliest_timestamp', 'latest_timestamp'])
 
 	for dt in days:
 		Day.objects.filter(date=dt).delete()
-

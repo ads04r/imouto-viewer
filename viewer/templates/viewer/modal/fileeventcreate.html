@@ -7,7 +7,11 @@
                 <label for="join_events">Event timespan:</label>
 		<select class="form-control" id="add_file_event" name="add_file_event">
 {% for f in imported_files %}
+{% if f.activity %}
+			<option value="{{ f.pk }}">{{ f.earliest_timestamp|date:"g:ia" }} to {{ f.latest_timestamp|date:"g:ia" }} / {{ f.activity }}</option>
+{% else %}
 			<option value="{{ f.pk }}">{{ f.earliest_timestamp|date:"g:ia" }} to {{ f.latest_timestamp|date:"g:ia" }}</option>
+{% endif %}
 {% endfor %}
                 </select>
 
