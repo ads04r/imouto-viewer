@@ -1,5 +1,6 @@
 import requests
 from django.conf import settings
+from viewer.models import ImportedFile
 
 import logging
 logger = logging.getLogger(__name__)
@@ -21,6 +22,12 @@ def upload_file(temp_file, file_source, format=''):
 		r = requests.post(url, headers={'Authorization': 'Token ' + bearer_token}, data={'file_source': file_source}, files={'uploaded_file': (temp_file, open(temp_file, 'rb'))})
 	else:
 		r = requests.post(url, headers={'Authorization': 'Token ' + bearer_token}, data={'file_source': file_source, 'file_format': format}, files={'uploaded_file': (temp_file, open(temp_file, 'rb'))})
+
+	for f in ImportedFile.objects.all():
+		if f.path == temp_file:
+			f.import_time = pytz.utc.localize(datetime.datetime.utcnow())
+			f.save(update_fields=['import_time'])
+
 	if r.status_code == 200:
 		return True
 	return False

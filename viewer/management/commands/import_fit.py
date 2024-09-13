@@ -13,7 +13,7 @@ class Command(BaseCommand):
 	"""
 	def add_arguments(self, parser):
 
-		parser.add_argument("-i", "--input", action="store", dest="input_file", default="", help="The file, containing SMS messages, to be imported.")
+		parser.add_argument("-i", "--input", action="store", dest="input_file", default="", help="The ANT-FIT file to be imported.")
 
 	def handle(self, *args, **kwargs):
 
