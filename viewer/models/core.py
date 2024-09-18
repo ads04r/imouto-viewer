@@ -985,9 +985,10 @@ class Photo(models.Model):
 				im = im.transpose(Image.ROTATE_270)
 		return im
 	def thumbnail(self, size=200):
-		if self.cached_thumbnail:
-			im = Image.open(self.cached_thumbnail)
-			return im
+		if size == 200:
+			if self.cached_thumbnail:
+				im = Image.open(self.cached_thumbnail)
+				return im
 		im = self.image()
 		bbox = im.getbbox()
 		w = bbox[2]
@@ -1000,8 +1001,9 @@ class Photo(models.Model):
 		ret = ret.resize((size, size), 1)
 		blob = BytesIO()
 		ret.save(blob, 'JPEG')
-		self.cached_thumbnail.save(photo_thumbnail_upload_location, File(blob), save=False)
-		self.save(update_fields=['cached_thumbnail'])
+		if size == 200:
+			self.cached_thumbnail.save(photo_thumbnail_upload_location, File(blob), save=False)
+			self.save(update_fields=['cached_thumbnail'])
 		return ret
 	def events(self):
 		if self.time is None:

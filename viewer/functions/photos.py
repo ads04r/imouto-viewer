@@ -1,4 +1,5 @@
-import datetime, pytz
+import datetime, pytz, random
+from django.conf import settings
 from viewer.models import Photo, Event, Location
 from viewer.functions.locations import nearest_location
 from PIL import Image, ImageDraw
@@ -6,6 +7,22 @@ from math import sin, cos, pi
 
 import logging
 logger = logging.getLogger(__name__)
+
+def get_year_sample_photos(year, max=50):
+
+	photos = []
+	dts = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(year, 1, 1, 0, 0, 0))
+	dte = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(year + 1, 1, 1, 0, 0, 0)) - datetime.timedelta(seconds=1)
+	for photo in Photo.objects.filter(time__lte=dte, time__gte=dts, face_count__gt=0).order_by('-face_count')[0:max]:
+		photos.append(photo)
+	for photo in Photo.objects.filter(time__lte=dte, time__gte=dts, face_count=0)[0:max]:
+		photos.append(photo)
+	random.shuffle(photos)
+
+	ret = []
+	for photo in photos[0:max]:
+		ret.append(photo.thumbnail(640))
+	return ret
 
 def hexagon_crop(im, landscape=True):
 
