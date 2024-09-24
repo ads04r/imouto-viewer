@@ -82,5 +82,6 @@ urlpatterns = [
     path('webhook/<path>', views.webhook),
     path('questionnaires.html', views.questionnaires),
     path('questionnaires/<id>.html', views.questionnaireview),
+    path('tile/<z>/<x>/<y>.pbf', views.pbftile),
 ]
 

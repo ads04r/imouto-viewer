@@ -947,10 +947,14 @@ function dayScreen(id)
         var lat = {{ home.lat }};
         var lon = {{ home.lon }};
         var map = L.map('mapselect', {center: [lat, lon], zoom: 13});
+{% if '.pbf' in tiles %}
+        L.vectorGrid.protobuf('tile/{z}/{x}/{y}.pbf').addTo(map);
+{% else %}
         L.tileLayer('{{ tiles }}', {
             attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
             maxZoom: {{ max_zoom }}
         }).addTo(map);
+{% endif %}
         //$('#id_lat').val(lat);
         //$('#id_lon').val(lon);
         map.on('click', onLocEventMapClick);
@@ -1278,10 +1282,14 @@ function placesScreen(id)
         var heightstring = parseInt(window.innerHeight * 0.5) + 'px';
         $('#mapselect').css('min-height', heightstring);
         var map = L.map('mapselect', {center: [lat, lon], zoom: 13});
+{% if '.pbf' in tiles %}
+        L.vectorGrid.protobuf('tile/{z}/{x}/{y}.pbf').addTo(map);
+{% else %}
         L.tileLayer('{{ tiles }}', {
             attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
             maxZoom: {{ max_zoom }}
         }).addTo(map);
+{% endif %}
         $('#id_lat').val(lat);
         $('#id_lon').val(lon);
         map.on('click', onMapClick);
@@ -1600,10 +1608,14 @@ function makeMap()
                 var map = L.map(id);
             }
             L.geoJSON(data, {onEachFeature: function(f, l){buildRouteMap(f.geometry, map);}});
-            L.tileLayer('{{ tiles }}', {
-                attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
-                maxZoom: {{ max_zoom }}, minZoom: 2
-            }).addTo(map);
+{% if '.pbf' in tiles %}
+        L.vectorGrid.protobuf('tile/{z}/{x}/{y}.pbf').addTo(map);
+{% else %}
+        L.tileLayer('{{ tiles }}', {
+            attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
+            maxZoom: {{ max_zoom }}
+        }).addTo(map);
+{% endif %}
             map.fitBounds(bb);
     });
 }
@@ -1989,10 +2001,14 @@ function initialiseJourneyMap(mapdiv)
             center: [50.93540, -1.39638],
             zoom: 13
         });
+{% if '.pbf' in tiles %}
+        L.vectorGrid.protobuf('tile/{z}/{x}/{y}.pbf').addTo(map);
+{% else %}
         L.tileLayer('{{ tiles }}', {
-            attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/" target="_top">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/" target="_top">CC-BY-SA</a>',
+            attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
             maxZoom: {{ max_zoom }}
         }).addTo(map);
+{% endif %}
         $.ajax({
             url: url,
             dataType: 'json',
@@ -2076,10 +2092,14 @@ function tagRulesScreen(id)
 			$('#condition-lat').val(lat);
 			$('#condition-lon').val(lon);
 		        var map = L.map('mapselect', {center: [lat, lon], zoom: 13});
-		        L.tileLayer('{{ tiles }}', {
-		            attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
-		            maxZoom: {{ max_zoom }}
-		        }).addTo(map);
+{% if '.pbf' in tiles %}
+        L.vectorGrid.protobuf('tile/{z}/{x}/{y}.pbf').addTo(map);
+{% else %}
+        L.tileLayer('{{ tiles }}', {
+            attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
+            maxZoom: {{ max_zoom }}
+        }).addTo(map);
+{% endif %}
 		        map.on('click', function(e){
 			    var RES = 100000;
 			    var lat = Math.round(e.latlng.lat * RES) / RES;

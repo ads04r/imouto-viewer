@@ -24,6 +24,8 @@ class Command(BaseCommand):
 			  ('leaflet/leaflet-src.esm.js.map', 'https://cdn.jsdelivr.net/npm/leaflet/dist/leaflet-src.esm.js.map'),
 			  ('leaflet/leaflet-src.js.map', 'https://cdn.jsdelivr.net/npm/leaflet/dist/leaflet-src.js.map'),
 			  ('leaflet/leaflet.js.map', 'https://cdn.jsdelivr.net/npm/leaflet/dist/leaflet.js.map'),
+			  ('leaflet-vectorgrid/Leaflet.VectorGrid.bundled.js', 'https://unpkg.com/leaflet.vectorgrid@latest/dist/Leaflet.VectorGrid.bundled.js'),
+			  ('leaflet-vectorgrid/Leaflet.VectorGrid.bundled.js.map', 'https://unpkg.com/leaflet.vectorgrid@latest/dist/Leaflet.VectorGrid.bundled.js.map'),
 			  ('fullcalendar/fullcalendar.print.css', 'https://cdn.jsdelivr.net/npm/fullcalendar@2.3.1/dist/fullcalendar.print.css'),
 			  ('fullcalendar/fullcalendar.js', 'https://cdn.jsdelivr.net/npm/fullcalendar@2.3.1/dist/fullcalendar.js'),
 			  ('fullcalendar/fullcalendar.min.js', 'https://cdn.jsdelivr.net/npm/fullcalendar@2.3.1/dist/fullcalendar.min.js'),

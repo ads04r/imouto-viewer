@@ -12,3 +12,4 @@ from viewer.views.webhook import *
 from viewer.views.years import *
 from viewer.views.questionnaires import *
 from viewer.views.rdf import *
+from viewer.views.tiles import *

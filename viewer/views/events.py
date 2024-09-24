@@ -4,6 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
 from django.db.models import Q, F, Count
 from django.conf import settings
+from io import BytesIO
 import datetime, pytz, dateutil.parser, json, requests, random
 
 from viewer.models import Person, Photo, Event, EventWorkoutCategory, CalendarAppointment, LifePeriod, ImportedFile
