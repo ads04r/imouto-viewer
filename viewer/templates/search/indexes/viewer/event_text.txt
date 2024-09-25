@@ -7,6 +7,20 @@
 {% endfor %}
 {{ object.description }}
 {{ object.type }}
-{% if object.location %}
-  {{ object.location.address }}
+{% for tag in object.tags.all %}
+  {{ tag }}
+{% endfor %}
+{% if object.type == 'life_event' %}
+  {% for event in object.subevents %}
+    {% if event.location %}
+      {{ event.location.address }}
+    {% endif %}
+  {% endfor %}
+{% else %}
+  {% if object.location %}
+    {{ object.location.address }}
+    {% if object.city %}{{ object.location.city }}{% endif %}
+    {% if object.country %}{{ object.location.country }}{% endif %}
+  {% endif %}
 {% endif %}
+{% for photo in object.photos %}{% if photo.detected_text %}{{ photo.detected_text }} {% endif %}{% endfor %}
