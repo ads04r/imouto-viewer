@@ -72,6 +72,11 @@ class ImoutoBasicReportStyle():
 		self.bottom_margin = 2*cm
 		self.left_margin = 2*cm
 		self.right_margin = 2*cm
+		self.primary_colour = [0.5, 0, 0]
+		self.secondary_colour = [0, 0, 0.5]
+		self.tertiary_colour = [0, 0.5, 0]
+		self.title_font = 'Helvetica-Bold'
+		self.main_font = 'Times-Roman'
 
 	@property
 	def page_width(self):
@@ -90,7 +95,7 @@ class ImoutoBasicReportStyle():
 		return self.page_size[1] - (self.top_margin + self.bottom_margin)
 
 	def generate(self, export_file):
-		logger.info("Generating report for " + str(self.year))
+		logger.info("Generating BASIC report for " + str(self.year))
 		logger.debug("Saving as " + export_file)
 		doc = ImoutoDocTemplate(export_file, self.getLayout(), pagesize=self.page_size, rightMargin=self.right_margin, leftMargin=self.left_margin, topMargin=self.top_margin, bottomMargin=self.bottom_margin)
 		report = Year.objects.get(year=self.year)
@@ -104,7 +109,7 @@ class ImoutoBasicReportStyle():
 
 		def __footer(canvas, doc):
 			canvas.saveState()
-			canvas.setFont('Times-Roman', 12)
+			canvas.setFont(self.main_font, 12)
 			text = 'Page ' + str(doc.page)
 			canvas.setLineWidth(2)
 			canvas.line(doc.leftMargin, doc.bottomMargin, doc.width + doc.leftMargin, doc.bottomMargin)
@@ -118,6 +123,7 @@ class ImoutoBasicReportStyle():
 		column_width = (self.content_width / 2) - 6
 		return [PageTemplate(id='TitlePage', frames=Frame(self.left_margin, self.bottom_margin, self.content_width, self.content_height, id='titlepage')),
 			PageTemplate(id='FullPage', frames=Frame(self.left_margin, self.bottom_margin, self.content_width, self.content_height, id='fullpage')),
+			PageTemplate(id='FullPageBlock', frames=Frame(self.left_margin, self.bottom_margin, self.content_width, self.content_height, id='fullpageblock')),
 			PageTemplate(id='LifeEventPage', frames=Frame(self.left_margin, self.bottom_margin, self.content_width, self.content_height, id='lifeeventpage'), onPage=__header, onPageEnd=__footer),
 			PageTemplate(id='PeoplePage', frames=Frame(self.left_margin, self.bottom_margin, self.content_width, self.content_height, id='peoplepage'), onPage=__header, onPageEnd=__footer),
 			PageTemplate(id='EventsPage', frames=Frame(self.left_margin, self.bottom_margin, self.content_width, self.content_height, id='eventspage'), onPage=__header, onPageEnd=__footer),
@@ -147,19 +153,19 @@ class ImoutoBasicReportStyle():
 		ret['Heading3'] = sss['Heading3']
 		ret['Heading4'] = sss['Heading4']
 
-		ret['YearTitle'] = ParagraphStyle('YearTitle', parent=sss['Title'], alignment=1, textTransform='uppercase', fontSize=100, leading=120)
-		ret['SectionTitle'] = ParagraphStyle('SectionTitle', parent=sss['Title'], alignment=1, textTransform='uppercase', fontSize=36, leading=40)
-		ret['SectionSubTitle'] = ParagraphStyle('SectionTitle', parent=sss['Title'], alignment=1, textTransform='uppercase')
-		ret['ChartTitle'] = ParagraphStyle('GraphTitle', parent=sss['Heading2'], alignment=1, textTransform='uppercase', backColor='#CFCFCF', spaceBefore=cm, spaceAfter=0)
-		ret['GraphTitle'] = ParagraphStyle('GraphTitle', parent=sss['Heading2'], alignment=1, textTransform='uppercase', backColor='#CFCFCF', spaceBefore=cm, spaceAfter=0)
-		ret['StatsPageTitle'] = ParagraphStyle('StatsPageTitle', parent=sss['Heading1'], alignment=1)
-		ret['LifeEventTitle'] = ParagraphStyle('LifeEventTitle', parent=sss['Heading1'], alignment=1)
-		ret['EventTitle'] = ParagraphStyle('EventTitle', parent=sss['Heading2'], backColor='#CFCFCF')
-		ret['EventDate'] = ParagraphStyle('EventDate', parent=sss['Normal'])
-		ret['EventText'] = ParagraphStyle('EventText', parent=sss['Normal'])
-		ret['StatisticTitle'] = ParagraphStyle('StatisticTitle', parent=sss['Heading2'], alignment=1, textTransform='uppercase', backColor='#CFCFCF', spaceBefore=cm, spaceAfter=0)
-		ret['StatisticValue'] = ParagraphStyle('StatisticValue', parent=sss['Heading1'], alignment=1, spaceBefore=0, spaceAfter=0)
-		ret['StatisticDescription'] = ParagraphStyle('StatisticDescription', parent=sss['Normal'], alignment=1, spaceBefore=0, spaceAfter=1.5*cm)
+		ret['YearTitle'] = ParagraphStyle('YearTitle', parent=sss['Title'], fontName=self.title_font, alignment=1, textTransform='uppercase', fontSize=100, leading=120)
+		ret['SectionTitle'] = ParagraphStyle('SectionTitle', parent=sss['Title'], fontName=self.title_font, alignment=1, textTransform='uppercase', fontSize=36, leading=40)
+		ret['SectionSubTitle'] = ParagraphStyle('SectionTitle', parent=sss['Title'], fontName=self.title_font, alignment=1, textTransform='uppercase')
+		ret['ChartTitle'] = ParagraphStyle('GraphTitle', parent=sss['Heading2'], fontName=self.title_font, alignment=1, textTransform='uppercase', backColor='#CFCFCF', spaceBefore=cm, spaceAfter=0)
+		ret['GraphTitle'] = ParagraphStyle('GraphTitle', parent=sss['Heading2'], fontName=self.title_font, alignment=1, textTransform='uppercase', backColor='#CFCFCF', spaceBefore=cm, spaceAfter=0)
+		ret['StatsPageTitle'] = ParagraphStyle('StatsPageTitle', parent=sss['Heading1'], fontName=self.title_font, alignment=1)
+		ret['LifeEventTitle'] = ParagraphStyle('LifeEventTitle', parent=sss['Heading1'], fontName=self.title_font, alignment=1)
+		ret['EventTitle'] = ParagraphStyle('EventTitle', parent=sss['Heading2'], fontName=self.title_font, backColor='#CFCFCF')
+		ret['EventDate'] = ParagraphStyle('EventDate', parent=sss['Normal'], fontName=self.main_font)
+		ret['EventText'] = ParagraphStyle('EventText', parent=sss['Normal'], fontName=self.main_font)
+		ret['StatisticTitle'] = ParagraphStyle('StatisticTitle', parent=sss['Heading2'], fontName=self.title_font, alignment=1, textTransform='uppercase', backColor='#CFCFCF', spaceBefore=cm, spaceAfter=0)
+		ret['StatisticValue'] = ParagraphStyle('StatisticValue', parent=sss['Heading1'], fontName=self.title_font, alignment=1, spaceBefore=0, spaceAfter=0)
+		ret['StatisticDescription'] = ParagraphStyle('StatisticDescription', parent=sss['Normal'], fontName=self.main_font, alignment=1, spaceBefore=0, spaceAfter=1.5*cm)
 
 		return ret
 
@@ -279,7 +285,7 @@ class ImoutoBasicReportStyle():
 			for e in events:
 				story.append(e)
 		if len(photo_collages) > 0:
-			story.append(NextPageTemplate('FullPage'))
+			story.append(NextPageTemplate('FullPageBlock'))
 			story.append(PageBreakIfNotEmpty())
 			for c in photo_collages:
 				story.append(c)
@@ -342,16 +348,33 @@ class ImoutoBasicReportStyle():
 				continue
 			ret = ret + '<index item="' + tag_name.replace(', ', ',, ') + '" />'
 		for person in event.people.all():
-			ret = ret + '<index item="' + str(person.sort_name).replace(', ', ',, ') + '" />'
+			person_name = str(person.sort_name).strip()
+			if person_name == '':
+				continue
+			ret = ret + '<index item="' + person_name.replace(', ', ',, ') + '" />'
 		if event.location:
-			ret = ret + '<index item="' + str(event.location.sort_name).replace(', ', ',, ') + '" />'
+			ret = ret + '<index item="' + str(event.location.sort_name()).replace(', ', ',, ') + '" />'
 			if event.location.city:
 				if event.location.city != home_city:
-					ret = ret + '<index item="' + str(event.location.city).replace(', ', ',, ') + '" />'
+					city_name = str(event.location.city).strip()
+					if city_name != '':
+						ret = ret + '<index item="' + city_name.replace(', ', ',, ') + '" />'
 			if event.location.country:
 				if event.location.country != home_country:
-					ret = ret + '<index item="' + str(event.location.country).replace(', ', ',, ') + '" />'
+					country_name = str(event.location.country).strip()
+					if country_name != '':
+						ret = ret + '<index item="' + country_name.replace(', ', ',, ') + '" />'
+
+		logger.debug("INDEX: " + ret)
 		return ret
+
+	def generate_month_title(self, month):
+
+		story = []
+		styles = self.getStyles()
+		story.append(Spacer(10*cm, 10*cm))
+		story.append(Paragraph(str(month), style=styles['SectionTitle']))
+		return story
 
 	def generate_month_story(self, month):
 
@@ -375,11 +398,10 @@ class ImoutoBasicReportStyle():
 		life_events = month.life_events.order_by('start_time')
 		if len(row) > 0:
 			table.append(row)
-		story.append(Spacer(10*cm, 10*cm))
-		story.append(Paragraph(str(month), style=styles['SectionTitle']))
+		for item in self.generate_month_title(month):
+			story.append(item)
 		story.append(NextPageTemplate('StatsPage'))
 		story.append(PageBreakIfNotEmpty())
-
 		story.append(Spacer(cm, cm))
 		for workout in month.workouts:
 			story.append(Table([
@@ -428,32 +450,43 @@ class ImoutoBasicReportStyle():
 
 		if len(table) > 0:
 			story.append(NextPageTemplate('PeoplePage'))
-		else:
-			if life_events.count == 0:
-				story.append(NextPageTemplate('EventsPage'))
-			else:
-				story.append(NextPageTemplate('LifeEventPage'))
-		story.append(PageBreakIfNotEmpty())
-		if len(table) > 0:
+			story.append(PageBreakIfNotEmpty())
 			story.append(Paragraph("People", style=styles['Heading1']))
 			story.append(Table(table, style=[('ALIGN', (0, 0), (-1, -1), 'CENTER')]))
-			story.append(NextPageTemplate('EventsPage'))
+
+		collages = 0
+		descriptions = 0
+		for event in month.reportable_events:
+			if event.description:
+				descriptions = descriptions + 1
+			if event.photo_collages.count() >= 1:
+				collages = collages + 1
+
+		logger.debug(str(month) + " has " + str(life_events.count()) + " life event(s)")
+		if life_events.count() > 0:
+			story.append(NextPageTemplate('LifeEventPage'))
 			story.append(PageBreakIfNotEmpty())
 
+		i = 0
 		for event in life_events:
 			for item in self.generate_life_event_story(event):
 				story.append(item)
-		if life_events.count() > 0:
+			i = i + 1
+			if i < life_events.count():
+				story.append(NextPageTemplate('LifeEventPage'))
+				story.append(PageBreakIfNotEmpty())
+		if descriptions > 0:
 			story.append(NextPageTemplate('EventsPage'))
 			story.append(PageBreakIfNotEmpty())
-		for event in month.reportable_events.order_by('start_time'):
-			if event.description:
-				story.append(self.event_to_flowable(event))
-		story.append(NextPageTemplate('FullPage'))
-		story.append(PageBreakIfNotEmpty())
-		for event in month.reportable_events.order_by('start_time'):
-			if event.photo_collages.count() >= 1:
-				story.append(Image(str(event.photo_collages.first().image.file), width=18*cm, height=25*cm))
+			for event in month.reportable_events.order_by('start_time'):
+				if event.description:
+					story.append(self.event_to_flowable(event))
+		if collages > 0:
+			story.append(NextPageTemplate('FullPageBlock'))
+			story.append(PageBreakIfNotEmpty())
+			for event in month.reportable_events.order_by('start_time'):
+				if event.photo_collages.count() >= 1:
+					story.append(Image(str(event.photo_collages.first().image.file), width=18*cm, height=25*cm))
 
 		return remove_multiple_page_breaks(story)
 

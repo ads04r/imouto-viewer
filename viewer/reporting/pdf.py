@@ -1,4 +1,4 @@
-from viewer.reporting.styles.basic import ImoutoBasicReportStyle
+from viewer.reporting.styles import ImoutoBasicReportStyle
 
 import logging
 logger = logging.getLogger(__name__)

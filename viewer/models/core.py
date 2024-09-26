@@ -2433,6 +2433,9 @@ class Month(models.Model):
 			ret.append(item)
 
 		return(json.dumps(ret))
+	@cached_property
+	def name(self):
+		return(datetime.date(self.year, self.month, 1).strftime('%B'))
 
 	def __str__(self):
 		return(datetime.date(self.year, self.month, 1).strftime('%B %Y'))
