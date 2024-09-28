@@ -145,7 +145,7 @@ class ImoutoModernReportStyle(ImoutoBasicReportStyle):
 		ret['LifeEventTitle'] = ParagraphStyle('LifeEventTitle', parent=ret['Heading1'], fontName=self.title_font, alignment=1)
 		ret['EventTitle'] = ParagraphStyle('EventTitle', parent=ret['Heading2'], fontName=self.title_font, backColor=Color(self.primary_colour[0], self.primary_colour[1], self.primary_colour[2], 1), textColor='#FFFFFF')
 		ret['EventDate'] = ParagraphStyle('EventDate', parent=ret['Normal'], fontName=self.main_font, fontSize=16, leading=20)
-		ret['EventText'] = ParagraphStyle('EventText', parent=ret['Normal'], fontName=self.main_font, fontSize=16, leading=20)
+		ret['EventText'] = ParagraphStyle('EventText', parent=ret['Normal'], fontName=self.main_font, fontSize=16, leading=18)
 		ret['StatisticTitle'] = ParagraphStyle('StatisticTitle', parent=ret['Heading2'], fontName=self.title_font, alignment=1, textTransform='uppercase', backColor=Color(self.primary_colour[0], self.primary_colour[1], self.primary_colour[2], 1), spaceBefore=cm, spaceAfter=0, textColor='#FFFFFF')
 		ret['StatisticValue'] = ParagraphStyle('StatisticValue', parent=ret['Heading1'], fontName=self.title_font, alignment=1, spaceBefore=0, spaceAfter=0)
 		ret['StatisticDescription'] = ParagraphStyle('StatisticDescription', parent=ret['Normal'], fontName=self.main_font, alignment=1, spaceBefore=0, spaceAfter=1.5*cm, fontSize=16, leading=20)
@@ -204,20 +204,21 @@ class ImoutoModernReportStyle(ImoutoBasicReportStyle):
 		column_width = (self.content_width / 2) - 6
 		html = self.event_to_indices(event) + event.description_html()
 		styles = self.getStyles()
+		right_column = Spacer(width=column_width, height=column_width)
 		if event.cover_photo:
 			tf = NamedTemporaryFile(delete=False)
 			im = event.cover_photo.thumbnail(200)
 			im.save(tf, format='JPEG')
-			right_column = Image(str(tf.name), width=column_width, height=column_width)
+			if os.path.exists(str(tf.name)):
+				right_column = Image(str(tf.name), width=column_width, height=column_width)
 		elif event.cached_staticmap:
-			right_column = Image(str(event.cached_staticmap.file), width=column_width, height=column_width)
-		else:
-			right_column = Spacer(column_width, column_width)
+			if os.path.exists(str(event.cached_staticmap.file)):
+				right_column = Image(str(event.cached_staticmap.file), width=column_width, height=column_width)
 		ret = Table(
 			[
 				[
 					[Paragraph(event.caption, style=styles['EventTitle']), Paragraph(event.start_time.strftime("%A %-d %B"), style=styles['EventDate']), Paragraph(html, style=styles['EventText'])], 
 					[right_column]
 				]
-			], colWidths=[None, column_width], style=[('VALIGN', (0, 0), (1, 2), 'TOP'), ('NOSPLIT', (0, 0), (-1, -1))])
+			], colWidths=[None, column_width], minRowHeights=[column_width + cm], splitInRow=1, spaceAfter=cm, style=[('VALIGN', (0, 0), (-1, -1), 'TOP')])
 		return ret

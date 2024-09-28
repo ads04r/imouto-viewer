@@ -313,7 +313,7 @@ class ImoutoBasicReportStyle():
 				[
 					[Paragraph(event.caption, style=styles['EventTitle']), ''],
 					[[Paragraph(event.start_time.strftime("%A %-d %B"), style=styles['EventDate']), Paragraph(html, style=styles['EventText'])], Image(str(event.cached_staticmap.file), width=6*cm, height=6*cm)]
-				], colWidths=[None, 7*cm], style=[('VALIGN', (0, 0), (1, 2), 'TOP'), ('NOSPLIT', (0, 0), (-1, -1)), ('SPAN', (0, 0), (1, 0))])
+				], colWidths=[None, 7*cm], splitInRow=2, style=[('VALIGN', (0, 0), (1, 2), 'TOP'), ('NOSPLIT', (0, 0), (-1, -1)), ('SPAN', (0, 0), (1, 0))])
 		elif event.cover_photo:
 			tf = NamedTemporaryFile(delete=False)
 			im = event.cover_photo.thumbnail(200)
@@ -322,13 +322,13 @@ class ImoutoBasicReportStyle():
 				[
 					[Paragraph(event.caption, style=styles['EventTitle']), ''],
 					[[Paragraph(event.start_time.strftime("%A %-d %B"), style=styles['EventDate']), Paragraph(html, style=styles['EventText'])], Image(str(tf.name), width=6*cm, height=6*cm)]
-				], colWidths=[None, 7*cm], style=[('VALIGN', (0, 0), (1, 2), 'TOP'), ('NOSPLIT', (0, 0), (-1, -1)), ('SPAN', (0, 0), (1, 0))])
+				], colWidths=[None, 7*cm], splitInRow=2, style=[('VALIGN', (0, 0), (1, 2), 'TOP'), ('NOSPLIT', (0, 0), (-1, -1)), ('SPAN', (0, 0), (1, 0))])
 		else:
 			ret = Table(
 				[
 					[Paragraph(event.caption, style=styles['EventTitle'])],
 					[[Paragraph(event.start_time.strftime("%A %-d %B"), style=styles['EventDate']), Paragraph(html, style=styles['EventText'])]]
-				], colWidths=[None, 7*cm], style=[('VALIGN', (0, 0), (0, 1), 'TOP'), ('NOSPLIT', (0, 0), (-1, -1))])
+				], colWidths=[None, 7*cm], splitInRow=2, style=[('VALIGN', (0, 0), (0, 1), 'TOP'), ('NOSPLIT', (0, 0), (-1, -1))])
 		return ret
 
 	def event_to_indices(self, event):
