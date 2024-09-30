@@ -2383,6 +2383,18 @@ function pageRefresh()
     }
 }
 
+function searchFocus()
+{
+	if($(".control-sidebar").length == 1)
+	{
+		window.setTimeout(function(){
+			if($(".control-sidebar")[0].getAttribute('class').includes("control-sidebar-open")) {
+				$("#imouto-search-text").focus();
+			}
+		}, 500);
+	}
+}
+
 $(document).ready(function()
 {
     $(".mood-select").on('click', function() {
@@ -2399,5 +2411,9 @@ $(document).ready(function()
         });
     });
     $(window).bind('hashchange', function(e) { pageRefresh(); });
+    $(".control-sidebar-toggle").click('expanded.lte.controlsidebar', function() {
+        searchFocus();
+        return false;
+    });
     pageRefresh();
 });
