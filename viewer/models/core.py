@@ -1089,6 +1089,12 @@ class Event(models.Model):
 	elevation = models.TextField(default='', blank=True)
 	speed = models.TextField(default='', blank=True)
 	cover_photo = models.ForeignKey(Photo, null=True,  blank=True, on_delete=models.SET_NULL)
+	"""All locations within this event and its sub-events (mostly for life events)"""
+	@cached_property
+	def locations(self):
+		if self.location:
+			return Location.objects.filter(id=self.location.id)
+		return Location.objects.filter(events__in=self.subevents()).distinct()
 	"""The URI of this object for RDF serialization."""
 	@property
 	def uri(self):
@@ -1145,6 +1151,40 @@ class Event(models.Model):
 		if 'elevmax' in health:
 			return True
 		return False
+	def locations_geo(self):
+		"""
+		Useful for drawing straight onto a Leaflet map, this function returns the geographical position of all locations associated with this event as a GeoJSON object.
+
+		:return: A GeoJSON object.
+		:rtype: dict
+		"""
+		points = {"type": "GeometryCollection", "geometries": []}
+		min_lon = 999.99
+		min_lat = 999.99
+		max_lat = -999.9
+		max_lon = -999.9
+		for loc in self.locations:
+			point = {}
+			point['type'] = "Feature"
+			point['type'] = "Point"
+			point['coordinates'] = [loc.lon, loc.lat]
+			point['properties'] = {"type": "location", "label": loc.label, "url": "#place_" + loc.uid}
+			if loc.image:
+				point['properties']['image'] = "places/" + loc.uid + "_thumb.jpg"
+			points['geometries'].append(point)
+			if loc.lon < min_lon:
+				min_lon = loc.lon
+			if loc.lat < min_lat:
+				min_lat = loc.lat
+			if loc.lon > max_lon:
+				max_lon = loc.lon
+			if loc.lat > max_lat:
+				max_lat = loc.lat
+		ret = {}
+		ret['type'] = "Feature"
+		ret['bbox'] = [min_lon, min_lat, max_lon, max_lat]
+		ret['geometry'] = points
+		return json.dumps(ret);
 	def to_dict(self):
 		"""
 		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.

@@ -1576,6 +1576,27 @@ function buildRouteMap(g, m)
 				});
 				p.setContent('<p class="map-bubble-text"><i class="fa fa-map-pin"></i>&nbsp;' + g.properties.label + '</p>');
 				break;
+			case 'location':
+				var l = L.geoJSON(g, {
+					pointToLayer: function(f, l) {
+						return new L.marker(l, { icon: L.icon({
+							iconUrl: '{% static 'libraries/leaflet/images/marker-icon.png' %}',
+							shadowUrl: '{% static 'libraries/leaflet/images/marker-shadow.png' %}',
+							iconSize: [25, 41],
+							shadowSize: [41, 41],
+							iconAnchor: [13, 40],
+							shadowAnchor: [13, 40],
+							popupAnchor: [0, -20]
+						})})
+					}
+				});
+				if(g.properties.image)
+				{
+					p.setContent('<table><tr><td><p class="map-bubble-text"><a href="' + g.properties.url + '">' + g.properties.label + '</a></p></td><td>&nbsp;</td><td><img src="' + g.properties.image + '" width="50" height="50"></td></tr></table>');
+				} else {
+					p.setContent('<p class="map-bubble-text"><a href="' + g.properties.url + '">' + g.properties.label + '</a></p>');
+				}
+				break;
 			default:
 				var l = L.geoJSON(g);
 				p.setContent('<p class="map-bubble-text">' + g.properties.label + '</p>');

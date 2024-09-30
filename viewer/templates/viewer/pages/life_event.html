@@ -32,7 +32,7 @@
 
 {% include 'viewer/cards/eventhead.html' %}
 
-{% if data.geo != '' %}
+{% if data.geo != '' or data.locations.count > 1 %}
   {% include 'viewer/cards/eventmap.html' %}
 {% endif %}
 

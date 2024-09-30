@@ -7,6 +7,10 @@
 
                         <div id="map{{ data.pk }}" class="eventmap" data-geojson="{{ data.location.geo }}"></div>
 
+    {% elif data.locations.count > 1 %}
+
+                        <div id="map{{ data.pk }}" class="eventmap" data-geojson="{{ data.locations_geo }}"></div>
+
     {% else %}
 
         {% if data.description == '' and data.photos.count == 0 %}
