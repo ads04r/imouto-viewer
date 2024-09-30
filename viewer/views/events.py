@@ -251,6 +251,10 @@ def eventsplit(request, eid):
 		data.end_time = dt
 		data.save()
 		new_event.save()
+		for wc in data.workout_categories.all():
+			new_event.workout_categories.add(wc)
+		for tag in data.tags.all():
+			new_event.tags.add(tag)
 		ret = str(new_event.pk)
 	if mode == 2:
 		data.start_time = dt
