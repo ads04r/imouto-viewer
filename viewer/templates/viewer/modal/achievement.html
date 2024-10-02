@@ -1,0 +1,31 @@
+<div class="modal fade nav-tabs-custom" id="add_achievement" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+                <form id="achievement-edit" action="achievement.json" method="POST" enctype="multipart/form-data">{% csrf_token %}
+
+                              <table class="table table-hover">
+
+                                <tr class="form-row">
+                                  <td><label for="achievement_title">Achievement:</label></td>
+                                  <td><input id="achievement_title" class="form-control" type="text" name="title" maxlength="254"></td>
+                                </tr>
+                                <tr class="form-row">
+                                  <td><label for="achievement_date">Date:</label></td>
+                                  <td><div class="input-group"><div class="input-group-addon"><i class="fa fa-calendar"></i></div><input id="achievement_date" class="form-control" type="text" name="title" maxlength="254" value="{{ today.date|date:"Y-m-d" }}"></div></td>
+                                </tr>
+
+                              </table>
+
+                </form>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="achievement-save-form-button">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+

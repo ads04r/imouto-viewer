@@ -2431,6 +2431,14 @@ $(document).ready(function()
             success: function(data) { console.log(data); }
         });
     });
+    $("#add_achievement").on('shown.bs.modal', function() {
+        var now = new Date();
+        $("#achievement_date").val(now.toISOString().replace('T', ' ').replace('Z', '').split('.')[0]);
+        $("#achievement_title").focus();
+    });
+    $('#achievement-save-form-button').on('click', function() {
+        $('#achievement-edit').submit();
+    });
     $(window).bind('hashchange', function(e) { pageRefresh(); });
     $(".control-sidebar-toggle").click('expanded.lte.controlsidebar', function() {
         searchFocus();
