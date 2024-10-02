@@ -2433,7 +2433,8 @@ $(document).ready(function()
     });
     $("#add_achievement").on('shown.bs.modal', function() {
         var now = new Date();
-        $("#achievement_date").val(now.toISOString().replace('T', ' ').replace('Z', '').split('.')[0]);
+	var ds = now.getFullYear() + '-' + ((now.getMonth() + 1).toString().padStart(2, '0')) + '-' + (now.getDate().toString().padStart(2, '0')) + ' ' + (now.getHours().toString().padStart(2, '0')) + ':' + (now.getMinutes().toString().padStart(2, '0')) + ':' + (now.getSeconds().toString().padStart(2, '0'))
+        $("#achievement_date").val(ds);
         $("#achievement_title").focus();
     });
     $('#achievement-save-form-button').on('click', function() {
