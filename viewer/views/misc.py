@@ -15,6 +15,12 @@ from viewer.forms import WatchedDirectoryForm
 import logging
 logger = logging.getLogger(__name__)
 
+def create_achievement(request):
+	if request.method != 'POST':
+		return HttpResponseNotAllowed(['POST'])
+	response = HttpResponse(json.dumps(request.POST), content_type='application/json')
+	return response
+
 def upload_file(request):
 	if request.method != 'POST':
 		return HttpResponseNotAllowed(['POST'])

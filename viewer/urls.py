@@ -83,5 +83,6 @@ urlpatterns = [
     path('questionnaires.html', views.questionnaires),
     path('questionnaires/<id>.html', views.questionnaireview),
     path('tile/<z>/<x>/<y>.pbf', views.pbftile),
+    path('achievement.json', views.create_achievement),
 ]
 
