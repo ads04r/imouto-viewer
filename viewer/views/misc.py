@@ -10,10 +10,53 @@ import datetime, pytz, dateutil.parser, json, requests, random
 from viewer.models import Location, Person, Event, WatchedDirectory
 from viewer.functions.rdf import get_webpage_data, microdata_to_rdf, get_rdf_people, get_rdf_places
 from viewer.functions.location_manager import get_location_manager_import_queue, get_location_manager_process_queue
+from viewer.importers.dav import create_calendar_task, mark_task_completed
 from viewer.forms import WatchedDirectoryForm
+from viewer.tasks.process import import_ical_feed
 
 import logging
 logger = logging.getLogger(__name__)
+
+def create_achievement(request):
+	if request.method != 'POST':
+		return HttpResponseNotAllowed(['POST'])
+	try:
+		urls = settings.ICAL_URLS
+	except:
+		urls = []
+	url = ''
+	username = None
+	password = None
+	for item in urls:
+		if not isinstance(item, list):
+			continue
+		if len(item) != 3:
+			continue
+		url = item[0]
+		username = item[1]
+		password = item[2]
+		break
+	if len(url) == 0:
+		return HttpResponse("Invalid CalDAV credentials.", status=401)
+	if username is None:
+		return HttpResponse("Invalid CalDAV credentials.", status=401)
+	if password is None:
+		return HttpResponse("Invalid CalDAV credentials.", status=401)
+	title = request.POST['title']
+	ds = request.POST['date']
+	try:
+		dt = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime.strptime(ds, "%Y-%m-%d %H:%M:%S"))
+	except:
+		dt = None
+	if dt is None:
+		raise Http404()
+	item_url = create_calendar_task(url, username, password, title)
+	if not item_url:
+		return HttpResponse("Invalid CalDAV credentials.", status=401)
+	if mark_task_completed(item_url, username, password, completion_date=dt):
+		import_ical_feed(url, username, password)
+		return HttpResponseRedirect('./#day_' + dt.strftime("%Y%m%d"))
+	raise Http404()
 
 def upload_file(request):
 	if request.method != 'POST':

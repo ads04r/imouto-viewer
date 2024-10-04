@@ -2431,6 +2431,15 @@ $(document).ready(function()
             success: function(data) { console.log(data); }
         });
     });
+    $("#add_achievement").on('shown.bs.modal', function() {
+        var now = new Date();
+	var ds = now.getFullYear() + '-' + ((now.getMonth() + 1).toString().padStart(2, '0')) + '-' + (now.getDate().toString().padStart(2, '0')) + ' ' + (now.getHours().toString().padStart(2, '0')) + ':' + (now.getMinutes().toString().padStart(2, '0')) + ':' + (now.getSeconds().toString().padStart(2, '0'))
+        $("#achievement_date").val(ds);
+        $("#achievement_title").focus();
+    });
+    $('#achievement-save-form-button').on('click', function() {
+        $('#achievement-edit').submit();
+    });
     $(window).bind('hashchange', function(e) { pageRefresh(); });
     $(".control-sidebar-toggle").click('expanded.lte.controlsidebar', function() {
         searchFocus();

@@ -1,25 +1,80 @@
 import vobject, requests
-from requests.auth import HTTPBasicAuth
+from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from django.db.models import Q
 from django.core.files import File
 from tempfile import NamedTemporaryFile
-from ics import Calendar
+from ics import Calendar, Todo
+from uuid import uuid4
 
 from viewer.models import Location, Person, PersonProperty, CalendarFeed, CalendarTask, CalendarAppointment
 
 import logging
 logger = logging.getLogger(__name__)
 
-def import_carddav(url, auth, countrycode='44'):
+def __try_auth(url, method, username, password, data=None):
+
+	auth = [HTTPBasicAuth(username, password), HTTPDigestAuth(username, password)]
+	for a in auth:
+		if data:
+			r = requests.request(method, url, auth=a, data=data)
+		else:
+			r = requests.request(method, url, auth=a)
+		if r.status_code < 200:
+			continue
+		if r.status_code >= 300:
+			continue
+		return r.text
+	return None
+
+def create_calendar_task(url, username, password, label):
+
+	id = str(uuid4())
+	call_url = url.split('?')[0].rstrip('/') + '/' + id + '.ics'
+	task = Todo()
+	task.uid = id
+	task.name = label
+	data = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\n" + task.serialize().strip() + "\r\nEND:VCALENDAR\r\n"
+	ret = __try_auth(call_url, "PUT", username, password, data)
+	if ret is None:
+		return None
+	return call_url
+
+def mark_task_completed(url, username, password, completion_date=None):
+
+	cal = Calendar(__try_auth(url, "GET", username, password))
+	if len(cal.todos) != 1:
+		return False
+	task = cal.todos.pop()
+
+	task.status = "COMPLETED"
+	data = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\n" + task.serialize().strip() + "\r\nEND:VCALENDAR\r\n"
+	ret = __try_auth(url, "PUT", username, password, data)
+	if ret is None:
+		return False
+	if completion_date:
+		task.completed = completion_date
+		data = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\n" + task.serialize().strip() + "\r\nEND:VCALENDAR\r\n"
+		ret = __try_auth(url, "PUT", username, password, data)
+	if ret is None:
+		return False
+
+	return True
+
+def import_carddav(url, username='', password='', countrycode='44'):
 	"""
 	Imports CardDAV data from a web URL, and creates or augments Person objects accordingly.
 
 	:param url: The URL from which to retrieve the CardDAV data.
-	:param auth: The authentication (sent directly to the requests library) required to read the file, if necessary.
+	:param username: The username, if the URL is a WebDav resource.
+	:param password: The password, if the URL is a WebDav resource.
 	:param countrycode: This is the dialling code for the country in which the user is based. It's a dirty hack for standardising UK phone numbers to avoid duplicates; it causes the function to attempt to deduplicate if set to '44', or do nothing if set to anything else.
 	"""
-	r = requests.request("GET", url, auth=auth)
-	cards = r.text.split('BEGIN:VCARD')
+	logger.info("Importing CardDAV from " + url)
+	if username == '':
+		r = requests.request("GET", url)
+		cards = r.text.split('BEGIN:VCARD')
+	else:
+		cards = __try_auth(url, "GET", username, password).split("BEGIN:VCARD")
 	people = []
 	for s in cards:
 		if s == '':
@@ -31,6 +86,7 @@ def import_carddav(url, auth, countrycode='44'):
 
 		pobj = None
 		name = person.fn.value
+		logger.debug("Found " + str(name))
 
 		if 'email' in person.contents:
 			for email in person.contents['email']:
@@ -147,7 +203,8 @@ def import_calendar_feed(url, username=None, password=None):
 		if username is None:
 			ics_text = requests.get(url).text
 		else:
-			ics_text = requests.get(url, auth=HTTPBasicAuth(username, password)).text
+			ics_text = __try_auth(url, "GET", username, password)
+
 		cal = Calendar(ics_text)
 		events = list(cal.events)
 	except:
