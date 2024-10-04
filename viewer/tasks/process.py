@@ -13,9 +13,15 @@ from viewer.importers.fitfile import import_fit
 from viewer.importers.location import upload_file
 from viewer.importers.photos import import_photo_file
 from viewer.importers.minimoods import import_mood_file
+from viewer.importers.dav import import_calendar_feed
 
 import logging
 logger = logging.getLogger(__name__)
+
+@background(schedule=0, queue='process')
+def import_ical_feed(url, username=None, password=None):
+
+	import_calendar_feed(url, username, password)
 
 @background(schedule=0, queue='process')
 def calculate_journey_distances(max=100):
