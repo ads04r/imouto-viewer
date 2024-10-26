@@ -1151,6 +1151,25 @@ class Event(models.Model):
 		if 'elevmax' in health:
 			return True
 		return False
+	@cached_property
+	def workouts(self):
+		if self.type != 'life_event':
+			return []
+		logger.debug("Generating life event workout data")
+		ret = []
+		max = 0.0
+		for wc in EventWorkoutCategory.objects.all():
+			item = [str(wc), 0.0, 0, str(wc.icon)]
+			for event in self.subevents().filter(type='journey', workout_categories=wc):
+				item[1] = item[1] + event.distance()
+			if item[1] > 0.0:
+				item[1] = float(int(item[1] * 100)) / 100
+				if item[1] > max:
+					max = item[1]
+				ret.append(item)
+		for i in range(0, len(ret)):
+			ret[i][2] = int((ret[i][1] / max) * 100.0)
+		return ret
 	def locations_geo(self):
 		"""
 		Useful for drawing straight onto a Leaflet map, this function returns the geographical position of all locations associated with this event as a GeoJSON object.

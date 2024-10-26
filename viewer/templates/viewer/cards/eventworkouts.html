@@ -1,0 +1,21 @@
+
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Health</h3>
+                </div>
+                <div class="box-body no-padding">
+
+                        <table class="table table-condensed">
+
+{% for wc in data.workouts %}
+                                <tr>
+                                        <th>{{ wc.0 }}&nbsp;distance</th>
+					<td style="width:100%;"><div class="progress progress-xs" style="width: 100%; background-color: rgba(0, 0, 0, 0)"><div class="progress-bar progress-bar-primary" style="width: {{ wc.2 }}%;"></div></div></td>
+                                        <td><span class="pull-right">{{ wc.1 }}&nbsp;miles</span></td>
+                                </tr>
+{% endfor %}
+                        </table>
+
+
+                </div>
+            </div>

@@ -40,6 +40,10 @@
   {% include 'viewer/cards/eventpeople.html' %}
 {% endif %}
 
+{% if data.workouts %}
+  {% include 'viewer/cards/eventworkouts.html' %}
+{% endif %}
+
 {% if data.commits %}
   {% include 'viewer/cards/eventcommits.html' %}
 {% endif %}
