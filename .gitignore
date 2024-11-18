@@ -20,3 +20,5 @@ nohup.out
 -static/viewer
 -static/viewer/script/.gitkeep
 -viewer/static/viewer/script/.gitkeep
+
+viewer/management/commands/generate_test_pdf.py
