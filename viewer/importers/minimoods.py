@@ -1,6 +1,7 @@
 from dateutil import parser
 import os, csv, datetime
 
+from viewer.models import create_or_get_day
 from viewer.importers.genericsensor import import_data
 
 import logging
@@ -24,6 +25,13 @@ def import_mood_file(path):
 				continue
 			dts = parser.parse(row[0])
 			dte = dts + datetime.timedelta(seconds=86399)
+			day = create_or_get_day(dts.date())
+			if day is not None:
+				if day.today == False:
+					dts = day.wake_time
+					dte = day.bed_time
+			if dte is None:
+				continue
 			v = 6 - int(row[1])
 			if v > 5:
 				continue
