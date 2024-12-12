@@ -4,7 +4,6 @@ import unittest, requests
 class ImoutoMapsConfiguration(unittest.TestCase):
 	def test_details(self):
 		self.assertEqual(hasattr(settings, "MAP_TILES"), True)
-		self.assertEqual(hasattr(settings, "MAPBOX_API_KEY"), True)
 
 class ImoutoBaseConfiguration(unittest.TestCase):
 	def test_details(self):

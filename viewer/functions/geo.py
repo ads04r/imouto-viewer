@@ -2,9 +2,40 @@ import json, requests
 from django.core.cache import cache
 from django.conf import settings
 from frechetdist import frdist
+from urllib.parse import urlencode
 
 import logging
 logger = logging.getLogger(__name__)
+
+def get_location_address(lat, lon):
+	"""
+	Given a query point, returns a human-readable address, as a list.
+
+	:param lat: The latitude of the query point.
+	:param lon: The longitude of the query point.
+	:return: A list of strings containing an address for the area.
+	:rtype: list(str)
+
+	"""
+	cache_key = "loc_" + str(lat) + "," + str(lon)
+	ret = cache.get(cache_key)
+	if ret is None:
+		ret = []
+	if len(ret) > 0:
+		return ret
+	url = "https://nominatim.openstreetmap.org/reverse?" + urlencode({'lat': lat, 'lon': lon, 'format': 'json'})
+	ordering = ['road', 'quarter', 'suburb', 'city', 'state', 'country']
+	with requests.get(url, headers={'User-Agent': settings.USER_AGENT}, allow_redirects=True) as r:
+		data = r.json()
+	ret = []
+	if not 'address' in data:
+		return ret
+	for k in ordering:
+		if k in data['address']:
+			ret.append(data['address'][k])
+	if len(ret) > 0:
+		cache.set(cache_key, ret, timeout=86400)
+	return ret
 
 def get_location_name(lat, lon):
 	"""
@@ -16,24 +47,10 @@ def get_location_name(lat, lon):
 	:rtype: str
 
 	"""
-	cache_key = "loc_" + str(lat) + "," + str(lon)
-	ret = cache.get(cache_key)
-	if ret is None:
-		ret = ''
-	try:
-		mapbox_key = settings.MAPBOX_API_KEY
-	except:
-		return ""
-	url = "https://api.mapbox.com/geocoding/v5/mapbox.places/" + str(lon) + "," + str(lat) + ".json?language=en&access_token=" + mapbox_key
-	r = requests.get(url)
-	data = json.loads(r.text)
-	if 'features' in data:
-		if len(data['features']) > 0:
-			if 'text' in data['features'][0]:
-				ret = data['features'][0]['text']
-	if len(ret) > 0:
-		cache.set(cache_key, ret, timeout=86400)
-	return ret
+	data = get_location_address(lat, lon)
+	if len(data) > 0:
+		return data[0]
+	return ''
 
 def get_area_address(n, w, s, e):
 	"""
@@ -53,30 +70,13 @@ def get_area_address(n, w, s, e):
 		ret = []
 	if len(ret) > 0:
 		return ret
-	try:
-		mapbox_key = settings.MAPBOX_API_KEY
-	except:
-		return []
 	queries = [[w, n], [e, n], [w, s], [e, s]]
 	text = []
 	c = 50
 	for query in queries:
 		lon = query[0]
 		lat = query[1]
-		url = "https://api.mapbox.com/geocoding/v5/mapbox.places/" + str(lon) + "," + str(lat) + ".json?language=en&access_token=" + mapbox_key
-		r = requests.get(url)
-		data = json.loads(r.text)
-		addr = []
-		if 'features' in data:
-			if len(data['features']) > 0:
-				for f in reversed(data['features']):
-					if not('place_type') in f:
-						continue
-					if 'postcode' in f['place_type']:
-						continue
-					if not('text' in f):
-						continue
-					addr.append(f['text'])
+		addr = list(reversed(get_location_address(lat, lon)))
 		l = len(addr)
 		if l > 0:
 			if l < c:
