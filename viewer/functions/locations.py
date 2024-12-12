@@ -1,10 +1,11 @@
-import datetime, pytz, overpy
+import datetime, pytz, overpy, requests
 from viewer.models import Location, Event, LocationCity, LocationCountry
 from viewer.functions.calendar import event_label
 from viewer.functions.location_manager import getstopevents
 from django.conf import settings
 from geopy import distance
 from dateutil import parser
+from urllib.parse import urlencode
 
 import logging
 logger = logging.getLogger(__name__)
@@ -269,3 +270,12 @@ def fill_location_cities():
 			ret = ret + 1
 			loc.save(update_fields=['city'])
 	return ret
+
+def lookup_address(query):
+
+	if len(query) == 0:
+		return []
+	url = "https://nominatim.openstreetmap.org/search?" + urlencode({'q': query, 'format': 'json'})
+	with requests.get(url, headers={'User-Agent': settings.USER_AGENT}, allow_redirects=True) as r:
+		data = r.json()
+	return data

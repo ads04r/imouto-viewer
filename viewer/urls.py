@@ -79,6 +79,7 @@ urlpatterns = [
     path('process', views.locman_process),
     path('create-first-event', views.create_first_event),
     path('mood', views.mood),
+    path('address.json', views.address_lookup),
     path('webhook/<path>', views.webhook),
     path('questionnaires.html', views.questionnaires),
     path('questionnaires/<id>.html', views.questionnaireview),

@@ -139,7 +139,6 @@ function importWebScreen()
 	$('#importformurl').on('keypress', function(e)
 	{
 		var key = e.which;
-		console.log(key);
 		if(key == 13) { $('a#importfromweb').click(); return false; }
 	});
 
@@ -1271,6 +1270,27 @@ function personScreen(id)
     });
 }
 
+function mapToAddress(map, query)
+{
+        var url = './address.json';
+        var data = {'query': query};
+        $.ajax({
+            url: url,
+            dataType: 'json',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            method: 'POST',
+            success: function(data) {
+		if(data.length == 4) {
+			var c1 = L.latLng(parseFloat(data[0]), parseFloat(data[2]))
+			var c2 = L.latLng(parseFloat(data[1]), parseFloat(data[3]))
+			var bounds = L.latLngBounds(c1, c2);
+			map.fitBounds(bounds);
+		}
+            }
+        });
+}
+
 function placesScreen(id)
 {
     $(".content-wrapper").load("./places.html", function(response, status, xhr){
@@ -1305,6 +1325,8 @@ function placesScreen(id)
             $("#place-add").submit();
             return true;
         });
+
+	$("#id_address").on('blur', function() { mapToAddress(map, $(this).val()) });
     });
 }
 

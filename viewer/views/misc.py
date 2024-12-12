@@ -10,6 +10,7 @@ import datetime, pytz, dateutil.parser, json, requests, random
 from viewer.models import Location, Person, Event, WatchedDirectory
 from viewer.functions.rdf import get_webpage_data, microdata_to_rdf, get_rdf_people, get_rdf_places
 from viewer.functions.location_manager import get_location_manager_import_queue, get_location_manager_process_queue
+from viewer.functions.locations import lookup_address
 from viewer.importers.dav import create_calendar_task, mark_task_completed
 from viewer.forms import WatchedDirectoryForm
 from viewer.tasks.process import import_ical_feed
@@ -172,4 +173,21 @@ def parse_rdf(request):
 	data = data + get_rdf_places(g)
 
 	response = HttpResponse(json.dumps(data), content_type='application/json')
+	return response
+
+@csrf_exempt
+def address_lookup(request):
+	if request.method != 'POST':
+		raise Http404()
+	query = json.loads(request.body)
+	data = []
+	bb = []
+	if 'query' in query:
+		data = lookup_address(query['query'])
+	for item in data:
+		if 'boundingbox' in item:
+			bb = item['boundingbox']
+			break
+
+	response = HttpResponse(json.dumps(bb), content_type='application/json')
 	return response

@@ -18,6 +18,8 @@ except ModuleNotFoundError:
 
 # Application definition
 
+USER_AGENT = "Imouto/1.0"
+
 INSTALLED_APPS = [
     'polymorphic',
     'django.contrib.auth',
