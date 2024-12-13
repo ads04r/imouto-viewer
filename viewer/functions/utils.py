@@ -315,3 +315,6 @@ def imouto_json_serializer(data):
 		return data.strftime("%Y-%m-%d %H:%M:%S %Z")
 	if isinstance(data, (Person, Location, Event)):
 		return data.to_dict()
+
+def unixtime_to_datetime(unixtime):
+	return (pytz.utc.localize(datetime.datetime(1970, 1, 1, 0, 0, 0)) + datetime.timedelta(seconds=int(unixtime))).astimezone(pytz.timezone(settings.TIME_ZONE))
