@@ -25,6 +25,11 @@
                     <h3 class="profile-username text-center">{{ year }}</h3>
                     <p class="text-muted text-center">This year is still ongoing. The stats are incomplete and this page will change often as more data becomes available.</p>
 
+		    <p><b>Year progress</b><span class="pull-right">{{ year.year_progress }}%</span></p>
+		    <div class="progress progress-sm">
+			<div class="progress-bar" role="progressbar" aria-valuenow="{{ year.year_progress }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ year.year_progress }}%;"></div>
+		    </div>
+
 {% include 'viewer/cards/year_switcher.html' %}
 
                 </div>
@@ -90,9 +95,40 @@
 {% endif %}
 {% endwith %}
 
+{% for category in year.get_stat_categories %}
+
+                <div class="box box-primary" id="day_event_{{ event.pk }}">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">{{ category.capitalize }}</h3>
+                    </div>
+                    <div class="box-body no-padding">
+
+{% with properties=year.properties.distinct %}
+{% if properties %}
+
+<table class="table table-condensed">
+{% for property in properties %}
+{% if property.category == category %}
+	<tr>
+		<th width="100%">{{ property.key }}</th>
+		<td><span class="pull-right"><nobr>{{ property.value|intcomma }}{% if property.description %}&nbsp;<small>&nbsp;({{ property.description }})</small>{% endif %}</nobr></span></td>
+	</tr>
+{% endif %}
+{% endfor %}
+</table>
+
+{% endif %}
+{% endwith %}
+
+
+                    </div>
+                </div>
+
+{% endfor %}
+
+
             </div>
         </div>
     </div>
 
 </section>
-

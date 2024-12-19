@@ -1827,6 +1827,14 @@ class Year(models.Model):
 		dt = datetime.datetime.now().date()
 		return (dt.year == self.year)
 	@cached_property
+	def year_progress(self):
+		if not self.this_year:
+			return 100
+		try:
+			return Day.objects.filter(date__year=self.year).order_by('-date').first().year_progress
+		except:
+			return 0
+	@cached_property
 	def next(self):
 		"""
 		Returns the Year object representing the year after the one represented by this one.
