@@ -50,7 +50,11 @@ def generate_photo_collages(event_id):
 		max_photos = 15
 	min_photos = 2
 
-	event = Event.objects.get(pk=event_id)
+	try:
+		event = Event.objects.get(pk=event_id)
+	except:
+		logger.error("Could not load event " + str(event_id))
+		return []
 	if event.type == 'life_event':
 		return []
 	event.photo_collages.all().delete()
@@ -224,3 +228,35 @@ def generate_report_pdf(year):
 	generate_year_pdf(year, path)
 	report.cached_pdf = path
 	report.save(update_fields=['cached_pdf'])
+
+@background(schedule=0, queue='reports')
+def update_year(year):
+	"""
+	Can be run occasionally throughout a year to ensure things like photo collages and static maps are kept up to date.
+	The idea is that the actual year report generation time is kept to a minimum if we do a lot of the heavy lifting as
+	the year progresses.
+
+	:param year: The year to update. Normally the current year, but doesn't have to be.
+	"""
+	year = Year.objects.get(year=2024)
+	for event in year.events.all():
+		if event.photos().count() == 0:
+			continue
+		if event.photo_collages.count() > 0:
+			continue
+		generate_photo_collages(event.pk)
+	for event in year.events.exclude(geo=None).exclude(geo='').exclude(description=''):
+		try:
+			f = event.cached_staticmap.file
+		except:
+			f = None
+		if not f is None:
+			continue
+		generate_staticmap(event.pk)
+	for month in year.months.order_by('month'):
+		if month.this_month:
+			break
+		event = month.longest_journey
+		if event is None:
+			continue
+		generate_staticmap(event.pk)

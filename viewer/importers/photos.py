@@ -178,7 +178,7 @@ def import_photo_directory(path, tzinfo=pytz.UTC):
 		try:
 			photo = Photo.objects.get(file=photo_path)
 		except:
-			photo is None
+			photo = None
 		if not(photo is None):
 			if photo.time:
 				if photo.lat:

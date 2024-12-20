@@ -1345,8 +1345,9 @@ class Event(models.Model):
 		"""
 		return CalendarTask.objects.filter(time_completed__gte=self.start_time, time_completed__lte=self.end_time).order_by('time_completed')
 	def __refresh_geo(self, save=True):
-		if self.cached_staticmap:
-			self.cached_staticmap.delete()
+		old_geo = ''
+		if self.geo:
+			old_geo = self.geo
 		try:
 			ret = json.loads(getgeoline(self.start_time, self.end_time))
 		except:
@@ -1368,6 +1369,9 @@ class Event(models.Model):
 			if 'distance' in ret['properties']:
 				self.cached_distance = float(int((ret['properties']['distance'] / 1.609) * 100)) / 100
 		self.geo = json.dumps(ret)
+		if self.geo != old_geo:
+			if self.cached_staticmap:
+				self.cached_staticmap.delete()
 		if save:
 			self.save(update_fields=['geo', 'cached_distance'])
 		return self.geo
@@ -1983,7 +1987,7 @@ class Year(models.Model):
 				word = word[:-2]
 			word = word.strip('\t!?.," ').replace('\n', ' ').replace('\r', ' ').replace('  ', ' ')
 			ret.append(word)
-		return ' '.join(ret)
+		return ' '.join(sorted(ret))
 	def wordcloud(self):
 		if self.cached_wordcloud:
 			im = Image.open(self.cached_wordcloud.path)

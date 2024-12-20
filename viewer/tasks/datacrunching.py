@@ -101,7 +101,11 @@ def regenerate_similar_events(event_id):
 
 	logger.info("Task regenerate_similar_events beginning")
 
-	e1 = Event.objects.get(id=event_id)
+	try:
+		e1 = Event.objects.get(id=event_id)
+	except:
+		logger.error("Could not load event " + str(event_id))
+		return
 	logger.debug("Working with event " + str(e1))
 	EventSimilarity.objects.filter(event1=e1).delete()
 	EventSimilarity.objects.filter(event2=e1).delete()
