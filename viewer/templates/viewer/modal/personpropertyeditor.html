@@ -1,0 +1,25 @@
+<div class="modal fade nav-tabs-custom" id="admin_people_property_edit" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+                <form id="person-property-add" action="" method="POST" enctype="multipart/form-data">{% csrf_token %}
+
+			<div class="form-group">
+                                <label>Property</label>
+		                <select class="form-control select2" style="width: 100%;" name="property-key">
+		                  <option selected="selected">Your mum</option>
+		                  <option>Someone else's mum</option>
+		                </select>
+                        </div>
+
+                </form>
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary save-form-button">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

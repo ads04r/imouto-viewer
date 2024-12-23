@@ -98,6 +98,7 @@ def person(request, uid):
 			raise Http404(form.errors)
 
 	ret = cache.get(key)
+	ret = None # TODO: Remove this
 	if ret is None:
 		data = get_object_or_404(Person, uid=uid)
 		form = PersonForm(instance=data)
