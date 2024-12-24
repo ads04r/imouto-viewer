@@ -1,0 +1,32 @@
+<div class="modal fade nav-tabs-custom" id="admin_people_property_edit" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+                <form id="person-property-add" action="people/{{ data.uid }}/properties.html" method="POST">{% csrf_token %}
+
+			<div class="form-group">
+                                <label>Property</label>
+		                <select id="personproperty-key" class="form-control" style="width: 100%;" name="property-key">
+{% for k in property_keys %}
+		                  <option value="{{ k }}">{{ k }}</option>
+{% endfor %}
+		                </select>
+                        </div>
+			<div class="form-group">
+				<label>Values (one per line)</label>
+				<textarea id="personproperty-value" class="form-control" name="property-value"></textarea>
+                        </div>
+
+                        <input type="hidden" id="append-option" name="property-append" value="0" />
+
+                </form>
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary save-property-form-button">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

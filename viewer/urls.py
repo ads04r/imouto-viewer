@@ -67,6 +67,7 @@ urlpatterns = [
     path('people/<uid>.json', views.person_json),
     path('people/<uid>_thumb.jpg', views.person_thumbnail),
     path('people/<uid>.jpg', views.person_photo),
+    path('people/<uid>/properties.html', views.person_property),
     path('photo/<uid>_thumb.jpg', views.photo_thumbnail),
     path('photo/<uid>.jpg', views.photo_full),
     path('photo/<uid>.json', views.photo_json),

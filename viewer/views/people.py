@@ -101,7 +101,7 @@ def person(request, uid):
 	if ret is None:
 		data = get_object_or_404(Person, uid=uid)
 		form = PersonForm(instance=data)
-		context = {'type':'person', 'data':data, 'form':form, 'properties':explode_properties(data)}
+		context = {'type':'person', 'data':data, 'form':form, 'properties': explode_properties(data), 'property_keys': sorted(list(map(lambda x: x['key'], list(PersonProperty.objects.values('key').distinct()))))}
 		ret = render(request, 'viewer/pages/person.html', context)
 		cache.set(key, ret, timeout=86400)
 	return ret
@@ -125,3 +125,30 @@ def person_thumbnail(request, uid):
 	response = HttpResponse(content_type='image/jpeg')
 	im.save(response, "JPEG")
 	return response
+
+def person_property(request, uid):
+	if request.method == 'POST':
+		person = get_object_or_404(Person, uid=uid)
+		key = 'person_' + str(uid) + '_' + datetime.date.today().strftime("%Y%m%d")
+		cache.delete(key)
+		if 'property-key' in request.POST:
+			values = []
+			append = False
+			k = request.POST['property-key']
+			if 'property-value' in request.POST:
+				for v in request.POST['property-value'].strip().split('\n'):
+					values.append(v.strip())
+			if 'property-append' in request.POST:
+				if int(request.POST['property-append']) == 1:
+					append = True
+
+			if not append:
+				PersonProperty.objects.filter(person=person, key=k).delete()
+			for v in values:
+				try:
+					pp = PersonProperty.objects.get(person=person, key=k, value=v)
+				except:
+					pp = PersonProperty(person=person, key=k, value=v)
+					pp.save()
+			return HttpResponseRedirect('../../#person_' + str(person.uid))
+	raise Http404()

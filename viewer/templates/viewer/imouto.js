@@ -1266,6 +1266,42 @@ function personScreen(id)
             $("#person-add").submit();
             return true;
         });
+        $(".save-property-form-button").on('click', function()
+        {
+            $("#personproperty-key").prop('disabled', false);
+            $("#person-property-add").submit();
+            return true;
+        });
+        $("#person-property-delete-button").on('click', function()
+        {
+            $("#person-property-delete").submit();
+            return true;
+        });
+        $(".admin-people-property-edit").on('click', function()
+        {
+            var id = $(this).data('id');
+            var valuearray = [];
+            var value = '';
+            if(id == '')
+            {
+                $("#append-option").val(1);
+                $("#personproperty-key").prop('disabled', false);
+            } else {
+                valuearray = $(this).data('value');
+                value = valuearray.join('\n');
+                $("#append-option").val(0);
+                $("#personproperty-key").prop('disabled', true);
+            }
+            $("#personproperty-key").val(id);
+            $("#personproperty-value").val(value);
+            return true;
+        });
+        $(".admin-people-property-delete").on('click', function()
+        {
+            var id = $(this).data('id');
+            $("#delete-id").val(id);
+            return true;
+        });
         activateImageEditor();
     });
 }

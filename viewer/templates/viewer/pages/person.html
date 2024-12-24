@@ -1,3 +1,5 @@
+{% load json_serialize %}
+
 <section class="content-header">
     <h1>
         {{ data.full_name }}
@@ -142,34 +144,42 @@
 {% endfor %}
 
                     </div>
-                    <div class="tab-pane" id="profile-tab-properties" class="no-padding">
+                    <div class="tab-pane" id="profile-tab-properties">
                     
-                        <table class="table table-condensed">
+                        <table class="table table-bordered table-striped">
                         
                             <tr>
                                 <th>Property</th>
                                 <th>Value(s)</th>
+                                <th></th>
                             </tr>
                         
 {% for k,v in properties.items %}
 
                             <tr>
-                                <td>{{ k }}</td>
-                                <td>
+                                <td><nobr>{{ k }}</nobr></td>
+                                <td style="width: 100%;">
 
     {% for value in v %}
 
-                                    {{ value }}<br>
+                                    <samp>{{ value }}</samp><br>
 
     {% endfor %}
     
                                 </td>
+                                <td><nobr>
+                                    <a class="btn btn-primary btn-xs admin-people-property-edit" data-toggle="modal" data-target="#admin_people_property_edit" data-id="{{ k }}" data-value="{{ v|json_serialize }}" aria-hidden="true">Edit</a>
+                                    <a class="btn btn-danger btn-xs admin-people-property-delete" data-toggle="modal" data-target="#admin_people_property_delete" data-id="{{ k }}" aria-hidden="true">Delete</a>
+                                </nobr></td>
                             </tr>
 
 {% endfor %}
 
                         </table>
-
+                        <div>
+                          <span class="pull-right"><a class="btn btn-success admin-people-property-edit" data-toggle="modal" data-target="#admin_people_property_edit" data-id="" aria-hidden="true">New Property</a></span>
+                          &nbsp;<br/>&nbsp;
+                        <div>
                     </div>
                 </div>
             </div>
@@ -181,3 +191,5 @@
 
 {% include 'viewer/modal/imageeditor.html' %}
 {% include 'viewer/modal/personeditor.html' %}
+{% include 'viewer/modal/personpropertyeditor.html' %}
+{% include 'viewer/modal/personpropertydelete.html' %}
