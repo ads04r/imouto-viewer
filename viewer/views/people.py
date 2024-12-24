@@ -98,7 +98,6 @@ def person(request, uid):
 			raise Http404(form.errors)
 
 	ret = cache.get(key)
-	ret = None # TODO: Remove this
 	if ret is None:
 		data = get_object_or_404(Person, uid=uid)
 		form = PersonForm(instance=data)
@@ -130,15 +129,26 @@ def person_thumbnail(request, uid):
 def person_property(request, uid):
 	if request.method == 'POST':
 		person = get_object_or_404(Person, uid=uid)
+		key = 'person_' + str(uid) + '_' + datetime.date.today().strftime("%Y%m%d")
+		cache.delete(key)
 		if 'property-key' in request.POST:
 			values = []
+			append = False
 			k = request.POST['property-key']
 			if 'property-value' in request.POST:
 				for v in request.POST['property-value'].strip().split('\n'):
 					values.append(v.strip())
-			PersonProperty.objects.filter(person=person, key=k).delete()
+			if 'property-append' in request.POST:
+				if int(request.POST['property-append']) == 1:
+					append = True
+
+			if not append:
+				PersonProperty.objects.filter(person=person, key=k).delete()
 			for v in values:
-				pp = PersonProperty(person=person, key=k, value=v)
-				pp.save()
+				try:
+					pp = PersonProperty.objects.get(person=person, key=k, value=v)
+				except:
+					pp = PersonProperty(person=person, key=k, value=v)
+					pp.save()
 			return HttpResponseRedirect('../../#person_' + str(person.uid))
 	raise Http404()
