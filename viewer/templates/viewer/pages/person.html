@@ -1,3 +1,5 @@
+{% load json_serialize %}
+
 <section class="content-header">
     <h1>
         {{ data.full_name }}
@@ -166,8 +168,8 @@
     
                                 </td>
                                 <td><nobr>
-                                    <a class="btn btn-primary btn-xs" data-toggle="modal" data-target="#admin_people_property_edit" data-id="{{ k }}" aria-hidden="true">Edit</a>
-                                    <a class="btn btn-danger btn-xs" data-toggle="modal" data-target="#admin_people_property_delete" data-id="{{ k }}" aria-hidden="true">Delete</a>
+                                    <a class="btn btn-primary btn-xs admin-people-property-edit" data-toggle="modal" data-target="#admin_people_property_edit" data-id="{{ k }}" data-value="{{ v|json_serialize }}" aria-hidden="true">Edit</a>
+                                    <a class="btn btn-danger btn-xs admin-people-property-delete" data-toggle="modal" data-target="#admin_people_property_delete" data-id="{{ k }}" aria-hidden="true">Delete</a>
                                 </nobr></td>
                             </tr>
 
@@ -175,7 +177,7 @@
 
                         </table>
                         <div>
-                          <span class="pull-right"><a class="btn btn-success" data-toggle="modal" data-target="#admin_people_property_edit" data-id="" aria-hidden="true">New Property</a></span>
+                          <span class="pull-right"><a class="btn btn-success admin-people-property-edit" data-toggle="modal" data-target="#admin_people_property_edit" data-id="" aria-hidden="true">New Property</a></span>
                           &nbsp;<br/>&nbsp;
                         <div>
                     </div>

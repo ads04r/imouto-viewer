@@ -1266,6 +1266,20 @@ function personScreen(id)
             $("#person-add").submit();
             return true;
         });
+        $(".admin-people-property-edit").on('click', function()
+        {
+            var id = $(this).data('id');
+            var valuearray = [];
+            var value = '';
+            if(id != '')
+            {
+                valuearray = $(this).data('value');
+                value = valuearray.join('\n');
+            }
+            $("#personproperty-key").val(id);
+            $("#personproperty-value").val(value);
+            return true;
+        });
         activateImageEditor();
     });
 }

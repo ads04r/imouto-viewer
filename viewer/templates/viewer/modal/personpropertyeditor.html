@@ -7,10 +7,15 @@
 
 			<div class="form-group">
                                 <label>Property</label>
-		                <select class="form-control select2" style="width: 100%;" name="property-key">
-		                  <option selected="selected">Your mum</option>
-		                  <option>Someone else's mum</option>
+		                <select id="personproperty-key" class="form-control" style="width: 100%;" name="property-key">
+{% for k in property_keys %}
+		                  <option value="{{ k }}">{{ k }}</option>
+{% endfor %}
 		                </select>
+                        </div>
+			<div class="form-group">
+				<label>Value(s)</label>
+				<textarea id="personproperty-value" class="form-control" name="property-value"></textarea>
                         </div>
 
                 </form>
