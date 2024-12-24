@@ -1,0 +1,17 @@
+<div class="modal fade nav-tabs-custom" id="admin_people_property_delete" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+
+                <p>Are you sure you want to permanently delete this property?</p>
+                
+                <form id="person-property-delete" action="people/{{ data.uid }}/properties.html" method="POST">{% csrf_token %}
+                    <input type="hidden" id="delete-id" name="property-key" value="" />
+                </form>
+            
+                <button type="button" id="person-property-delete-button" class="btn btn-danger person-property-delete-form-button">Delete</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

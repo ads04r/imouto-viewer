@@ -126,3 +126,19 @@ def person_thumbnail(request, uid):
 	response = HttpResponse(content_type='image/jpeg')
 	im.save(response, "JPEG")
 	return response
+
+def person_property(request, uid):
+	if request.method == 'POST':
+		person = get_object_or_404(Person, uid=uid)
+		if 'property-key' in request.POST:
+			values = []
+			k = request.POST['property-key']
+			if 'property-value' in request.POST:
+				for v in request.POST['property-value'].strip().split('\n'):
+					values.append(v.strip())
+			PersonProperty.objects.filter(person=person, key=k).delete()
+			for v in values:
+				pp = PersonProperty(person=person, key=k, value=v)
+				pp.save()
+			return HttpResponseRedirect('../../#person_' + str(person.uid))
+	raise Http404()

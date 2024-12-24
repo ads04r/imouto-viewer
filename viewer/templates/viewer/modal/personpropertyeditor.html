@@ -3,7 +3,7 @@
         <div class="modal-content">
             <div class="modal-body">
 
-                <form id="person-property-add" action="" method="POST" enctype="multipart/form-data">{% csrf_token %}
+                <form id="person-property-add" action="people/{{ data.uid }}/properties.html" method="POST">{% csrf_token %}
 
 			<div class="form-group">
                                 <label>Property</label>
@@ -14,7 +14,7 @@
 		                </select>
                         </div>
 			<div class="form-group">
-				<label>Value(s)</label>
+				<label>Values (one per line)</label>
 				<textarea id="personproperty-value" class="form-control" name="property-value"></textarea>
                         </div>
 
@@ -22,7 +22,7 @@
                 
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary save-form-button">Save</button>
+                <button type="button" class="btn btn-primary save-property-form-button">Save</button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
             </div>
         </div>

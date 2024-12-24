@@ -1266,6 +1266,16 @@ function personScreen(id)
             $("#person-add").submit();
             return true;
         });
+        $(".save-property-form-button").on('click', function()
+        {
+            $("#person-property-add").submit();
+            return true;
+        });
+        $("#person-property-delete-button").on('click', function()
+        {
+            $("#person-property-delete").submit();
+            return true;
+        });
         $(".admin-people-property-edit").on('click', function()
         {
             var id = $(this).data('id');
@@ -1278,6 +1288,12 @@ function personScreen(id)
             }
             $("#personproperty-key").val(id);
             $("#personproperty-value").val(value);
+            return true;
+        });
+        $(".admin-people-property-delete").on('click', function()
+        {
+            var id = $(this).data('id');
+            $("#delete-id").val(id);
             return true;
         });
         activateImageEditor();
