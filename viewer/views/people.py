@@ -101,7 +101,8 @@ def person(request, uid):
 	if ret is None:
 		data = get_object_or_404(Person, uid=uid)
 		form = PersonForm(instance=data)
-		context = {'type':'person', 'data':data, 'form':form, 'properties': explode_properties(data), 'property_keys': sorted(list(map(lambda x: x['key'], list(PersonProperty.objects.values('key').distinct()))))}
+		ignore = ['mhb', 'image', 'livesat', 'birthday', 'deathday', 'hasface']
+		context = {'type':'person', 'data':data, 'form':form, 'properties': explode_properties(data), 'property_keys': [item for item in sorted(list(map(lambda x: x['key'], list(PersonProperty.objects.values('key').distinct())))) if item not in ignore]}
 		ret = render(request, 'viewer/pages/person.html', context)
 		cache.set(key, ret, timeout=86400)
 	return ret
