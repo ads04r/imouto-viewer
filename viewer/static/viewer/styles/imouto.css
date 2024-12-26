@@ -151,3 +151,16 @@ div.barsleeppattern {
 p.map-bubble-text {
 	font-size: 1.5em;
 }
+
+ol.eventstats {
+	list-style: none;
+	padding-left: 0px;
+	padding-top: 0.5em;
+}
+
+ol.eventstats li {
+	list-style: none;
+	display: inline-block;
+}
+
+ol.eventstats > li + li:before { content: '| '; }
