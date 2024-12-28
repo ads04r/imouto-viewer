@@ -100,7 +100,7 @@ def create_location_events(minlength=300):
 		home_id = settings.USER_HOME_LOCATION
 	except:
 		home_id = -1
-	dts = Event.objects.filter(type='loc_prox').exclude(location__id=home_id).order_by('-start_time')[0].start_time
+	dts = Event.objects.filter(type='loc_prox').order_by('-start_time')[0].start_time
 	dte = pytz.utc.localize(datetime.datetime.utcnow()).replace(hour=0, minute=0, second=0) + datetime.timedelta(days=1)
 	ret = []
 	while dts < dte:

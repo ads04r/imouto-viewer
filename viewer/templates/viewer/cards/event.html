@@ -53,8 +53,10 @@
                         {% endif %}
                     {% endif %}
 
-                    {% if event.health.steps or event.health.heartavg %}
+                    {% if event.health.steps or event.health.heartavg or event.geo %}
                     <ol class="eventstats">
+                        {% if event.people.count > 0 or event.description or event.photos.count > 0 or event.geo %}<li>{{ event.length_string }}</li>{% endif %}
+                        {% if event.geo %}<li>{{ event.distance }} miles</li>{% endif %}
                         {% if event.health.steps %}<li>{{ event.health.steps }} steps</li>{% endif %}
                         {% if event.health.heartavg %}<li>Average heart rate {{ event.health.heartavg }}bpm</li>{% endif %}
                     </ol>
