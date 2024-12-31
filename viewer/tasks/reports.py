@@ -9,6 +9,7 @@ import datetime, pytz, os, random
 from viewer.models import Event, Year, create_or_get_year, Photo, PhotoCollage
 from viewer.reporting.generation import generate_year_travel, generate_year_photos, generate_year_comms, generate_year_music, generate_year_movies, generate_year_health
 from viewer.reporting.pdf import generate_year_pdf
+from viewer.reporting.styles import ImoutoModernReportStyle
 from viewer.functions.file_uploads import photo_collage_upload_location, year_pdf_upload_location
 from viewer.eventcollage import make_collage
 
@@ -225,7 +226,7 @@ def generate_report_pdf(year):
 		report.cached_pdf.delete()
 		report.save(update_fields=['cached_pdf'])
 	path = os.path.join(settings.MEDIA_ROOT, year_pdf_upload_location(report, ''))
-	generate_year_pdf(year, path)
+	generate_year_pdf(year, path, ImoutoModernReportStyle)
 	report.cached_pdf = path
 	report.save(update_fields=['cached_pdf'])
 
@@ -238,7 +239,6 @@ def update_year(year):
 
 	:param year: The year to update. Normally the current year, but doesn't have to be.
 	"""
-	year = Year.objects.get(year=2024)
 	for event in year.events.all():
 		if event.photos().count() == 0:
 			continue

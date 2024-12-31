@@ -1,4 +1,3 @@
-
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import PageTemplate, Frame, NextPageTemplate, Paragraph, ParagraphAndImage, KeepTogether, Table, Image, PageBreak, FrameBreak, PageBreakIfNotEmpty, BaseDocTemplate, PageTemplate, Spacer
 from reportlab.platypus.tableofcontents import TableOfContents, SimpleIndex
@@ -17,6 +16,12 @@ import random, json, markdown, os
 
 import logging
 logger = logging.getLogger(__name__)
+
+class EventImage(Image):
+
+	def __init__(self, filename, width=None, height=None, kind='direct', mask='auto', lazy=1, hAlign='CENTER', useDPI=False):
+		self.height = height
+		super().__init__(filename=filename, width=width, height=height, kind=kind, mask=mask, lazy=lazy, hAlign=hAlign, useDPI=useDPI)
 
 class ImoutoModernTemplate(ImoutoDocTemplate):
 
@@ -210,10 +215,10 @@ class ImoutoModernReportStyle(ImoutoBasicReportStyle):
 			im = event.cover_photo.thumbnail(200)
 			im.save(tf, format='JPEG')
 			if os.path.exists(str(tf.name)):
-				right_column = Image(str(tf.name), width=column_width, height=column_width)
+				right_column = EventImage(str(tf.name), width=column_width, height=column_width)
 		elif event.cached_staticmap:
 			if os.path.exists(str(event.cached_staticmap.file)):
-				right_column = Image(str(event.cached_staticmap.file), width=column_width, height=column_width)
+				right_column = EventImage(str(event.cached_staticmap.file), width=column_width, height=column_width)
 		ret = Table(
 			[
 				[
