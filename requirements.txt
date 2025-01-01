@@ -34,6 +34,7 @@ docutils==0.17.1
 et-xmlfile==1.1.0
 ExifRead==2.1.2
 extruct==0.17.0
+feedparser==6.0.11
 fit-tool==0.9.13
 fonttools==4.53.1
 frechetdist==0.6
@@ -86,6 +87,7 @@ rdflib==6.3.2
 regex==2024.5.15
 reportlab==4.2.5
 requests==2.32.2
+sgmllib3k==1.0.0
 six==1.16.0
 soupsieve==2.5
 sqlparse==0.5.0

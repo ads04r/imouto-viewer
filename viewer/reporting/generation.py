@@ -2,7 +2,7 @@ from django.db.models import Count, Sum, Max, Min
 from django.conf import settings
 from viewer.models import Event
 from bs4 import BeautifulSoup
-import datetime, pytz, json, requests
+import datetime, pytz, json, requests, feedparser
 
 from viewer.models import Year, YearChart, YearProperty, YearGraph
 from viewer.models import DataReading, RemoteInteraction
@@ -36,7 +36,7 @@ def generate_year_health(year):
 		steps_per_day = int(float(steps) / days)
 
 	for workout in year.workouts:
-		prop = year.add_property(key=workout[0] + ' distance', value=workout[1], category='health', icon=workout[2])
+		prop = year.add_property(key=workout[0] + ' distance', value=workout[1], category='health', icon=workout[3])
 		prop.description='miles'
 		prop.save(update_fields=['description'])
 	if steps:
@@ -186,7 +186,16 @@ def generate_year_music(year, moonshine_url=''):
 						prop.description = str(len(music_data['discovery']['albums'])) + ' albums discovered'
 						prop.save(update_fields=['description'])
 
-def generate_year_movies(year, username=''):
+def generate_year_movies(year, letterboxd_username=''):
+
+	try:
+		username = settings.LETTERBOXD_USERNAME
+	except:
+		username = ''
+	if len(letterboxd_username) > 0:
+		username = letterboxd_username
+
+	chart_data = []
 
 	if len(username) > 0:
 
@@ -195,24 +204,21 @@ def generate_year_movies(year, username=''):
 		for chart in YearChart.objects.filter(year=year, text=title):
 			chart.delete()
 
-		url = "https://letterboxd.com/" + str(username) + "/films/diary/for/" + str(year.year) + "/"
-		session = requests.Session()
-		session.headers.update({"User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win94; x64; rv:55.0) Gecko/20100101 Firefox/55.0"})
-		r = session.get(url, allow_redirects=True, timeout=10)
-		html = r.text
+		url = "https://letterboxd.com/" + str(username) + "/rss/"
+		feed = feedparser.parse(url)
 
-		soup = BeautifulSoup(html, features='html.parser')
-		chart_data = []
-		for link in soup.findAll('a'):
+		for movie in feed.entries:
 
 			try:
-				ds = link['data-viewing-date']
+				ds = movie['letterboxd_watcheddate']
 			except:
 				ds = ''
 			if ds == '':
 				continue
+			if not(ds.startswith(str(year.year) + '-')):
+				continue
 
-			label = link['data-film-name']
+			label = movie['letterboxd_filmtitle']
 			dt = datetime.datetime.strptime(ds, '%Y-%m-%d').date().strftime("%-d %B")
 			item = {'text': label, 'value': dt}
 			chart_data.append(item)
@@ -221,3 +227,4 @@ def generate_year_movies(year, username=''):
 			chart_data.reverse()
 			year.add_chart(text=title, category='movies', chart_data=chart_data)
 
+	return chart_data
