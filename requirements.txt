@@ -16,7 +16,7 @@ databind.core==4.5.2
 databind.json==4.5.2
 dateparser==1.2.0
 Deprecated==1.2.14
-Django==4.2.16
+Django==4.2.17
 django-adminlte2==0.4.3
 django-appconf==1.0.6
 django-colorfield==0.11.0
