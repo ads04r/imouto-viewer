@@ -16,6 +16,28 @@ import random, json, markdown, os
 
 import logging
 logger = logging.getLogger(__name__)
+page_count = 0
+
+class EventTable(Table):
+
+	def draw(self):
+		global page_count
+		if page_count % 2 == 1:
+			logger.debug("Generating RH page ... " + str(repr(self._colWidths)) + " " + str(repr(self._colpositions)))
+			super().draw()
+		else:
+			self._curweight = self._curcolor = self._curcellstyle = None
+			self._drawBkgrnd()
+			colpos = [0]
+			colwidth = list(reversed(self._colWidths))
+			colwidth[0] = colwidth[0] + int(cm / 2)
+			for w in colwidth:
+				cum = colpos[-1] + w
+				colpos.append(cum)
+			logger.debug("Generating LH page ... " + str(repr(colwidth)) + " " + str(repr(colpos)))
+			for row, rowstyle, rowpos, rowheight in zip(self._cellvalues, self._cellStyles, self._rowpositions[1:], self._rowHeights):
+				for cellval, cellstyle, colpos, colwidth in zip(list(reversed(row)), list(rowstyle), colpos, colwidth):
+					self._drawCell(cellval, cellstyle, (colpos, rowpos), (colwidth, rowheight))
 
 class EventImage(Image):
 
@@ -70,11 +92,16 @@ class ImoutoModernReportStyle(ImoutoBasicReportStyle):
 			canvas.restoreState()
 
 		def __event_border(canvas, doc):
+			global page_count
 			canvas.saveState()
 			canvas.setFillColorRGB(self.primary_colour[0], self.primary_colour[1], self.primary_colour[2])
-			canvas.rect(self.page_width - (self.left_margin + (self.content_width / 3.0)), 0, (self.left_margin + (self.content_width / 3.0)), self.page_height, stroke=0, fill=1)
+			if doc.page % 2 == 0:
+				canvas.rect(0, 0, (self.left_margin + (self.content_width / 3.0)), self.page_height, stroke=0, fill=1)
+			else:
+				canvas.rect(self.page_width - (self.left_margin + (self.content_width / 3.0)), 0, (self.left_margin + (self.content_width / 3.0)), self.page_height, stroke=0, fill=1)
 			canvas.rect(0, (self.content_height + self.bottom_margin), self.page_width, self.top_margin, stroke=0, fill=1)
 			canvas.rect(0, 0, self.page_width, self.bottom_margin, stroke=0, fill=1)
+			page_count = doc.page
 			canvas.restoreState()
 
 		def __half_border(canvas, doc):
@@ -115,7 +142,7 @@ class ImoutoModernReportStyle(ImoutoBasicReportStyle):
 
 		column_width = (self.content_width / 2) - 6
 		return [PageTemplate(id='TitlePage', frames=Frame(self.left_margin, self.bottom_margin, self.content_width, self.content_height, id='titlepage')),
-			PageTemplate(id='FullPage', frames=Frame(self.left_margin, self.bottom_margin, self.content_width, self.content_height, id='fullpage'), onPage=__half_border, onPageEnd=__footer_inverse),
+			PageTemplate(id='FullPage', frames=Frame(self.left_margin, self.bottom_margin, self.content_width, self.content_height, id='fullpage'), onPageEnd=__footer_inverse),
 			PageTemplate(id='FullPageBlock', frames=Frame(self.left_margin, self.bottom_margin, self.content_width, self.content_height, id='fullpageblock'), onPage=__half_page_fill, onPageEnd=__footer_inverse),
 			PageTemplate(id='LifeEventPage', frames=[
 				Frame(self.left_margin, self.bottom_margin, column_width, self.content_height, id='col1'),
@@ -219,7 +246,7 @@ class ImoutoModernReportStyle(ImoutoBasicReportStyle):
 		elif event.cached_staticmap:
 			if os.path.exists(str(event.cached_staticmap.file)):
 				right_column = EventImage(str(event.cached_staticmap.file), width=column_width, height=column_width)
-		ret = Table(
+		ret = EventTable(
 			[
 				[
 					[Paragraph(event.caption, style=styles['EventTitle']), Paragraph(event.start_time.strftime("%A %-d %B"), style=styles['EventDate']), Paragraph(html, style=styles['EventText'])], 

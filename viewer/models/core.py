@@ -1960,7 +1960,7 @@ class Year(models.Model):
 		return ret
 
 	@cached_property
-	def words(self):
+	def words_list(self):
 		text = ''
 		for event in self.life_events.all():
 			text = text + event.description + ' '
@@ -1987,12 +1987,15 @@ class Year(models.Model):
 				word = word[:-2]
 			word = word.strip('\t!?.," ').replace('\n', ' ').replace('\r', ' ').replace('  ', ' ')
 			ret.append(word)
+		return ret
+	@cached_property
+	def words(self):
 		return ' '.join(sorted(ret))
 	def wordcloud(self):
 		if self.cached_wordcloud:
 			im = Image.open(self.cached_wordcloud.path)
 			return im
-		text = self.words
+		text = ' '.join(self.words_list)
 		stopwords = set()
 		for word in set(STOPWORDS):
 			stopwords.add(word)
