@@ -23,7 +23,7 @@
 
                     <ul class="list-group list-group-unbordered">
 			<li class="list-group-item"><b>Day of week</b><span class="pull-right">{{ data.date|date:"l" }}</span></li>
-			<li class="list-group-item"><b>This year</b><span class="pull-right">{{ data.date|date:"Y" }}{% if data.date|date:"L" %}<small> (leap year)</small>{% endif %}</span></li>
+			<li class="list-group-item"><b>This year</b><span class="pull-right">{{ data.date|date:"Y" }}{% if data.date|date:"L" == True %}<small> (leap year)</small>{% endif %}</span></li>
 			<li class="list-group-item"><b>Day of year</b><span class="pull-right">{{ data.date|date:"z" }}</span></li>
 			<li class="list-group-item"><b>Week of year</b><span class="pull-right">{{ data.date|date:"W" }}</span></li>
                     </ul>
