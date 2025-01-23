@@ -711,6 +711,9 @@ class Person(models.Model):
 		if not(self.birthday is None):
 			if self.birthday:
 				ret['birthday'] = self.birthday.strftime("%Y-%m-%d")
+		if not(self.deathday is None):
+			if self.deathday:
+				ret['deathday'] = self.deathday.strftime("%Y-%m-%d")
 		home = self.home()
 		if not(home is None):
 			ret['home'] = home.to_dict()
@@ -911,6 +914,9 @@ class Photo(models.Model):
 		ret['people'] = []
 		for person in self.people.all():
 			ret['people'].append(person.to_dict())
+		ret['tags'] = []
+		for tag in self.tags.all():
+			ret['tags'].append(tag.id)
 		return ret
 	def picasa_info(self):
 		image_path = str(self.file.path)
@@ -1009,6 +1015,19 @@ class Photo(models.Model):
 		if self.time is None:
 			return Event.objects.none()
 		return Event.objects.filter(start_time__lte=self.time, end_time__gte=self.time)
+	def tag(self, tagname):
+		tagid = tagname.lower()
+		try:
+			tag = PhotoTag.objects.get(id=tagid)
+		except:
+			tag = PhotoTag(id=tagid, colour=('#' + str("%06x" % random.randint(0, 0xFFFFFF)).upper()))
+			tag.save()
+		self.tags.add(tag)
+	def tags_field(self):
+		ret = []
+		for tag in self.tags.all():
+			ret.append(tag.id)
+		return ', '.join(ret)
 	def generate_caption(self):
 		if self.caption != '':
 			return self.caption
@@ -1297,6 +1316,8 @@ class Event(models.Model):
 		for tag in self.tags.all():
 			ret.append(tag.id)
 		return ', '.join(ret)
+	def photo_tags(self):
+		return PhotoTag.objects.filter(photos__in=self.photos()).distinct()
 	def description_html(self):
 		if self.description == '':
 			return ''
@@ -3346,6 +3367,18 @@ class EventTag(models.Model):
 		app_label = 'viewer'
 		verbose_name = 'event tag'
 		verbose_name_plural = 'event tags'
+
+class PhotoTag(models.Model):
+	photos = models.ManyToManyField(Photo, related_name='tags')
+	id = models.SlugField(max_length=32, primary_key=True)
+	comment = models.TextField(null=True, blank=True)
+	colour = ColorField(default='#777777')
+	def __str__(self):
+		return(self.id)
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'photo tag'
+		verbose_name_plural = 'photo tags'
 
 class AutoTag(models.Model):
 	tag = models.ForeignKey(EventTag, null=False, on_delete=models.CASCADE, related_name='rules')
