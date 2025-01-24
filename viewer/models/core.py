@@ -1023,11 +1023,10 @@ class Photo(models.Model):
 			tag = PhotoTag(id=tagid, colour=('#' + str("%06x" % random.randint(0, 0xFFFFFF)).upper()))
 			tag.save()
 		self.tags.add(tag)
+	def tags_list(self):
+		return [tag.pk for tag in self.tags.all()]
 	def tags_field(self):
-		ret = []
-		for tag in self.tags.all():
-			ret.append(tag.id)
-		return ', '.join(ret)
+		return ', '.join(self.tags_list())
 	def generate_caption(self):
 		if self.caption != '':
 			return self.caption
@@ -3361,6 +3360,12 @@ class EventTag(models.Model):
 	id = models.SlugField(max_length=32, primary_key=True)
 	comment = models.TextField(null=True, blank=True)
 	colour = ColorField(default='#777777')
+	@property
+	def photo_tag(self):
+		try:
+			return PhotoTag.objects.get(pk=self.pk)
+		except:
+			return None
 	def __str__(self):
 		return(self.id)
 	class Meta:

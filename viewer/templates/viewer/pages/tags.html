@@ -29,7 +29,7 @@
 					<a class="btn btn-primary btn-xs eventlink" href="#tag_{{ tag.id }}">View Events</a>
 				</span>
                                 <span class="username no-image"><i class="fa fa-tag" style="color: {{ tag.colour }};"></i>&nbsp;{{ tag.id }}</span>
-                                <span class="description no-image">{{ tag.num_events }} events{% if tag.rules.count > 0 %} | {{ tag.rules.count }} rules{% endif %}</span>
+                                <span class="description no-image">{{ tag.num_events }} events{% if tag.photo_tag %} | {{ tag.photo_tag.photos.count }} photos{% endif %}{% if tag.rules.count > 0 %} | {{ tag.rules.count }} rules{% endif %}</span>
                             </div>
 
                         </div>

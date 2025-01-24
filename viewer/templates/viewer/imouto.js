@@ -1539,6 +1539,7 @@ function activateImageEditor()
 		var phototime = $(this).data('phototime');
 		var cover_image = $(this).data('cover');
 		var face_count = parseInt($(this).data('facecount'));
+		var tags = $(this).data('tags');
 		var img = $(this).html();
 		var alt = $('img', this).attr('alt');
 		html = html + '<table class="table">';
@@ -1571,6 +1572,13 @@ function activateImageEditor()
 		}
 		if(face_count > 1) { info.push(face_count + ' faces detected'); }
 		if(face_count == 1) { info.push(face_count + ' face detected'); }
+		try { var taglist = JSON.parse(tags.replaceAll("'", '"')); } catch { var taglist = []; }
+		if(taglist.length > 0)
+		{
+			html = html + '<div>';
+			for(var i=0; i < taglist.length; i++) { html = html + '<span class="badge">' + taglist[i] + '</span>'; }
+			html = html + '</div>';
+		}
 		if(info.length > 0) { html = html + '<ul><li> ' + info.join('</li><li> ') + '</li></ul>'; }
 		html = html + '</td>';
 		html = html + '</tr>';
