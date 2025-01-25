@@ -1,0 +1,38 @@
+{% if tag.photo_tag %}
+
+<div class="box box-primary">
+<div class="box-body box-profile">
+<img class="profile-user-img img-responsive img-circle" src="photo/{{ tag.photo_tag.photos.first.id }}_thumb.jpg">
+<h3 class="profile-username text-center"><i class="fa fa-tag" style="color: {{ tag.colour }};"></i>&nbsp;{{ tag.id }}</h3>
+<ul class="list-group list-group-unbordered">
+	<li class="list-group-item"><b>Events</b><span class="pull-right">{{ tag.num_events }}</span></li>
+	{% if tag.photo_tag %}<li class="list-group-item"><b>Photos</b><span class="pull-right">{{ tag.photo_tag.photos.count }}</span></li>{% endif %}
+	{% if tag.rules.count > 0 %}<li class="list-group-item"><b>Rules</b><span class="pull-right">{{ tag.rules.count }}</span>{% endif %}</li>
+</ul>
+<div class="pull-right">
+<a class="btn btn-secondary tagrulelink" href="#tagrules_{{ tag.id }}">View Rules</a>
+<a class="btn btn-primary eventlink" href="#tag_{{ tag.id }}">View Events</a>
+</div>
+</div>
+</div>
+
+{% else %}
+
+<div class="box box-primary">
+<div class="box-body">
+<h4><i class="fa fa-tag" style="color: {{ tag.colour }};"></i>&nbsp;{{ tag.id }}</h4>
+<ol class="eventstats">
+	<li>{{ tag.num_events }} events</li>
+	{% if tag.photo_tag %}<li>{{ tag.photo_tag.photos.count }} photos</li>{% endif %}
+	{% if tag.rules.count > 0 %}<li>{{ tag.rules.count }} rules{% endif %}</li>
+</ol>
+</div>
+<div class="box-footer">
+<span class="pull-right">
+<a class="btn btn-secondary btn-xs tagrulelink" href="#tagrules_{{ tag.id }}">View Rules</a>
+<a class="btn btn-primary btn-xs eventlink" href="#tag_{{ tag.id }}">View Events</a>
+</span>
+</div>
+</div>
+
+{% endif %}

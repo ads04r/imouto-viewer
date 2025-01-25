@@ -1575,9 +1575,9 @@ function activateImageEditor()
 		try { var taglist = JSON.parse(tags.replaceAll("'", '"')); } catch { var taglist = []; }
 		if(taglist.length > 0)
 		{
-			html = html + '<div>';
-			for(var i=0; i < taglist.length; i++) { html = html + '<span class="badge">' + taglist[i] + '</span>'; }
-			html = html + '</div>';
+			html = html + '<span class="pull-right">';
+			for(var i=0; i < taglist.length; i++) { html = html + '<span class="badge">' + taglist[i] + '</span> '; }
+			html = html + '</span>';
 		}
 		if(info.length > 0) { html = html + '<ul><li> ' + info.join('</li><li> ') + '</li></ul>'; }
 		html = html + '</td>';

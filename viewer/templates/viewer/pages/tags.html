@@ -13,34 +13,42 @@
 
     <div class="container-fluid">
         <div class="row">
-            <div class="col-xs-12 col-sm-12 col-md-12">
 
-
-                <div class="box box-primary" id="day_event_{{ event.pk }}">
-                    <div class="box-body">
 
 {% for tag in data.all %}
 {% if tag.id != '' %}
+{% if tag.photo_tag %}
 
-                        <div class="post">
-                            <div class="user-block">
-				<span class="pull-right">
-					<a class="btn btn-secondary btn-xs tagrulelink" href="#tagrules_{{ tag.id }}">View Rules</a>
-					<a class="btn btn-primary btn-xs eventlink" href="#tag_{{ tag.id }}">View Events</a>
-				</span>
-                                <span class="username no-image"><i class="fa fa-tag" style="color: {{ tag.colour }};"></i>&nbsp;{{ tag.id }}</span>
-                                <span class="description no-image">{{ tag.num_events }} events{% if tag.photo_tag %} | {{ tag.photo_tag.photos.count }} photos{% endif %}{% if tag.rules.count > 0 %} | {{ tag.rules.count }} rules{% endif %}</span>
-                            </div>
+            <div class="col-xs-12 col-sm-6 col-md-4">
 
-                        </div>
+{% include 'viewer/cards/tag.html' %}
 
+            </div>
+
+{% endif %}
 {% endif %}
 {% endfor %}                        
 
-                    </div>
-                </div>
+
+        </div>
+        <div class="row">
+
+
+{% for tag in data.all %}
+{% if tag.id != '' %}
+{% if not tag.photo_tag %}
+
+            <div class="col-xs-12 col-sm-6 col-md-4">
+
+{% include 'viewer/cards/tag.html' %}
 
             </div>
+
+{% endif %}
+{% endif %}
+{% endfor %}                        
+
+
         </div>
     </div>
 
