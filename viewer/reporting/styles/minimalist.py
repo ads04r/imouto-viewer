@@ -45,7 +45,7 @@ class EventImage(Image):
 		self.height = height
 		super().__init__(filename=filename, width=width, height=height, kind=kind, mask=mask, lazy=lazy, hAlign=hAlign, useDPI=useDPI)
 
-class ImoutoModernTemplate(ImoutoDocTemplate):
+class ImoutoMinimalistTemplate(ImoutoDocTemplate):
 
 	def afterFlowable(self, flowable):
 		if flowable.__class__.__name__ == 'Paragraph':
@@ -67,18 +67,19 @@ class ImoutoModernTemplate(ImoutoDocTemplate):
 					item.append(link)
 				self.notify('TOCEntry', tuple(item))
 
-class ImoutoModernReportStyle(ImoutoBasicReportStyle):
+class ImoutoMinimalistReportStyle(ImoutoBasicReportStyle):
 
 	def __init__(self, *args, **kwargs):
-		super(ImoutoModernReportStyle, self).__init__(*args, **kwargs)
+		super(ImoutoMinimalistReportStyle, self).__init__(*args, **kwargs)
 		self.primary_colour = [0.5, 0, 0.5]
 		self.secondary_colour = [0.26, 0.28, 0.35]
 		self.tertiary_colour = [0, 0, 0]
+		self.__page_title = ''
 
 	def generate(self, export_file):
-		logger.info("Generating MODERN report for " + str(self.year))
+		logger.info("Generating MINIMALIST report for " + str(self.year))
 		logger.debug("Saving as " + export_file)
-		doc = ImoutoModernTemplate(export_file, self.getLayout(), pagesize=self.page_size, rightMargin=self.right_margin, leftMargin=self.left_margin, topMargin=self.top_margin, bottomMargin=self.bottom_margin)
+		doc = ImoutoMinimalistTemplate(export_file, self.getLayout(), pagesize=self.page_size, rightMargin=self.right_margin, leftMargin=self.left_margin, topMargin=self.top_margin, bottomMargin=self.bottom_margin)
 		report = Year.objects.get(year=self.year)
 		doc.multiBuild(self.generate_year_story())
 
@@ -165,7 +166,7 @@ class ImoutoModernReportStyle(ImoutoBasicReportStyle):
 
 	def getStyles(self):
 
-		ret = super(ImoutoModernReportStyle, self).getStyles()
+		ret = super(ImoutoMinimalistReportStyle, self).getStyles()
 
 		ret['YearTitle'] = ParagraphStyle('YearTitle', parent=ret['Title'], fontName=self.title_font, alignment=1, textTransform='uppercase', fontSize=100, leading=120)
 		ret['SectionTitle'] = ParagraphStyle('SectionTitle', parent=ret['Title'], fontName=self.title_font, alignment=1, textTransform='uppercase', fontSize=52, textColor=Color(self.primary_colour[0], self.primary_colour[1], self.primary_colour[2], 1), leading=64)

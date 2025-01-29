@@ -36,6 +36,7 @@ class ImoutoDocTemplate(BaseDocTemplate):
 		BaseDocTemplate.__init__(self, filename, **dict(kw))
 		self.addPageTemplates(layout)
 		self.indexobject = SimpleIndex(dot=' . ', headers=True)
+		self.page_title = ''
 
 	def afterFlowable(self, flowable):
 		if flowable.__class__.__name__ == 'Paragraph':
@@ -52,6 +53,7 @@ class ImoutoDocTemplate(BaseDocTemplate):
 				level = 1
 			if level > -1:
 				item = [level, text, self.page]
+				self.page_title = text
 				link = getattr(flowable, '_bookmarkName', None)
 				if link is not None:
 					item.append(link)
