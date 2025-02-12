@@ -3,6 +3,7 @@ from django.core.cache import cache
 from django.conf import settings
 from dateutil.parser import parse as dateparse
 from viewer.importers.dav import import_calendar_feed
+from tqdm import tqdm
 import os, sys, datetime, pytz, requests
 
 class Command(BaseCommand):
@@ -19,7 +20,7 @@ class Command(BaseCommand):
 			sys.stderr.write(self.style.ERROR("ICAL_URLS setting must be a list of ICS URLs.\n"))
 			sys.exit(1)
 
-		for calendar_data in urls:
+		for calendar_data in tqdm(urls, bar_format='{l_bar}{bar} | {n_fmt}/{total_fmt} ({remaining} remaining)', colour='#00af00'):
 
 			username = None
 			password = None
@@ -31,10 +32,3 @@ class Command(BaseCommand):
 				password = calendar_data[2]
 
 			ret = import_calendar_feed(url, username, password)
-			if ret is None:
-				sys.stderr.write(self.style.ERROR("Failed to import " + url + "\n"))
-				continue
-			sys.stderr.write(self.style.MIGRATE_HEADING("Importing " + url + "\n"))
-			for item in ret:
-				sys.stderr.write(self.style.SUCCESS(" - Imported " + str(item.caption) + "\n"))
-

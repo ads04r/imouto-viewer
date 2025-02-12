@@ -49,17 +49,3 @@ class Command(BaseCommand):
 			reading = WeatherReading(time=dt, location=wloc, description=description, temperature=temp, wind_speed=data['wind']['speed'], wind_direction=data['wind']['deg'], humidity=data['main']['humidity'], visibility=data['visibility'])
 			reading.save()
 
-# {'coord': {'lon': -1.4043, 'lat': 50.904}, 'weather': [{'id': 803, 'main': 'Clouds', 'description': 'broken clouds', 'icon': '04n'}], 
-# 'base': 'stations', 'main': {'temp': 283.77, 'feels_like': 280.2, 'temp_min': 282.59, 'temp_max': 285.15, 'pressure': 1003, 'humidity': 87},
-# 'visibility': 8000, 'wind': {'speed': 4.63, 'deg': 220}, 'clouds': {'all': 75}, 'dt': 1611855971, 'sys': {'type': 1, 'id': 1402, 'country': 'GB', 'sunrise': 1611820054, 'sunset': 1611852563}, 'timezone': 0, 'id': 2637487, 'name': 'Southampton', 'cod': 200}
-# dict_keys(['coord', 'weather', 'base', 'main', 'visibility', 'wind', 'clouds', 'dt', 'sys', 'timezone', 'id', 'name', 'cod'])
-
-#    time = models.DateTimeField()
-#    location = models.ForeignKey(WeatherLocation, on_delete=models.CASCADE, related_name='readings')
-#    description = models.CharField(max_length=128, blank=True, null=True)
-#    temperature = models.FloatField(blank=True, null=True)
-#    wind_speed = models.FloatField(blank=True, null=True)
-#    wind_direction = models.IntegerField(blank=True, null=True)
-#    humidity = models.IntegerField(blank=True, null=True)
-#    visibility = models.IntegerField(blank=True, null=True)
-

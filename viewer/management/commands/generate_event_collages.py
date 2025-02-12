@@ -43,5 +43,4 @@ class Command(BaseCommand):
 				events.append(e)
 
 		for event in events:
-			print(event)
 			generate_photo_collages(event.id)

@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from bs4 import BeautifulSoup
+from tqdm import tqdm
 import datetime, requests
 
 from viewer.models import HistoricalEvent
@@ -61,6 +62,6 @@ class Command(BaseCommand):
 		if len(events) > 0:
 
 			HistoricalEvent.objects.filter(date__month=dt.month, date__day=dt.day, category='world_events').delete()
-			for event in events:
+			for event in tqdm(events, bar_format='{l_bar}{bar} | {n_fmt}/{total_fmt} ({remaining} remaining)', colour='#00af00'):
 				item = HistoricalEvent(date=event[0], category='world_events', description=event[1])
 				item.save()
