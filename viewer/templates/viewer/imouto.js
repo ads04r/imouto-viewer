@@ -1185,10 +1185,11 @@ function daySummary(date)
 		if(data.length > 0){
 
 			html = html + "<div class=\"box box-primary\">";
+			html = html + "<div class=\"box-header\">";
+			html = html + "<h3 class=\"box-title\">Today's Music</h3>";
+			html = html + "</div>";
+
 			html = html + "<div class=\"box-body\">";
-
-			html = html + "<p>Today's Music</p>";
-
 			html = html + "<div class=\"table-responsive\">";
 			html = html + "<table class=\"table table-sm no-margin\">";
 
