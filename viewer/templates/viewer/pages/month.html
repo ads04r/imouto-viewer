@@ -182,13 +182,18 @@
 				</tr>
 {% endif %}
 {% endwith %}
-{% for wc in workouts %}
-                                <tr>
-                                        <th>{{ wc.0 }}&nbsp;distance</th>
-					<td style="width:100%;"><div class="progress progress-xs" style="width: 100%; background-color: rgba(0, 0, 0, 0)"><div class="progress-bar progress-bar-primary" style="width: {{ wc.2 }}%;"></div></div></td>
-                                        <td><span class="pull-right">{{ wc.1 }}&nbsp;miles</span></td>
-                                </tr>
-{% endfor %}
+{% with graph=month.step_graph %}
+{% if graph.2 %}
+				<tr>
+                                        <th>Steps</th>
+					<td colspan="2">
+						<div class="chart">
+							<canvas class="bar-chart" style="height: 160px" data-data="{{ graph|escape }}"></canvas>
+						</div>
+					</td>
+				</tr>
+{% endif %}
+{% endwith %}
 {% with steps=month.steps %}
 {% if steps > 0 %}
 				<tr>
@@ -197,6 +202,13 @@
 				</tr>
 {% endif %}
 {% endwith %}
+{% for wc in workouts %}
+                                <tr>
+                                        <th>{{ wc.0 }}&nbsp;distance</th>
+					<td style="width:100%;"><div class="progress progress-xs" style="width: 100%; background-color: rgba(0, 0, 0, 0)"><div class="progress-bar progress-bar-primary" style="width: {{ wc.2 }}%;"></div></div></td>
+                                        <td><span class="pull-right">{{ wc.1 }}&nbsp;miles</span></td>
+                                </tr>
+{% endfor %}
                         </table>
 
                 </div>

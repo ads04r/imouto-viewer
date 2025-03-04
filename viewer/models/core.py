@@ -2513,6 +2513,17 @@ class Month(models.Model):
 					exclude.append(event.id)
 		return self.events.exclude(type='life_event').exclude(cached_staticmap=None).exclude(description=None).exclude(description='').exclude(id__in=exclude).union(self.events.exclude(type='life_event').exclude(photo_collages=None).exclude(id__in=exclude))
 	@cached_property
+	def step_graph(self):
+		logger.debug("Generating month step graph")
+		ret = []
+		for day in self.days.order_by('date'):
+			ret.append({"label": str(day.date.day), "value": [day.steps]})
+#			if day.is_weekend:
+#				ret.append({"label": str(day.date.day), "value": [0, day.steps]})
+#			else:
+#				ret.append({"label": str(day.date.day), "value": [day.steps, 0]})
+		return(json.dumps(ret))
+	@cached_property
 	def weight_graph(self):
 		logger.debug("Generating month weight graph")
 		dts = self.days.first().wake_time
@@ -2616,6 +2627,10 @@ class Day(models.Model):
 			ret.append(dd.strftime("%Y%m%d"))
 			i = i + 1
 		return ret
+
+	@cached_property
+	def is_weekend(self):
+		return (self.date.weekday() > 4)
 
 	@cached_property
 	def interesting(self):
