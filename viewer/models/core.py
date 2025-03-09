@@ -2843,9 +2843,8 @@ class Day(models.Model):
 		if dts is None:
 			return 0
 		if dte is None:
-			obj = DataReading.objects.filter(type='step-count').filter(start_time__gte=dts).aggregate(steps=Sum('value'))
-		else:
-			obj = DataReading.objects.filter(type='step-count').filter(start_time__gte=dts, end_time__lt=dte).aggregate(steps=Sum('value'))
+			dte = dts + datetime.timedelta(hours=24)
+		obj = DataReading.objects.filter(type='step-count').filter(start_time__gte=dts, end_time__lt=dte).aggregate(steps=Sum('value'))
 		try:
 			ret = int(obj['steps'])
 		except:
