@@ -93,7 +93,8 @@ def get_recent_github_commits(username, since=None):
 			item['url'] = commit_url
 			if 'html_url' in data:
 				item['url'] = data['html_url']
-			item['stats'] = data['stats']
+			if 'stats' in data:
+				item['stats'] = data['stats']
 			item['time'] = parser.parse(data['commit']['committer']['date'])
 
 			ret.append(item)

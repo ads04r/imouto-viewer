@@ -55,7 +55,7 @@ def save_poster(savefile, opts, collage):
 def make_collage(filename, new_images, width, height):
 	photolist = []
 	photolist.extend(render.build_photolist(new_images))
-	opts = Options(width, height, 1, 'black')
+	opts = Options(width, height, 1, 'white')
 	if len(photolist) > 0:
 		new_collage = UserCollage(photolist)
 		new_collage.make_page(opts)
