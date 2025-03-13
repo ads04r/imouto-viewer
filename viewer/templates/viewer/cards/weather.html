@@ -3,7 +3,7 @@
 	<div class="box-body">
 
 		<div class="chart">
-			<canvas class="time-chart" style="height: 160px;" data-data="[{% for item in weather %}{% if forloop.counter0 > 0 %},{% endif %}{&quot;x%quot;: &quot;{{ item.time|date:"c" }};&quot;, %quot;y&quot;: {{ item.temperature }}}{% endfor %}]"/>
+			<canvas class="scatter-chart" style="height: 160px;" data-data="[{% for item in weather %}{% if forloop.counter0 > 0 %},{% endif %}{&quot;x&quot;: &quot;{{ item.time|date:"c" }}&quot;, &quot;y&quot;: {{ item.temperature }}}{% endfor %}]"/>
 		</div>
 
 		<table class="table table-inline">
