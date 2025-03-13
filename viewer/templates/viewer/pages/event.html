@@ -27,9 +27,9 @@
   {% include 'viewer/cards/eventsimilar.html' %}
 {% endif %}
 
-{% if data.weather %}
+{% with data.weather as weather %}
 	{% include 'viewer/cards/weather.html' %}
-{% endif %}
+{% endwith %}
 
 {% if data.workout_categories.count > 0 %}
 	{% include 'viewer/cards/eventhealth.html' %}

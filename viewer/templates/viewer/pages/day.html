@@ -29,6 +29,7 @@
 		{% if not day.today %}<div class="day-heart-summary"></div>{% endif %}
 		<div data-day="{{ day.date|date:"Ymd" }}" class="hidden-xs day-weight-summary"></div>
 		<div data-day="{{ day.date|date:"Ymd" }}" class="hidden-xs day-sleep-summary"></div>
+		{% with day.weather as weather %}{% include 'viewer/cards/weather.html' %}{% endwith %}
 		<div data-day="{{ day.date|date:"Ymd" }}" class="hidden-xs day-music-summary"></div>
 		<div data-day="{{ day.date|date:"Ymd" }}" class="hidden-xs day-people-summary"></div>
 

@@ -904,6 +904,8 @@ function dayScreen(id)
     {
         if(status == 'error') { errorPage(xhr); return false; }
 
+        initialiseGraphics();
+
         $("a.eventdelete").on('click', function()
         {
             var id = $(this).data('event-id');

@@ -329,6 +329,22 @@ class WeatherLocation(models.Model):
 			models.Index(fields=['label'])
 		]
 
+class WeatherReading(models.Model):
+	time = models.DateTimeField()
+	location = models.ForeignKey(WeatherLocation, on_delete=models.CASCADE, related_name='readings')
+	description = models.CharField(max_length=128, blank=True, null=True)
+	temperature = models.FloatField(blank=True, null=True)
+	wind_speed = models.FloatField(blank=True, null=True)
+	wind_direction = models.IntegerField(blank=True, null=True)
+	humidity = models.IntegerField(blank=True, null=True)
+	visibility = models.IntegerField(blank=True, null=True)
+	def __str__(self):
+		return str(self.time) + ' at ' + str(self.location)
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'weather reading'
+		verbose_name_plural = 'weather readings'
+
 class SchemaOrgClass(models.Model):
 	label = models.CharField(max_length=256, null=False)
 	uri = models.URLField(null=False)
@@ -2627,6 +2643,18 @@ class Day(models.Model):
 			ret.append(dd.strftime("%Y%m%d"))
 			i = i + 1
 		return ret
+
+	def weather(self):
+		readings = []
+		for event in self.events.all():
+			weather = event.weather()
+			if weather is None:
+				continue
+			for id in [x['pk'] for x in list(weather.values('pk'))]:
+				if id in readings:
+					continue
+				readings.append(id)
+		return WeatherReading.objects.filter(pk__in=readings).order_by('time')
 
 	@cached_property
 	def is_weekend(self):
