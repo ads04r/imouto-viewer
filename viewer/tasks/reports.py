@@ -39,17 +39,7 @@ def generate_staticmap(event_id):
 	return True
 
 @background(schedule=0, queue='reports')
-def generate_photo_collages(event_id):
-	"""
-	Generates one or more PhotoCollage objects for an Event object, assuming that some photos exist that were taken within that particular timeframe.
-
-	:param event_id: The ID (primary key) of the Event for which to create PhotoCollages.
-	"""
-	try:
-		max_photos = settings.PHOTO_COLLAGE_MAX_PHOTOS
-	except:
-		max_photos = 15
-	min_photos = 2
+def generate_event_photo_collage(event_id, photo_ids):
 
 	try:
 		event = Event.objects.get(pk=event_id)
@@ -58,13 +48,20 @@ def generate_photo_collages(event_id):
 		return []
 	if event.type == 'life_event':
 		return []
-	event.photo_collages.all().delete()
+
 	photos = []
 	tempphotos = []
-	for photo in Photo.objects.filter(time__gte=event.start_time, time__lte=event.end_time).order_by("?")[0:(max_photos * 5)]:
+
+	im = Image.new(mode='RGB', size=(10, 10))
+	blob = BytesIO()
+	im.save(blob, 'JPEG')
+
+	collage = PhotoCollage(event=event)
+	collage.save()
+	collage.image.save(photo_collage_upload_location(collage, 'collage.jpg'), File(blob), save=False)
+	for photo in Photo.objects.filter(pk__in=photo_ids):
+
 		photo_path = str(photo.file.path)
-		if photo_path in photos:
-			continue
 		if os.path.exists(photo_path):
 			if len(photo.picasa_info()) == 0:
 				photos.append(photo_path)
@@ -77,35 +74,51 @@ def generate_photo_collages(event_id):
 					tempphotos.append(tf.name)
 				except:
 					photos.append(photo_path)
+		collage.photos.add(photo)
 
-	if len(photos) < min_photos:
-		return []
-
-	random.shuffle(photos)
-	ret = []
-
-	while len(photos) > 0:
-
-		im = Image.new(mode='RGB', size=(10, 10))
-		blob = BytesIO()
-		im.save(blob, 'JPEG')
-
-		collage = PhotoCollage(event=event)
-		collage.save()
-		collage.image.save(photo_collage_upload_location(collage, 'collage.jpg'), File(blob), save=False)
-		for photo in Photo.objects.filter(time__gte=event.start_time, time__lte=event.end_time):
-			collage.photos.add(photo)
-		collage.save()
-		thisphotos = photos[0:max_photos]
-		filename = make_collage(collage.image.path, thisphotos, 2400, 3543)
-		ret.append(filename)
-
-		photos = photos[max_photos:]
+	collage.save()
+	make_collage(collage.image.path, photos, 2400, 3543)
 
 	for photo in tempphotos:
 		os.remove(photo)
 
-	return ret
+@background(schedule=0, queue='reports')
+def generate_photo_collages(event_id):
+	"""
+	Generates one or more PhotoCollage objects for an Event object, assuming that some photos exist that were taken within that particular timeframe.
+
+	:param event_id: The ID (primary key) of the Event for which to create PhotoCollages.
+	"""
+	try:
+		max_photos = settings.PHOTO_COLLAGE_MAX_PHOTOS
+	except:
+		max_photos = 10
+	min_photos = 2
+
+	try:
+		event = Event.objects.get(pk=event_id)
+	except:
+		logger.error("Could not load event " + str(event_id))
+		return []
+	if event.type == 'life_event':
+		return []
+
+	event.photo_collages.all().delete()
+	photos = []
+	for photo in Photo.objects.filter(time__gte=event.start_time, time__lte=event.end_time).order_by("?")[0:(max_photos * 5)]:
+		if photo.pk in photos:
+			continue
+		photos.append(photo.pk)
+
+	if len(photos) < min_photos:
+		return []
+
+	while len(photos) > 0:
+
+		thisphotos = photos[0:max_photos]
+		photos = photos[max_photos:]
+
+		generate_event_photo_collage(event.pk, thisphotos)
 
 @background(schedule=0, queue='reports')
 def generate_life_event_photo_collages(event_id):
