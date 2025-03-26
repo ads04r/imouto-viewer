@@ -2646,6 +2646,12 @@ class Day(models.Model):
 
 	def weather(self):
 		readings = []
+		dts = self.wake_time
+		dte = self.bed_time
+		if dts is None:
+			return WeatherReading.objects.none()
+		if dte is None:
+			return WeatherReading.objects.none()
 		for event in self.events.all():
 			weather = event.weather()
 			if weather is None:
@@ -2654,7 +2660,7 @@ class Day(models.Model):
 				if id in readings:
 					continue
 				readings.append(id)
-		return WeatherReading.objects.filter(pk__in=readings).order_by('time')
+		return WeatherReading.objects.filter(pk__in=readings, time__gte=dts, time__lte=dte).order_by('time')
 
 	@cached_property
 	def is_weekend(self):
