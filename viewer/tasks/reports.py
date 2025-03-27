@@ -11,6 +11,7 @@ from viewer.reporting.generation import generate_year_travel, generate_year_phot
 from viewer.reporting.pdf import generate_year_pdf
 from viewer.reporting.styles import ImoutoMinimalistReportStyle
 from viewer.functions.file_uploads import photo_collage_upload_location, year_pdf_upload_location
+from viewer.functions.utils import choking
 from viewer.eventcollage import make_collage
 
 import logging
@@ -40,6 +41,11 @@ def generate_staticmap(event_id):
 
 @background(schedule=0, queue='reports')
 def generate_event_photo_collage(event_id, photo_ids):
+
+	if choking():
+		# If load average is high, reschedule in 5 minutes time
+		generate_event_photo_collage(event_id, photo_ids, schedule=300)
+		return
 
 	try:
 		event = Event.objects.get(pk=event_id)

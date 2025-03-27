@@ -1,4 +1,4 @@
-import datetime, pytz, json
+import datetime, pytz, json, psutil
 from django.db.models import Sum, Count
 from django.conf import settings
 
@@ -318,3 +318,9 @@ def imouto_json_serializer(data):
 
 def unixtime_to_datetime(unixtime):
 	return (pytz.utc.localize(datetime.datetime(1970, 1, 1, 0, 0, 0)) + datetime.timedelta(seconds=int(unixtime))).astimezone(pytz.timezone(settings.TIME_ZONE))
+
+def choking():
+	for lav in psutil.getloadavg():
+		if lav > 1.0:
+			return True
+	return False
