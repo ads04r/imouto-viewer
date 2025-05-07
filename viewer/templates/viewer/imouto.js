@@ -1578,7 +1578,7 @@ function activateImageEditor()
 		try { var taglist = JSON.parse(tags.replaceAll("'", '"')); } catch { var taglist = []; }
 		if(taglist.length > 0)
 		{
-			html = html + '<span class="pull-right">';
+			html = html + '<span>';
 			for(var i=0; i < taglist.length; i++) { html = html + '<span class="badge">' + taglist[i] + '</span> '; }
 			html = html + '</span>';
 		}

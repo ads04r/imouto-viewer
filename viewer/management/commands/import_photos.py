@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand
 from django.core.cache import cache
 from django.conf import settings
 from viewer.importers.photos import import_photo_directory, import_picasa_faces
-from viewer.functions.photos import bubble_photo_locations, locate_photos_by_exif
+from viewer.functions.photos import bubble_photo_locations, locate_photos_by_exif, get_untagged_photo_ids, get_xmp_sidecar_tags
 from viewer.tasks.process import precache_photo_thumbnail
 import os, sys, pytz
 
@@ -62,3 +62,14 @@ class Command(BaseCommand):
 			ret = bubble_photo_locations() + locate_photos_by_exif()
 			if ret > 0:
 				sys.stderr.write(self.style.SUCCESS(str(ret) + " photo(s) tagged with locations.\n"))
+
+		photo_count = 0
+		tag_count = 0
+		for photo in get_untagged_photo_ids():
+			ct = len(get_xmp_sidecar_tags(photo))
+			if ct == 0:
+				continue
+			photo_count = photo_count + 1
+			tag_count = tag_count + ct
+		if photo_count > 0:
+			sys.stderr.write(self.style.SUCCESS(str(photo_count) + " photo(s) tagged with " + str(tag_count) + " tags.\n"))

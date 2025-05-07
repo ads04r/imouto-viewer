@@ -1,9 +1,10 @@
-import datetime, pytz, random
+import datetime, pytz, random, os
 from django.conf import settings
 from viewer.models import Photo, Event, Location
 from viewer.functions.locations import nearest_location
 from PIL import Image, ImageDraw
 from math import sin, cos, pi
+from libxmp import XMPMeta
 
 import logging
 logger = logging.getLogger(__name__)
@@ -94,4 +95,32 @@ def bubble_photo_locations(since=None, loc_id=None, reassign=False):
 			for photo in photos:
 				photo.location = loc
 				photo.save()
+	return ret
+
+def get_untagged_photo_ids():
+
+	return [photo.pk for photo in Photo.objects.filter(time__gt=Photo.objects.exclude(tags=None).order_by('-time').first().time)]
+
+def get_xmp_sidecar_tags(photo_id):
+
+	try:
+		photo = Photo.objects.get(pk=photo_id)
+	except:
+		return []
+	xmp_path = photo.file.path + '.xmp'
+	if not os.path.exists(xmp_path):
+		ext_len = len(photo.file.path.split('.')[-1])
+		xmp_path = photo.file.path[:-ext_len] + 'xmp'
+	if not os.path.exists(xmp_path):
+		return []
+	xmp = XMPMeta()
+	with open(xmp_path, 'r') as fp:
+		xmp.parse_from_str(fp.read())
+	ret = []
+	for tag in [xmp.get_array_item("http://purl.org/dc/elements/1.1/", 'subject', (i + 1)) for i in range(0, xmp.count_array_items("http://purl.org/dc/elements/1.1/", 'subject'))]:
+		if tag == '':
+			continue
+		photo.tag(tag)
+		ret.append(tag)
+
 	return ret

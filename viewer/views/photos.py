@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
 from django.db.models import F
+from viewer.functions.photos import get_xmp_sidecar_tags
 import datetime, pytz, dateutil.parser, json, requests, random
 
 from viewer.models import Photo, Event
@@ -37,11 +38,13 @@ def photo_json(request, uid):
 		cache.delete(cache_key)
 		return HttpResponseRedirect('../#event_' + str(eid))
 	data = get_object_or_404(Photo, pk=uid)
+	get_xmp_sidecar_tags(data.pk)
 	response = HttpResponse(json.dumps(data.to_dict()), content_type='application/json')
 	return response
 
 def photo_full(request, uid):
 	data = get_object_or_404(Photo, pk=uid)
+	get_xmp_sidecar_tags(data.pk)
 	im = data.image()
 	response = HttpResponse(content_type='image/jpeg')
 	im.save(response, "JPEG")
@@ -49,6 +52,7 @@ def photo_full(request, uid):
 
 def photo_thumbnail(request, uid):
 	data = get_object_or_404(Photo, pk=uid)
+	get_xmp_sidecar_tags(data.pk)
 	im = data.thumbnail(200)
 	response = HttpResponse(content_type='image/jpeg')
 	im.save(response, "JPEG")

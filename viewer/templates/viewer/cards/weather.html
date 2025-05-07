@@ -2,9 +2,13 @@
 <div class="box box-primary">
 	<div class="box-body">
 
+{% if weather|length > 1 %}
+
 		<div class="chart">
 			<canvas class="scatter-chart" style="height: 160px;" data-data="[{% for item in weather %}{% if forloop.counter0 > 0 %},{% endif %}{&quot;x&quot;: &quot;{{ item.time|date:"c" }}&quot;, &quot;y&quot;: {{ item.temperature }}}{% endfor %}]"/>
 		</div>
+
+{% endif %}
 
 		<table class="table table-inline">
 			<thead>
