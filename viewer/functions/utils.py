@@ -320,7 +320,7 @@ def unixtime_to_datetime(unixtime):
 	return (pytz.utc.localize(datetime.datetime(1970, 1, 1, 0, 0, 0)) + datetime.timedelta(seconds=int(unixtime))).astimezone(pytz.timezone(settings.TIME_ZONE))
 
 def choking():
+	ttl = 0.0
 	for lav in psutil.getloadavg():
-		if lav > 1.0:
-			return True
-	return False
+		ttl = ttl + lav
+	return (ttl > 3.0)

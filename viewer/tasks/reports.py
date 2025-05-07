@@ -119,12 +119,14 @@ def generate_photo_collages(event_id):
 	if len(photos) < min_photos:
 		return []
 
+	delay = 60
 	while len(photos) > 0:
 
 		thisphotos = photos[0:max_photos]
 		photos = photos[max_photos:]
 
-		generate_event_photo_collage(event.pk, thisphotos)
+		generate_event_photo_collage(event.pk, thisphotos, schedule=delay)
+		delay = delay + 3600
 
 @background(schedule=0, queue='reports')
 def generate_life_event_photo_collages(event_id):

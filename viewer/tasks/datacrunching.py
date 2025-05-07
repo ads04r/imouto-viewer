@@ -3,6 +3,7 @@ from background_task import background
 from viewer.models import Event, EventSimilarity, Photo
 from viewer.functions.geo import journey_similarity
 from viewer.functions.ocr import get_text_in_image
+from viewer.functions.utils import choking
 from django.conf import settings
 from geopy import distance
 
@@ -30,6 +31,10 @@ def count_photo_faces(photo_id):
 
 	if not hasattr(settings, "FACE_DETECTOR"):
 		return # If there is no face detector configured, this task cannot function.
+	if choking():
+		# If load average is high, reschedule in 5 minutes time
+		count_photo_faces(photo_id, schedule=300)
+		return
 	logger.info("Task count_photo_faces beginning")
 
 	photo = Photo.objects.get(id=photo_id)
@@ -83,18 +88,7 @@ def count_event_faces(event_id):
 	logger.debug("Working with event " + str(event))
 	face_cascade = cv2.CascadeClassifier(settings.FACE_DETECTOR)
 	for photo in event.photos():
-		logger.debug(" ... " + str(photo.file.path))
-		try:
-			img = cv2.imread(photo.file.path)
-			grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-			faces = face_cascade.detectMultiScale(grey, 1.3, 5)
-		except:
-			faces = []
-		face_count = len(faces)
-		if photo.face_count == face_count:
-			continue
-		photo.face_count = face_count
-		photo.save(update_fields=['face_count'])
+		count_photo_faces(photo.pk)
 
 @background(schedule=0, queue='datacrunching')
 def regenerate_similar_events(event_id):
