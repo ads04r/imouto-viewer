@@ -2005,7 +2005,7 @@ class Year(models.Model):
 			for msg in event.messages():
 				if msg.incoming:
 					continue
-				if ((msg.type != 'sms') & (msg.type != 'microblogpost')):
+				if ((msg.type != 'sms') & (msg.type != 'microblogpost') & (msg.type != 'im')):
 					continue
 				text = text + msg.message + ' '
 		text = re.sub('=[0-9A-F][0-9A-F]', '', text)
@@ -2845,6 +2845,14 @@ class Day(models.Model):
 		dts = self.__dts__()
 		dte = self.__dte__()
 		return RemoteInteraction.objects.filter(time__gte=dts, time__lte=dte, type='sms').order_by('time')
+	@property
+	def im(self):
+		"""
+		Every instant message sent or received on this particular day.
+		"""
+		dts = self.__dts__()
+		dte = self.__dte__()
+		return RemoteInteraction.objects.filter(time__gte=dts, time__lte=dte, type='im').order_by('time')
 
 	@property
 	def max_heart_rate(self):
@@ -3235,7 +3243,10 @@ class RemoteInteraction(models.Model):
 	incoming = models.BooleanField()
 	title = models.CharField(max_length=255, default='', blank=True)
 	message = models.TextField(default='', blank=True)
+	contact = models.ForeignKey(Person, on_delete=models.SET_NULL, null=True, blank=True)
 	def person(self):
+		if self.contact is not None:
+			return self.contact
 		address = self.address.replace(' ', '')
 		try:
 			person = PersonProperty.objects.get(value=address).person
