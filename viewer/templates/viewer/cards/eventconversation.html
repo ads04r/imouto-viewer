@@ -1,13 +1,13 @@
 {% load static %}
 
-{% for conversation in data.sms %}
+{% for conversation in data.conversations %}
 
                 <div class="box box-primary">
                     <div class="box-header with-border">
     {% if conversation.0.person %}
-                        <h3 class="box-title">SMS with <a href="#person_{{ conversation.0.person.uid }}">{{ conversation.0.person.full_name }}</a></h3>
+                        <h3 class="box-title">Conversation with <a href="#person_{{ conversation.0.person.uid }}">{{ conversation.0.person.full_name }}</a></h3>
     {% else %}
-                        <h3 class="box-title">SMS conversation</h3>
+                        <h3 class="box-title">Conversation</h3>
     {% endif %}
                     </div>
                     <div class="box-body">

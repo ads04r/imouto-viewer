@@ -46,6 +46,8 @@ def day(request, ds):
 		events.append(tweet)
 	for sms in day.sms:
 		events.append(sms)
+	for im in day.im:
+		events.append(im)
 	for commit in day.commits:
 		events.append(commit)
 	for task in day.tasks_completed:

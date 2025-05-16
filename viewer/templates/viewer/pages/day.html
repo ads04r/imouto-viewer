@@ -78,6 +78,12 @@
 
 		{% endif %}
 
+		{% if event.type == 'im' %}
+
+			{% include 'viewer/cards/smsconversation.html' %}
+
+		{% endif %}
+
 	{% endif %}
 
 	{% if event|get_class == 'GitCommit' %}

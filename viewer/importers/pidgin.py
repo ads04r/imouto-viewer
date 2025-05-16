@@ -25,28 +25,30 @@ def import_pidgin_log_file(filename, uid, name):
 		return 0 # The file doesn't exist, so do nothing.
 	dt = pytz.utc.localize(datetime.datetime(1970, 1, 1, 0, 0, 0))
 	ret = 0
+	tz = pytz.timezone(settings.TIME_ZONE)
 	with open(filename, 'r') as fp:
 		for row in fp.readlines():
 			head = re.search(r'^Conversation with (.+) at (.+) on (.+)$', row)
 			if not head is None:
-				dt = parser.parse(head.group(2))
-				print("Set to " + str(dt))
+				dt = parser.parse(head.group(2)).astimezone(tz)
 				continue
 			item = re.search(r'\(([^\)]+)\)([^:]+):(.+)', row.rstrip())
 			if item is None:
 				continue
-			t = re.search(r'^(.+):(.+):(.+)$', item.group(1))
+			t = re.search(r'^(\d+):(\d+):(\d+)$', item.group(1))
 			if t is None:
 				last_dt = dt
 				try:
-					dt = parser.parse(item.group(1))
+					dt = parser.parse(item.group(1)).astimezone(tz)
 				except:
 					dt = last_dt
+				if dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None: # ie if the datetime is naive
+					dt = last_dt.tzinfo.localize(dt)
 			else:
 				dt = datetime.datetime(dt.year, dt.month, dt.day, int(t.group(1)), int(t.group(2)), int(t.group(3)), tzinfo=dt.tzinfo)
 			cmp = item.group(2).strip().lower()
 			incoming = (cmp == name.strip().lower())
-			body = item.group(3).encode('utf8')
+			body = item.group(3)
 			try:
 				msg = RemoteInteraction.objects.get(type='im', time=dt, address='', incoming=incoming, title='', contact=person, message=body)
 			except:

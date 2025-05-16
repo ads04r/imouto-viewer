@@ -1550,7 +1550,14 @@ class Event(models.Model):
 		else:
 			return RemoteInteraction.objects.filter(time__gte=self.start_time).filter(time__lte=self.end_time).filter(type=type).order_by('time')
 	def sms(self):
-		messages = self.messages('sms')
+		return self.conversations('sms')
+	def im(self):
+		return self.conversations('im')
+	def conversations(self, type=None):
+		if type is None:
+			messages = self.messages()
+		else:
+			messages = self.messages(type)
 		people = []
 		for message in messages:
 			address = message.address.replace(' ', '')
@@ -2026,7 +2033,7 @@ class Year(models.Model):
 		return ret
 	@cached_property
 	def words(self):
-		return ' '.join(sorted(ret))
+		return ' '.join(sorted(self.words_list))
 	def wordcloud(self):
 		if self.cached_wordcloud:
 			im = Image.open(self.cached_wordcloud.path)
