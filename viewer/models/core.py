@@ -2821,9 +2821,9 @@ class Day(models.Model):
 		dte = self.__dte__()
 		return CalendarAppointment.objects.filter(end_time__gte=dts, end_time__lte=dte).values('id', 'eventid', 'caption')
 	@property
-	def tweets(self):
+	def microblogposts(self):
 		"""
-		Every microblogpost (typically tweets, could be toots) made on this particular day.
+		Every microblogpost (tweets, toots, etc) made on this particular day.
 		"""
 		dts = self.__dts__()
 		dte = self.__dte__()

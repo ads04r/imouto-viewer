@@ -42,8 +42,8 @@ def day(request, ds):
 		if not(last_event is None):
 			potential_joins.append([str(last_event.pk) + '_' + str(event.pk), str(last_event.caption) + ' to ' + str(event.caption)])
 		last_event = event
-	for tweet in day.tweets:
-		events.append(tweet)
+	for msg in day.microblogposts:
+		events.append(msg)
 	for sms in day.sms:
 		events.append(sms)
 	for im in day.im:

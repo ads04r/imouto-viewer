@@ -88,12 +88,12 @@
                     </div>
                 </div>
 
-{% for tweet in day.tweets.all %}
+{% for msg in day.microblogposts.all %}
 
         <div class="callout callout-info">
           <table>
-            <td valign="top"><i class="fa fa-twitter"></i>&nbsp;</td>
-            <td valign="top">{{ tweet.message }}<br><small class="muted">{{ tweet.time|date:"l jS F Y, g:ia" }}</small></td>
+            <td valign="top"><i class="fa fa-microphone"></i>&nbsp;</td>
+            <td valign="top">{{ msg.message }}<br><small class="muted">{{ msg.time|date:"l jS F Y, g:ia" }}</small></td>
           </table>
         </div>
 

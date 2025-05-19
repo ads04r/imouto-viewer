@@ -1,6 +1,20 @@
 {% load static %}
 
 {% for conversation in data.conversations %}
+{% if conversation.0.type == 'microblogpost' %}
+
+{% for sms in conversation %}
+
+	        <div class="callout callout-info">
+	          <table>
+	            <td valign="top"><nobr><i class="fa fa-microphone"></i>&nbsp;</nobr></td>
+	            <td valign="top">{{ sms.message }}<br><small class="muted">{{ sms.time|date:"l jS F Y, g:ia" }}</small></td>
+	          </table>
+	        </div>
+
+{% endfor %}
+
+{% else %}
 
                 <div class="box box-primary">
                     <div class="box-header with-border">
@@ -21,4 +35,5 @@
                     </div>
                 </div>
 
+{% endif %}
 {% endfor %}
