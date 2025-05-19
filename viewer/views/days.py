@@ -51,6 +51,7 @@ def day(request, ds):
 	for commit in day.commits:
 		events.append(commit)
 	for task in day.tasks_completed:
+		task.time_completed = task.time_completed.astimezone(day.timezone)
 		events.append(task)
 	if day.sunrise_time:
 		if day.sunrise_time < now:
