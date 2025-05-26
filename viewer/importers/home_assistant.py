@@ -8,7 +8,7 @@ from viewer.functions.locations import home_location
 import logging
 logger = logging.getLogger(__name__)
 
-def import_home_assistant_readings(entity_id, reading_type, days=7):
+def import_home_assistant_readings(entity_id, reading_type, days=7, multiplier=1):
 	"""
 	Imports data from a Home Assistant log directly into Imouto Viewer as DataReading objects. This
 	function checks for existing data from a previous import, so the function may be called
@@ -42,7 +42,7 @@ def import_home_assistant_readings(entity_id, reading_type, days=7):
 	for item in json.loads(r.text):
 		for subitem in item:
 			try:
-				state = int(subitem['state'])
+				state = int(float(subitem['state']) * float(multiplier))
 			except:
 				state = 0
 			dt = dateparse(subitem['last_changed'])
