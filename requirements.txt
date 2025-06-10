@@ -88,7 +88,7 @@ PyYAML==6.0.1
 rdflib==6.3.2
 regex==2024.5.15
 reportlab==4.2.5
-requests==2.32.2
+requests==2.32.4
 sgmllib3k==1.0.0
 six==1.16.0
 soupsieve==2.5
