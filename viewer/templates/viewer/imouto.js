@@ -2335,6 +2335,55 @@ function eventScreen(id)
 	$('.delete_person').on('click', function() { return eventPeopleDeleteName($(this).data('id')); });
         $("#event-delete-button").on('click', function(){ $("#event-event-delete").submit(); });
 	activateImageEditor();
+        $.ajax({
+            url: './events/' + id + '/music.json',
+            method: 'GET',
+            success: function(data) {
+
+		var html = "";
+
+		if(data.length > 0){
+
+			html = html + "<div class=\"box box-primary\">";
+			html = html + "<div class=\"box-header\">";
+			html = html + "<h3 class=\"box-title\">Music Played</h3>";
+			html = html + "</div>";
+
+			html = html + "<div class=\"box-body\">";
+			html = html + "<div class=\"table-responsive\">";
+			html = html + "<table class=\"table table-inline\">";
+
+			html = html + "<thead><tr><th>Time</th><th>Track</th></tr></thead>";
+			html = html + "<tbody>";
+
+			for(i = 0; i < data.length; i++){
+				var artists = '';
+				for(j = 0; j < data[i].artists.length; j++)
+				{
+					if(artists != '') { artists = artists + ', '; }
+					artists = artists + data[i].artists[j].name;
+				}
+				html = html + "<tr><td>" + data[i].time + "</td><td>" + artists + ' - ' + data[i].title + '</td></tr>';
+			}
+
+			html = html + "</tbody>";
+			html = html + "</table>";
+			html = html + "</div>";
+
+			html = html + "</div>";
+			html = html + "</div>";
+
+		}
+
+		if(html != '') {
+                    $(".event-music-summary").each(function(){
+                        var checkid = $(this).data("event");
+                        if(checkid == id) { $(this).html(html); }
+                    });
+                }
+            }
+        });
+
     });
 }
 

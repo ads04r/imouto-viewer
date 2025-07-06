@@ -79,9 +79,9 @@
   {% include 'viewer/cards/eventconversation.html' %}
 {% endif %}
 
-{% if music %}
-  {% include 'viewer/cards/eventmusic.html' %}
-{% endif %}
+
+		<div data-event="{{ data.pk }}" class="event-music-summary"></div>
+
 
 {% if data.photos.count > 0 %}
   {% include 'viewer/cards/eventphotos.html' %}
