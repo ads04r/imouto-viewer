@@ -6,7 +6,7 @@ from django.conf import settings
 from viewer.models import WatchedDirectory, Photo, Event
 
 from viewer.functions.photos import locate_photos_by_exif
-from viewer.functions.locations import create_location_events, fill_country_cities, fill_location_cities
+from viewer.functions.locations import create_location_events, fill_country_cities, fill_location_cities, fill_location_countries
 from viewer.functions.location_manager import get_location_manager_report_queue
 
 from viewer.importers.fitfile import import_fit
@@ -73,6 +73,17 @@ def fill_cities():
 	logger.info("Task fill_cities beginning")
 	fill_country_cities()
 	fill_location_cities()
+
+@background(schedule=0, queue='process')
+def fill_countries():
+	if Task.objects.filter(queue='process', task_name__icontains='tasks.process.fill_countries').count() > 1:
+		return # If there's already an instance of this task running or queued, don't start another.
+	if len(get_location_manager_report_queue()) > 0:
+		fill_countries(schedule=60) # If there are tasks in the location manager, hold back until they finish
+		return
+	logger.info("Task fill_countries beginning")
+	fill_country_cities()
+	fill_location_countries()
 
 @background(schedule=0, queue='process')
 def precache_photo_thumbnails(limit=200):

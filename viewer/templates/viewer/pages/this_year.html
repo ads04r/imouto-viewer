@@ -35,6 +35,14 @@
                 </div>
             </div>
 
+{% with countries=year.countries %}
+{% if countries %}
+
+        {% include 'viewer/cards/yearcountries.html' %}
+
+{% endif %}
+{% endwith %}
+
 {% with tasks=year.tasks_completed %}
 {% if tasks %}
 

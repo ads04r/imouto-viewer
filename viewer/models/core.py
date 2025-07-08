@@ -153,6 +153,9 @@ class LocationCountry(models.Model):
 	@property
 	def cities_sorted(self):
 		return self.cities.annotate(locs=Count('locations')).exclude(locs=0).order_by('-locs')
+	@property
+	def events(self):
+		return Event.objects.filter(location__country=self).order_by('start_time')
 	def __str__(self):
 		return str(self.label)
 	def to_dict(self):
@@ -2288,6 +2291,13 @@ class Month(models.Model):
 		"""
 		logger.debug("Generating list of cities")
 		return LocationCity.objects.filter(locations__events__in=self.events).exclude(locations__pk=settings.USER_HOME_LOCATION).distinct()
+	@cached_property
+	def countries(self):
+		"""
+		Every country visited in this month.
+		"""
+		logger.debug("Generating list of countries")
+		return LocationCountry.objects.filter(locations__events__in=self.events).exclude(locations__pk=settings.USER_HOME_LOCATION).distinct()
 	@cached_property
 	def steps(self):
 		"""

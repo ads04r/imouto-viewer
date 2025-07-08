@@ -6,6 +6,7 @@ from django.conf import settings
 from geopy import distance
 from dateutil import parser
 from urllib.parse import urlencode
+from iso3166 import countries as isocountries
 
 import logging
 logger = logging.getLogger(__name__)
@@ -280,6 +281,19 @@ def fill_location_cities():
 			loc.save(update_fields=['city'])
 	return ret
 
+def fill_location_countries():
+
+	ret = 0
+	for loc in Location.objects.filter(country=None):
+		address = [x.strip() for x in str(loc.address).split(',')]
+		city = nearest_city(loc.lat, loc.lon)
+		if city.country:
+			if city.country.label in address:
+				loc.country = city.country
+				ret = ret + 1
+				loc.save(update_fields=['country'])
+	return ret
+
 def lookup_address(query):
 
 	if len(query) == 0:
@@ -288,3 +302,20 @@ def lookup_address(query):
 	with requests.get(url, headers={'User-Agent': settings.USER_AGENT}, allow_redirects=True) as r:
 		data = r.json()
 	return data
+
+def import_countries():
+
+	for c in isocountries:
+		try:
+			country = LocationCountry.objects.get(a2=c.alpha2)
+		except:
+			country = None
+		if not country is None:
+			continue
+		country = LocationCountry(a2=c.alpha2, a3=c.alpha3, label=c.name)
+		url = "https://en.wikipedia.org/wiki/" + str(c.name).replace(' ', '_')
+		with requests.get(url) as r:
+			if r.status_code == 200:
+				country.wikipedia = url
+		country.cached_description = ''
+		country.save()

@@ -54,22 +54,7 @@
 {% with countries=year.countries %}
 {% if countries %}
 
-            <div class="box box-primary">
-                <div class="box-header with-border">
-                    <h3 class="box-title">Countries visited</h3>
-                </div>
-                <div class="box-body no-padding">
-
-			<table class="table table-condensed">
-{% for country in countries %}
-				<tr>
-					<td><b>{{ country }}</b></td>
-				</tr>
-{% endfor %}
-			</table>
-
-                </div>
-            </div>
+	{% include 'viewer/cards/yearcountries.html' %}	
 
 {% endif %}
 {% endwith %}
