@@ -7,36 +7,58 @@ A web app for visualising life annotations and other 'quantified self' data.
 
 Imouto
 ------
-Imouto is a life annotation system with its roots deep in academia
-(which means it was written by a lone PhD student and very badly maintained)
-It's a way of keeping a digital record of your life with as little user
-effort as possible. These days Google will do all this for you for free,
-but this is for people who would rather keep their data local.
+**Imouto** is a life annotation system designed to help you maintain a 
+digital record of your life with minimal effort, focused on keeping your 
+data local and private. Originally developed in an academic setting 
+-- which means it was written by a lone PhD student and very badly maintained --
+Imouto prioritizes user privacy over cloud-based solutions.
+
 It is **NOT** production ready.
 
-For those interested, 'imouto' is the japanese word for 'little sister'.
+For those interested, 'imouto' (妹) is a Japanese word, it translates as
+'little sister'.
 
-Imouto Viewer
--------------
-The viewer is the bit the user sees the most. My goal was always for the
-data collection to be completely invisible - ubiquitous, if you like.
-In a world where wearable computers such as fitness trackers are common,
-this becomes trivial. But the data is only useful if you do something with
-it, and that is the point of Imouto Viewer.
+## Imouto Viewer
 
-I'll be completely honest, the viewer is pretty useless on its own.
-You need at least the [location manager](https://github.com/ads04r/imouto-location-manager)
-running as well in order to
-make it do anything at all, and even then you'll just be able to import
-GPS tracks into it, you'll have to do all the high level stuff like creating
-life events manually. Where it shines is its ability
-to display other types of data which - currently - you need to add
-to the database yourself, either manually or using a script.
+**Imouto Viewer** is the user-facing component of the Imouto ecosystem.
+The philosophy behind Imouto is that data collection should be seamless
+and unobtrusive, especially in a world full of wearables and fitness
+trackers. Imouto Viewer aims to make sense of the data you collect, 
+helping you visualize and understand various aspects of your life, 
+without having to rely on cloud services run by people you've never met.
 
-Most of the data I have is pretty unique to me (I mean, who else tracks
-their steps with a Pebble?) but I'm hoping to come up with some
-kind of framework that makes it easy for anyone to import and process
-any kind of data. I've already got scripts that read Garmin FIT files
-and edit features so I can get *something* out the door, and worry
-about which formats I'm going to try and support later, because they
-*will* change over time (and, in fact, already have, several times).
+### What Can You Do With Imouto Viewer?
+
+- **Import Data:** Out of the box, Imouto Viewer is limited; for its most
+  useful functionality, you’ll need to run the
+  [Imouto Location Manager](https://github.com/ads04r/imouto-location-manager)
+  alongside it. But sensor data, such as heart rate and step count, and more
+  esoteric data, such as photo metadata and IM messages, can be imported via
+  the Viewer.
+- **Create Life Events:** High-level annotation like life events may be
+  created manually, or automatically with a bit of extra configuration effort.
+- **Visualize Unique Data:** The viewer can display many types of data,
+  and will generate human-readable reports for lazy diarists.
+- **Custom Data Support:** The system is designed to be extensible,
+  so you can process and display any kind of data that matters to you.
+
+### Framework & Extensibility
+
+While much of the sample data is unique to the original author (e.g., step
+counts from a Pebble smartwatch), the long-term goal is to develop a
+flexible framework for importing and processing arbitrary data formats.
+Current functionality supports the Garmin FIT file format primarily.
+
+## Getting Started
+
+> **Note:** This project is under active development and is not ready for production use. The documentation and code will change frequently.
+
+### Prerequisites
+
+- Python 3.x
+- [Imouto Location Manager](https://github.com/ads04r/imouto-location-manager) (for GPS data import)
+- Basic understanding of running web applications and managing databases
+
+## License
+
+This project is released under the MIT License.
