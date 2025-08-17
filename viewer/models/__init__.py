@@ -5,3 +5,4 @@ from viewer.models.photos import *
 from viewer.models.file_importers import *
 from viewer.models.history import *
 from viewer.models.questionnaire import *
+from viewer.models.user import *
