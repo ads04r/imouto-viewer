@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.conf import settings
+from django.contrib.auth.models import User
 from viewer.importers.location import upload_file
 from viewer.tasks.process import generate_location_events
 import os, sys, datetime, shutil
@@ -10,11 +11,20 @@ class Command(BaseCommand):
 	"""
 	def add_arguments(self, parser):
 
+		arser.add_argument("-u", "--user", action="store", dest="user_id", required=True, help="which user are we working with?")
 		parser.add_argument("-i", "--input", action="store", dest="input_file", default="", help="The file, containing GPS data, to be imported.")
 		parser.add_argument("-f", "--format", action="store", dest="input_format", default="", help="The type of the file being imported.", choices=['gpx', 'csv', 'fit'])
 		parser.add_argument("-s", "--source", action="store", dest="input_source", default="", help="An identifier for the source of the imported GPS data. For example: phone_gps.")
 
 	def handle(self, *args, **kwargs):
+
+		try:
+			user = User.objects.get(username=kwargs['user_id'])
+		except:
+			user = None
+		if not user:
+			sys.stderr.write(self.style.ERROR(str(kwargs['user_id']) + " is not a valid user on this system.\n"))
+			sys.exit(1)
 
 		uploaded_file = os.path.abspath(kwargs['input_file'])
 		temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp_uploads')
@@ -43,9 +53,9 @@ class Command(BaseCommand):
 		shutil.copyfile(uploaded_file, temp_file)
 
 		if format == '':
-			imported_ok = upload_file(temp_file, file_source)
+			imported_ok = upload_file(user, temp_file, file_source)
 		else:
-			imported_ok = upload_file(temp_file, file_source, format)
+			imported_ok = upload_file(user, temp_file, file_source, format)
 		os.remove(temp_file)
 		if imported_ok:
 			generate_location_events()

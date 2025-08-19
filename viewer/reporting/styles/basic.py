@@ -335,7 +335,7 @@ class ImoutoBasicReportStyle():
 
 	def event_to_indices(self, event):
 		ret = ''
-		home = home_location()
+		home = home_location(user)
 		if home is None:
 			home_city = None
 			home_country = None

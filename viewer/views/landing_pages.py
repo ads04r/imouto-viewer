@@ -1,8 +1,9 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render
 from django.core.cache import cache
 from django.db.models import Q, F
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
 import datetime, pytz, dateutil.parser, json, requests, random
 
 from viewer.models import Event, create_or_get_day
@@ -14,8 +15,9 @@ from viewer.functions.utils import get_timeline_events, generate_dashboard, get_
 import logging
 logger = logging.getLogger(__name__)
 
+@login_required(login_url='/users/login')
 def index(request):
-	context = {'type':'index', 'data':[], 'today': create_or_get_day()}
+	context = {'type':'index', 'data':[], 'today': create_or_get_day(request.user)}
 	if context['today']:
 		context['today'].yesterday.get_sleep_information() # Pre-cache so we never end up with any part-processed data
 	logger.info("HTML frame requested")
@@ -27,7 +29,7 @@ def dashboard(request):
 	ret = cache.get(key)
 	if ret is None:
 		logger.debug("Generating dashboard")
-		data = generate_dashboard()
+		data = generate_dashboard(request.user)
 		context = {'type':'view', 'data':data}
 		if len(data) == 0:
 			ret = render(request, 'viewer/pages/setup.html', context)
@@ -53,7 +55,7 @@ def dashboard_json(request):
 	return response
 
 def script(request):
-	context = {'tiles': 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', 'max_zoom': 17, 'home': home_location()}
+	context = {'tiles': 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', 'max_zoom': 17, 'home': home_location(request.user)}
 	if hasattr(settings, 'MAP_TILES'):
 		if settings.MAP_TILES != '':
 			context['tiles'] = str(settings.MAP_TILES)
@@ -78,7 +80,7 @@ def timelineitem(request, ds):
 	dsmonth = int(ds[4:6])
 	dsday = int(ds[6:])
 	dtq = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(dsyear, dsmonth, dsday, 0, 0, 0))
-	events = get_timeline_events(dtq)
+	events = get_timeline_events(request.user, dtq)
 
 	dtq = events[0].start_time
 	dtn = dtq - datetime.timedelta(days=1)
@@ -91,6 +93,6 @@ def timelineitem(request, ds):
 
 def onthisday(request, format='html'):
 	logger.info("On This Day requested")
-	data = get_today()
+	data = get_today(request.user)
 	context = {'type':'view', 'data':data}
 	return render(request, 'viewer/pages/onthisday.html', context)

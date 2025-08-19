@@ -10,7 +10,6 @@ import datetime, pytz, dateutil.parser, json, requests, random
 from viewer.models import Event, DataReading, EventWorkoutCategory, Day
 from viewer.forms import WorkoutCategoryForm
 
-from viewer.functions.health import get_sleep_history
 from viewer.functions.utils import imouto_json_serializer
 
 import logging
@@ -25,7 +24,7 @@ def health_data(datatypes):
 			filter = Q(type=type)
 		else:
 			filter = filter | Q(type=type)
-	for dr in DataReading.objects.filter(filter).order_by('-start_time'):
+	for dr in DataReading.objects.filter(user=request.user).filter(filter).order_by('-start_time'):
 		type = str(dr.type)
 		if type == 'weight':
 			value = float(dr.value) / 1000
@@ -47,7 +46,7 @@ def health(request, pageid):
 	if pageid == 'sleep':
 		dt = pytz.utc.localize(datetime.datetime.utcnow())
 		dt_start = (dt - datetime.timedelta(days=365)).date()
-		context['data'] = {'stats': [], 'days': Day.objects.filter(date__gte=dt_start).order_by('-date')}
+		context['data'] = {'stats': [], 'days': Day.objects.filter(user=request.user, date__gte=dt_start).order_by('-date')}
 		return render(request, 'viewer/pages/health_sleep.html', context)
 	if pageid == 'distance':
 		return render(request, 'viewer/pages/health_distance.html', context)
@@ -73,7 +72,7 @@ def health(request, pageid):
 
 				return HttpResponseRedirect('../#workout_' + str(data.id))
 		else:
-			context['data'] = EventWorkoutCategory.objects.all()
+			context['data'] = EventWorkoutCategory.objects.filter(user=request.user)
 			context['form'] = WorkoutCategoryForm()
 			return render(request, 'viewer/pages/health_exercise.html', context)
 	if pageid == 'blood':
@@ -105,7 +104,7 @@ def health(request, pageid):
 		for i in [{'label': 'week', 'dt': (dt - datetime.timedelta(days=7))}, {'label': 'month', 'dt': (dt - datetime.timedelta(days=28))}, {'label': 'year', 'dt': (dt - datetime.timedelta(days=365))}]:
 			item = []
 			min_dt = i['dt'].timestamp()
-			for point in DataReading.objects.filter(type='weight', end_time__gte=i['dt']).order_by('start_time'):
+			for point in DataReading.objects.filter(user=request.user, type='weight', end_time__gte=i['dt']).order_by('start_time'):
 				pdt = point.start_time.timestamp()
 				if pdt < min_dt:
 					continue

@@ -1,8 +1,10 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 class Questionnaire(models.Model):
 	"""This class represents a questionnaire that may be taken by the user. Results are
 	stored as DataReading objects, and these may be customised in the QuestionnaireAnswer class."""
+	user = models.ForeignKey(User, on_delete=models.CASCADE)
 	label = models.CharField(max_length=255)
 	description = models.TextField(default='', null=False)
 	intro_text = models.TextField(default='', null=False)

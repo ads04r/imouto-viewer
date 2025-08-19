@@ -24,7 +24,7 @@ def questionnaires(request):
 		raise Http404(form.errors)
 
 	form = QuestionnaireForm()
-	context = {'items': Questionnaire.objects.all(), 'form': form}
+	context = {'items': Questionnaire.objects.filter(user=request.user), 'form': form}
 	template = 'viewer/pages/questionnaires.html'
 	return render(request, template, context)
 

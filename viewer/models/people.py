@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 from colorfield.fields import ColorField
 
 from viewer.models.core import Person

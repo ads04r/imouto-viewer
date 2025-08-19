@@ -1,10 +1,12 @@
 from django.db import models
+from django.contrib.auth.models import User
 import os, datetime, pytz
 
 import logging
 logger = logging.getLogger(__name__)
 
 class WatchedDirectory(models.Model):
+	user = models.ForeignKey(User, on_delete=models.CASCADE)
 	path = models.CharField(max_length=1024, null=False)
 	recursive = models.BooleanField(default=False)
 	file_regex = models.CharField(max_length=512, null=True, blank=True)
@@ -77,7 +79,7 @@ class WatchedDirectory(models.Model):
 				modified_time = pytz.utc.localize(datetime.datetime.utcfromtimestamp(os.path.getmtime(fn)))
 				file_size = os.path.getsize(fn)
 				rel_path = fn[(len(self.path) + 1):]
-				file_object = ImportedFile(relative_path=rel_path, modified_time=modified_time, watched_directory=self, file_size=file_size)
+				file_object = ImportedFile(user=self.user, relative_path=rel_path, modified_time=modified_time, watched_directory=self, file_size=file_size)
 				file_object.save()
 				ret.append(fn)
 		return ret
@@ -88,6 +90,7 @@ class WatchedDirectory(models.Model):
 		verbose_name_plural = "watched directories"
 
 class ImportedFile(models.Model):
+	user = models.ForeignKey(User, on_delete=models.CASCADE)
 	relative_path = models.CharField(max_length=512, null=False)
 	watched_directory = models.ForeignKey(WatchedDirectory, on_delete=models.CASCADE, related_name='known_files')
 	modified_time = models.DateTimeField()

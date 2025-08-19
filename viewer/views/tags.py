@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def tags(request):
 
-	data = EventTag.objects.annotate(num_events=Count('events')).order_by('-num_events')
+	data = EventTag.objects.filter(events__user=request.user).annotate(num_events=Count('events')).order_by('-num_events')
 	context = {'type':'tag', 'data':data}
 	return render(request, 'viewer/pages/tags.html', context)
 
@@ -47,13 +47,13 @@ def tagrules(request, id):
 			if ret['tag-delete'] == 'tag':
 				# An entire tag
 				try:
-					t = EventTag.objects.get(id=ret['tag'])
+					t = EventTag.objects.get(events__user=request.user, id=ret['tag'])
 				except:
 					raise Http404()
 				t.delete()
 				return HttpResponseRedirect('../#tags')
 		try:
-			rule = AutoTag.objects.get(pk=ret['ruleid'])
+			rule = AutoTag.objects.get(user=request.user, pk=ret['ruleid'])
 		except:
 			raise Http404()
 		if 'cond-type' in ret:
@@ -64,7 +64,7 @@ def tagrules(request, id):
 		if 'cond-workout' in ret:
 			# Add a workout condition
 			try:
-				workout = EventWorkoutCategory.objects.get(pk=ret['cond-workout'])
+				workout = EventWorkoutCategory.objects.get(user=request.user, pk=ret['cond-workout'])
 			except:
 				raise Http404()
 			n = TagWorkoutCondition(tag=rule, workout_category=workout)
@@ -79,7 +79,7 @@ def tagrules(request, id):
 			# We want to delete something
 			if ret['rule-delete'] == 'rule':
 				try:
-					t = AutoTag.objects.get(id=ret['ruleid'])
+					t = AutoTag.objects.get(user=request.user, id=ret['ruleid'])
 				except:
 					raise Http404()
 				t.delete()
@@ -96,7 +96,7 @@ def tagrules(request, id):
 				return HttpResponseRedirect('../#tagrules_' + ret['tag'])
 			return HttpResponse(json.dumps(ret), content_type='application/json')
 		raise Http404()
-	context = {'type':'tag', 'data':data, 'workout_categories':sorted([x['id'] for x in EventWorkoutCategory.objects.all().values('id')]), 'types':sorted([x['type'] for x in Event.objects.all().values('type').distinct()])}
+	context = {'type':'tag', 'data':data, 'workout_categories':sorted([x['id'] for x in EventWorkoutCategory.objects.filter(user=request.user).values('id')]), 'types':sorted([x['type'] for x in Event.objects.filter(user=request.user).values('type').distinct()])}
 	return render(request, 'viewer/pages/tagrules.html', context)
 
 def tagrule_staticmap(request, id):

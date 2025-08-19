@@ -18,14 +18,14 @@ logger = logging.getLogger(__name__)
 
 def places(request):
 	data = {}
-	home = home_location()
+	home = home_location(request.user)
 	datecutoff = pytz.utc.localize(datetime.datetime.utcnow()) - datetime.timedelta(days=60)
 	data['home'] = home
-	data['recent'] = Location.objects.filter(events__start_time__gte=datecutoff).exclude(uid=home.uid).annotate(num_events=Count('events')).order_by('-num_events')
+	data['recent'] = Location.objects.filter(user=request.user, events__start_time__gte=datecutoff).exclude(uid=home.uid).annotate(num_events=Count('events')).order_by('-num_events')
 	if home is None:
 		data['overseas'] = Location.objects.none()
 	else:
-		data['overseas'] = Location.objects.exclude(country=None).exclude(country=home.country).order_by('label')
+		data['overseas'] = Location.objects.filter(user=request.user).exclude(country=None).exclude(country=home.country).order_by('label')
 	data['all'] = Location.objects.annotate(num_events=Count('events')).order_by('label')
 	data['categories'] = LocationCategory.objects.order_by('caption')
 	if request.method == 'POST':
@@ -66,9 +66,9 @@ def places(request):
 				if len(category_label) == 0:
 					continue
 				try:
-					category = LocationCategory.objects.get(caption=category_label)
+					category = LocationCategory.objects.get(user=request.user, caption=category_label)
 				except:
-					category = LocationCategory(caption=category_label)
+					category = LocationCategory(user=request.user, caption=category_label)
 					category.save()
 				post.categories.add(category)
 
@@ -103,9 +103,9 @@ def place(request, uid):
 				if len(category_label) == 0:
 					continue
 				try:
-					category = LocationCategory.objects.get(caption=category_label)
+					category = LocationCategory.objects.get(user=request.user, caption=category_label)
 				except:
-					category = LocationCategory(caption=category_label)
+					category = LocationCategory(user=request.user, caption=category_label)
 					category.save()
 				post.categories.add(category)
 

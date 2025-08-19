@@ -23,7 +23,7 @@ def __find_person_by_monica_hash(hash):
 			return item
 	return []
 
-def get_people_without_monica_hash(since=None):
+def get_people_without_monica_hash(user, since=None):
 	"""
 	Returns all people known to Imouto that are not linked to people within the Monica instance.
 
@@ -33,13 +33,13 @@ def get_people_without_monica_hash(since=None):
 
 	"""
 	if since is None:
-		if Event.objects.count() > 0:
-			dt = Event.objects.order_by('start_time')[0].start_time
+		if Event.objects.filter(user=user).count() > 0:
+			dt = Event.objects.filter(user=user).order_by('start_time')[0].start_time
 		else:
 			dt = pytz.utc.localize(datetime.datetime(1970, 1, 1, 0, 0, 0))
 	else:
 		dt = since
-	people = Person.objects.filter(personevent__event__start_time__gte=dt).distinct()
+	people = Person.objects.filter(user=user, personevent__event__start_time__gte=dt).distinct()
 	people = people.exclude(properties__key='monicahash').distinct()
 	return people
 

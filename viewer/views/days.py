@@ -25,8 +25,8 @@ def day(request, ds):
 	d = int(ds[6:])
 	dt = datetime.date(y, m, d)
 	now = pytz.utc.localize(datetime.datetime.utcnow())
-	Day.objects.filter(date=dt).delete()
-	day = Day(date=dt)
+	Day.objects.filter(user=request.user, date=dt).delete()
+	day = Day(user=request.user, date=dt)
 	day.refresh()
 
 	events = []
@@ -62,9 +62,9 @@ def day(request, ds):
 	dss = str(day)
 	events = sorted(events, key=lambda x: x.start_time if x.__class__.__name__ == 'Event' else (x.time_completed if x.__class__.__name__ == 'CalendarTask' else (x.commit_date if x.__class__.__name__ == 'GitCommit' else (x['time'] if isinstance(x, (dict)) else x.time))))
 	appointments = day.calendar
-	amenities = getamenities(day.date)
-	imported_files = ImportedFile.objects.filter(latest_timestamp__gte=pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(day.date.year, day.date.month, day.date.day, 0, 0, 0)), earliest_timestamp__lte=pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(day.date.year, day.date.month, day.date.day, 23, 59, 59))).order_by('earliest_timestamp')
-	context = {'type':'view', 'caption': dss, 'events':events, 'day': day, 'potential_joins': potential_joins, 'appointments': appointments, 'categories':EventWorkoutCategory.objects.all(), 'amenities': amenities, 'imported_files': imported_files}
+	amenities = getamenities(request.user, day.date)
+	imported_files = ImportedFile.objects.filter(user=request.user, latest_timestamp__gte=pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(day.date.year, day.date.month, day.date.day, 0, 0, 0)), earliest_timestamp__lte=pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(day.date.year, day.date.month, day.date.day, 23, 59, 59))).order_by('earliest_timestamp')
+	context = {'type':'view', 'caption': dss, 'events':events, 'day': day, 'potential_joins': potential_joins, 'appointments': appointments, 'categories':EventWorkoutCategory.objects.filter(user=request.user), 'amenities': amenities, 'imported_files': imported_files}
 	context['form'] = EventForm()
 	return render(request, 'viewer/pages/day.html', context)
 
@@ -76,7 +76,7 @@ def day_card(request, ds):
 	m = int(ds[4:6])
 	d = int(ds[6:])
 	dt = datetime.date(y, m, d)
-	day = create_or_get_day(dt)
+	day = create_or_get_day(request.user, dt)
 	dss = str(day)
 	context = {'type':'view', 'caption': dss, 'day': day, 'history': HistoricalEvent.objects.filter(date=dt)}
 	context['form'] = EventForm()
@@ -108,9 +108,9 @@ def day_weight(request, ds):
 	d = int(ds[6:])
 	dt = datetime.date(y, m, d)
 	try:
-		day = Day.objects.get(date=dt)
+		day = Day.objects.get(user=request.user, date=dt)
 	except:
-		day = Day(date=dt)
+		day = Day(user=request.user, date=dt)
 		day.save()
 
 	data = []
@@ -128,7 +128,7 @@ def day_heart(request, ds):
 	m = int(ds[4:6])
 	d = int(ds[6:])
 	dt = datetime.date(y, m, d)
-	day = create_or_get_day(dt)
+	day = create_or_get_day(request.user, dt)
 	data = day.get_heart_information()
 
 	response = HttpResponse(json.dumps(data), content_type='application/json')
@@ -142,7 +142,7 @@ def day_sleep(request, ds):
 	m = int(ds[4:6])
 	d = int(ds[6:])
 	dt = datetime.date(y, m, d)
-	day = create_or_get_day(dt)
+	day = create_or_get_day(request.user, dt)
 	if day is None:
 		data = {}
 	else:
@@ -161,9 +161,9 @@ def day_data(request, ds):
 	d = int(ds[6:])
 	dt = datetime.date(y, m, d)
 	try:
-		day = Day.objects.get(date=dt)
+		day = Day.objects.get(user=request.user, date=dt)
 	except:
-		day = Day(date=dt)
+		day = Day(user=request.user, date=dt)
 		day.save()
 
 	data = []
@@ -182,9 +182,9 @@ def day_people(request, ds):
 	d = int(ds[6:])
 	dt = datetime.date(y, m, d)
 	try:
-		day = Day.objects.get(date=dt)
+		day = Day.objects.get(user=request.user, date=dt)
 	except:
-		day = Day(date=dt)
+		day = Day(user=request.user, date=dt)
 		day.save()
 
 	data = []
@@ -221,9 +221,9 @@ def day_events(request, ds):
 	d = int(ds[6:])
 	dt = datetime.date(y, m, d)
 	try:
-		day = Day.objects.get(date=dt)
+		day = Day.objects.get(user=request.user, date=dt)
 	except:
-		day = Day(date=dt)
+		day = Day(user=request.user, date=dt)
 		day.save()
 
 	data = []
@@ -254,8 +254,8 @@ def day_loceventscreate(request, ds):
 			if 'location' in item:
 				if isinstance(item['location'], int):
 					if item['location'] > 0:
-						loc = Location.objects.get(id=item['location'])
-			event = Event(type='loc_prox', caption=item['text'], location=loc, start_time=dts, end_time=dte)
+						loc = Location.objects.get(user=request.user, id=item['location'])
+			event = Event(user=request.user, type='loc_prox', caption=item['text'], location=loc, start_time=dts, end_time=dte)
 			event.save()
 			event.auto_tag()
 			ret.append(event.id)
@@ -285,8 +285,8 @@ def day_locevents(request, ds):
 	epoch = pytz.utc.localize(datetime.datetime(1970, 1, 1, 0, 0, 0))
 	loc = None
 	if lookup:
-		loc = nearest_location(data['lat'], data['lon'])
-	for item in get_possible_location_events(dt, data['lat'], data['lon']):
+		loc = nearest_location(request.user, data['lat'], data['lon'])
+	for item in get_possible_location_events(request.user, dt, data['lat'], data['lon']):
 		result = {"start_time": item['start_time'].astimezone(pytz.UTC).strftime("%Y-%m-%d %H:%M:%S"), "end_time": item['end_time'].astimezone(pytz.UTC).strftime("%Y-%m-%d %H:%M:%S")}
 		result['display_text'] = (item['start_time'].strftime("%-I:%M%p") + ' to ' + item['end_time'].strftime("%-I:%M%p")).lower()
 		result['text'] = result['display_text']
@@ -294,7 +294,7 @@ def day_locevents(request, ds):
 			result['display_text'] = str(loc.label) + ', ' + result['text']
 			result['text'] = str(loc.label)
 			result['location'] = loc.id
-		appointment = event_label(item['start_time'], item['end_time'])
+		appointment = event_label(request.user, item['start_time'], item['end_time'])
 		if len(appointment) > 0:
 			result['text'] = appointment
 		ret.append(result)

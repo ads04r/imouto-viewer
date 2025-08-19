@@ -11,6 +11,7 @@ urlpatterns = [
     path('viewer/', include('viewer.urls')),
     path('admin/doc/', include('django.contrib.admindocs.urls')),
     path('admin/', admin.site.urls),
+    path('users/', include('django.contrib.auth.urls')),
     path('', RedirectView.as_view(url='/viewer/', permanent=False)),
     path('favicon.ico', RedirectView.as_view(url='static/viewer/graphics/favicon.ico', permanent=True))
 ]

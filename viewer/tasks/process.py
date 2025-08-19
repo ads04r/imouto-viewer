@@ -4,6 +4,7 @@ from background_task.models import Task
 from django.conf import settings
 
 from viewer.models import WatchedDirectory, Photo, Event
+from django.contrib.auth.models import User
 
 from viewer.functions.photos import locate_photos_by_exif
 from viewer.functions.locations import create_location_events, fill_country_cities, fill_location_cities, fill_location_countries
@@ -19,9 +20,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 @background(schedule=0, queue='process')
-def import_ical_feed(url, username=None, password=None):
+def import_ical_feed(user_id, url, username=None, password=None):
 
-	import_calendar_feed(url, username, password)
+	user = User.objects.get(pk=user_id)
+	import_calendar_feed(user, url, username, password)
 
 @background(schedule=0, queue='process')
 def calculate_journey_distances(max=100):
@@ -34,15 +36,16 @@ def calculate_journey_distances(max=100):
 	if Task.objects.filter(queue='process', task_name__icontains='tasks.process.calculate_journey_distances').count() > 1:
 		return # If there's already an instance of this task running or queued, don't start another.
 	logger.info("Task calculate_journey_distances beginning")
-	i = 0
-	for event in Event.objects.filter(type='journey', cached_distance=0).order_by('-start_time'):
-		event.refresh()
-		distance = event.distance()
-		if distance > 0:
-			logger.debug("Event " + str(event.pk) + " distance is " + str(distance))
-			i = i + 1
-		if i >= max:
-			break
+	for user in User.objects.all():
+		i = 0
+		for event in Event.objects.filter(user=user, type='journey', cached_distance=0).order_by('-start_time'):
+			event.refresh()
+			distance = event.distance()
+			if distance > 0:
+				logger.debug("Event " + str(event.pk) + " distance is " + str(distance))
+				i = i + 1
+			if i >= max:
+				break
 
 @background(schedule=0, queue='process')
 def generate_location_events(min_duration=300):
@@ -53,11 +56,12 @@ def generate_location_events(min_duration=300):
 	"""
 	if Task.objects.filter(queue='process', task_name__icontains='tasks.process.generate_location_events').count() > 1:
 		return # If there's already an instance of this task running or queued, don't start another.
-	if len(get_location_manager_report_queue()) > 0:
+	if sum([len(get_location_manager_report_queue(user)) for user in User.objects.all()]) > 0:
 		generate_location_events(min_duration=min_duration, schedule=60) # If there are tasks in the location manager, hold back until they finish
 		return
 	logger.info("Task generate_location_events beginning")
-	create_location_events(min_duration)
+	for user in User.objects.all():
+		create_location_events(user, min_duration)
 
 @background(schedule=0, queue='process')
 def fill_cities():
@@ -67,7 +71,7 @@ def fill_cities():
 	"""
 	if Task.objects.filter(queue='process', task_name__icontains='tasks.process.fill_cities').count() > 1:
 		return # If there's already an instance of this task running or queued, don't start another.
-	if len(get_location_manager_report_queue()) > 0:
+	if sum([len(get_location_manager_report_queue(user)) for user in User.objects.all()]) > 0:
 		fill_cities(schedule=60) # If there are tasks in the location manager, hold back until they finish
 		return
 	logger.info("Task fill_cities beginning")
@@ -78,7 +82,7 @@ def fill_cities():
 def fill_countries():
 	if Task.objects.filter(queue='process', task_name__icontains='tasks.process.fill_countries').count() > 1:
 		return # If there's already an instance of this task running or queued, don't start another.
-	if len(get_location_manager_report_queue()) > 0:
+	if sum([len(get_location_manager_report_queue(user)) for user in User.objects.all()]) > 0:
 		fill_countries(schedule=60) # If there are tasks in the location manager, hold back until they finish
 		return
 	logger.info("Task fill_countries beginning")
@@ -117,62 +121,64 @@ def check_watched_directories():
 	"""
 	if Task.objects.filter(queue='process', task_name__icontains='check_watched_directories').count() > 1:
 		return # If there's already an instance of this task running or queued, don't start another.
-	if len(get_location_manager_report_queue()) > 0:
+	if sum([len(get_location_manager_report_queue(user)) for user in User.objects.all()]) > 0:
 		check_watched_directories(schedule=60) # If there are tasks in the location manager, hold back until they finish
 		return
 
-	ret = []
 	logger.info("Task check_watched_directories beginning")
-	for wd in WatchedDirectory.objects.all():
-		if not(wd.needs_check):
-			continue
-		if not(os.path.exists(wd.path)):
-			continue
-		wd.last_check = pytz.utc.localize(datetime.datetime.utcnow())
-		wd.save(update_fields=['last_check'])
-		for fn in wd.unimported_files:
-			for f in wd.known_files.all():
-				if f.path == fn:
-					modified_time = pytz.utc.localize(datetime.datetime.utcfromtimestamp(os.path.getmtime(fn)))
-					file_size = os.path.getsize(fn)
-					if((f.modified_time == modified_time) & (f.file_size == file_size)):
-						ret.append(f)
-					else:
-						f.modified_time = modified_time
-						f.file_size = file_size
-						f.import_time = None
-						f.save(update_fields=['import_time', 'modified_time', 'file_size'])
-	last_photo = None
-	for f in ret:
-		if f.watched_directory.importer == 'fit':
-			f.import_time = pytz.utc.localize(datetime.datetime.utcnow())
-			f.save(update_fields=['import_time'])
-			if upload_file(f.path, f.watched_directory.source):
-				import_fit(f.path)
-			else:
-				f.import_time = None
-				f.save(update_fields=['import_time'])
-		if f.watched_directory.importer == 'gpx':
-			f.import_time = pytz.utc.localize(datetime.datetime.utcnow())
-			f.save(update_fields=['import_time'])
-			if not(upload_file(f.path, f.watched_directory.source)):
-				f.import_time = None
-				f.save(update_fields=['import_time'])
-		if f.watched_directory.importer == 'mood':
-			f.import_time = pytz.utc.localize(datetime.datetime.utcnow())
-			f.save(update_fields=['import_time'])
-			ret = import_mood_file(f.path)
-		if f.watched_directory.importer == 'jpg':
-			f.import_time = pytz.utc.localize(datetime.datetime.utcnow())
-			f.save(update_fields=['import_time'])
-			photo = import_photo_file(f.path, pytz.timezone(settings.TIME_ZONE))
-			if photo.time is None:
+	for user in User.objects.all():
+		logger.info("  Task check_watched_directories beginning for " + str(user.username))
+		ret = []
+		for wd in WatchedDirectory.objects.filter(user=user):
+			if not(wd.needs_check):
 				continue
-			if last_photo is None:
-				last_photo = photo.time
-			if photo.time < last_photo:
-				last_photo = photo.time
-			precache_photo_thumbnail(photo.id)
-	if not(last_photo is None):
-		locate_photos_by_exif(since=last_photo - datetime.timedelta(seconds=1), reassign=False)
+			if not(os.path.exists(wd.path)):
+				continue
+			wd.last_check = pytz.utc.localize(datetime.datetime.utcnow())
+			wd.save(update_fields=['last_check'])
+			for fn in wd.unimported_files:
+				for f in wd.known_files.all():
+					if f.path == fn:
+						modified_time = pytz.utc.localize(datetime.datetime.utcfromtimestamp(os.path.getmtime(fn)))
+						file_size = os.path.getsize(fn)
+						if((f.modified_time == modified_time) & (f.file_size == file_size)):
+							ret.append(f)
+						else:
+							f.modified_time = modified_time
+							f.file_size = file_size
+							f.import_time = None
+							f.save(update_fields=['import_time', 'modified_time', 'file_size'])
+		last_photo = None
+		for f in ret:
+			if f.watched_directory.importer == 'fit':
+				f.import_time = pytz.utc.localize(datetime.datetime.utcnow())
+				f.save(update_fields=['import_time'])
+				if upload_file(user, f.path, f.watched_directory.source):
+					import_fit(user, f.path)
+				else:
+					f.import_time = None
+					f.save(update_fields=['import_time'])
+			if f.watched_directory.importer == 'gpx':
+				f.import_time = pytz.utc.localize(datetime.datetime.utcnow())
+				f.save(update_fields=['import_time'])
+				if not(upload_file(user, f.path, f.watched_directory.source)):
+					f.import_time = None
+					f.save(update_fields=['import_time'])
+			if f.watched_directory.importer == 'mood':
+				f.import_time = pytz.utc.localize(datetime.datetime.utcnow())
+				f.save(update_fields=['import_time'])
+				ret = import_mood_file(user, f.path)
+			if f.watched_directory.importer == 'jpg':
+				f.import_time = pytz.utc.localize(datetime.datetime.utcnow())
+				f.save(update_fields=['import_time'])
+				photo = import_photo_file(user, f.path, pytz.timezone(settings.TIME_ZONE))
+				if photo.time is None:
+					continue
+				if last_photo is None:
+					last_photo = photo.time
+				if photo.time < last_photo:
+					last_photo = photo.time
+				precache_photo_thumbnail(photo.id)
+		if not(last_photo is None):
+			locate_photos_by_exif(user, since=last_photo - datetime.timedelta(seconds=1), reassign=False)
 

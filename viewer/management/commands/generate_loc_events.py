@@ -18,7 +18,7 @@ class Command(BaseCommand):
 
 		min_duration = int(kwargs['minlength'])
 
-		for ev in create_location_events(min_duration):
+		for ev in create_location_events(user, min_duration):
 			dtlen = (ev.end_time - ev.start_time).total_seconds()
 			sys.stderr.write(self.style.SUCCESS(str(ev.start_time) + " - " + str(ev.location) + " " + str(int(dtlen / 60)) + '\n'))
 

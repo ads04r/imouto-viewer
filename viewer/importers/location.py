@@ -4,7 +4,7 @@ from django.conf import settings
 import logging
 logger = logging.getLogger(__name__)
 
-def upload_file(temp_file, file_source, format=''):
+def upload_file(user, temp_file, file_source, format=''):
 	"""
 	Uploads a file to the configured location manager. When calling this function you need to pass a string
 	representing the source of the data (eg 'handheld_gps', 'fitness_tracker', 'phone').
@@ -15,8 +15,9 @@ def upload_file(temp_file, file_source, format=''):
 	:return: True if the upload was successful, False if not.
 	:rtype: bool
 	"""
-	url = str(settings.LOCATION_MANAGER_URL).rstrip('/') + '/import'
-	bearer_token = settings.LOCATION_MANAGER_TOKEN
+	address = user.profile.settings['LOCATION_MANAGER_URL']
+	bearer_token = user.profile.settings['LOCATION_MANAGER_TOKEN']
+	url = address.rstrip('/') + '/import'
 	if format == '':
 		r = requests.post(url, headers={'Authorization': 'Token ' + bearer_token}, data={'file_source': file_source}, files={'uploaded_file': (temp_file, open(temp_file, 'rb'))})
 	else:

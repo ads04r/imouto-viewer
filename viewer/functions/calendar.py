@@ -3,7 +3,7 @@ from viewer.models import CalendarAppointment
 import logging
 logger = logging.getLogger(__name__)
 
-def event_label(start_time, end_time):
+def event_label(user, start_time, end_time):
 	"""
 	Returns a human readable string based on any known calendar events that are active during the specified time window.
 
@@ -13,10 +13,10 @@ def event_label(start_time, end_time):
 	:rtype: str
 
 	"""
-	apts = CalendarAppointment.objects.filter(start_time__lte=end_time, end_time__gte=start_time)
+	apts = CalendarAppointment.objects.filter(user=user, start_time__lte=end_time, end_time__gte=start_time)
 	if apts.count() == 1:
 		return apts.first().caption
-	apts = CalendarAppointment.objects.filter(start_time__lte=start_time, end_time__gte=end_time)
+	apts = CalendarAppointment.objects.filter(user=user, start_time__lte=start_time, end_time__gte=end_time)
 	if apts.count() == 1:
 		return apts.first().caption
 	return ""

@@ -15,7 +15,7 @@ def month(request, ds):
 	y = int(ds[0:4])
 	m = int(ds[4:])
 	logger.info("Month " + ds + " requested")
-	obj = create_or_get_month(m, y)
+	obj = create_or_get_month(request.user, m, y)
 
 	history = HistoricalEvent.objects.filter(date__month=m, date__year=y).order_by('date')
 	longest_journey = obj.longest_journey

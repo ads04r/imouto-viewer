@@ -27,11 +27,11 @@ def __display_timeline_event(event):
 							return False
 	return True
 
-def generate_life_grid(start_date, weeks):
+def generate_life_grid(user, start_date, weeks):
 
 	life = []
 	year = []
-	year_birthday = settings.USER_DATE_OF_BIRTH
+	year_birthday = user.profile.date_of_birth
 	for i in range(0, weeks):
 		dts = start_date + datetime.timedelta(days=(7 * i))
 		dte = dts + datetime.timedelta(days=6)
@@ -42,7 +42,7 @@ def generate_life_grid(start_date, weeks):
 				year = []
 		dtts = pytz.utc.localize(datetime.datetime(dts.year, dts.month, dts.day, 0, 0, 0))
 		dtte = pytz.utc.localize(datetime.datetime(dte.year, dte.month, dte.day, 23, 59, 59))
-		item = {'start_time': dts, 'end_time': dte, 'events': Event.objects.filter(type='life_event', start_time__lte=dtte, end_time__gte=dtts), 'periods': LifePeriod.objects.filter(start_time__lte=dtte, end_time__gte=dtts)}
+		item = {'start_time': dts, 'end_time': dte, 'events': Event.objects.filter(user=user, type='life_event', start_time__lte=dtte, end_time__gte=dtts), 'periods': LifePeriod.objects.filter(user=user, start_time__lte=dtte, end_time__gte=dtts)}
 		year.append(item)
 	if len(year) > 0:
 		life.append(year)
@@ -54,66 +54,66 @@ def get_report_queue():
 
 	return ret
 
-def get_timeline_events(dt):
+def get_timeline_events(user, dt):
 
 	dtq = dt
 	events = []
 	while len(events) == 0:
-		for event in Event.objects.filter(start_time__gte=dtq, start_time__lt=(dtq + datetime.timedelta(hours=24))).order_by('-start_time'):
+		for event in Event.objects.filter(user=user, start_time__gte=dtq, start_time__lt=(dtq + datetime.timedelta(hours=24))).order_by('-start_time'):
 			if __display_timeline_event(event):
 				events.append(event)
 		dtq = dtq - datetime.timedelta(hours=24)
 	return events
 
-def get_today():
+def get_today(user):
 
 	dt = pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(settings.TIME_ZONE)).date()
-	return create_or_get_day(dt)
+	return create_or_get_day(user, dt)
 
-def generate_dashboard():
+def generate_dashboard(user):
 
 	stats = {}
 	now = pytz.utc.localize(datetime.datetime.utcnow())
 
 	try:
-		user_dob = settings.USER_DATE_OF_BIRTH
+		user_dob = user.profile.date_of_birth
 	except:
 		user_dob = None
 	if user_dob is None:
 		return {'error': 'USER_DATE_OF_BIRTH must be set.'}
 	try:
-		last_contact = RemoteInteraction.objects.all().order_by('-time')[0].time
+		last_contact = RemoteInteraction.objects.filter(user=user).order_by('-time')[0].time
 	except:
 		try:
-			last_contact = Event.objects.all().order_by('-end_time')[0].end_time
+			last_contact = Event.objects.filter(user=user).order_by('-end_time')[0].end_time
 		except:
 			return {}
 
 	contactdata = []
-	stats['messages'] = len(RemoteInteraction.objects.filter(type='sms', time__gte=(last_contact - datetime.timedelta(days=7))))
-	stats['phone_calls'] = len(RemoteInteraction.objects.filter(type='phone-call', time__gte=(last_contact - datetime.timedelta(days=7))))
-	for i in RemoteInteraction.objects.filter(type='sms', time__gte=(last_contact - datetime.timedelta(days=7))).values('address').annotate(messages=Count('address')).order_by('-messages'):
+	stats['messages'] = len(RemoteInteraction.objects.filter(user=user, type='sms', time__gte=(last_contact - datetime.timedelta(days=7))))
+	stats['phone_calls'] = len(RemoteInteraction.objects.filter(user=user, type='phone-call', time__gte=(last_contact - datetime.timedelta(days=7))))
+	for i in RemoteInteraction.objects.filter(user=user, type='sms', time__gte=(last_contact - datetime.timedelta(days=7))).values('address').annotate(messages=Count('address')).order_by('-messages'):
 		address = i['address'].replace(' ', '')
 		try:
-			person = PersonProperty.objects.get(value=address).person
+			person = PersonProperty.objects.get(person__user=user, value=address).person
 		except:
 			person = None
 		if(not(person is None)):
 			item = {'person': person, 'address': address, 'messages': int(i['messages'])}
 			contactdata.append(item)
 
-	first_event = Event.objects.all().order_by('start_time')[0].start_time
-	last_event = Event.objects.all().order_by('-start_time')[0].start_time
+	first_event = Event.objects.filter(user=user).order_by('start_time')[0].start_time
+	last_event = Event.objects.filter(user=user).order_by('-start_time')[0].start_time
 
 	tags = []
-	for tag in EventTag.objects.filter(events__end_time__gte=(last_event - datetime.timedelta(days=7)), events__start_time__lte=last_event).distinct():
+	for tag in EventTag.objects.filter(events__user=user, events__end_time__gte=(last_event - datetime.timedelta(days=7)), events__start_time__lte=last_event).distinct():
 		id = str(tag.id)
 		if id == '':
 			continue
 		tags.append({'id': id, 'colour': str(tag.colour)})
 
 	locationdata = []
-	for event in Event.objects.filter(start_time__gte=(last_event - datetime.timedelta(days=7))):
+	for event in Event.objects.filter(user=user, start_time__gte=(last_event - datetime.timedelta(days=7))):
 		location = event.location
 		if location in locationdata:
 			continue
@@ -123,7 +123,7 @@ def generate_dashboard():
 			continue
 		locationdata.append(location)
 	if len(locationdata) == 0:
-		for event in Event.objects.filter(start_time__gte=(last_event - datetime.timedelta(days=7))):
+		for event in Event.objects.filter(user=user, start_time__gte=(last_event - datetime.timedelta(days=7))):
 			location = event.location
 			if location in locationdata:
 				continue
@@ -132,13 +132,13 @@ def generate_dashboard():
 			locationdata.append(location)
 
 	peopledata = []
-	for event in Event.objects.filter(start_time__gte=(last_event - datetime.timedelta(days=7))):
+	for event in Event.objects.filter(user=user, start_time__gte=(last_event - datetime.timedelta(days=7))):
 		for person in event.people.all():
 			if person in peopledata:
 				continue
 			peopledata.append(person)
 
-	weights = DataReading.objects.filter(type='weight', start_time__gte=(last_event - datetime.timedelta(days=7)))
+	weights = DataReading.objects.filter(user=user, type='weight', start_time__gte=(last_event - datetime.timedelta(days=7)))
 	if weights.count() > 0:
 		total_weight = 0.0
 		for weight in weights:
@@ -147,20 +147,20 @@ def generate_dashboard():
 
 	stats['photos'] = 0
 	try:
-		last_photo = Photo.objects.all().order_by('-time')[0].time
-		stats['photos'] = len(Photo.objects.filter(time__gte=(last_photo - datetime.timedelta(days=7))))
+		last_photo = Photo.objects.filter(user=user).order_by('-time')[0].time
+		stats['photos'] = len(Photo.objects.filter(user=user, time__gte=(last_photo - datetime.timedelta(days=7))))
 	except:
 		stats['photos'] = 0
 
 	stats['events'] = 0
 	try:
-		last_event = Event.objects.all().order_by('-start_time')[0].start_time
-		stats['events'] = len(Event.objects.filter(start_time__gte=(last_event - datetime.timedelta(days=7))))
+		last_event = Event.objects.filter(user=user).order_by('-start_time')[0].start_time
+		stats['events'] = len(Event.objects.filter(user=user, start_time__gte=(last_event - datetime.timedelta(days=7))))
 	except:
 		stats['events'] = 0
 
 	try:
-		last_record = DataReading.objects.all().order_by('-end_time')[0].end_time
+		last_record = DataReading.objects.filter(user=user).order_by('-end_time')[0].end_time
 	except:
 		last_record = last_contact
 
@@ -172,7 +172,7 @@ def generate_dashboard():
 			dt = dtbase.tzinfo.localize(datetime.datetime(dtbase.year, dtbase.month, dtbase.day, 0, 0, 0))
 		except:
 			dt = dtbase
-		obj = DataReading.objects.filter(type='step-count').filter(start_time__gte=dt, end_time__lt=(dt + datetime.timedelta(days=1))).aggregate(Sum('value'))
+		obj = DataReading.objects.filter(user=user, type='step-count').filter(start_time__gte=dt, end_time__lt=(dt + datetime.timedelta(days=1))).aggregate(Sum('value'))
 		try:
 			steps = int(obj['value__sum'])
 		except:
@@ -188,9 +188,9 @@ def generate_dashboard():
 	dt = (last_record - datetime.timedelta(days=7)).replace(hour=0, minute=0, second=0)
 	if pytz.tzinfo is None:
 		dt = pytz.utc.localize(dt)
-	for walk in DataReading.objects.filter(start_time__gte=dt, type='pebble-app-activity', value='5'):
+	for walk in DataReading.objects.filter(user=user, start_time__gte=dt, type='pebble-app-activity', value='5'):
 		try:
-			ev = Event.objects.get(start_time=walk.start_time, end_time=walk.end_time, type='journey')
+			ev = Event.objects.get(user=user, start_time=walk.start_time, end_time=walk.end_time, type='journey')
 		except:
 			ev = None
 		if ev is None:
@@ -202,11 +202,11 @@ def generate_dashboard():
 	heartdata = []
 	days = []
 
-	if DataReading.objects.filter(type='heart-rate', start_time__gte=(last_record - datetime.timedelta(days=7))).count() > 0:
+	if DataReading.objects.filter(user=user, type='heart-rate', start_time__gte=(last_record - datetime.timedelta(days=7))).count() > 0:
 
 		for i in range(0, 7):
 			dtbase = last_record - datetime.timedelta(days=(7 - i))
-			day = create_or_get_day(dtbase.date())
+			day = create_or_get_day(user, dtbase.date())
 			info = day.get_heart_information(False)
 			try:
 				zone = info['heart']['heartzonetime']
@@ -231,10 +231,10 @@ def generate_dashboard():
 			dt = dtbase
 		total_sleep = 0
 		deep_sleep = 0
-		obj = DataReading.objects.filter(type='sleep').filter(value=1).filter(start_time__gte=(dt - datetime.timedelta(days=1))).filter(end_time__lt=dt)
+		obj = DataReading.objects.filter(user=user, type='sleep').filter(value=1).filter(start_time__gte=(dt - datetime.timedelta(days=1))).filter(end_time__lt=dt)
 		for item in obj:
 			total_sleep = total_sleep + ((item.end_time) - (item.start_time)).total_seconds()
-		obj = DataReading.objects.filter(type='sleep').filter(value=2).filter(start_time__gte=(dt - datetime.timedelta(days=1))).filter(end_time__lt=dt)
+		obj = DataReading.objects.filter(user=user, type='sleep').filter(value=2).filter(start_time__gte=(dt - datetime.timedelta(days=1))).filter(end_time__lt=dt)
 		for item in obj:
 			deep_sleep = deep_sleep + ((item.end_time) - (item.start_time)).total_seconds()
 		light_sleep = total_sleep - deep_sleep
@@ -245,7 +245,7 @@ def generate_dashboard():
 		sleepdata.append(item)
 
 	walkdata = []
-	for walk in DataReading.objects.filter(end_time__gte=(last_contact - datetime.timedelta(days=7))).filter(type='pebble-app-activity').filter(value=5):
+	for walk in DataReading.objects.filter(user=user, end_time__gte=(last_contact - datetime.timedelta(days=7))).filter(type='pebble-app-activity').filter(value=5):
 		item = {}
 		item['time'] = walk.end_time
 		item['length'] = walk.length()
@@ -266,7 +266,7 @@ def generate_dashboard():
 
 	birthdays = []
 	dtd = now.date()
-	for pp in PersonProperty.objects.filter(key='birthday'):
+	for pp in PersonProperty.objects.filter(person__user=user, key='birthday'):
 		if not(pp.person.significant):
 			continue
 		dtp = pp.person.next_birthday
@@ -282,16 +282,16 @@ def generate_dashboard():
 	birthdays = sorted(birthdays, key=lambda p: p[1])
 
 	tasks = []
-	for task in CalendarTask.objects.filter(time_completed=None, time_due__gte=now, time_due__lt=(now + datetime.timedelta(days=7))):
+	for task in CalendarTask.objects.filter(user=user, time_completed=None, time_due__gte=now, time_due__lt=(now + datetime.timedelta(days=7))):
 		tasks.append(task)
 
 	workouts = []
 	workout_total = 0
 	dts = last_record - datetime.timedelta(days=7)
 	dte = last_record
-	for category in EventWorkoutCategory.objects.all():
+	for category in EventWorkoutCategory.objects.filter(user=user):
 		v = 0.0
-		for event in Event.objects.filter(end_time__gte=dts, start_time__lte=dte, workout_categories=category):
+		for event in Event.objects.filter(user=user, end_time__gte=dts, start_time__lte=dte, workout_categories=category):
 			v = v + event.distance()
 		if v > 0:
 			workouts.append({'id': category.pk, 'label': str(category), 'distance': int(v)})

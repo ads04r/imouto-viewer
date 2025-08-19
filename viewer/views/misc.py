@@ -55,15 +55,16 @@ def create_achievement(request):
 	if not item_url:
 		return HttpResponse("Invalid CalDAV credentials.", status=401)
 	if mark_task_completed(item_url, username, password, completion_date=dt):
-		import_ical_feed(url, username, password)
+		import_ical_feed(request.user, url, username, password)
 		return HttpResponseRedirect('./#day_' + dt.strftime("%Y%m%d"))
 	raise Http404()
 
 def upload_file(request):
 	if request.method != 'POST':
 		return HttpResponseNotAllowed(['POST'])
-	url = settings.LOCATION_MANAGER_URL + '/import'
-	bearer_token = settings.LOCATION_MANAGER_TOKEN
+	address = request.user.profile.settings['LOCATION_MANAGER_URL']
+	bearer_token = request.user.profile.settings['LOCATION_MANAGER_TOKEN']
+	url = address + '/import'
 	logger.info("File sent for import")
 	files = {'uploaded_file': request.FILES['uploadformfile']}
 	data = {'file_source': request.POST['uploadformfilesource']}
@@ -73,15 +74,15 @@ def upload_file(request):
 	return HttpResponseRedirect('./#files')
 
 def locman_import(request):
-	response = HttpResponse(json.dumps(get_location_manager_import_queue()), content_type='application/json')
+	response = HttpResponse(json.dumps(get_location_manager_import_queue(request.user)), content_type='application/json')
 	return response
 
 def locman_process(request):
-	response = HttpResponse(json.dumps(get_location_manager_process_queue()), content_type='application/json')
+	response = HttpResponse(json.dumps(get_location_manager_process_queue(request.user)), content_type='application/json')
 	return response
 
 def importer(request):
-	context = {'progress': get_location_manager_import_queue(), 'form': WatchedDirectoryForm(), 'paths': WatchedDirectory.objects.all()}
+	context = {'progress': get_location_manager_import_queue(request.user), 'form': WatchedDirectoryForm(), 'paths': WatchedDirectory.objects.filter(user=request.user)}
 	return render(request, 'viewer/pages/import.html', context)
 
 def webimporter(request):
@@ -132,6 +133,8 @@ def search(request):
 	for searchresult in sq:
 		event = searchresult.object
 		if event is None:
+			continue
+		if event.user.pk != request.user.pk:
 			continue
 		description = event.description[0:50]
 		if len(description) == 50:

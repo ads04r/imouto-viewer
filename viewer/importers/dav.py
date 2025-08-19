@@ -60,7 +60,7 @@ def mark_task_completed(url, username, password, completion_date=None):
 
 	return True
 
-def import_carddav(url, username='', password='', countrycode='44'):
+def import_carddav(user, url, username='', password='', countrycode='44'):
 	"""
 	Imports CardDAV data from a web URL, and creates or augments Person objects accordingly.
 
@@ -91,7 +91,7 @@ def import_carddav(url, username='', password='', countrycode='44'):
 		if 'email' in person.contents:
 			for email in person.contents['email']:
 				try:
-					pp = PersonProperty.objects.get(key='email', value=str(email.value))
+					pp = PersonProperty.objects.get(person__user=user, key='email', value=str(email.value))
 				except:
 					pp = None
 				if not(pp is None):
@@ -99,7 +99,7 @@ def import_carddav(url, username='', password='', countrycode='44'):
 		if 'tel' in person.contents:
 			for phone in person.contents['tel']:
 				try:
-					pp = PersonProperty.objects.get(Q(value=str(phone.value)), Q(key='phone') | Q(key='mobile'))
+					pp = PersonProperty.objects.filter(person__user=user).get(Q(value=str(phone.value)), Q(key='phone') | Q(key='mobile'))
 				except:
 					pp = None
 				if not(pp is None):
@@ -107,7 +107,7 @@ def import_carddav(url, username='', password='', countrycode='44'):
 
 		if pobj is None:
 			ct = 0
-			for ptest in Person.objects.all():
+			for ptest in Person.objects.filter(user=user):
 				if ptest.full_name == name:
 					ct = ct + 1
 					pobj = ptest
@@ -183,7 +183,7 @@ def import_carddav(url, username='', password='', countrycode='44'):
 						pp = PersonProperty(person=pobj, key=phonestyle, value=num)
 						pp.save()
 
-def import_calendar_feed(url, username=None, password=None):
+def import_calendar_feed(user, url, username=None, password=None):
 	"""
 	Imports CalDAV data from a web URL, and creates or augments CalendarFeed, CalendarAppointment and CalendarTask objects accordingly.
 
@@ -194,9 +194,9 @@ def import_calendar_feed(url, username=None, password=None):
 	:rtype: list
 	"""
 	try:
-		feed = CalendarFeed.objects.get(url=url)
+		feed = CalendarFeed.objects.get(user=user, url=url)
 	except:
-		feed = CalendarFeed(url=url)
+		feed = CalendarFeed(user=user, url=url)
 		feed.save()
 
 	try:
@@ -235,9 +235,9 @@ def import_calendar_feed(url, username=None, password=None):
 		id = str(task.uid)
 
 		try:
-			item = CalendarTask.objects.get(taskid=id, calendar=feed)
+			item = CalendarTask.objects.get(user=user, taskid=id, calendar=feed)
 		except:
-			item = CalendarTask(taskid=id, calendar=feed)
+			item = CalendarTask(user=user, taskid=id, calendar=feed)
 
 		item.time_created = created
 		item.time_due = due
@@ -262,7 +262,7 @@ def import_calendar_feed(url, username=None, password=None):
 			data = ''
 		location = str(event.location)
 		try:
-			loc = Location.objects.get(label__icontains=location)
+			loc = Location.objects.get(user=user, label__icontains=location)
 		except:
 			loc = None
 
@@ -273,13 +273,13 @@ def import_calendar_feed(url, username=None, password=None):
 		all_day = event.all_day
 
 		try:
-			item = CalendarAppointment.objects.get(eventid=id, calendar=feed)
+			item = CalendarAppointment.objects.get(user=user, eventid=id, calendar=feed)
 		except:
 			try:
-				item = CalendarAppointment.objects.get(eventid=id) # In case the item moves from one calendar to another
+				item = CalendarAppointment.objects.get(user=user, eventid=id) # In case the item moves from one calendar to another
 				item.calendar = feed
 			except:
-				item = CalendarAppointment(eventid=id, calendar=feed)
+				item = CalendarAppointment(user=user, eventid=id, calendar=feed)
 			ret.append(item)
 
 		item.start_time = start_time

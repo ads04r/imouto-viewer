@@ -8,7 +8,7 @@ from viewer.functions.locations import home_location
 import logging
 logger = logging.getLogger(__name__)
 
-def import_home_assistant_readings(entity_id, reading_type, days=7, multiplier=1):
+def import_home_assistant_readings(user, entity_id, reading_type, days=7, multiplier=1):
 	"""
 	Imports data from a Home Assistant log directly into Imouto Viewer as DataReading objects. This
 	function checks for existing data from a previous import, so the function may be called
@@ -47,15 +47,15 @@ def import_home_assistant_readings(entity_id, reading_type, days=7, multiplier=1
 				state = 0
 			dt = dateparse(subitem['last_changed'])
 			try:
-				reading = DataReading.objects.get(start_time=dt, end_time=dt, type=reading_type)
+				reading = DataReading.objects.get(user=user, start_time=dt, end_time=dt, type=reading_type)
 			except:
-				reading = DataReading(start_time=dt, end_time=dt, type=reading_type)
+				reading = DataReading(user=user, start_time=dt, end_time=dt, type=reading_type)
 			reading.value = state
 			reading.save()
 			ret.append(reading)
 	return ret
 
-def import_home_assistant_events(entity_id, event_type, days=1):
+def import_home_assistant_events(user, entity_id, event_type, days=1):
 	"""
 	Imports data from a Home Assistant log directly into Imouto Viewer as Event objects. This
 	function checks for existing data from a previous import, so the function may be called
@@ -104,14 +104,14 @@ def import_home_assistant_events(entity_id, event_type, days=1):
 		name = entity_id + ' event'
 	for item in data:
 		try:
-			event = Event.objects.get(start_time=item['from'], end_time=item['to'], type=event_type)
+			event = Event.objects.get(user=user, start_time=item['from'], end_time=item['to'], type=event_type)
 		except:
-			event = Event(start_time=item['from'], end_time=item['to'], type=event_type, caption=name)
+			event = Event(user=user, start_time=item['from'], end_time=item['to'], type=event_type, caption=name)
 			event.save()
 		ret.append(event)
 	return ret
 
-def import_home_assistant_presence(uid, entity_id, days=7):
+def import_home_assistant_presence(user, uid, entity_id, days=7):
 	"""
 	Imports presence data from a Home Assistant log and augments Imouto Event objects with this accordingly. If a
 	person has a 'presence' entity ID in Home Assistant and a Person entry in Imouto Viewer, this function can
@@ -134,8 +134,8 @@ def import_home_assistant_presence(uid, entity_id, days=7):
 		token = settings.HOME_ASSISTANT_TOKEN
 	except AttributeError:
 		token = ''
-	home = home_location()
-	person = Person.objects.get(uid=uid)
+	home = home_location(user)
+	person = Person.objects.get(user=user, uid=uid)
 	data = []
 	ret = []
 
@@ -156,7 +156,7 @@ def import_home_assistant_presence(uid, entity_id, days=7):
 				data.append({'from': dateparse(last_item['last_changed']), 'to': dateparse(subitem['last_changed'])})
 			last_item = subitem
 	for item in data:
-		for event in Event.objects.filter(start_time__gte=item['from'], end_time__lte=item['to'], location=home):
+		for event in Event.objects.filter(user=user, start_time__gte=item['from'], end_time__lte=item['to'], location=home):
 			event.people.add(person)
 			ret.append(event)
 

@@ -16,34 +16,34 @@ logger = logging.getLogger(__name__)
 def people(request):
 	data = {}
 	datecutoff = pytz.utc.localize(datetime.datetime.utcnow()) - datetime.timedelta(days=365)
-	data['recent_by_events'] = Person.objects.filter(event__start_time__gte=datecutoff).annotate(num_events=Count('event', distinct=True)).order_by('-num_events')[0:10]
-	data['recent_by_days'] = Person.objects.filter(event__start_time__gte=datecutoff).annotate(days=Count(Cast('event__start_time', DateField()), distinct=True)).order_by('-days')[0:10]
-	data['recent_by_last_seen'] = Person.objects.annotate(last_seen=Max('event__start_time')).order_by('-last_seen')[0:10]
-	data['photos'] = Person.objects.filter(photo__time__gte=datecutoff).annotate(photo_count=Count('photo')).order_by('-photo_count')[0:10]
+	data['recent_by_events'] = Person.objects.filter(user=request.user, event__start_time__gte=datecutoff).annotate(num_events=Count('event', distinct=True)).order_by('-num_events')[0:10]
+	data['recent_by_days'] = Person.objects.filter(user=request.user, event__start_time__gte=datecutoff).annotate(days=Count(Cast('event__start_time', DateField()), distinct=True)).order_by('-days')[0:10]
+	data['recent_by_last_seen'] = Person.objects.filter(user=request.user).annotate(last_seen=Max('event__start_time')).order_by('-last_seen')[0:10]
+	data['photos'] = Person.objects.filter(user=request.user, photo__time__gte=datecutoff).annotate(photo_count=Count('photo')).order_by('-photo_count')[0:10]
 	data['messages'] = []
 	data['calls'] = []
-	for number in RemoteInteraction.objects.filter(time__gte=datecutoff, type='sms').values('address').annotate(messages=Count('address')).order_by('-messages'):
+	for number in RemoteInteraction.objects.filter(user=request.user, time__gte=datecutoff, type='sms').values('address').annotate(messages=Count('address')).order_by('-messages'):
 		try:
-			person = Person.objects.get(properties__key='mobile', properties__value=number['address'])
+			person = Person.objects.get(user=request.user, properties__key='mobile', properties__value=number['address'])
 		except:
 			person = None
 		if not(person is None):
 			data['messages'].append([person, number['messages']])
-	for number in RemoteInteraction.objects.filter(time__gte=datecutoff, type='phone-call').values('address').annotate(messages=Count('address')).order_by('-messages'):
+	for number in RemoteInteraction.objects.filter(user=request.user, time__gte=datecutoff, type='phone-call').values('address').annotate(messages=Count('address')).order_by('-messages'):
 		try:
-			person = Person.objects.get(properties__key='mobile', properties__value=number['address'])
+			person = Person.objects.get(user=request.user, properties__key='mobile', properties__value=number['address'])
 		except:
 			person = None
 		if not(person is None):
 			data['calls'].append([person, number['messages']])
 		try:
-			person = Person.objects.get(properties__key='phone', properties__value=number['address'])
+			person = Person.objects.get(user=request.user, properties__key='phone', properties__value=number['address'])
 		except:
 			person = None
 		if not(person is None):
 			data['calls'].append([person, number['messages']])
 	data['all'] = Person.objects.annotate(days=Count(Cast('event__start_time', DateField()), distinct=True)).annotate(last_seen=Max('event__start_time')).order_by('display_name')
-	data['deceased'] = Person.objects.filter(significant=True, properties__key='deathday').annotate(days=Count(Cast('event__start_time', DateField()), distinct=True)).annotate(last_seen=Max('event__start_time')).order_by('display_name')
+	data['deceased'] = Person.objects.filter(user=request.user, significant=True, properties__key='deathday').annotate(days=Count(Cast('event__start_time', DateField()), distinct=True)).annotate(last_seen=Max('event__start_time')).order_by('display_name')
 	if request.method == 'POST':
 		cache.delete('dashboard')
 		form = PersonForm(request.POST, request.FILES)
@@ -58,7 +58,7 @@ def people(request):
 			except:
 				person_home = form.cleaned_data.get('home')
 			if person_home:
-				loc = Location.objects.get(uid=person_home)
+				loc = Location.objects.get(user=request.user, uid=person_home)
 				pp = PersonProperty(person=post, key='livesat', value=loc.pk)
 				pp.save()
 			for p in [('birthday', 'birthday'), ('homephone', 'phone'), ('workphone', 'work'), ('mobilephone', 'mobile')]:
@@ -74,7 +74,7 @@ def people(request):
 			raise Http404(form.errors)
 	else:
 		form = PersonForm()
-	context = {'type':'person', 'data':data, 'form':form, 'places':Location.objects.all().values('uid', 'label').order_by('label')}
+	context = {'type':'person', 'data':data, 'form':form, 'places':Location.objects.filter(user=request.user).values('uid', 'label').order_by('label')}
 	ret = render(request, 'viewer/pages/people.html', context)
 	return ret
 

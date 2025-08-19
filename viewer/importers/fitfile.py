@@ -6,7 +6,7 @@ from viewer.models import Day, DataReading, ImportedFile
 import logging
 logger = logging.getLogger(__name__)
 
-def import_fit(parseable_fit_input):
+def import_fit(user, parseable_fit_input):
 	"""
 	Reads data in ANT-FIT format, typically used by Garmin fitness trackers, and generates DataValues based on the information contained within.
 
@@ -84,28 +84,28 @@ def import_fit(parseable_fit_input):
 		if 'heart' in item:
 			if not(item['heart'] is None):
 				try:
-					event = DataReading.objects.get(start_time=dts, end_time=dte, type='heart-rate')
+					event = DataReading.objects.get(user=user, start_time=dts, end_time=dte, type='heart-rate')
 				except:
-					event = DataReading(start_time=dts, end_time=dte, type='heart-rate', value=item['heart'])
+					event = DataReading(user=user, start_time=dts, end_time=dte, type='heart-rate', value=item['heart'])
 					event.save()
 
 		if 'cadence' in item:
 			if not(item['cadence'] is None):
 				try:
-					event = DataReading.objects.get(start_time=dts, end_time=dte, type='cadence')
+					event = DataReading.objects.get(user=user, start_time=dts, end_time=dte, type='cadence')
 				except:
-					event = DataReading(start_time=dts, end_time=dte, type='cadence', value=item['cadence'])
+					event = DataReading(user=user, start_time=dts, end_time=dte, type='cadence', value=item['cadence'])
 					event.save()
 
 		if 'speed' in item:
 			if not(item['speed'] is None):
 				try:
-					event = DataReading.objects.get(start_time=dts, end_time=dte, type='speed')
+					event = DataReading.objects.get(user=user, start_time=dts, end_time=dte, type='speed')
 				except:
-					event = DataReading(start_time=dts, end_time=dte, type='speed', value=item['speed'])
+					event = DataReading(user=user, start_time=dts, end_time=dte, type='speed', value=item['speed'])
 					event.save()
 
-	for f in ImportedFile.objects.all():
+	for f in ImportedFile.objects.filter(user=user):
 		if f.path == parseable_fit_input:
 			f.import_time = pytz.utc.localize(datetime.datetime.utcnow())
 			f.earliest_timestamp = earliest_timestamp
@@ -114,4 +114,4 @@ def import_fit(parseable_fit_input):
 			f.save(update_fields=['activity', 'import_time', 'earliest_timestamp', 'latest_timestamp'])
 
 	for dt in days:
-		Day.objects.filter(date=dt).delete()
+		Day.objects.filter(user=user, date=dt).delete()

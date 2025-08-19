@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.core.cache import cache
 from django.conf import settings
+from django.contrib.auth.models import User
 from viewer.models import DataReading, Event
 import os, sys, datetime, shutil, sqlite3, pytz
 
@@ -10,9 +11,18 @@ class Command(BaseCommand):
 	"""
 	def add_arguments(self, parser):
 
+		parser.add_argument("-u", "--user", action="store", dest="user_id", required=True, help="which user are we working with?")
 		parser.add_argument("-i", "--input", action="store", dest="input_file", default="", help="A pebble data file, copied from the data directory of the Pebble Android app.")
 
 	def handle(self, *args, **kwargs):
+
+		try:
+			user = User.objects.get(username=kwargs['user_id'])
+		except:
+			user = None
+		if not user:
+			sys.stderr.write(self.style.ERROR(str(kwargs['user_id']) + " is not a valid user on this system.\n"))
+			sys.exit(1)
 
 		uploaded_file = os.path.abspath(kwargs['input_file'])
 		temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp_uploads')
@@ -40,28 +50,28 @@ class Command(BaseCommand):
 
 		last_events = []
 		try:
-			last_events.append(Event.objects.filter(type='journey', caption__endswith='km walk').order_by('-start_time')[0])
+			last_events.append(Event.objects.filter(user=user, type='journey', caption__endswith='km walk').order_by('-start_time')[0])
 		except IndexError:
 			pass
 		try:
-			last_events.append(Event.objects.filter(type='journey', caption='Walk').order_by('-start_time')[0])
+			last_events.append(Event.objects.filter(user=user, type='journey', caption='Walk').order_by('-start_time')[0])
 		except IndexError:
 			pass
-			last_events.append(Event.objects.filter(type='journey', caption__startswith='Walking in ').order_by('-start_time')[0])
-		except IndexError:
-			pass
-		try:
-			last_events.append(Event.objects.filter(workout_categories__id='walking').order_by('-start_time')[0])
+			last_events.append(Event.objects.filter(user=user, type='journey', caption__startswith='Walking in ').order_by('-start_time')[0])
 		except IndexError:
 			pass
 		try:
-			last_events.append(Event.objects.filter(workout_categories__id='walk').order_by('-start_time')[0])
+			last_events.append(Event.objects.filter(user=user, workout_categories__id='walking').order_by('-start_time')[0])
 		except IndexError:
 			pass
-		last_entry = DataReading.objects.filter(type='pebble-app-activity').order_by('-start_time')[0]
-		last_step = DataReading.objects.filter(type='step-count').order_by('-start_time')[0]
+		try:
+			last_events.append(Event.objects.filter(user=user, workout_categories__id='walk').order_by('-start_time')[0])
+		except IndexError:
+			pass
+		last_entry = DataReading.objects.filter(user=user, type='pebble-app-activity').order_by('-start_time')[0]
+		last_step = DataReading.objects.filter(user=user, type='step-count').order_by('-start_time')[0]
 		if len(last_events) == 0:
-			last_event = Event.objects.order_by('-start_time')[0] # There should be at least one event. If not, we have bigger problems.
+			last_event = Event.objects.filter(user=user).order_by('-start_time')[0] # There should be at least one event. If not, we have bigger problems.
 		else:
 			last_event = sorted(last_events, reverse=True, key=lambda x: x.start_time)[0]
 
@@ -75,12 +85,12 @@ class Command(BaseCommand):
 		query = "SELECT COUNT(name) FROM sqlite_master WHERE type='table' and name='activity_sessions';"
 		c.execute(query)
 		if c.fetchone()[0] == 1:
-			sys.stdout.write("Parsing Pebble file...\n")
+			sys.stderr.write(self.style.WARNING("Parsing Pebble file...\n"))
 			db_type = 'pebble'
 		query = "SELECT COUNT(name) FROM sqlite_master WHERE type='table' and name='PEBBLE_HEALTH_ACTIVITY_OVERLAY';"
 		c.execute(query)
 		if c.fetchone()[0] == 1:
-			sys.stdout.write("Parsing GadgetBridge file...\n")
+			sys.stderr.write(self.style.WARNING("Parsing GadgetBridge file...\n"))
 			db_type = 'gadgetbridge'
 
 		if db_type == '': # Die if no compatible database found
@@ -113,31 +123,31 @@ class Command(BaseCommand):
 			if ((value == 1) or (value == 2)):
 				type = 'sleep'
 			try:
-				dp = DataReading.objects.get(type=type, start_time=dts, end_time=dte)
+				dp = DataReading.objects.get(user=user, type=type, start_time=dts, end_time=dte)
 			except:
-				dp = DataReading(start_time=dts, end_time=dte, type=type, value=value)
+				dp = DataReading(user=user, start_time=dts, end_time=dte, type=type, value=value)
 				dp.save()
 
 		# Add 'awake' events between the 'sleep' events, for easier parsing later
 
-		if DataReading.objects.filter(type='sleep').count() > 0:
-			if DataReading.objects.filter(type='awake').count() == 0:
-				dtmin = DataReading.objects.filter(type='sleep').order_by('start_time')[0].start_time
+		if DataReading.objects.filter(user=user, type='sleep').count() > 0:
+			if DataReading.objects.filter(user=user, type='awake').count() == 0:
+				dtmin = DataReading.objects.filter(user=user, type='sleep').order_by('start_time')[0].start_time
 			else:
-				dtmin = DataReading.objects.filter(type='awake').order_by('-end_time')[0].end_time
-			sleeps = DataReading.objects.filter(type='sleep', value='1', start_time__gte=dtmin).order_by('start_time')
+				dtmin = DataReading.objects.filter(user=user, type='awake').order_by('-end_time')[0].end_time
+			sleeps = DataReading.objects.filter(user=user, type='sleep', value='1', start_time__gte=dtmin).order_by('start_time')
 			sleep_ct = sleeps.count()
 			for i in range(1, sleep_ct):
 				delta = sleeps[i].start_time - sleeps[i - 1].end_time
 				if delta.total_seconds() > 3600:
-					data = DataReading(type='awake', value='0', start_time=sleeps[i - 1].end_time, end_time=sleeps[i].start_time)
+					data = DataReading(user=user, type='awake', value='0', start_time=sleeps[i - 1].end_time, end_time=sleeps[i].start_time)
 					data.save()
 
 			# Now go through the 'awake' events making sure they're actual days, and I didn't just take a nap
 
 			joins = []
 			prev = None
-			for cur in DataReading.objects.filter(type='awake', start_time__gte=(dtmin - datetime.timedelta(hours=48))).order_by('start_time'):
+			for cur in DataReading.objects.filter(user=user, type='awake', start_time__gte=(dtmin - datetime.timedelta(hours=48))).order_by('start_time'):
 				if prev is None:
 					prev = cur
 					continue
@@ -170,9 +180,9 @@ class Command(BaseCommand):
 			if steps == 0:
 				continue
 			try:
-				dp = DataReading.objects.get(type=type, start_time=dts, end_time=dte)
+				dp = DataReading.objects.get(user=user, type=type, start_time=dts, end_time=dte)
 			except:
-				dp = DataReading(start_time=dts, end_time=dte, type=type, value=steps)
+				dp = DataReading(user=user, start_time=dts, end_time=dte, type=type, value=steps)
 				dp.save()
 				step_count = step_count + steps
 
@@ -181,3 +191,9 @@ class Command(BaseCommand):
 
 		os.remove(file)
 		cache.delete('dashboard')
+
+
+
+
+
+

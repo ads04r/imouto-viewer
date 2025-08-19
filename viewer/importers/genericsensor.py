@@ -3,7 +3,7 @@ from viewer.models import DataReading
 import logging
 logger = logging.getLogger(__name__)
 
-def import_data(data):
+def import_data(user, data):
 	"""
 	Import generic sensor data into Imouto's database.
 
@@ -17,12 +17,12 @@ def import_data(data):
 	for item in data:
 		done = done + 1
 		try:
-			e = DataReading.objects.get(start_time=item['start_time'], end_time=item['end_time'], type=item['type'])
+			e = DataReading.objects.get(user=user, start_time=item['start_time'], end_time=item['end_time'], type=item['type'])
 			e.value = item['value']
 			e.save()
 			updated = updated + 1
 		except:
-			e = DataReading(start_time=item['start_time'], end_time=item['end_time'], type=item['type'], value=item['value'])
+			e = DataReading(user=user, start_time=item['start_time'], end_time=item['end_time'], type=item['type'], value=item['value'])
 			e.save()
 			inserted = inserted + 1
 

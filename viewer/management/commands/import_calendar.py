@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.core.cache import cache
-from django.conf import settings
+from django.contrib.auth.models import User
 from dateutil.parser import parse as dateparse
 from viewer.importers.dav import import_calendar_feed
 from tqdm import tqdm
@@ -10,10 +10,21 @@ class Command(BaseCommand):
 	"""
 	Command for importing calendars. This functionality needs the ICAL_URLS setting to be set.
 	"""
+	def add_arguments(self, parser):
+
+		parser.add_argument("-u", "--user", action="store", dest="user_id", required=True, help="which user are we working with?")
+
 	def handle(self, *args, **kwargs):
 
 		try:
-			urls = settings.ICAL_URLS
+			user = User.objects.get(username=kwargs['user_id'])
+		except:
+			user = None
+		if not user:
+			sys.stderr.write(self.style.ERROR(str(kwargs['user_id']) + " is not a valid user on this system.\n"))
+			sys.exit(1)
+		try:
+			urls = user.profile.settings['ICAL_URLS']
 		except:
 			urls = None
 		if not(isinstance(urls, (list))):
@@ -31,4 +42,4 @@ class Command(BaseCommand):
 				username = calendar_data[1]
 				password = calendar_data[2]
 
-			ret = import_calendar_feed(url, username, password)
+			ret = import_calendar_feed(user, url, username, password)

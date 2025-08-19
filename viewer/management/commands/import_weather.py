@@ -17,7 +17,11 @@ class Command(BaseCommand):
 
 	def handle(self, *args, **kwargs):
 
-		api_key = settings.OPENWEATHERMAP_API_KEY
+		try:
+			api_key = settings.OPENWEATHERMAP_API_KEY
+		except:
+			sys.stderr.write(self.style.ERROR("Settings OPENWEATHERMAP_API_KEY is not set.\n"))
+			sys.exit(1)
 
 		for loc in kwargs['loc']:
 
@@ -48,4 +52,3 @@ class Command(BaseCommand):
 				description = ', '.join(items)
 			reading = WeatherReading(time=dt, location=wloc, description=description, temperature=temp, wind_speed=data['wind']['speed'], wind_direction=data['wind']['deg'], humidity=data['main']['humidity'], visibility=data['visibility'])
 			reading.save()
-

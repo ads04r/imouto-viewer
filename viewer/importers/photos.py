@@ -4,12 +4,12 @@ from django.conf import settings
 from viewer.models import Photo
 from viewer.functions.people import find_person_by_picasaid as find_person
 from viewer.functions.geo import convert_to_degrees
-from viewer.functions.location_manager import get_logged_position
+from viewer.functions.location_manager import get_logged_position, upload_csv_data
 
 import logging
 logger = logging.getLogger(__name__)
 
-def import_photo_file(filepath, tzinfo=pytz.UTC):
+def import_photo_file(user, filepath, tzinfo=pytz.UTC):
 	"""
 	Imports a photo into the lifelog data as a Photo object. During import, the function attempts to
 	annotate the photo based on EXIF data, and existing data within Imouto if available.
@@ -22,9 +22,9 @@ def import_photo_file(filepath, tzinfo=pytz.UTC):
 	path = os.path.abspath(filepath)
 
 	try:
-		photo = Photo.objects.get(file=path)
+		photo = Photo.objects.get(user=user, file=path)
 	except:
-		photo = Photo(file=path)
+		photo = Photo(user=user, file=path)
 		photo.save()
 
 	exif = exifread.process_file(open(path, 'rb'))
@@ -66,7 +66,7 @@ def import_photo_file(filepath, tzinfo=pytz.UTC):
 		if photo:
 			if photo.time:
 				dt = photo.time
-				lat, lon = get_logged_position(dt)
+				lat, lon = get_logged_position(user, dt)
 				if not(lat is None):
 					photo.lat = lat
 					photo.lon = lon
@@ -74,7 +74,7 @@ def import_photo_file(filepath, tzinfo=pytz.UTC):
 
 	return photo
 
-def import_picasa_faces(picasafile):
+def import_picasa_faces(user, picasafile):
 	"""
 	Tags the photos within Imouto Viewer with person data from Google Picasa. Takes a Picasa sidecar file,
 	attempts to match it up with photos and people already in Imouto Viewer, and links them accordingly.
@@ -101,7 +101,7 @@ def import_picasa_faces(picasafile):
 			if lf == 'Contacts2':
 				parse = line.replace(';', '').split('=')
 				if len(parse) == 2:
-					contacts[parse[0]] = find_person(parse[0], parse[1])
+					contacts[parse[0]] = find_person(user, parse[0], parse[1])
 			if ((line[0:6] == 'faces=') & (lf != '')):
 				for segment in line[6:].split(';'):
 					structure = segment.split(',')
@@ -116,14 +116,14 @@ def import_picasa_faces(picasafile):
 		if not(os.path.isfile(full_filename)):
 			continue
 		try:
-			photo = Photo.objects.get(file=full_filename)
+			photo = Photo.objects.get(user=user, file=full_filename)
 		except:
 			photo = None
 		if photo is None:
 			continue
 		for file_face in faces[filename]:
 			if not(file_face in contacts):
-				contacts[file_face] = find_person(file_face)
+				contacts[file_face] = find_person(user, file_face)
 			person = contacts[file_face]
 			if person is None:
 				continue
@@ -135,7 +135,7 @@ def import_picasa_faces(picasafile):
 				event.people.add(person)
 	return ret
 
-def import_photo_directory(path, tzinfo=pytz.UTC):
+def import_photo_directory(user, path, tzinfo=pytz.UTC):
 	"""
 	Scans a local directory for photos and calls import_photo_file for every photo file found. If it
 	finds a Picasa sidecar file, it imports that too by calling import_picasa_faces.
@@ -160,23 +160,23 @@ def import_photo_directory(path, tzinfo=pytz.UTC):
 			continue
 		photo_file = os.path.join(full_path, f)
 		try:
-			photo = Photo.objects.get(file=photo_file)
+			photo = Photo.objects.get(user=user, file=photo_file)
 		except:
 			photo = None
 			photos.append(photo_file)
 
 	for photo in photos:
-		p = import_photo_file(photo, tzinfo)
+		p = import_photo_file(user, photo, tzinfo)
 		if p is None:
 			continue
 		ret.append(p)
 
-	import_picasa_faces(picasafile)
+	import_picasa_faces(user, picasafile)
 
 	gps_data = []
 	for photo_path in ret:
 		try:
-			photo = Photo.objects.get(file=photo_path)
+			photo = Photo.objects.get(user=user, file=photo_path)
 		except:
 			photo = None
 		if not(photo is None):
@@ -192,12 +192,7 @@ def import_photo_directory(path, tzinfo=pytz.UTC):
 		for row in gps_data:
 			op = op + '\t'.join(row) + '\n'
 
-		url = settings.LOCATION_MANAGER_URL + '/import'
-		bearer_token = settings.LOCATION_MANAGER_TOKEN
-		files = {'uploaded_file': op}
-		data = {'file_source': 'photo', 'file_format': 'csv'}
-
-		requests.post(url, headers={'Authorization': 'Token ' + bearer_token}, files=files, data=data)
+		upload_csv_data(user, op, 'photo')
 
 	return ret
 

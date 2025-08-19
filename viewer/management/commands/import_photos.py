@@ -59,13 +59,13 @@ class Command(BaseCommand):
 			for photo in ret:
 				precache_photo_thumbnail(photo.pk)
 			sys.stderr.write(self.style.SUCCESS(str(len(ret)) + " new photo(s) added.\n"))
-			ret = bubble_photo_locations() + locate_photos_by_exif()
+			ret = bubble_photo_locations(user) + locate_photos_by_exif(user)
 			if ret > 0:
 				sys.stderr.write(self.style.SUCCESS(str(ret) + " photo(s) tagged with locations.\n"))
 
 		photo_count = 0
 		tag_count = 0
-		for photo in get_untagged_photo_ids():
+		for photo in get_untagged_photo_ids(user):
 			ct = len(get_xmp_sidecar_tags(photo))
 			if ct == 0:
 				continue

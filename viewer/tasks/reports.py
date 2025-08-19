@@ -13,6 +13,7 @@ from viewer.reporting.styles import ImoutoMinimalistReportStyle
 from viewer.functions.file_uploads import photo_collage_upload_location, year_pdf_upload_location
 from viewer.functions.utils import choking
 from viewer.eventcollage import make_collage
+from django.contrib.auth.models import User
 
 import logging
 logger = logging.getLogger(__name__)
@@ -65,7 +66,7 @@ def generate_event_photo_collage(event_id, photo_ids):
 	collage = PhotoCollage(event=event)
 	collage.save()
 	collage.image.save(photo_collage_upload_location(collage, 'collage.jpg'), File(blob), save=False)
-	for photo in Photo.objects.filter(pk__in=photo_ids):
+	for photo in Photo.objects.filter(user=event.user, pk__in=photo_ids):
 
 		photo_path = str(photo.file.path)
 		if os.path.exists(photo_path):
@@ -111,7 +112,7 @@ def generate_photo_collages(event_id):
 
 	event.photo_collages.all().delete()
 	photos = []
-	for photo in Photo.objects.filter(time__gte=event.start_time, time__lte=event.end_time).order_by("?")[0:(max_photos * 5)]:
+	for photo in Photo.objects.filter(user=event.user, time__gte=event.start_time, time__lte=event.end_time).order_by("?")[0:(max_photos * 5)]:
 		if photo.pk in photos:
 			continue
 		photos.append(photo.pk)
@@ -154,19 +155,19 @@ def generate_life_event_photo_collages(event_id):
 	return ret
 
 @background(schedule=0, queue='reports')
-def generate_year_wordcloud(year):
+def generate_year_wordcloud(user_id, year):
 	"""
 	Generates a word cloud for a Year object, using any text we can find within (event descriptions, messages, etc).
 
 	:param year: The year of which to create the word cloud
 	"""
-	report = Year.objects.get(year=year)
+	report = Year.objects.get(user__pk=user_id, year=year)
 	if report.cached_wordcloud:
 		report.cached_wordcloud.delete()
 	report.wordcloud()
 
 @background(schedule=0, queue='reports')
-def generate_report(title, year):
+def generate_report(user_id, title, year):
 	"""
 	A background task for generating statistics for a year
 
@@ -174,7 +175,8 @@ def generate_report(title, year):
 	:param year: The calendar year with which to make a report
 	"""
 
-	report = create_or_get_year(year)
+	user = User.objects.get(pk=user_id)
+	report = create_or_get_year(user, year)
 	if report.cached_pdf:
 		report.cached_pdf.delete()
 	if len(title) > 0:
@@ -260,13 +262,13 @@ def update_year(year):
 
 	:param year: The year to update. Normally the current year, but doesn't have to be.
 	"""
-	for event in year.events.all():
+	for event in year.events.filter(user=year.user):
 		if event.photos().count() == 0:
 			continue
 		if event.photo_collages.count() > 0:
 			continue
 		generate_photo_collages(event.pk)
-	for event in year.events.exclude(geo=None).exclude(geo='').exclude(description=''):
+	for event in year.events.filter(user=year.user).exclude(geo=None).exclude(geo='').exclude(description=''):
 		try:
 			f = event.cached_staticmap.file
 		except:

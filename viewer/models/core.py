@@ -9,6 +9,7 @@ from django.conf import settings
 from django.dispatch import receiver
 from django.utils.functional import cached_property
 from django.utils.html import strip_tags
+from django.contrib.auth.models import User
 from polymorphic.models import PolymorphicModel
 from colorfield.fields import ColorField
 from PIL import Image
@@ -42,7 +43,7 @@ class WeekdayLookup(Transform):
 	def output_field(self):
 		return IntegerField()
 
-def create_or_get_day(query_date=None):
+def create_or_get_day(user, query_date=None):
 
 	dt = None
 	if query_date is None:
@@ -54,28 +55,28 @@ def create_or_get_day(query_date=None):
 	if dt > datetime.datetime.now().date():
 		return None
 	try:
-		ret = Day.objects.get(date=dt)
+		ret = Day.objects.get(date=dt, user=user)
 	except:
-		ret = Day(date=dt)
+		ret = Day(date=dt, user=user)
 		ret.save()
 
 	return ret
 
-def create_or_get_month(month, year):
+def create_or_get_month(user, month, year):
 
 	if month < 1:
 		return None
 	if month > 12:
 		return None
 	try:
-		ret = Month.objects.get(year=year, month=month)
+		ret = Month.objects.get(year=year, month=month, user=user)
 	except:
-		ret = Month(year=year, month=month)
+		ret = Month(year=year, month=month, user=user)
 		ret.save()
 
 	return ret
 
-def create_or_get_year(year):
+def create_or_get_year(user, year):
 
 	try:
 		ret = Year.objects.get(year=year)
@@ -85,6 +86,8 @@ def create_or_get_year(year):
 	return ret
 
 class GitCommit(models.Model):
+	user = models.ForeignKey(User, on_delete=models.CASCADE)
+	"""The Django user that owns this instance"""
 	repo_url = models.URLField()
 	commit_date = models.DateTimeField()
 	hash = models.SlugField(max_length=48, unique=True)
@@ -407,6 +410,8 @@ class Location(models.Model):
 	description = models.TextField(blank=True, null=True)
 	lat = models.FloatField()
 	lon = models.FloatField()
+	user = models.ForeignKey(User, on_delete=models.CASCADE)
+	"""The Django user that owns this instance"""
 	country = models.ForeignKey(LocationCountry, related_name='locations', null=True, blank=True, on_delete=models.SET_NULL)
 	city = models.ForeignKey(LocationCity, related_name='locations', null=True, blank=True, on_delete=models.SET_NULL)
 	creation_time = models.DateTimeField(blank=True, null=True)
@@ -437,7 +442,7 @@ class Location(models.Model):
 		Determines if this Location is the user's home or not. Always returns False if USER_HOME_LOCATION is not set in settings.py
 		"""
 		try:
-			home = settings.USER_HOME_LOCATION
+			home = self.user.profile.home_location
 		except:
 			home = -1
 		return (self.pk == home)
@@ -706,6 +711,8 @@ class Person(models.Model):
 	wikipedia = models.URLField(blank=True, null=True)
 	image = models.ImageField(blank=True, null=True, upload_to=user_thumbnail_upload_location)
 	significant = models.BooleanField(default=True)
+	user = models.ForeignKey(User, on_delete=models.CASCADE)
+	"""The Django user that owns this instance"""
 	@property
 	def wikipedia_parsed(self):
 		if self.wikipedia:
@@ -913,6 +920,8 @@ class Photo(models.Model):
 	cached_thumbnail = models.ImageField(blank=True, null=True, upload_to=photo_thumbnail_upload_location)
 	face_count = models.IntegerField(null=True, blank=True)
 	detected_text = models.TextField(null=True, blank=True)
+	user = models.ForeignKey(User, on_delete=models.CASCADE)
+	"""The Django user that owns this instance"""
 	def to_dict(self):
 		"""
 		Returns the contents of this object as a dictionary of standard values, which can be serialised and output as JSON.
@@ -1099,6 +1108,8 @@ class Event(models.Model):
 	use events for exercise periods, people doing general lifelogging would use them for journeys
 	or visits to places. They could also just be imported calendar appointments. You do you.
 	"""
+	user = models.ForeignKey(User, on_delete=models.CASCADE)
+	"""The Django user that owns this instance"""
 	start_time = models.DateTimeField()
 	"""The start time of the Event, a datetime."""
 	end_time = models.DateTimeField()
@@ -1195,7 +1206,7 @@ class Event(models.Model):
 		logger.debug("Generating life event workout data")
 		ret = []
 		max = 0.0
-		for wc in EventWorkoutCategory.objects.all():
+		for wc in EventWorkoutCategory.objects.filter(user=self.user):
 			item = [str(wc), 0.0, 0, str(wc.icon)]
 			for event in self.subevents().filter(type='journey', workout_categories=wc):
 				item[1] = item[1] + event.distance()
@@ -1346,8 +1357,8 @@ class Event(models.Model):
 	def refresh(self, save=True):
 		if self.type == 'journey':
 			self.__refresh_geo(save=False)
-			self.elevation = getelevation(self.start_time, self.end_time)
-			self.speed = getspeed(self.start_time, self.end_time)
+			self.elevation = getelevation(self.user, self.start_time, self.end_time)
+			self.speed = getspeed(self.user, self.start_time, self.end_time)
 		if self.type == 'loc_prox':
 			self.geo = ''
 			self.elevation = ''
@@ -1363,7 +1374,7 @@ class Event(models.Model):
 		if save:
 			self.save()
 		if self.pk:
-			for wc in self.workout_categories.all():
+			for wc in self.workout_categories.filter(user=self.user):
 				wc.recalculate_stats()
 	def subevents(self):
 		return Event.objects.filter(start_time__gte=self.start_time, end_time__lte=self.end_time).exclude(id=self.id).order_by('start_time')
@@ -1388,7 +1399,7 @@ class Event(models.Model):
 		if self.geo:
 			old_geo = self.geo
 		try:
-			ret = json.loads(getgeoline(self.start_time, self.end_time))
+			ret = json.loads(getgeoline(self.user, self.start_time, self.end_time))
 		except:
 			ret = {}
 		if 'geometry' in ret:
@@ -1398,10 +1409,10 @@ class Event(models.Model):
 				except:
 					max_hr = None
 				if not(max_hr is None):
-					opt_rate = int(float(max_heart_rate(max_hr.start_time)) / 2)
+					opt_rate = int(float(max_heart_rate(self.user, max_hr.start_time)) / 2)
 					if max_hr.value >= opt_rate:
 						ds = max_hr.start_time.strftime("%Y-%m-%dT%H:%M:%S%z")
-						lat, lon = get_logged_position(max_hr.start_time)
+						lat, lon = get_logged_position(self.user, max_hr.start_time)
 						if not(lat is None):
 							ret['geometry']['geometries'].append({"type": "Point", "coordinates": [lon, lat], "properties": {"type": "poi", "time": ds, "label": "Highest heart rate " + str(max_hr.value) + "bpm at " + max_hr.start_time.strftime("%H:%M:%S")}})
 		if 'properties' in ret:
@@ -1496,7 +1507,7 @@ class Event(models.Model):
 		de = self.end_time.date()
 		dt = ds
 		while dt<=de:
-			create_or_get_day(dt)
+			create_or_get_day(self.user, dt)
 			dt = dt + datetime.timedelta(days=1)
 		return Day.objects.filter(date__gte=ds, date__lte=de).order_by('date')
 	@property
@@ -1589,7 +1600,7 @@ class Event(models.Model):
 	def __refresh_health(self, save=True):
 		if len(self.cached_health) > 2:
 			return json.loads(self.cached_health)
-		max_hr = float(max_heart_rate(self.start_time))
+		max_hr = float(max_heart_rate(self.user, self.start_time))
 		ret = {}
 		heart_total = 0.0
 		heart_count = 0.0
@@ -1723,7 +1734,7 @@ class Event(models.Model):
 					continue
 				self.people.add(person)
 	def auto_tag(self):
-		for tag in AutoTag.objects.all():
+		for tag in AutoTag.objects.filter(user=self.user):
 			if tag.eval(self):
 				self.tag(str(tag.tag))
 		if self.type == 'life_event':
@@ -1753,6 +1764,8 @@ class LifePeriod(models.Model):
 	"""A LifePeriod is a period longer than an Event. It may be used for things such as
 	living in a particular town, attending a particular school or working in a particular
 	job."""
+	user = models.ForeignKey(User, on_delete=models.CASCADE)
+	"""The Django user that owns this instance"""
 	start_time = models.DateField()
 	"""The start time of the LifePeriod, a date object."""
 	end_time = models.DateField()
@@ -1790,6 +1803,8 @@ class PersonEvent(models.Model):
 
 class Year(models.Model):
 	year = models.IntegerField()
+	user = models.ForeignKey(User, on_delete=models.CASCADE)
+	"""The Django user that owns this instance"""
 	caption = models.CharField(max_length=255, default='', blank=True)
 	"""A human-readable caption for the Year, could also be described as the title or summary."""
 	cached_wordcloud = models.ImageField(blank=True, null=True, upload_to=year_wordcloud_upload_location)
@@ -1891,13 +1906,13 @@ class Year(models.Model):
 		"""
 		if self.this_year:
 			return None
-		return create_or_get_year(year=self.year + 1)
+		return create_or_get_year(user=self.user, year=self.year + 1)
 	@cached_property
 	def previous(self):
 		"""
 		Returns the Year object representing the year before the one represented by this one.
 		"""
-		return create_or_get_year(year=self.year - 1)
+		return create_or_get_year(user=self.user, year=self.year - 1)
 	@property
 	def months(self):
 		"""
@@ -1905,7 +1920,7 @@ class Year(models.Model):
 		"""
 		if not(self.this_year):
 			for i in range(0, 12):
-				create_or_get_month(year=self.year, month=(i + 1))
+				create_or_get_month(user=self.user, year=self.year, month=(i + 1))
 		return Month.objects.filter(year=self.year).order_by('month')
 	@property
 	def people(self):
@@ -1939,13 +1954,13 @@ class Year(models.Model):
 		"""
 		Every country visited in this year.
 		"""
-		return LocationCountry.objects.filter(locations__events__in=self.events).exclude(locations__pk=settings.USER_HOME_LOCATION).distinct()
+		return LocationCountry.objects.filter(locations__events__in=self.events).exclude(locations__pk=self.user.profile.home_location).distinct()
 	@property
 	def cities(self):
 		"""
 		Every city visited in this year.
 		"""
-		return LocationCity.objects.filter(locations__events__in=self.events).exclude(locations__pk=settings.USER_HOME_LOCATION).distinct()
+		return LocationCity.objects.filter(locations__events__in=self.events).exclude(locations__pk=self.user.profile.home_location).distinct()
 	@cached_property
 	def tasks_completed(self):
 		"""
@@ -2071,7 +2086,7 @@ class Year(models.Model):
 	def workouts(self):
 		ret = []
 		max = 0.0
-		for wc in EventWorkoutCategory.objects.all():
+		for wc in EventWorkoutCategory.objects.filter(user=self.user):
 			item = [str(wc), 0.0, 0, str(wc.icon)]
 			for event in self.events.filter(type='journey', workout_categories=wc):
 				item[1] = item[1] + event.distance()
@@ -2086,7 +2101,7 @@ class Year(models.Model):
 	@cached_property
 	def location_categories(self):
 		categories = {}
-		for loc in Location.objects.filter(events__in=self.events.filter(type='loc_prox').exclude(location__pk=settings.USER_HOME_LOCATION)).annotate(time_spent=F('events__end_time')-F('events__start_time')).annotate(total_time=Sum('time_spent')).order_by('-total_time'):
+		for loc in Location.objects.filter(events__in=self.events.filter(type='loc_prox').exclude(location__pk=self.user.profile.home_location)).annotate(time_spent=F('events__end_time')-F('events__start_time')).annotate(total_time=Sum('time_spent')).order_by('-total_time'):
 			for c in loc.categories.all():
 				if not(c.pk in categories):
 					categories[c.pk] = [c, 0]
@@ -2212,6 +2227,8 @@ class YearChart(models.Model):
 		]
 
 class Month(models.Model):
+	user = models.ForeignKey(User, on_delete=models.CASCADE)
+	"""The Django user that owns this instance"""
 	month = models.IntegerField(validators=[MaxValueValidator(12), MinValueValidator(1)])
 	year = models.IntegerField()
 	@property
@@ -2252,7 +2269,7 @@ class Month(models.Model):
 		if m > 12:
 			m = m - 12
 			y = y + 1
-		return create_or_get_month(year=y, month=m)
+		return create_or_get_month(user=self.user, year=y, month=m)
 	@property
 	def label(self):
 		return(datetime.date(self.year, self.month, 1).strftime('%B'))
@@ -2267,7 +2284,7 @@ class Month(models.Model):
 		if m < 1:
 			m = m + 12
 			y = y - 1
-		return create_or_get_month(year=y, month=m)
+		return create_or_get_month(user=self.user, year=y, month=m)
 	@cached_property
 	def days(self):
 		"""
@@ -2281,7 +2298,7 @@ class Month(models.Model):
 			dte = datetime.date(self.year + 1, 1, 1)
 		dt = dts
 		while dt < dte:
-			create_or_get_day(dt)
+			create_or_get_day(self.user, dt)
 			dt = dt + datetime.timedelta(days=1)
 		return Day.objects.filter(date__gte=dts, date__lt=dte).order_by('date')
 	@cached_property
@@ -2290,14 +2307,14 @@ class Month(models.Model):
 		Every city visited in this month.
 		"""
 		logger.debug("Generating list of cities")
-		return LocationCity.objects.filter(locations__events__in=self.events).exclude(locations__pk=settings.USER_HOME_LOCATION).distinct()
+		return LocationCity.objects.filter(locations__events__in=self.events).exclude(locations__pk=self.user.profile.home_location).distinct()
 	@cached_property
 	def countries(self):
 		"""
 		Every country visited in this month.
 		"""
 		logger.debug("Generating list of countries")
-		return LocationCountry.objects.filter(locations__events__in=self.events).exclude(locations__pk=settings.USER_HOME_LOCATION).distinct()
+		return LocationCountry.objects.filter(locations__events__in=self.events).exclude(locations__pk=self.user.profile.home_location).distinct()
 	@cached_property
 	def steps(self):
 		"""
@@ -2330,7 +2347,7 @@ class Month(models.Model):
 		ret = None
 		early = 86400
 		while dt < dte:
-			day = create_or_get_day(dt)
+			day = create_or_get_day(self.user, dt)
 			day_midnight = day.timezone.localize(datetime.datetime.combine(dt, datetime.datetime.min.time()))
 			if day.wake_time is None:
 				dt = dt + datetime.timedelta(days=1)
@@ -2356,7 +2373,7 @@ class Month(models.Model):
 		ret = None
 		latest = 0
 		while dt < dte:
-			day = create_or_get_day(dt)
+			day = create_or_get_day(self.user, dt)
 			day_midnight = day.timezone.localize(datetime.datetime.combine(dt, datetime.datetime.min.time()))
 			if day.bed_time is None:
 				dt = dt + datetime.timedelta(days=1)
@@ -2403,8 +2420,8 @@ class Month(models.Model):
 		else:
 			dted = datetime.date(self.year + 1, 1, 1)
 		try:
-			dts = create_or_get_day(dtsd).wake_time
-			dte = create_or_get_day(dted).bed_time
+			dts = create_or_get_day(self.user, dtsd).wake_time
+			dte = create_or_get_day(self.user, dted).bed_time
 		except:
 			return Person.objects.none()
 		if dts is None:
@@ -2472,7 +2489,7 @@ class Month(models.Model):
 		logger.debug("Generating month workout data")
 		ret = []
 		max = 0.0
-		for wc in EventWorkoutCategory.objects.all():
+		for wc in EventWorkoutCategory.objects.filter(user=self.user):
 			item = [str(wc), 0.0, 0, str(wc.icon)]
 			for event in self.events.filter(type='journey', workout_categories=wc):
 				item[1] = item[1] + event.distance()
@@ -2488,7 +2505,7 @@ class Month(models.Model):
 	def location_categories(self):
 		logger.debug("Finding location categories")
 		categories = {}
-		for loc in Location.objects.filter(events__in=self.events.filter(type='loc_prox').exclude(location__pk=settings.USER_HOME_LOCATION)).annotate(time_spent=F('events__end_time')-F('events__start_time')).annotate(total_time=Sum('time_spent')).order_by('-total_time'):
+		for loc in Location.objects.filter(events__in=self.events.filter(type='loc_prox').exclude(location__pk=self.user.profile.home_location)).annotate(time_spent=F('events__end_time')-F('events__start_time')).annotate(total_time=Sum('time_spent')).order_by('-total_time'):
 			for c in loc.categories.all():
 				if not(c.pk in categories):
 					categories[c.pk] = [c, 0]
@@ -2589,7 +2606,9 @@ class Day(models.Model):
 	the times they start at home. This class is also a crafty way of caching
 	certain health data.
 	"""
-	date = models.DateField(primary_key=True)
+	user = models.ForeignKey(User, on_delete=models.CASCADE)
+	"""The Django user that owns this instance"""
+	date = models.DateField()
 	wake_time = models.DateTimeField(null=True, blank=True)
 	bed_time = models.DateTimeField(null=True, blank=True)
 	timezone_str = models.CharField(max_length=32, default='UTC')
@@ -2651,7 +2670,7 @@ class Day(models.Model):
 
 	def onthisday(self):
 		ret = []
-		user_born = settings.USER_DATE_OF_BIRTH
+		user_born = user.profile.date_of_birth
 		i = 1
 		while True:
 			dd = datetime.date(self.date.year - i, self.date.month, self.date.day)
@@ -2729,7 +2748,7 @@ class Day(models.Model):
 
 	@property
 	def places(self):
-		return Location.objects.filter(events__in=self.events).exclude(id=settings.USER_HOME_LOCATION).distinct()
+		return Location.objects.filter(events__in=self.events).exclude(id=self.user.profile.home_location).distinct()
 
 	@property
 	def today(self):
@@ -2752,13 +2771,13 @@ class Day(models.Model):
 		"""
 		Returns the Month object that contains this Day.
 		"""
-		return create_or_get_month(self.date.month, self.date.year)
+		return create_or_get_month(self.user, self.date.month, self.date.year)
 	@property
 	def year(self):
 		"""
 		Returns the Year object that contains this Day.
 		"""
-		return create_or_get_year(self.date.year)
+		return create_or_get_year(self.user, self.date.year)
 	@property
 	def slug(self):
 		"""
@@ -2770,13 +2789,13 @@ class Day(models.Model):
 		"""
 		Returns the Day object representing the day after the one represented by this Day object.
 		"""
-		return create_or_get_day(self.date + datetime.timedelta(days=1))
+		return create_or_get_day(self.user, self.date + datetime.timedelta(days=1))
 	@property
 	def yesterday(self):
 		"""
 		Returns the Day object representing the day before the one represented by this Day object.
 		"""
-		return create_or_get_day(self.date - datetime.timedelta(days=1))
+		return create_or_get_day(self.user, self.date - datetime.timedelta(days=1))
 	@property
 	def length(self):
 		"""
@@ -2934,7 +2953,7 @@ class Day(models.Model):
 		Calculate the country in which the day was mostly spent, based on visited locations.
 		"""
 		try:
-			ret = Location.objects.get(id=settings.USER_HOME_LOCATION).country
+			ret = Location.objects.get(id=self.user.profile.location).country
 		except:
 			ret = None
 		locations = []
@@ -2989,7 +3008,7 @@ class Day(models.Model):
 		if not(self.today):
 			data['next'] = (self.date + datetime.timedelta(days=1)).strftime('%Y%m%d')
 
-		max_rate = float(max_heart_rate(dts))
+		max_rate = float(max_heart_rate(self.user, dts))
 		zone_1 = int(max_rate * 0.5)
 		zone_2 = int(max_rate * 0.5)
 
@@ -3122,7 +3141,7 @@ class Day(models.Model):
 		if not((self.sunrise_time is None) or (self.sunset_time is None)):
 			return(self.sunrise_time, self.sunset_time)
 		try:
-			home = Location.objects.get(pk=settings.USER_HOME_LOCATION)
+			home = Location.objects.get(pk=self.user.profile.home_location)
 		except:
 			home = None
 		if home is None:
@@ -3134,18 +3153,18 @@ class Day(models.Model):
 
 		try:
 			if self.wake_time is None:
-				logged_pos = get_logged_position(self.timezone.localize(datetime.datetime(self.date.year, self.date.month, self.date.day, 8, 0, 0)))
+				logged_pos = get_logged_position(self.user, self.timezone.localize(datetime.datetime(self.date.year, self.date.month, self.date.day, 8, 0, 0)))
 			else:
-				logged_pos = get_logged_position(self.wake_time)
+				logged_pos = get_logged_position(self.user, self.wake_time)
 		except:
 			logged_pos = wake_loc
 		wake_loc = logged_pos
 
 		try:
 			if self.bed_time is None:
-				logged_pos = get_logged_position(self.timezone.localize(datetime.datetime(self.date.year, self.date.month, self.date.day, 22, 0, 0)))
+				logged_pos = get_logged_position(self.user, self.timezone.localize(datetime.datetime(self.date.year, self.date.month, self.date.day, 22, 0, 0)))
 			else:
-				logged_pos = get_logged_position(self.bed_time)
+				logged_pos = get_logged_position(self.user, self.bed_time)
 		except:
 			logged_pos = sleep_loc
 		sleep_loc = logged_pos
@@ -3180,7 +3199,7 @@ class Day(models.Model):
 			dts = self.timezone.localize(datetime.datetime(d.year, d.month, d.day, 8, 0, 0))
 		if dte is None:
 			dte = self.timezone.localize(datetime.datetime(d.year, d.month, d.day, 22, 0, 0))
-		data = getboundingbox(dts, dte)
+		data = getboundingbox(self.user, dts, dte)
 		if len(data) == 4:
 			try:
 				tz1 = get_tz(data[0], data[1])
@@ -3218,6 +3237,7 @@ class Day(models.Model):
 		app_label = 'viewer'
 		verbose_name = 'day'
 		verbose_name_plural = 'days'
+		unique_together = ('user', 'date')
 
 class PersonProperty(models.Model):
 	person = models.ForeignKey(Person, on_delete=models.CASCADE, related_name="properties")
@@ -3235,6 +3255,8 @@ class PersonProperty(models.Model):
 		]
 
 class DataReading(models.Model):
+	user = models.ForeignKey(User, on_delete=models.CASCADE)
+	"""The Django user that owns this instance"""
 	start_time = models.DateTimeField()
 	end_time = models.DateTimeField()
 	type = models.SlugField(max_length=32)
@@ -3254,6 +3276,8 @@ class DataReading(models.Model):
 		]
 
 class RemoteInteraction(models.Model):
+	user = models.ForeignKey(User, on_delete=models.CASCADE)
+	"""The Django user that owns this instance"""
 	type = models.SlugField(max_length=32)
 	time = models.DateTimeField()
 	address = models.CharField(max_length=128)
@@ -3288,6 +3312,8 @@ class RemoteInteraction(models.Model):
 		]
 
 class CalendarFeed(models.Model):
+	user = models.ForeignKey(User, on_delete=models.CASCADE)
+	"""The Django user that owns this instance"""
 	url = models.URLField()
 	@property
 	def url_parsed(self):
@@ -3302,6 +3328,8 @@ class CalendarFeed(models.Model):
 		verbose_name_plural = 'calendars'
 
 class CalendarTask(models.Model):
+	user = models.ForeignKey(User, on_delete=models.CASCADE)
+	"""The Django user that owns this instance"""
 	taskid = models.SlugField(max_length=255, blank=True, default='')
 	time_due = models.DateTimeField(null=True, blank=True)
 	time_created = models.DateTimeField(null=True, blank=True)
@@ -3321,10 +3349,12 @@ class CalendarTask(models.Model):
 		app_label = 'viewer'
 		verbose_name = 'calendar task'
 		verbose_name_plural = 'calendar tasks'
-		unique_together = ('taskid', 'calendar')
+		unique_together = ('taskid', 'calendar', 'user')
 
 class CalendarAppointment(models.Model):
-	eventid = models.SlugField(max_length=255, blank=True, default='', unique=True)
+	user = models.ForeignKey(User, on_delete=models.CASCADE)
+	"""The Django user that owns this instance"""
+	eventid = models.SlugField(max_length=255, blank=True, default='')
 	start_time = models.DateTimeField()
 	end_time = models.DateTimeField(null=True, blank=True)
 	all_day = models.BooleanField(default=False)
@@ -3341,6 +3371,7 @@ class CalendarAppointment(models.Model):
 		app_label = 'viewer'
 		verbose_name = 'calendar appointment'
 		verbose_name_plural = 'calendar appointments'
+		unique_together = ('eventid', 'user')
 
 class EventSimilarity(models.Model):
 	event1 = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="similar_from")
@@ -3365,6 +3396,8 @@ class EventSimilarity(models.Model):
 		]
 
 class EventWorkoutCategory(models.Model):
+	user = models.ForeignKey(User, on_delete=models.CASCADE)
+	"""The Django user that owns this instance"""
 	events = models.ManyToManyField(Event, related_name='workout_categories')
 	id = models.SlugField(max_length=32, primary_key=True)
 	label = models.CharField(max_length=32, default='')
@@ -3462,6 +3495,8 @@ class PhotoTag(models.Model):
 		verbose_name_plural = 'photo tags'
 
 class AutoTag(models.Model):
+	user = models.ForeignKey(User, on_delete=models.CASCADE)
+	"""The Django user that owns this instance"""
 	tag = models.ForeignKey(EventTag, null=False, on_delete=models.CASCADE, related_name='rules')
 	enabled = models.BooleanField(default=True)
 	def add_location_condition(self, lat, lon):
@@ -3514,7 +3549,7 @@ class TagLocationCondition(TagCondition):
 	cached_staticmap = models.ImageField(blank=True, null=True, upload_to=tag_staticmap_upload_location)
 	cached_locationtext = models.TextField(default='')
 	def eval(self, event):
-		for ev in get_possible_location_events(event.start_time.date(), self.lat, self.lon):
+		for ev in get_possible_location_events(self.tag.user, event.start_time.date(), self.lat, self.lon):
 			if ((ev['start_time'] > event.start_time) & (ev['end_time'] < event.end_time)):
 				return True
 		return False
@@ -3601,6 +3636,8 @@ class LocationCategory(models.Model):
 	"""This class represents a category of places. It should normally be used
 	for things like 'pub' and 'cinema' but can also be 'friends houses', etc.
 	"""
+	user = models.ForeignKey(User, on_delete=models.CASCADE)
+	"""The Django user that owns this instance"""
 	caption = models.CharField(max_length=255, default='', blank=True)
 	description = models.TextField(default='', blank=True)
 	locations = models.ManyToManyField(Location, related_name='categories')

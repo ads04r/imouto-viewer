@@ -8,7 +8,7 @@ from viewer.models import create_or_get_day
 import logging
 logger = logging.getLogger(__name__)
 
-def get_weight_history(days):
+def get_weight_history(user, days):
 	"""
 	Returns the stored weight values for the last [n] days.
 
@@ -18,7 +18,7 @@ def get_weight_history(days):
 	"""
 	dte = pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(settings.TIME_ZONE)).replace(hour=0, minute=0, second=0)
 	dts = dte - datetime.timedelta(days=days)
-	data = DataReading.objects.filter(start_time__gte=dts, type='weight').order_by('start_time')
+	data = DataReading.objects.filter(user=user, start_time__gte=dts, type='weight').order_by('start_time')
 	ret = []
 	last = 0
 	if data.count() > 0:
@@ -28,7 +28,7 @@ def get_weight_history(days):
 		ret.append([(dt - last), float(item.value) / 1000])
 	return ret
 
-def get_heart_history(days):
+def get_heart_history(user, days):
 	"""
 	Returns the stored heart rate values for the last [n] days.
 
@@ -38,7 +38,7 @@ def get_heart_history(days):
 	"""
 	dte = pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(settings.TIME_ZONE)).replace(hour=0, minute=0, second=0)
 	dts = dte - datetime.timedelta(days=days)
-	data = DataReading.objects.filter(start_time__gte=dts, type='heart-rate').order_by('start_time')
+	data = DataReading.objects.filter(user=user, start_time__gte=dts, type='heart-rate').order_by('start_time')
 	ret = []
 	last = 0
 	if data.count() > 0:
@@ -48,7 +48,7 @@ def get_heart_history(days):
 		ret.append([(dt - last), item.value])
 	return ret
 
-def get_weight_graph(dts, dte):
+def get_weight_graph(user, dts, dte):
 	"""
 	Returns the stored weight values for a time range, for the purpose of drawing a graph.
 
@@ -57,13 +57,13 @@ def get_weight_graph(dts, dte):
 	:return: A list of two-value lists consisting of graph co-ordinates, with time on the x-axis and weight in kg on the y-axis.
 	:rtype: list
 	"""
-	key = 'weightgraph_' + dts.strftime("%Y%m%d%H%M%S") + dte.strftime("%Y%m%d%H%M%S")
+	key = 'weightgraph_' + str(user.pk) + "_" + dts.strftime("%Y%m%d%H%M%S") + dte.strftime("%Y%m%d%H%M%S")
 	ret = cache.get(key)
 	if not(ret is None):
 		return ret
 
 	ret = []
-	for item in DataReading.objects.filter(start_time__lt=dte, end_time__gte=dts, type='weight').order_by('start_time'):
+	for item in DataReading.objects.filter(user=user, start_time__lt=dte, end_time__gte=dts, type='weight').order_by('start_time'):
 		dtx = item.start_time.astimezone(pytz.utc)
 		item = {'x': dtx.strftime("%Y-%m-%dT%H:%M:%S"), 'y': float(item.value) / 1000}
 		ret.append(item)
@@ -72,7 +72,7 @@ def get_weight_graph(dts, dte):
 
 	return(ret)
 
-def get_heart_graph(dt):
+def get_heart_graph(user, dt):
 	"""
 	Returns the stored heart rate values for an entire day, for the purpose of drawing a graph.
 
@@ -80,7 +80,7 @@ def get_heart_graph(dt):
 	:return: A list of two-value lists consisting of graph co-ordinates, with time on the x-axis and heart rate in bpm on the y-axis.
 	:rtype: list
 	"""
-	key = 'heartgraph_' + dt.strftime("%Y%m%d")
+	key = 'heartgraph_' + str(user.pk) + "_" + dt.strftime("%Y%m%d")
 	ret = cache.get(key)
 	if not(ret is None):
 		return ret
@@ -89,7 +89,7 @@ def get_heart_graph(dt):
 	dte = dts + datetime.timedelta(days=1)
 	last = None
 	values = {}
-	for item in DataReading.objects.filter(start_time__lt=dte, end_time__gte=dts, type='heart-rate').order_by('start_time'):
+	for item in DataReading.objects.filter(user=user, start_time__lt=dte, end_time__gte=dts, type='heart-rate').order_by('start_time'):
 		dtx = int((item.start_time - dts).total_seconds() / 60)
 		if dtx in values:
 			if item.value < values[dtx]:
@@ -115,7 +115,7 @@ def get_heart_graph(dt):
 
 	return(ret)
 
-def get_sleep_history(days):
+def get_sleep_history(user, days):
 	"""
 	Returns the stored wake history for the last [n] days.
 
@@ -129,7 +129,7 @@ def get_sleep_history(days):
 
 	dt = dts
 	while dt < dte:
-		day = create_or_get_day(dt)
+		day = create_or_get_day(user, dt)
 		dt = dt + datetime.timedelta(days=1)
 		tts = day.wake_time
 		tte = day.bed_time

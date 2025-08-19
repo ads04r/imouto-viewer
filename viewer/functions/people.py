@@ -27,10 +27,10 @@ def bubble_event_people():
 			for person in e.people.all():
 				event.people.add(person)
 
-def find_person_by_picasaid(picasaid, name=''):
+def find_person_by_picasaid(user, picasaid, name=''):
 
 	try:
-		prop = PersonProperty.objects.get(key='hasface', value=picasaid)
+		prop = PersonProperty.objects.get(user=user, key='hasface', value=picasaid)
 		ret = prop.person
 	except:
 		ret = None
@@ -40,7 +40,7 @@ def find_person_by_picasaid(picasaid, name=''):
 
 	if name != '':
 
-		for person in Person.objects.all():
+		for person in Person.objects.filter(user=user):
 			fn = person.full_name
 			if fn == name:
 				ret = person

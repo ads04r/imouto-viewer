@@ -28,10 +28,4 @@ class ImoutoBaseConfiguration(unittest.TestCase):
 			self.assertEqual(('process' in data), True)
 			self.assertEqual(('bbox' in data), True)
 
-class ImoutoUserConfiguration(unittest.TestCase):
-	def test_details(self):
-		self.assertEqual(hasattr(settings, "USER_HOME_LOCATION"), True)
-		self.assertEqual(hasattr(settings, "USER_DATE_OF_BIRTH"), True)
-		self.assertEqual(hasattr(settings, "USER_HOME_LOCATION"), True)
-		self.assertEqual(hasattr(settings, "USER_HOME_URI"), True)
-		self.assertEqual(hasattr(settings, "USER_RDF_NAMESPACE"), True)
+

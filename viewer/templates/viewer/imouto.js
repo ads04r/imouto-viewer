@@ -945,8 +945,8 @@ function dayScreen(id)
         $('#mapselect').css('min-height', heightstring);
         makeMap();
 
-        var lat = {{ home.lat }};
-        var lon = {{ home.lon }};
+        {% if home.lat %}var lat = {{ home.lat }};{% else %}var lat = 0.0;{% endif %}
+        {% if home.lon %}var lon = {{ home.lon }};{% else %}var lon = 0.0;{% endif %}
         var map = L.map('mapselect', {center: [lat, lon], zoom: 13});
 {% if '.pbf' in tiles %}
         L.vectorGrid.protobuf('tile/{z}/{x}/{y}.pbf').addTo(map);
@@ -1336,8 +1336,8 @@ function placesScreen(id)
 
         if(status == 'error') { errorPage(xhr); return false; }
 
-        var lat = {{ home.lat }};
-        var lon = {{ home.lon }};
+        {% if home.lat %}var lat = {{ home.lat }};{% else %}var lat = 0.0;{% endif %}
+        {% if home.lon %}var lon = {{ home.lon }};{% else %}var lon = 0.0;{% endif %}
         var heightstring = parseInt(window.innerHeight * 0.5) + 'px';
         $('#mapselect').css('min-height', heightstring);
         var map = L.map('mapselect', {center: [lat, lon], zoom: 13});
@@ -2177,8 +2177,8 @@ function tagRulesScreen(id)
 			$('#create-condition-location').modal('show');
 		        //makeMap();
 
-			var lat = {{ home.lat }};
-			var lon = {{ home.lon }};
+		        {% if home.lat %}var lat = {{ home.lat }};{% else %}var lat = 0.0;{% endif %}
+		        {% if home.lon %}var lon = {{ home.lon }};{% else %}var lon = 0.0;{% endif %}
 			$('#condition-lat').val(lat);
 			$('#condition-lon').val(lon);
 		        var map = L.map('mapselect', {center: [lat, lon], zoom: 13});

@@ -18,7 +18,7 @@ def year(request, ds):
 	y = int(ds)
 
 	if request.method == 'POST':
-		obj = create_or_get_year(y)
+		obj = create_or_get_year(request.user, y)
 		if 'createreportyear' in request.POST:
 			year = int(request.POST['createreportyear'])
 			title = request.POST['createreporttitle']
@@ -47,13 +47,13 @@ def year(request, ds):
 		raise Http404()
 
 	logger.info("Year " + ds + " requested")
-	obj = create_or_get_year(y)
+	obj = create_or_get_year(request.user, y)
 
 	context = {'type':'view', 'caption': str(obj), 'year': obj}
 	template = 'viewer/pages/year.html'
 	if obj.this_year:
 		template = 'viewer/pages/this_year.html'
-		context['years'] = Year.objects.all()
+		context['years'] = Year.objects.filter(user=request.user)
 	else:
 		if obj.report_prc == 0:
 			active_task = None

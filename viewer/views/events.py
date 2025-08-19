@@ -15,7 +15,6 @@ from viewer.tasks.datacrunching import regenerate_similar_events, generate_simil
 from viewer.functions.moonshine import get_moonshine_tracks
 from viewer.functions.locations import join_location_events
 from viewer.functions.location_manager import getgeoline, getelevation, getspeed, getboundingbox
-from viewer.functions.utils import generate_life_grid
 from viewer.functions.geo import get_area_name
 
 import logging
@@ -37,7 +36,7 @@ def events(request):
 			event.workout_categories.clear()
 			catid = str(request.POST['workout_type'])
 			if len(catid) > 0:
-				for category in EventWorkoutCategory.objects.filter(id=catid):
+				for category in EventWorkoutCategory.objects.filter(user=request.user, id=catid):
 					event.workout_categories.add(category)
 
 			return HttpResponseRedirect('./#event_' + str(event.id))
@@ -45,11 +44,11 @@ def events(request):
 			raise Http404(form.errors)
 
 	data = {}
-	data['life'] = Event.objects.filter(type='life_event').order_by('-start_time')
+	data['life'] = Event.objects.filter(user=request.user, type='life_event').order_by('-start_time')
 	data['periods'] = LifePeriod.objects.order_by('type', 'start_time')
 	form = EventForm()
 	periodform = LifePeriodForm()
-	context = {'type':'view', 'data':data, 'form':form, 'periodform': periodform, 'categories':EventWorkoutCategory.objects.all()}
+	context = {'type':'view', 'data':data, 'form':form, 'periodform': periodform, 'categories':EventWorkoutCategory.objects.filter(user=request.user)}
 	return render(request, 'viewer/pages/calendar.html', context)
 
 def event(request, eid):
@@ -76,7 +75,7 @@ def event(request, eid):
 				people = peoples.split("|")
 			event.people.clear()
 			for id in people:
-				for person in Person.objects.filter(uid=id):
+				for person in Person.objects.filter(user=request.user, uid=id):
 					event.people.add(person)
 			event.tags.clear()
 			try:
@@ -94,7 +93,7 @@ def event(request, eid):
 			except:
 				catid = ''
 			if len(catid) > 0:
-				for category in EventWorkoutCategory.objects.filter(id=catid):
+				for category in EventWorkoutCategory.objects.filter(user=request.user, id=catid):
 					event.workout_categories.add(category)
 			event.save()
 
@@ -115,7 +114,7 @@ def event(request, eid):
 		scan_event_for_text(eid)
 
 	form = EventForm(instance=data)
-	context = {'type':'event', 'data':data, 'form':form, 'people':Person.objects.order_by('-significant', 'given_name', 'family_name'), 'categories':EventWorkoutCategory.objects.all()}
+	context = {'type':'event', 'data':data, 'form':form, 'people':Person.objects.order_by('-significant', 'given_name', 'family_name'), 'categories':EventWorkoutCategory.objects.filter(user=request.user)}
 	template = 'viewer/pages/event.html'
 	if data.type=='life_event':
 		template = 'viewer/pages/life_event.html'
@@ -148,19 +147,19 @@ def event_addjourney(request):
 	if len(vals) != 2:
 		raise Http404()
 	try:
-		event_from = Event.objects.get(id=vals[0])
-		event_to = Event.objects.get(id=vals[1])
+		event_from = Event.objects.get(user=request.user, id=vals[0])
+		event_to = Event.objects.get(user=request.user, id=vals[1])
 	except:
 		raise Http404()
-	event = join_location_events(event_from.pk, event_to.pk)
+	event = join_location_events(request.user, event_from.pk, event_to.pk)
 	if event is None:
 		raise Http404()
-	event.geo = getgeoline(event.start_time, event.end_time)
-	event.elevation = getelevation(event.start_time, event.end_time)
-	event.speed = getspeed(event.start_time, event.end_time)
+	event.geo = getgeoline(request.user, event.start_time, event.end_time)
+	event.elevation = getelevation(request.user, event.start_time, event.end_time)
+	event.speed = getspeed(request.user, event.start_time, event.end_time)
 	event.caption = event_from.caption + ' to ' + event_to.caption
 	if len(catid) > 0:
-		for category in EventWorkoutCategory.objects.filter(id=catid):
+		for category in EventWorkoutCategory.objects.filter(user=request.user, id=catid):
 			event.workout_categories.add(category)
 	event.save()
 	event.auto_tag()
@@ -171,7 +170,7 @@ def event_addappointmentevent(request):
 	if request.method != 'POST':
 		return HttpResponseNotAllowed(['POST'])
 	try:
-		c = CalendarAppointment.objects.get(id=request.POST['add_appointment_event'])
+		c = CalendarAppointment.objects.get(user=request.user, id=request.POST['add_appointment_event'])
 	except:
 		c = None
 	if c is None:
@@ -198,15 +197,15 @@ def event_addfileevent(request):
 	caption = 'Journey'
 	if len(catid) > 0:
 		caption = catid.title()
-	bbox = getboundingbox(imported_file.earliest_timestamp, imported_file.latest_timestamp)
+	bbox = getboundingbox(request.user, imported_file.earliest_timestamp, imported_file.latest_timestamp)
 	if len(bbox) == 4:
 		location_text = get_area_name(bbox[1], bbox[0], bbox[3], bbox[2])
 		if len(location_text) > 0:
 			caption = caption + ' in ' + location_text
-	event = Event(caption=caption, start_time=imported_file.earliest_timestamp, end_time=imported_file.latest_timestamp, type='journey', location=None, description='')
+	event = Event(user=request.user, caption=caption, start_time=imported_file.earliest_timestamp, end_time=imported_file.latest_timestamp, type='journey', location=None, description='')
 	event.save()
 	if len(catid) > 0:
-		for category in EventWorkoutCategory.objects.filter(id=catid):
+		for category in EventWorkoutCategory.objects.filter(user=request.user, id=catid):
 			event.workout_categories.add(category)
 	event.auto_tag()
 
@@ -294,7 +293,7 @@ def eventjson(request):
 	dte = dateutil.parser.parse(dse)
 	tz = pytz.timezone(settings.TIME_ZONE)
 	ret = []
-	for event in Event.objects.filter(end_time__gte=dts).filter(start_time__lte=dte):
+	for event in Event.objects.filter(user=request.user, end_time__gte=dts, start_time__lte=dte):
 		item = {}
 		item['id'] = event.pk
 		item['url'] = "#event_" + str(event.pk)

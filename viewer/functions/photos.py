@@ -9,14 +9,14 @@ from libxmp import XMPMeta
 import logging
 logger = logging.getLogger(__name__)
 
-def get_year_sample_photos(year, max=50):
+def get_year_sample_photos(user, year, max=50):
 
 	photos = []
 	dts = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(year, 1, 1, 0, 0, 0))
 	dte = pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(year + 1, 1, 1, 0, 0, 0)) - datetime.timedelta(seconds=1)
-	for photo in Photo.objects.filter(time__lte=dte, time__gte=dts, face_count__gt=0).order_by('-face_count')[0:max]:
+	for photo in Photo.objects.filter(user=user, time__lte=dte, time__gte=dts, face_count__gt=0).order_by('-face_count')[0:max]:
 		photos.append(photo)
-	for photo in Photo.objects.filter(time__lte=dte, time__gte=dts, face_count=0)[0:max]:
+	for photo in Photo.objects.filter(user=user, time__lte=dte, time__gte=dts, face_count=0)[0:max]:
 		photos.append(photo)
 	random.shuffle(photos)
 
@@ -44,7 +44,7 @@ def hexagon_crop(im, landscape=True):
 	ret.paste(im, (0, 0), mask)
 	return ret
 
-def locate_photos_by_exif(since=None, reassign=False):
+def locate_photos_by_exif(user, since=None, reassign=False):
 
 	ret = 0
 	if since is None:
@@ -52,17 +52,17 @@ def locate_photos_by_exif(since=None, reassign=False):
 	else:
 		datecutoff = since
 	if reassign:
-		photos = Photo.objects.filter(time__gte=datecutoff).exclude(lat=None).exclude(lon=None)
+		photos = Photo.objects.filter(user=user, time__gte=datecutoff).exclude(lat=None).exclude(lon=None)
 	else:
-		photos = Photo.objects.filter(location=None, time__gte=datecutoff).exclude(lat=None).exclude(lon=None)
+		photos = Photo.objects.filter(user=user, location=None, time__gte=datecutoff).exclude(lat=None).exclude(lon=None)
 	for photo in photos:
 		t = photo.time
 		if t is None:
 			continue
-		events = Event.objects.filter(start_time__lte=t, end_time__gte=t)
+		events = Event.objects.filter(user=user, start_time__lte=t, end_time__gte=t)
 		if events.count() > 0:
 			continue
-		loc = nearest_location(photo.lat, photo.lon)
+		loc = nearest_location(user, photo.lat, photo.lon)
 		if loc is None:
 			continue
 		photo.location = loc
@@ -71,16 +71,16 @@ def locate_photos_by_exif(since=None, reassign=False):
 
 	return ret
 
-def bubble_photo_locations(since=None, loc_id=None, reassign=False):
+def bubble_photo_locations(user, since=None, loc_id=None, reassign=False):
 
 	if since is None:
 		datecutoff = pytz.utc.localize(datetime.datetime.utcnow()) - datetime.timedelta(days=60)
 	else:
 		datecutoff = since
 	if loc_id is None:
-		places = Location.objects.filter(events__start_time__gte=datecutoff).distinct()
+		places = Location.objects.filter(user=user, events__start_time__gte=datecutoff).distinct()
 	else:
-		places = Location.objects.filter(id=loc_id).distinct()
+		places = Location.objects.filter(user=user, id=loc_id).distinct()
 	ret = 0
 	for loc in places:
 		for event in loc.events.filter(start_time__gte=datecutoff):
@@ -97,9 +97,9 @@ def bubble_photo_locations(since=None, loc_id=None, reassign=False):
 				photo.save()
 	return ret
 
-def get_untagged_photo_ids():
+def get_untagged_photo_ids(user):
 
-	return [photo.pk for photo in Photo.objects.filter(time__gt=Photo.objects.exclude(tags=None).order_by('-time').first().time)]
+	return [photo.pk for photo in Photo.objects.filter(user=user, time__gt=Photo.objects.filter(user=user).exclude(tags=None).order_by('-time').first().time)]
 
 def get_xmp_sidecar_tags(photo_id):
 
