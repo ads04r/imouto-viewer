@@ -176,7 +176,7 @@ def event_addappointmentevent(request):
 	if c is None:
 		raise Http404()
 	else:
-		event = Event(caption=c.caption, start_time=c.start_time, end_time=c.end_time, type='event', location=c.location, description='')
+		event = Event(user=request.user, caption=c.caption, start_time=c.start_time, end_time=c.end_time, type='event', location=c.location, description='')
 		if c.description:
 			if c.description != 'None':
 				event.description = c.description
@@ -252,7 +252,7 @@ def eventsplit(request, eid):
 	cache.delete(cache_key)
 
 	if mode == 1:
-		new_event = Event(caption=data.caption, type=data.type, start_time=dt, end_time=data.end_time)
+		new_event = Event(user=request.user, caption=data.caption, type=data.type, start_time=dt, end_time=data.end_time)
 		data.end_time = dt
 		data.save()
 		new_event.save()
@@ -329,7 +329,7 @@ def event_json(request, eid):
 def create_first_event(request):
 	if Event.objects.count() == 0:
 		dt = pytz.utc.localize(datetime.datetime.utcnow())
-		event = Event(start_time=dt, end_time=dt, type='event', caption='Installed Imouto Viewer')
+		event = Event(user=request.user, start_time=dt, end_time=dt, type='event', caption='Installed Imouto Viewer')
 		event.description = "Congratulations on creating your first event!\n\nNext you'll want to start investigating the ways of importing your life into Imouto. As a good place to start, try importing a GPX or FIT file from a GPS watch using the '[Upload](./#files)' feature on the Viewer."
 		event.save()
 		return HttpResponseRedirect('./#event_' + str(event.pk))

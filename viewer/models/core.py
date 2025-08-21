@@ -2670,7 +2670,7 @@ class Day(models.Model):
 
 	def onthisday(self):
 		ret = []
-		user_born = user.profile.date_of_birth
+		user_born = self.user.profile.date_of_birth
 		i = 1
 		while True:
 			dd = datetime.date(self.date.year - i, self.date.month, self.date.day)
