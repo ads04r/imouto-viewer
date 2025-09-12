@@ -59,6 +59,7 @@ def places(request):
 							country = None
 			if not(country is None):
 				post.country = country
+			post.user_id = request.user.pk
 			post.save()
 			post.categories.clear()
 			for category_label_dirty in categories:

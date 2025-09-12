@@ -1718,7 +1718,9 @@ class Event(models.Model):
 		if speed_count > 0:
 			ret['speedavg'] = int(speed_total / speed_count)
 			self.cached_average_speed = ret['speedavg']
-			ret['speedavgmoving'] = int(speed_total / speed_move_count)
+			ret['speedavgmoving'] = ret['speedavg']
+			if speed_move_count > 0:
+				ret['speedavgmoving'] = int(speed_total / speed_move_count)
 			ret['speedmax'] = int(speed_max)
 			ret['speedmoving'] = self.length_string(int(speed_move_time))
 		self.cached_health = json.dumps(ret)
@@ -3098,9 +3100,10 @@ class Day(models.Model):
 			next_wake = self.tomorrow.wake_time
 		# Finally, if we have a next wake time but it's over 24 hours after the current day's bed time, well, we
 		# again assume the data is incomplete, and return nothing.
-		if not(next_wake is None):
-			if (next_wake - dte).total_seconds() >= 86400:
-				next_wake = None
+		if not dte is None:
+			if not(next_wake is None):
+				if (next_wake - dte).total_seconds() >= 86400:
+					next_wake = None
 		if next_wake is None:
 			# If we don't have any sleep data, update the cached wake/sleep times anyway.
 			self.wake_time = dts

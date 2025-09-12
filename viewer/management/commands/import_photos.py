@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.core.cache import cache
 from django.conf import settings
+from django.contrib.auth.models import User
 from viewer.importers.photos import import_photo_directory, import_picasa_faces
 from viewer.functions.photos import bubble_photo_locations, locate_photos_by_exif, get_untagged_photo_ids, get_xmp_sidecar_tags
 from viewer.tasks.process import precache_photo_thumbnail
@@ -12,6 +13,7 @@ class Command(BaseCommand):
 	"""
 	def add_arguments(self, parser):
 
+		parser.add_argument("-u", "--user", action="store", dest="user_id", required=True, help="which user are we working with?")
 		parser.add_argument("-i", "--input", action="store", dest="photo_path", default="", help="A path to search for photos.")
 		parser.add_argument("-z", "--timezone", action="store", dest="tz_info", default="", help="The timezone of the photos, useful for when none is specified in the EXIF data.")
 		parser.add_argument("-f", "--update-faces", action="store_true", dest="faces_only", help="If this switch is present, the function doesn't import any new photos, but updates face data from any picasa.ini files present.")
@@ -21,6 +23,14 @@ class Command(BaseCommand):
 		path = kwargs['photo_path']
 		tz_string = kwargs['tz_info']
 		faces_only = kwargs['faces_only']
+
+		try:
+			user = User.objects.get(username=kwargs['user_id'])
+		except:
+			user = None
+		if not user:
+			sys.stderr.write(self.style.ERROR(str(kwargs['user_id']) + " is not a valid user on this system.\n"))
+			sys.exit(1)
 
 		if tz_string == '':
 			if settings.TIME_ZONE:
@@ -55,7 +65,7 @@ class Command(BaseCommand):
 
 		else:
 
-			ret = import_photo_directory(full_path, tz)
+			ret = import_photo_directory(user, full_path, tz)
 			for photo in ret:
 				precache_photo_thumbnail(photo.pk)
 			sys.stderr.write(self.style.SUCCESS(str(len(ret)) + " new photo(s) added.\n"))

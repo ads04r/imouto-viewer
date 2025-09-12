@@ -300,7 +300,11 @@ def generate_dashboard(user):
 		workouts[i]['prc'] = int(float(workouts[i]['distance']) / float(workout_total))
 
 	years = []
-	for i in range(first_event.year, days[0].date.year):
+	ys = first_event.year
+	ye = datetime.datetime.now().year
+	if len(days) > 0:
+		ye = days[0].date.year
+	for i in range(ys, ye):
 		years.append(i)
 	years.reverse()
 	ret = {'stats': stats, 'birthdays': birthdays, 'tasks': tasks, 'workouts': workouts, 'steps': json.dumps(stepdata), 'sleep': json.dumps(sleepdata), 'contact': contactdata, 'people': peopledata, 'places': locationdata, 'walks': walkdata, 'days': days, 'years': years[0:8]}

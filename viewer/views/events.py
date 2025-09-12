@@ -26,6 +26,7 @@ def events(request):
 		form = EventForm(request.POST)
 		if form.is_valid():
 			event = form.save(commit=False)
+			event.user = request.user
 			event.save()
 			try:
 				tags = str(request.POST['event_tags']).split(',')

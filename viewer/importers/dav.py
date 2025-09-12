@@ -133,7 +133,7 @@ def import_carddav(user, url, username='', password='', countrycode='44'):
 				continue
 			if id == 'breakdowncover':
 				continue
-			pobj = Person(uid=id, given_name=given_name, family_name=family_name)
+			pobj = Person(user=user, uid=id, given_name=given_name, family_name=family_name)
 			pobj.save()
 
 			if 'email' in person.contents:

@@ -52,6 +52,7 @@ def people(request):
 			id = form.cleaned_data['uid']
 			if form.cleaned_data.get('image'):
 				post.image = request.FILES['image']
+			post.user_id = request.user.pk
 			post.save()
 			try:
 				person_home = request.POST['home']
