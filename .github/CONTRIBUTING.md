@@ -1,6 +1,6 @@
 # Contributing to imouto-viewer / imouto-location-manager
 
-Thank you for your interest in contributing to this project!
+Firstly, thank you for your interest in contributing to this project!
 
 ## Project Status
 
@@ -9,7 +9,7 @@ At this stage, the project’s codebase and feature set are rapidly evolving, an
 
 ## Pull Requests
 
-Because of the haphazard nature of development and the limited capacity for code review, **pull requests from external contributors may not be appropriate at this time**. If you have an idea, suggestion, or bug report, please consider opening an issue first to discuss it before submitting code.
+Because of the haphazard nature of development and the limited capacity for code review, **pull requests from external contributors may not be appropriate at this time**. If you have an idea, suggestion, or bug report, please consider opening an issue first to discuss it before submitting code. I may already be working on the same issue.
 
 ## Suggestions and Issues
 
