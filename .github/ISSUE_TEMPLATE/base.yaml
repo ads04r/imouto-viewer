@@ -1,0 +1,64 @@
+name: Bug Report or Feature Request
+description: Create an issue for Imouto Life Annotation Viewer.
+title: "[Bug/Feature]: "
+labels: []
+assignees: []
+body:
+  - type: dropdown
+    id: issue_type
+    attributes:
+      label: Type of Issue
+      description: Please select the type of issue.
+      options:
+        - Bug Report
+        - Feature Request
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Please describe the bug or feature you are reporting/requesting.
+      placeholder: "A clear and concise description of what the bug is, or what feature you would like to see."
+    validations:
+      required: true
+  - type: textarea
+    id: steps_to_reproduce
+    attributes:
+      label: Steps to Reproduce (for bugs)
+      description: "If this is a bug report, please list the steps to reproduce the problem."
+      placeholder: "1. Go to '...'\n2. Click on '...'\n3. Error happens"
+    validations:
+      required: false
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected Behavior
+      description: "What did you expect to happen?"
+      placeholder: "Describe what you expected to see."
+    validations:
+      required: false
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: "Add any other context, screenshots, or information that may help us understand the issue."
+      placeholder: "Any relevant logs, error messages, or screenshots."
+    validations:
+      required: false
+  - type: dropdown
+    id: labels
+    attributes:
+      label: Related Tags
+      description: "Select the tags/labels that best fit your issue."
+      multiple: true
+      options:
+        - bug
+        - enhancement
+        - functionality
+        - external
+        - question
+        - documentation
+    validations:
+      required: false
+      
