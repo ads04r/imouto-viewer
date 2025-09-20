@@ -1510,8 +1510,28 @@ class Event(models.Model):
 			create_or_get_day(self.user, dt)
 			dt = dt + datetime.timedelta(days=1)
 		return Day.objects.filter(date__gte=ds, date__lte=de).order_by('date')
+	"""The timezone in which this event took place"""
 	@property
 	def timezone(self):
+		if self.location:
+			tz_string = get_tz(self.location.lon, self.location.lat)
+			return pytz.timezone(tz_string)
+		if self.geo:
+			try:
+				geo = json.loads(self.geo)
+			except:
+				geo = False
+			if isinstance(geo, dict):
+				if 'bbox' in geo:
+					bbox = geo['bbox']
+					if len(bbox) == 4:
+						try:
+							tz1 = get_tz(bbox[0], bbox[1])
+							tz2 = get_tz(bbox[2], bbox[3])
+							if tz1 == tz2:
+								return pytz.timezone(tz1)
+						except:
+							pass
 		days = self.days
 		if days.count() == 0:
 			return pytz.timezone(settings.TIME_ZONE)
@@ -3202,6 +3222,9 @@ class Day(models.Model):
 			dts = self.timezone.localize(datetime.datetime(d.year, d.month, d.day, 8, 0, 0))
 		if dte is None:
 			dte = self.timezone.localize(datetime.datetime(d.year, d.month, d.day, 22, 0, 0))
+		event_zones = list(set([event.timezone for event in self.events.filter(type='loc_prox')]))
+		if len(event_zones) == 1:
+			self.timezone_str = str(event_zones[0])
 		data = getboundingbox(self.user, dts, dte)
 		if len(data) == 4:
 			try:
