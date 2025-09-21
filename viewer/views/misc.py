@@ -22,7 +22,7 @@ def create_achievement(request):
 	if request.method != 'POST':
 		return HttpResponseNotAllowed(['POST'])
 	try:
-		urls = settings.ICAL_URLS
+		urls = request.user.profile.settings['ICAL_URLS']
 	except:
 		urls = []
 	url = ''
@@ -55,7 +55,7 @@ def create_achievement(request):
 	if not item_url:
 		return HttpResponse("Invalid CalDAV credentials.", status=401)
 	if mark_task_completed(item_url, username, password, completion_date=dt):
-		import_ical_feed(request.user, url, username, password)
+		import_ical_feed(request.user.pk, url, username, password)
 		return HttpResponseRedirect('./#day_' + dt.strftime("%Y%m%d"))
 	raise Http404()
 
