@@ -1,0 +1,31 @@
+                <div class="box box-primary" id="day_event_{{ event.pk }}">
+                    <div class="box-body no-padding">
+
+			<table class="table table-condensed">
+{% for event in events %}
+
+				<tr>
+
+{% if event.cover_photo %}
+				<td>
+					<img class="img-bordered-sm" src="photo/{{ event.cover_photo.pk }}_thumb.jpg" width="50" height="50"/>
+				</td>
+{% else %}
+				<td></td>
+{% endif %}
+				<td width="100%">
+					<p><a href="#event_{{ event.id }}">{{ event.caption }}</a><br>
+					<small class="muted">{{ event.start_time }}</small></p>
+					<p>{% for tag in event.tags.all %}<a href="#tag_{{ tag.id }}"><span class="badge" style="background-color: {{ tag.colour }}">{{ tag.id }}</span></a> {% endfor %}</p>
+				</td>
+				<td class="pull-right">
+					<a class="btn btn-primary" href="#event_{{ event.id }}">View Event</a>
+				</td>
+
+				</tr>
+
+{% endfor %}
+			</table>
+
+                    </div>
+                </div>

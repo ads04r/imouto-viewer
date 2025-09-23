@@ -55,6 +55,8 @@
 
                     {% if event.health.steps or event.health.heartavg or event.geo %}
                     <ol class="eventstats">
+                        {% if event.type == 'loc_prox' %}{% if event.location %}{% for category in event.location.categories.all %}<li>{{ category }}</li>{% endfor %}{% endif %}{% endif %}
+                        {% if event.type == 'journey' %}{% if event.transit_method %}<li>{{ event.transit_method }}</li>{% endif %}{% endif %}
                         {% if event.people.count > 0 or event.description or event.photos.count > 0 or event.geo %}<li>{{ event.length_string }}</li>{% endif %}
                         {% if event.geo %}<li>{{ event.distance }} miles</li>{% endif %}
                         {% if event.health.steps %}<li>{{ event.health.steps }} steps</li>{% endif %}

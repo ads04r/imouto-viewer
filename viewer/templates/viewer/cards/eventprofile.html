@@ -32,6 +32,9 @@
 {% if data.distance > 0 %}
 <li class="list-group-item"><b>Total Distance</b> <span class="pull-right">{{ data.distance }}&nbsp;miles</span></li>
 {% endif %}
+{% if data.type == 'journey' %}{% if data.transit_method %}
+<li class="list-group-item"><b>Transit Method</b> <span class="pull-right"><a href="#transit_{{ data.transit_method|lower }}">{{ data.transit_method }}</a></span></li>
+{% endif %}{% endif %}
 {% if data.music %}
 <li class="list-group-item"><b>Music</b> <span class="pull-right">{{ data.music|length }}&nbsp;tracks</span></span></li>
 {% endif %}

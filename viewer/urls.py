@@ -40,6 +40,7 @@ urlpatterns = [
     path('tagrules/<id>.png', views.tagrule_staticmap),
     path('workout/<id>.html', views.workout),
     path('workout/<id>/delete', views.workoutdelete),
+    path('transit/<id>.html', views.transit),
     path('events.html', views.events),
     path('events.json', views.eventjson),
     path('events/<eid>.html', views.event),

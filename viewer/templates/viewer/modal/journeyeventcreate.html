@@ -11,6 +11,13 @@
 {% endfor %}
 		</select>
 
+		<label for="id_journey_transit_type">Transit method:</label>
+		<select id="id_journey_transit_type" class="form-control" name="transit_type">
+                                      <option selected="selected" value="">---------</option>
+{% for method in transit %}
+                                      <option value="{{ method.label|lower }}">{{ method.label }}</option>
+{% endfor %}
+                </select>
 		<label for="id_journey_workout_type">Workout type:</label>
 		<select id="id_journey_workout_type" class="form-control" name="workout_type">
                                       <option selected="selected" value="">---------</option>

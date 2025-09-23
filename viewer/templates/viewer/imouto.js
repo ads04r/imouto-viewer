@@ -2286,6 +2286,14 @@ function workoutScreen(id)
     });
 }
 
+function transitScreen(id)
+{
+    $(".content-wrapper").load("./transit/" + id + ".html", function(response, status, xhr)
+    {
+        if(status == 'error') { errorPage(xhr); return false; }
+    });
+}
+
 function watchedDirectoryScreen(id)
 {
     $(".content-wrapper").load("./watched_directory/" + id + ".html", function(response, status, xhr)
@@ -2509,6 +2517,7 @@ function pageRefresh()
     if(page.startsWith('country_')) { countryScreen(page.replace('country_', '')); }
     if(page.startsWith('person_')) { personScreen(page.replace('person_', '')); }
     if(page.startsWith('workout_')) { workoutScreen(page.replace('workout_', '')); }
+    if(page.startsWith('transit_')) { transitScreen(page.replace('transit_', '')); }
     if(page.startsWith('report_')) { var parse = page.replace('report_', '').split('_'); reportScreen(parse[0], parse[1]); }
     if(page.startsWith('watched_directory_')) { watchedDirectoryScreen(page.replace('watched_directory_', '')); }
     if(page.startsWith('questionnaire_')) { var parse = page.replace('questionnaire_', '').split('_'); questionEditScreen(parse[0], parse[1]); }

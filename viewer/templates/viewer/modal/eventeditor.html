@@ -35,6 +35,15 @@
                                   </select></td>
                                 </tr>
 
+{% for field in form %}
+{% if forloop.counter == 7 %}
+                                <tr class="form-row">
+                                  <td>{{ field.errors }}</td>
+                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                </tr>
+{% endif %}
+{% endfor %}
+
                               </table>
                         
                         </div>

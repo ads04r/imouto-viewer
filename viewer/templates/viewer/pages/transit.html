@@ -3,10 +3,10 @@
 <section class="content-header">
     <h1>
         {{ data.label }}
-        <small>Workout Type</small>
+        <small>Transit Method</small>
     </h1>
     <ol class="breadcrumb">
-        <li><a href="#tags">Workouts</a></li>
+        <li><a href="#tags">Transit Methods</a></li>
         <li>{{ data.label }}</li>
     </ol>
 </section>
@@ -22,7 +22,7 @@
                     <div class="box-body box-profile">
 
                         <h3 class="profile-username text-center">{{ data.label }}</h3>
-                        <p class="text-muted text-center">Workout Category</p>
+                        <p class="text-muted text-center">Transit Method</p>
                         <ul class="list-group list-group-unbordered">
                             <li class="list-group-item"><b>Events</b> <span class="pull-right">{{ data.events.count }}</span></li>
                             <li class="list-group-item"><b>Last Event</b> <span class="pull-right">{{ data.last_event|date:"jS F Y" }}</span></li>

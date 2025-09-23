@@ -7,7 +7,7 @@ from django.conf import settings
 from io import BytesIO
 import datetime, pytz, dateutil.parser, json, requests, random
 
-from viewer.models import Person, Photo, Event, EventWorkoutCategory, CalendarAppointment, LifePeriod, ImportedFile
+from viewer.models import Person, Photo, Event, EventWorkoutCategory, CalendarAppointment, LifePeriod, ImportedFile, TransitMethod
 from viewer.forms import EventForm, QuickEventForm, LifePeriodForm
 from viewer.tasks.reports import generate_photo_collages
 from viewer.tasks.datacrunching import regenerate_similar_events, generate_similar_events, count_event_faces, scan_event_for_text
@@ -144,6 +144,7 @@ def event_addjourney(request):
 		return HttpResponseNotAllowed(['POST'])
 	vals = request.POST['join_events'].split('_')
 	catid = str(request.POST['workout_type'])
+	transitid = str(request.POST['transit_type'])
 
 	if len(vals) != 2:
 		raise Http404()
@@ -159,9 +160,15 @@ def event_addjourney(request):
 	event.elevation = getelevation(request.user, event.start_time, event.end_time)
 	event.speed = getspeed(request.user, event.start_time, event.end_time)
 	event.caption = event_from.caption + ' to ' + event_to.caption
+	try:
+		transit_method = TransitMethod.objects.get(label__iexact=transitid)
+	except TransitMethod.DoesNotExist:
+		transit_method = None
 	if len(catid) > 0:
 		for category in EventWorkoutCategory.objects.filter(user=request.user, id=catid):
 			event.workout_categories.add(category)
+	if not transit_method is None:
+		event.transit_method = transit_method
 	event.save()
 	event.auto_tag()
 	ds = event.start_time.strftime("%Y%m%d")
@@ -353,3 +360,8 @@ def life_period(request):
 	else:
 		raise Http404(form.errors)
 
+def transit(request, id):
+
+	data = get_object_or_404(TransitMethod, label=id.lower())
+	context = {'type':'transit', 'data':data}
+	return render(request, 'viewer/pages/transit.html', context)

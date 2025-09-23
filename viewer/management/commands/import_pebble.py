@@ -68,6 +68,10 @@ class Command(BaseCommand):
 			last_events.append(Event.objects.filter(user=user, workout_categories__id='walk').order_by('-start_time')[0])
 		except IndexError:
 			pass
+		try:
+			last_events.append(Event.objects.filter(user=user, type='journey', transit_method__label__iexact='walking').order_by('-start_time')[0])
+		except IndexError:
+			pass
 		last_entry = DataReading.objects.filter(user=user, type='pebble-app-activity').order_by('-start_time')[0]
 		last_step = DataReading.objects.filter(user=user, type='step-count').order_by('-start_time')[0]
 		if len(last_events) == 0:

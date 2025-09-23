@@ -85,11 +85,12 @@ class EventForm(ModelForm):
 		self.fields['location'].queryset = Location.objects.exclude(creation_time__gt=now).exclude(destruction_time__lt=now).annotate(num_events=Count('events')).order_by('-num_events')
 	class Meta:
 		model = Event
-		fields = ['caption', 'type', 'description', 'start_time', 'end_time', 'location']
+		fields = ['caption', 'type', 'description', 'start_time', 'end_time', 'location', 'transit_method']
 		widgets = {
 			'caption': TextInput(attrs={'class': 'form-control'}),
 			'type': TextInput(attrs={'class': 'form-control'}),
 			'location': Select(attrs={'class': 'form-control'}),
+			'transit_method': Select(attrs={'class': 'form-control'}),
 			'description': Textarea(attrs={'class': 'form-control'}),
 			'start_time': TextInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD HH:MM:SS'}),
 			'end_time': TextInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD HH:MM:SS'}),

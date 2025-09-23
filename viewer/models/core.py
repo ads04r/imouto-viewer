@@ -1102,6 +1102,30 @@ class PersonPhoto(models.Model):
 		verbose_name = 'person photo'
 		verbose_name_plural = 'person photos'
 
+class TransitMethod(models.Model):
+	"""A method of transit (eg car, bus, plane) to be linked from journey events
+	"""
+	user = models.ForeignKey(User, on_delete=models.CASCADE)
+	"""The Django user that owns this instance"""
+	label = models.CharField(max_length=32, default='')
+	comment = models.TextField(null=True, blank=True)
+	icon = models.SlugField(max_length=64, default='road')
+	@property
+	def first_event(self):
+		return self.events.order_by('start_time').first().start_time
+	@property
+	def last_event(self):
+		return self.events.order_by('-end_time').first().end_time
+	@property
+	def events_sorted(self):
+		return self.events.order_by('-start_time')
+	def __str__(self):
+		return str(self.label)
+	class Meta:
+		app_label = 'viewer'
+		verbose_name = 'person photo'
+		verbose_name_plural = 'person photos'
+
 class Event(models.Model):
 	"""A class representing an event in the life of the user. This is very vague and can mean
 	pretty much anything. The intention is for people using Imouto as a health tracker would
@@ -1137,6 +1161,8 @@ class Event(models.Model):
 	elevation = models.TextField(default='', blank=True)
 	speed = models.TextField(default='', blank=True)
 	cover_photo = models.ForeignKey(Photo, null=True,  blank=True, on_delete=models.SET_NULL)
+	transit_method = models.ForeignKey(TransitMethod, null=True, blank=True, on_delete=models.SET_NULL, related_name="events")
+	passenger = models.BooleanField(default=False)
 	"""All locations within this event and its sub-events (mostly for life events)"""
 	@cached_property
 	def locations(self):

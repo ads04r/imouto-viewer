@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand
 from django.core.cache import cache
 from django.conf import settings
 from django.contrib.auth.models import User
-from viewer.models import DataReading, Event, EventWorkoutCategory
+from viewer.models import DataReading, Event, EventWorkoutCategory, TransitMethod
 from viewer.tasks.datacrunching import regenerate_similar_events
 from viewer.functions.geo import get_area_name
 from viewer.functions.location_manager import getgeoline, get_location_manager_report_queue
@@ -26,7 +26,13 @@ class Command(BaseCommand):
 					continue
 				if Event.objects.filter(user=user, type='journey', start_time__lte=walk.start_time, end_time__gte=walk.end_time).count() > 0:
 					continue
-				event = Event(user=user, type='journey', caption='Walk', start_time=walk.start_time, end_time=walk.end_time)
+
+				try:
+					transit = TransitMethod.objects.get(user=user, label__iexact='walking')
+				except:
+					transit = None
+
+				event = Event(user=user, type='journey', transit_method=transit, caption='Walk', start_time=walk.start_time, end_time=walk.end_time)
 
 				try:
 					data = json.loads(getgeoline(user, event.start_time, event.end_time))
