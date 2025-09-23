@@ -1,6 +1,5 @@
 from django.core.management.base import BaseCommand
-from bs4 import BeautifulSoup
-from tqdm import tqdm
+from django.conf import settings
 import datetime, requests
 
 from viewer.models import HistoricalEvent
@@ -23,45 +22,22 @@ class Command(BaseCommand):
 			dsd = int(dsa[-1])
 			dsm = int(dsa[-2])
 			if((dsd >= 1) & (dsd <= 31) & (dsm >= 1) & (dsm <= 12)):
-				dt = dt.replace(day=dsd, month=dsm)
-		ds = dt.strftime("%B") + ' ' + (dt.strftime("%d").lstrip('0'))
-		url = "https://en.wikipedia.org/wiki/" + ds.replace(' ', '_')
-		r = requests.get(url)
-		soup = BeautifulSoup(r.content, features='lxml')
-		last_year = 1900
-		events = []
+				dt = datetime.date(dt.year, dsm, dsd)
+
+		url = "https://api.wikimedia.org/feed/v1/wikipedia/en/onthisday/selected/" + dt.strftime("%m/%d")
+		with requests.get(url, headers={'User-Agent': settings.USER_AGENT}, allow_redirects=True) as r:
+			data = r.json()
+		if not 'selected' in data:
+			return
+		last_year = 0
 		if len(kwargs['year']) >= 4:
 			last_year = int(kwargs['year'])
-		div = soup.find('div', class_='mw-body-content')
-		for ul in div.find_all('ul'):
-			for li in ul.find_all('li'):
-				text = li.text
-				if '(d. ' in text:
-					break
-				if '(b. ' in text:
-					break
-				if not('–' in text):
-					continue
-				parsed = text.split('–')
-				if len(parsed) != 2:
-					continue
-				if ':' in parsed[1]:
-					continue
-				try:
-					y = int(parsed[0].strip())
-				except:
-					y = -1
-				if y < last_year:
-					continue
-				last_year = y
-				event_date = dt.replace(year=y)
-				parsed = parsed[1].split('[')
-				text = parsed[0].strip()
-				events.append([event_date, text])
-
-		if len(events) > 0:
-
-			HistoricalEvent.objects.filter(date__month=dt.month, date__day=dt.day, category='world_events').delete()
-			for event in tqdm(events, bar_format='{l_bar}{bar} | {n_fmt}/{total_fmt} ({remaining} remaining)', colour='#00af00'):
-				item = HistoricalEvent(date=event[0], category='world_events', description=event[1])
-				item.save()
+		HistoricalEvent.objects.filter(date__month=dt.month, date__day=dt.day, category='world_events').delete()
+		for item in data['selected']:
+			if not 'year' in item:
+				continue
+			if last_year > item['year']:
+				continue
+			dd = datetime.date(item['year'], dt.month, dt.day)
+			event = HistoricalEvent(date=dd, category='world_events', description=item['text'])
+			event.save()
