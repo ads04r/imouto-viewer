@@ -1,5 +1,4 @@
-import datetime, pytz, os, exifread, requests
-from django.conf import settings
+import datetime, pytz, os, exifread
 
 from viewer.models import Photo
 from viewer.functions.people import find_person_by_picasaid as find_person

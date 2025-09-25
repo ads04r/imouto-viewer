@@ -1,4 +1,3 @@
-from django.conf import settings
 from dateutil import parser
 import datetime, pytz, json, re, requests
 

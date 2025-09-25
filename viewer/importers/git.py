@@ -1,5 +1,4 @@
 import datetime, pytz
-from django.conf import settings
 
 from viewer.functions.git import get_recent_github_commits, get_recent_gitea_commits
 from viewer.models import GitCommit

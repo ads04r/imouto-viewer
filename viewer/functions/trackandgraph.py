@@ -1,5 +1,4 @@
 import sqlite3, datetime, pytz
-from django.conf import settings
 from viewer.functions.utils import unixtime_to_datetime
 
 def read_trackandgraph_file(path, date_from=None, date_to=None):
