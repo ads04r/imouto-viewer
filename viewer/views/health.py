@@ -15,7 +15,7 @@ from viewer.functions.utils import imouto_json_serializer
 import logging
 logger = logging.getLogger(__name__)
 
-def health_data(datatypes):
+def health_data(user, datatypes):
 	item = {'date': ''}
 	filter = None
 	ret = []
@@ -24,7 +24,7 @@ def health_data(datatypes):
 			filter = Q(type=type)
 		else:
 			filter = filter | Q(type=type)
-	for dr in DataReading.objects.filter(user=request.user).filter(filter).order_by('-start_time'):
+	for dr in DataReading.objects.filter(user=user).filter(filter).order_by('-start_time'):
 		type = str(dr.type)
 		if type == 'weight':
 			value = float(dr.value) / 1000
@@ -85,7 +85,7 @@ def health(request, pageid):
 			datapoint.save()
 			response = HttpResponse(json.dumps(ret), content_type='application/json')
 			return response
-		context['data'] = health_data(['bp_sys', 'bp_dia'])
+		context['data'] = health_data(request.user, ['bp_sys', 'bp_dia'])
 		return render(request, 'viewer/pages/health_bp.html', context)
 	if pageid == 'weight':
 		if request.method == 'POST':
@@ -98,7 +98,7 @@ def health(request, pageid):
 			datapoint.save()
 			response = HttpResponse(json.dumps(ret), content_type='application/json')
 			return response
-		context['data'] = health_data(['weight', 'fat', 'muscle', 'water'])
+		context['data'] = health_data(request.user, ['weight', 'fat', 'muscle', 'water'])
 		context['graphs'] = {}
 		dt = pytz.utc.localize(datetime.datetime.now()).replace(hour=0, minute=0, second=0)
 		for i in [{'label': 'week', 'dt': (dt - datetime.timedelta(days=7))}, {'label': 'month', 'dt': (dt - datetime.timedelta(days=28))}, {'label': 'year', 'dt': (dt - datetime.timedelta(days=365))}]:
@@ -121,7 +121,7 @@ def health(request, pageid):
 			datapoint.save()
 			response = HttpResponse(json.dumps(ret), content_type='application/json')
 			return response
-		for entry in health_data(['hads-a', 'hads-d']):
+		for entry in health_data(request.user, ['hads-a', 'hads-d']):
 			item = {'date': entry['date']}
 			if 'hads-a' in entry:
 				item['anxiety'] = entry['hads-a']
