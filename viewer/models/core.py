@@ -1163,6 +1163,16 @@ class Event(models.Model):
 	cover_photo = models.ForeignKey(Photo, null=True,  blank=True, on_delete=models.SET_NULL)
 	transit_method = models.ForeignKey(TransitMethod, null=True, blank=True, on_delete=models.SET_NULL, related_name="events")
 	passenger = models.BooleanField(default=False)
+	@property
+	def start_time_local(self):
+		if self.timezone:
+			return self.start_time.astimezone(self.timezone)
+		return self.start_time
+	@property
+	def end_time_local(self):
+		if self.timezone:
+			return self.end_time.astimezone(self.timezone)
+		return self.end_time
 	"""All locations within this event and its sub-events (mostly for life events)"""
 	@cached_property
 	def locations(self):
