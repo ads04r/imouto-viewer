@@ -93,7 +93,7 @@ def day_music(request, ds):
 	dte = dts + datetime.timedelta(seconds=86400)
 
 	data = []
-	for item in get_moonshine_tracks(dts, dte):
+	for item in get_moonshine_tracks(request.user, dts, dte):
 		item['time'] = item['time'].strftime("%H:%M")
 		data.append(item)
 	response = HttpResponse(json.dumps(data), content_type='application/json')

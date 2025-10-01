@@ -55,15 +55,15 @@ def get_moonshine_artist_image(mbid):
 
 	return None
 
-def get_moonshine_tracks(start_time, end_time):
+def get_moonshine_tracks(user, start_time, end_time):
 
-	if not(hasattr(settings, 'MOONSHINE_URL')):
+	if not 'MOONSHINE_URL' in user.profile.settings:
 		return []
 
 	dt = datetime.date(start_time.year, start_time.month, 1)
 	ret = []
 	while dt < end_time.date():
-		url = settings.MOONSHINE_URL + '/time/' + dt.strftime("%Y-%m")
+		url = user.profile.settings['MOONSHINE_URL'] + '/time/' + dt.strftime("%Y-%m")
 		r = requests.get(url)
 		for item in r.json():
 			if not('time' in item):

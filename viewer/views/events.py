@@ -129,7 +129,7 @@ def event_music(request, eid):
 	music = cache.get(cache_key + '_event_music')
 	if music is None:
 		logger.debug("        Loading music data for " + str(data))
-		music = get_moonshine_tracks(data.start_time, data.end_time)
+		music = get_moonshine_tracks(request.user, data.start_time, data.end_time)
 		if len(music) > 0:
 			cache.set(cache_key + '_event_music', music, 86400)
 	ret = []
