@@ -3197,12 +3197,17 @@ class Day(models.Model):
 		Calculates the sun up / down times for this day, based on where the user slept or the
 		home location if that isn't available.
 		"""
+		logger.debug("Calculating sun times")
+
 		if not((self.sunrise_time is None) or (self.sunset_time is None)):
 			return(self.sunrise_time, self.sunset_time)
 		try:
 			home = Location.objects.get(pk=self.user.profile.home_location)
 		except:
 			home = None
+
+		logger.debug("Home location: " + str(home))
+
 		if home is None:
 			wake_loc = None
 			sleep_loc = None
@@ -3215,7 +3220,8 @@ class Day(models.Model):
 				logged_pos = get_logged_position(self.user, self.timezone.localize(datetime.datetime(self.date.year, self.date.month, self.date.day, 8, 0, 0)))
 			else:
 				logged_pos = get_logged_position(self.user, self.wake_time)
-		except:
+		except e:
+			logger.debug(str(e))
 			logged_pos = wake_loc
 		wake_loc = logged_pos
 
@@ -3224,9 +3230,13 @@ class Day(models.Model):
 				logged_pos = get_logged_position(self.user, self.timezone.localize(datetime.datetime(self.date.year, self.date.month, self.date.day, 22, 0, 0)))
 			else:
 				logged_pos = get_logged_position(self.user, self.bed_time)
-		except:
+		except e:
+			logger.debug(str(e))
 			logged_pos = sleep_loc
 		sleep_loc = logged_pos
+
+		logger.debug("Wake location: " + json.dumps(wake_loc))
+		logger.debug("Sleep location: " + json.dumps(sleep_loc))
 
 		if wake_loc is None:
 			return None

@@ -8,24 +8,29 @@ def get_logged_position(user, dt):
 	"""
 	Given a date, returns the point that the user was near at the time specified.
 
-	:param date: A datetime.
+	:param dt: A datetime.
 	:return: A tuple (lat, lon) indicating the user's position
 	:rtype: tuple(float)
 
 	"""
+	logger.debug("Location manager lookup for " + str(dt))
 	if not 'LOCATION_MANAGER_URL' in user.profile.settings:
+		logger.debug("Location manager URL not set")
 		return (None, None)
 	if not 'LOCATION_MANAGER_TOKEN' in user.profile.settings:
+		logger.debug("Location manager token not set")
 		return (None, None)
 	address = user.profile.settings['LOCATION_MANAGER_URL']
 	bearer_token = user.profile.settings['LOCATION_MANAGER_TOKEN']
 	ds = dt.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S")
 	url = address + '/position/' + ds
+	logger.debug("Location manager calling: " + url)
 	try:
 		with requests.get(url, headers={'Authorization': 'Token ' + bearer_token}) as r:
 			data = json.loads(r.text)
 	except:
 		data = {}
+	logger.debug("Returned: " + json.dumps(data))
 	if(('lat' in data) & ('lon' in data)):
 		return (data['lat'], data['lon'])
 
@@ -51,6 +56,7 @@ def get_possible_location_events(user, date, lat, lon):
 
 	ds = date.strftime("%Y-%m-%d")
 	url = address + '/event/' + ds + '/' + str(lat) + '/' + str(lon)
+	logger.debug("Location manager calling: " + url)
 	try:
 		with requests.get(url, headers={'Authorization': 'Token ' + bearer_token}) as r:
 			data = json.loads(r.text)
@@ -85,6 +91,7 @@ def getgeoline(user, dts, dte):
 
 	id = dts.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S") + dte.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S")
 	url = address + "/route/" + id + "?format=json"
+	logger.debug("Location manager calling: " + url)
 	data = {}
 	try:
 		with requests.get(url, headers={'Authorization': 'Token ' + bearer_token}) as r:
@@ -120,6 +127,7 @@ def getelevation(user, dts, dte):
 
 	id = dts.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S") + dte.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S")
 	url = address + "/elevation/" + id + "?format=json"
+	logger.debug("Location manager calling: " + url)
 	data = []
 	try:
 		with requests.get(url, headers={'Authorization': 'Token ' + bearer_token}) as r:
@@ -154,6 +162,7 @@ def getspeed(user, dts, dte):
 	data = []
 	last_dist = 0
 	last_time = dts
+	logger.debug("Location manager calling: " + url)
 	try:
 		with requests.get(url, headers={'Authorization': 'Token ' + bearer_token}) as h:
 			for item in json.loads(h.text):
@@ -189,6 +198,7 @@ def getstopevents(user, dt):
 	address = user.profile.settings['LOCATION_MANAGER_URL']
 	bearer_token = user.profile.settings['LOCATION_MANAGER_TOKEN']
 	url = address + '/event/' + dt.strftime("%Y-%m-%d")
+	logger.debug("Location manager calling: " + url)
 	try:
 		r = requests.get(url, headers={'Authorization': 'Token ' + bearer_token})
 		data = json.loads(r.text)
@@ -214,6 +224,7 @@ def getamenities(user, dt):
 	address = user.profile.settings['LOCATION_MANAGER_URL']
 	bearer_token = user.profile.settings['LOCATION_MANAGER_TOKEN']
 	url = address + '/event/' + dt.strftime("%Y-%m-%d")
+	logger.debug("Location manager calling: " + url)
 	try:
 		r = requests.get(url, headers={'Authorization': 'Token ' + bearer_token})
 		data = json.loads(r.text)
@@ -240,6 +251,7 @@ def getboundingbox(user, dts, dte):
 	bearer_token = user.profile.settings['LOCATION_MANAGER_TOKEN']
 	id = dts.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S") + dte.astimezone(pytz.UTC).strftime("%Y%m%d%H%M%S")
 	url = address + '/bbox/' + id
+	logger.debug("Location manager calling: " + url)
 	try:
 		r = requests.get(url, headers={'Authorization': 'Token ' + bearer_token})
 		data = json.loads(r.text)

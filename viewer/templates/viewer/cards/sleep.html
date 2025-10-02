@@ -1,5 +1,7 @@
 {% load static %}
+{% load tz %}
 
+{% localtime off %}
         
                 {% if event.location %}
                     {% if event.location.image %}
@@ -38,3 +40,5 @@
                 
                     
                 </div>
+
+{% endlocaltime %}
