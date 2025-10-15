@@ -2699,6 +2699,9 @@ class Day(models.Model):
 		d = self.date
 		dts = self.timezone.localize(datetime.datetime(d.year, d.month, d.day, 0, 0, 0))
 		dte = dts + datetime.timedelta(seconds=86400)
+		if self._state.adding:
+			return (dts, dte)
+
 		wakes = DataReading.objects.filter(type='awake', start_time__gte=dts, start_time__lt=dte).order_by('start_time')
 		wakecount = 0
 		if self.future_data:
@@ -3268,6 +3271,8 @@ class Day(models.Model):
 			dts = self.timezone.localize(datetime.datetime(d.year, d.month, d.day, 8, 0, 0))
 		if dte is None:
 			dte = self.timezone.localize(datetime.datetime(d.year, d.month, d.day, 22, 0, 0))
+		if self._state.adding:
+			return
 		event_zones = list(set([event.timezone for event in self.events.filter(type='loc_prox')]))
 		if len(event_zones) == 1:
 			self.timezone_str = str(event_zones[0])
