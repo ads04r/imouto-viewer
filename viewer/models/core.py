@@ -2991,6 +2991,18 @@ class Day(models.Model):
 		return ret
 
 	@property
+	def steps_list(self):
+		ret = []
+		steps = 0
+		dt = None
+		for x in self.data_readings('step-count').order_by('start_time'):
+			if dt is None:
+				dt = x.start_time
+			steps = steps + x.value
+			ret.append([x.end_time, int((x.end_time - dt).total_seconds()), steps])
+		return ret
+
+	@property
 	def average_mood(self):
 		"""
 		The average mood of the user during thie particular Day. Returns None if no mood data found.
