@@ -266,32 +266,7 @@
 {% endwith %}
 {% with people=month.people %}
 {% if people %}
-
-                <div class="box box-primary" id="day_event_{{ event.pk }}">
-                    <div class="box-header with-border">
-                        <h3 class="box-title">People</h3>
-                    </div>
-                    <div class="box-body">
-
-                        <ul class="products-list product-list-in-box">
-
-{% for item in people %}
-                        
-                            <li class="item">
-                                <div class="product-img">{% if item.image %}<img class="img-responsive" src="people/{{ item.uid }}_thumb.jpg"/>{% else %}<img class="img-responsive" src="{% static "viewer/graphics/unknown_person.jpg" %}">{% endif %}</div>
-				<div class="product-info">
-	                                <a class="product-name personlink" href="#person_{{ item.uid }}">{{ item.full_name }}{% if item.significant %}<span class="pull-right"><i class="fa fa-star"></i></span>{% endif %}</a>
-					<span class="product-description">{{ item.event_count }} event(s) this month, {{ item.personevent_set.count }} event(s) total.</span>
-				</div>
-                            </li>
-
-{% endfor %}
-
-                        </ul>
-
-                    </div>
-                </div>
-
+	{% include 'viewer/cards/month_people.html' %}
 {% endif %}
 {% endwith %}
 
