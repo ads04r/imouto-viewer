@@ -1,0 +1,12 @@
+{% load static %}
+
+<div class="box box-primary">
+	<div class="box-header with-border">
+		<h3 class="box-title">Steps</h3>
+	</div>
+	<div class="box-body">
+		<div class="chart">
+			<canvas class="time-chart" style="height: 160px" data-data="{{ steps|escape }}"></canvas>
+		</div>
+	</div>
+</div>

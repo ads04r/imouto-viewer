@@ -1230,9 +1230,13 @@ class Event(models.Model):
 		for x in self.data_readings('step-count').order_by('start_time'):
 			if dt is None:
 				dt = x.start_time
+				ret.append({"x": dt.strftime("%Y-%m-%dT%H:%M:%S"), "y": 0})
 			steps = steps + x.value
-			ret.append([x.end_time, int((x.end_time - dt).total_seconds()), steps])
+			ret.append({"x": x.end_time.strftime("%Y-%m-%dT%H:%M:%S"), "y": steps})
 		return ret
+	@property
+	def steps_list_json(self):
+		return json.dumps(self.steps_list)
 	@property
 	def show_elevationtab(self):
 		health = self.health()
@@ -1276,6 +1280,9 @@ class Event(models.Model):
 		if type == '':
 			return DataReading.objects.filter(end_time__gte=self.start_time, start_time__lte=self.end_time)
 		return DataReading.objects.filter(end_time__gte=self.start_time, start_time__lte=self.end_time, type=type)
+
+	def data_reading_types(self):
+		return [x[0] for x in DataReading.objects.filter(end_time__gte=self.start_time, start_time__lte=self.end_time).values_list('type').distinct()]
 
 	def locations_geo(self):
 		"""
@@ -3021,9 +3028,14 @@ class Day(models.Model):
 		for x in self.data_readings('step-count').order_by('start_time'):
 			if dt is None:
 				dt = x.start_time
+				ret.append({"x": dt.strftime("%Y-%m-%dT%H:%M:%S"), "y": 0})
 			steps = steps + x.value
-			ret.append([x.end_time, int((x.end_time - dt).total_seconds()), steps])
+			ret.append({"x": x.end_time.strftime("%Y-%m-%dT%H:%M:%S"), "y": steps})
 		return ret
+
+	@property
+	def steps_list_json(self):
+		return json.dumps(self.steps_list)
 
 	@property
 	def average_mood(self):
@@ -3083,6 +3095,9 @@ class Day(models.Model):
 		if type == '':
 			return DataReading.objects.filter(end_time__gte=dts, start_time__lte=dte)
 		return DataReading.objects.filter(end_time__gte=dts, start_time__lte=dte, type=type)
+
+	def data_reading_types(self):
+		return [x[0] for x in self.data_readings().exclude(type='step-count').exclude(type='awake').exclude(type='sleep').values_list('type').distinct()]
 
 	def get_heart_information(self, graph=True):
 		"""
