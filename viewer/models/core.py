@@ -1179,21 +1179,21 @@ class Event(models.Model):
 		if self.location:
 			return Location.objects.filter(id=self.location.id)
 		return Location.objects.filter(events__in=self.subevents()).distinct()
-	"""The URI of this object for RDF serialization."""
 	@property
 	def uri(self):
+		"""The URI of this object for RDF serialization."""
 		if hasattr(settings, 'USER_RDF_NAMESPACE'):
 			return settings.USER_RDF_NAMESPACE + 'event/' + str(self.pk)
 		if hasattr(settings, 'RDF_NAMESPACE'):
 			return settings.RDF_NAMESPACE + 'event/' + str(self.pk)
 		return None
-	"""Properties to exclude from RDF serialization."""
 	@property
 	def rdf_exclude(self):
+		"""Properties to exclude from RDF serialization."""
 		return ['geo', 'speed', 'elevation']
-	"""The RDF type(s) of this object for RDF serialization."""
 	@property
 	def rdf_types(self):
+		"""The RDF type(s) of this object for RDF serialization."""
 		ret = []
 		if hasattr(settings, 'RDF_NAMESPACE'):
 			ret.append(settings.RDF_NAMESPACE + 'Event')
@@ -1208,7 +1208,6 @@ class Event(models.Model):
 			if self.type == 'photos':
 				ret.append(settings.RDF_NAMESPACE + 'PhotoEvent')
 		return ret
-	"""The Photo object that best illustrates this Event."""
 	@property
 	def show_hearttab(self):
 		health = self.health()
@@ -1223,6 +1222,17 @@ class Event(models.Model):
 		if 'heartoptimaltime' in health:
 			return True
 		return False
+	@property
+	def steps_list(self):
+		ret = []
+		steps = 0
+		dt = None
+		for x in self.data_readings('step-count').order_by('start_time'):
+			if dt is None:
+				dt = x.start_time
+			steps = steps + x.value
+			ret.append([x.end_time, int((x.end_time - dt).total_seconds()), steps])
+		return ret
 	@property
 	def show_elevationtab(self):
 		health = self.health()
@@ -1254,6 +1264,19 @@ class Event(models.Model):
 		for i in range(0, len(ret)):
 			ret[i][2] = int((ret[i][1] / max) * 100.0)
 		return ret
+
+	def data_readings(self, type=''):
+		"""
+		Returns all DataReading object of the type specified, logged during this event.
+
+		:param type: The type of readings to return (empty string returns all readings).
+		:return: A QuerySet of DataReading objects.
+		:rtype: QuerySet(DataReading)
+		"""
+		if type == '':
+			return DataReading.objects.filter(end_time__gte=self.start_time, start_time__lte=self.end_time)
+		return DataReading.objects.filter(end_time__gte=self.start_time, start_time__lte=self.end_time, type=type)
+
 	def locations_geo(self):
 		"""
 		Useful for drawing straight onto a Leaflet map, this function returns the geographical position of all locations associated with this event as a GeoJSON object.
