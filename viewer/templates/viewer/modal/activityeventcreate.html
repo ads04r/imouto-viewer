@@ -1,0 +1,27 @@
+<div class="modal fade nav-tabs-custom" id="day_activityevent_add" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+	<form action="events/add_activity_event" method="POST">
+            <div class="modal-body">
+
+		<table class="table table-condensed">
+{% for item in activities %}
+			<tr>
+				<td><input type="checkbox" name="activity_{{ item.pk }}" id="activity_{{ item.pk }}_id"></td>
+				<td><label for="activity_{{ item.pk }}_id">{{ item.type }}</label></td>
+				<td>{{ item.start_time|date:"g:ia" }} - {{ item.end_time|date:"g:ia" }}</td>
+			</tr>
+{% endfor %}
+		</table>
+
+{% csrf_token %}
+                
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+	</form>
+        </div>
+    </div>
+</div>

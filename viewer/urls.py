@@ -56,6 +56,7 @@ urlpatterns = [
     path('events/add_journey', views.event_addjourney),
     path('events/add_file_event', views.event_addfileevent),
     path('events/add_appointment_event', views.event_addappointmentevent),
+    path('events/add_activity_event', views.event_addactivityevent),
     path('places.html', views.places),
     path('places/<uid>.html', views.place),
     path('places/<uid>.json', views.place_json),

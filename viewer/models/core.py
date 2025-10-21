@@ -3099,6 +3099,14 @@ class Day(models.Model):
 	def data_reading_types(self):
 		return [x[0] for x in self.data_readings().exclude(type='step-count').exclude(type='awake').exclude(type='sleep').values_list('type').distinct()]
 
+	def data_readings_by_duration(self, duration=300):
+		ids = []
+		for dr in self.data_readings().exclude(type='sleep').exclude(type='awake'):
+			if (dr.end_time - dr.start_time).total_seconds() < duration:
+				continue
+			ids.append(dr.pk)
+		return DataReading.objects.filter(pk__in=ids).order_by('start_time')
+
 	def get_heart_information(self, graph=True):
 		"""
 		Returns a summary of the stored heart rate data for the day in question.

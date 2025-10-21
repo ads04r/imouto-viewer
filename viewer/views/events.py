@@ -219,6 +219,13 @@ def event_addfileevent(request):
 
 	return HttpResponseRedirect('../#event_' + str(event.pk))
 
+def event_addactivityevent(request):
+	if request.method != 'POST':
+		return HttpResponseNotAllowed(['POST'])
+	ret = dict(request.POST)
+	response = HttpResponse(json.dumps(ret), content_type='application/json')
+	return response
+
 def event_staticmap(request, eid):
 	data = get_object_or_404(Event, id=eid)
 	if data.geo:
