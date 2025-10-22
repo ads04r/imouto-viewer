@@ -64,7 +64,7 @@ def day(request, ds):
 	appointments = day.calendar
 	amenities = getamenities(request.user, day.date)
 	imported_files = ImportedFile.objects.filter(user=request.user, latest_timestamp__gte=pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(day.date.year, day.date.month, day.date.day, 0, 0, 0)), earliest_timestamp__lte=pytz.timezone(settings.TIME_ZONE).localize(datetime.datetime(day.date.year, day.date.month, day.date.day, 23, 59, 59))).order_by('earliest_timestamp')
-	context = {'type':'view', 'caption': dss, 'events':events, 'day': day, 'potential_joins': potential_joins, 'appointments': appointments, 'categories':EventWorkoutCategory.objects.filter(user=request.user), 'transit':TransitMethod.objects.filter(user=request.user), 'amenities': amenities, 'imported_files': imported_files}
+	context = {'type':'view', 'caption': dss, 'events':events, 'day': day, 'potential_joins': potential_joins, 'appointments': appointments, 'categories':EventWorkoutCategory.objects.filter(user=request.user), 'transit':TransitMethod.objects.filter(user=request.user), 'activities': day.data_readings_by_duration(), 'amenities': amenities, 'imported_files': imported_files}
 	context['form'] = EventForm()
 	return render(request, 'viewer/pages/day.html', context)
 

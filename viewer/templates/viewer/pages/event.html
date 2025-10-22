@@ -70,6 +70,12 @@
   {% include 'viewer/cards/eventcadencegraph.html' %}
 {% endif %}
 {% endif %}
+
+{% with steps=data.steps_list_json %}
+{% if steps %}
+  {% include 'viewer/cards/eventstepgraph.html' %}
+{% endif %}
+{% endwith %}
             
 {% if data.health.sleep != None %}
   {% include 'viewer/cards/eventsleepgraph.html' %}
