@@ -7,7 +7,7 @@ from django.conf import settings
 from io import BytesIO
 import datetime, pytz, dateutil.parser, json, requests, random
 
-from viewer.models import Person, Photo, Event, EventWorkoutCategory, CalendarAppointment, LifePeriod, ImportedFile, TransitMethod
+from viewer.models import Person, Photo, Event, EventWorkoutCategory, CalendarAppointment, LifePeriod, ImportedFile, TransitMethod, DataReading
 from viewer.forms import EventForm, QuickEventForm, LifePeriodForm
 from viewer.tasks.reports import generate_photo_collages
 from viewer.tasks.datacrunching import regenerate_similar_events, generate_similar_events, count_event_faces, scan_event_for_text
@@ -222,9 +222,19 @@ def event_addfileevent(request):
 def event_addactivityevent(request):
 	if request.method != 'POST':
 		return HttpResponseNotAllowed(['POST'])
-	ret = dict(request.POST)
-	response = HttpResponse(json.dumps(ret), content_type='application/json')
-	return response
+	ret = []
+	for kk in dict(request.POST).keys():
+		k = str(kk)
+		if not k.startswith('activity_'):
+			continue
+		dr = get_object_or_404(DataReading, pk=k[9:])
+		event = Event(user=request.user, caption=str(dr.type) + " activity", start_time=dr.start_time, end_time=dr.end_time, type='activity', location=None, description='')
+		event.save()
+		ret.append(event)
+
+	if len(ret) == 1:
+		return HttpResponseRedirect('../#event_' + str(ret[0].pk))
+	return HttpResponseRedirect('../#day_' + str(ret[0].start_time.strftime("%Y%m%d")))
 
 def event_staticmap(request, eid):
 	data = get_object_or_404(Event, id=eid)
