@@ -26,7 +26,7 @@ def import_github_history(user, since=None):
 		if commit['time'] <= last_commit:
 			continue
 		try:
-			item = GitCommit(user=user, hash=commit['hash'], comment=commit['comment'].strip(), repo_url=commit['repo_url'], commit_date=commit['time'], additions=commit['stats']['additions'], deletions=commit['stats']['deletions'])
+			item = GitCommit(user=user, hash=commit['hash'], comment=commit['comment'].strip(), repo_url=commit['repo_url'], commit_date=commit['time'], additions=None, deletions=None)
 			item.save()
 		except:
 			item = None
