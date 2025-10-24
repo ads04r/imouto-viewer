@@ -9,6 +9,7 @@
 			<tr>
 				<td><input type="checkbox" name="activity_{{ item.pk }}" id="activity_{{ item.pk }}_id"></td>
 				<td><label for="activity_{{ item.pk }}_id">{{ item.type }}</label></td>
+				<td>{{ item.location }}</td>
 				<td>{{ item.start_time|date:"g:ia" }} - {{ item.end_time|date:"g:ia" }}</td>
 			</tr>
 {% endfor %}

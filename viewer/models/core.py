@@ -24,7 +24,7 @@ from suntimes import SunTimes
 from urllib.parse import urlparse
 
 from viewer.health import parse_sleep, max_heart_rate
-from viewer.functions.geo import get_location_name
+from viewer.functions.geo import get_location_name, get_area_name
 from viewer.functions.location_manager import get_possible_location_events, get_logged_position, getgeoline, getelevation, getspeed, getboundingbox
 from viewer.staticcharts import generate_pie_chart, generate_donut_chart
 from viewer.functions.file_uploads import user_thumbnail_upload_location, photo_thumbnail_upload_location, location_thumbnail_upload_location, year_pdf_upload_location, report_wordcloud_upload_location, report_graph_upload_location, event_staticmap_upload_location, tag_staticmap_upload_location, year_wordcloud_upload_location
@@ -3396,6 +3396,35 @@ class DataReading(models.Model):
 	end_time = models.DateTimeField()
 	type = models.SlugField(max_length=32)
 	value = models.IntegerField()
+	cached_location = models.CharField(max_length=256, null=True)
+	@property
+	def location(self):
+		if self.cached_location:
+			return self.cached_location
+		for event in Event.objects.filter(end_time__gte=self.start_time, start_time__lte=self.end_time).exclude(location=None):
+			return str(event.location)
+		lat = [0.0, 0.0]
+		lon = [0.0, 0.0]
+		lat[0], lon[0] = get_logged_position(self.user, self.start_time)
+		lat[1], lon[1] = get_logged_position(self.user, self.end_time)
+		if lat[0] is None:
+			lat[0] = lat[1]
+		if lat[1] is None:
+			lat[1] = lat[0]
+		if lon[0] is None:
+			lon[0] = lon[1]
+		if lon[1] is None:
+			lon[1] = lon[0]
+		try:
+			lat.sort()
+			lon.sort()
+			ret = get_area_name(lat[0], lon[0], lat[1], lon[1])
+		except:
+			ret = ''
+		if ((ret != self.cached_location) & (len(ret) > 0)):
+			self.cached_location = ret
+			self.save(update_fields=['cached_location'])
+		return ret
 	def length(self):
 		return((self.end_time - self.start_time).total_seconds())
 	def __str__(self):
