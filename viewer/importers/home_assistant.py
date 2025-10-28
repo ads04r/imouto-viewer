@@ -24,11 +24,11 @@ def import_home_assistant_readings(user, entity_id, reading_type, days=7, multip
 	dte = pytz.utc.localize(datetime.datetime.utcnow())
 	dts = dte - datetime.timedelta(days=days)
 	try:
-		url = settings.HOME_ASSISTANT_URL.lstrip('/') + '/history/period/' + dts.strftime("%Y-%m-%d") + 'T' + dts.strftime("%H:%M:%S")
+		url = user.profile.settings['HOME_ASSISTANT_URL'].lstrip('/') + '/history/period/' + dts.strftime("%Y-%m-%d") + 'T' + dts.strftime("%H:%M:%S")
 	except AttributeError:
 		url = ''
 	try:
-		token = settings.HOME_ASSISTANT_TOKEN
+		token = user.profile.settings['HOME_ASSISTANT_TOKEN']
 	except AttributeError:
 		token = ''
 	ret = []
@@ -39,7 +39,8 @@ def import_home_assistant_readings(user, entity_id, reading_type, days=7, multip
 	if reading_type == '':
 		return ret
 	r = requests.get(url, headers={'Authorization': 'Bearer ' + token}, params={'filter_entity_id': entity_id, 'minimal_response': True, 'end_time': dte.strftime("%Y-%m-%d") + 'T' + dte.strftime("%H:%M:%S")})
-	for item in json.loads(r.text):
+	json_txt = r.text
+	for item in json.loads(json_txt):
 		for subitem in item:
 			try:
 				state = int(float(subitem['state']) * float(multiplier))

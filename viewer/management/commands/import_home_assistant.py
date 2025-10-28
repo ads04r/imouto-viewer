@@ -40,7 +40,10 @@ class Command(BaseCommand):
 				sys.stderr.write(self.style.SUCCESS(str(ct) + " event(s) tagged with entity " + prop['value'] + ".\n"))
 
 		for item in logging:
-			ret = import_home_assistant_readings(user, item[0], item[1], days=7)
+			if len(item) > 2:
+				ret = import_home_assistant_readings(user, item[0], item[1], days=7, multiplier=item[2])
+			else:
+				ret = import_home_assistant_readings(user, item[0], item[1], days=7)
 			ct = len(ret)
 			if ct > 0:
 				sys.stderr.write(self.style.SUCCESS(str(ct) + " data readings of type " + item[1] + " added.\n"))
