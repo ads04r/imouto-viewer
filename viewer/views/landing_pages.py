@@ -10,14 +10,14 @@ from viewer.models import Event, create_or_get_day
 from viewer.forms import EventForm, QuickEventForm
 
 from viewer.functions.locations import home_location
-from viewer.functions.utils import get_timeline_events, generate_dashboard, get_today, imouto_json_serializer
+from viewer.functions.utils import get_timeline_events, generate_dashboard, get_today, imouto_json_serializer, first_event_time
 
 import logging
 logger = logging.getLogger(__name__)
 
 @login_required(login_url='/users/login')
 def index(request):
-	context = {'type':'index', 'data':[], 'today': create_or_get_day(request.user)}
+	context = {'type':'index', 'data':[], 'today': create_or_get_day(request.user), 'home': home_location(request.user), 'since': first_event_time(request.user)}
 	if context['today']:
 		context['today'].yesterday.get_sleep_information() # Pre-cache so we never end up with any part-processed data
 	logger.info("HTML frame requested")

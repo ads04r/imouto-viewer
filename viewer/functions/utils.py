@@ -27,6 +27,13 @@ def __display_timeline_event(event):
 							return False
 	return True
 
+def first_event_time(user):
+
+	try:
+		return Event.objects.filter(user=user).order_by('start_time').first().start_time
+	except:
+		return None
+
 def generate_life_grid(user, start_date, weeks):
 
 	life = []

@@ -1,0 +1,22 @@
+{% load static %}
+<li class="user-header">
+	<img size="100" height="100" src="{% static "viewer/graphics/unknown_person.jpg" %}">
+	<p>{{ user.username }}
+	<small class="muted">{{ home.city }}</small></p>
+</li>
+<li class="user-body">
+	<ul class="list-group list-group-unbordered">
+		<li class="list-group-item">
+			<b>Age</b>
+			<span class="pull-right">{{ user.profile.age }}</span>
+		</li>
+		<li class="list-group-item">
+			<b>Logs since</b>
+			<span class="pull-right">{{ since|date:"jS F Y" }}</span>
+		</li>
+	</ul>
+</li>
+<li class="user-footer">
+	<div class="pull-left"><a class="btn btn-default btn-flat" href="#profile">Profile</a></div>
+	<div class="pull-right"><a class="btn btn-default btn-flat" href="#files">Data</a></div>
+</li>
