@@ -23,7 +23,7 @@
 </li>
 
 <li class="dropdown user user-menu">
-	<a class="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="true"><img class="user-image" src="{% static "viewer/graphics/unknown_person.jpg" %}" alt="User image"><span class="hidden-xs">{{ user.username }}</span></a>
+	<a class="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="true"><img class="user-image" src="profile/{{ user.username }}.jpg" alt="User image"><span class="hidden-xs">{{ user.username }}</span></a>
 	<ul class="dropdown-menu">
 		{% include 'viewer/_profile.html' %}
 	</ul>

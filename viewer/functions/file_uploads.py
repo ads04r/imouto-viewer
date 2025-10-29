@@ -33,3 +33,6 @@ def year_wordcloud_upload_location(instance, filename):
 
 def photo_collage_upload_location(instance, filename):
 	return 'collages/photo_collage_' + str(instance.pk) + '.jpg'
+
+def user_profile_image_upload_location(instance, filename):
+	return 'people/users/' + str(instance.pk) + '/' + filename

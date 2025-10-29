@@ -4,8 +4,10 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.functional import cached_property
-
-import datetime
+from django.contrib.staticfiles import finders
+from viewer.functions.file_uploads import user_profile_image_upload_location
+from PIL import Image
+import datetime, os
 
 def create_new_userprofile():
 	ret = {}
@@ -15,8 +17,28 @@ class UserProfile(models.Model):
 	user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
 	date_of_birth = models.DateField(null=True, blank=True)
 	home_location = models.IntegerField(default=0)
+	image = models.ImageField(blank=True, null=True, upload_to=user_profile_image_upload_location)
 	rdf_namespace = models.URLField(null=True, blank=True)
 	settings = models.JSONField(default=create_new_userprofile, encoder=DjangoJSONEncoder)
+	def thumbnail(self, size):
+		try:
+			im = Image.open(self.image.path)
+		except:
+			unknown = finders.find('viewer/graphics/unknown_person.jpg')
+			if os.path.exists(unknown):
+				im = Image.open(unknown)
+			else:
+				return None
+		bbox = im.getbbox()
+		w = bbox[2]
+		h = bbox[3]
+		if h > w:
+			ret = im.crop((0, 0, w, w))
+		else:
+			x = int((w - h) / 2)
+			ret = im.crop((x, 0, x + h, h))
+		ret = ret.resize((size, size), 1)
+		return ret
 	@cached_property
 	def age(self):
 		today = datetime.datetime.now().date()
