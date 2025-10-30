@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.core.cache import cache
 from django.conf import settings
+from django.contrib.auth.models import User
 from dateutil.parser import parse as dateparse
 from viewer.models import Person, PersonProperty
 from django.db.models import Q
@@ -19,12 +20,21 @@ class Command(BaseCommand):
 	def add_arguments(self, parser):
 
 		parser.add_argument("host", action="store", help="The hostname or IP address of the IMAP server.")
-		parser.add_argument("-u", "--username", action="store", dest="username", default="", help="User name for logging into the IMAP server.")
+		parser.add_argument("-l", "--username", action="store", dest="username", default="", help="User name for logging into the IMAP server.")
 		parser.add_argument("-p", "--password", action="store", dest="password", default="", help="Password for logging into the IMAP server.")
 		parser.add_argument("-i", "--inbox", action="store", dest="inbox", default="INBOX", help="The name of the inbox in which the SMS messages may be found.")
 		parser.add_argument("-o", "--operation", action="store", dest="operation", default="sms", choices=['sms', 'phone'], help="The mode of operation. 'sms' imports text messages, 'phone' imports phone calls.")
+		parser.add_argument("-u", "--user", action="store", dest="user_id", required=True, help="which (Imouto) user are we working with?")
 
 	def handle(self, *args, **kwargs):
+
+		try:
+			user = User.objects.get(username=kwargs['user_id'])
+		except:
+			user = None
+		if not user:
+			sys.stderr.write(self.style.ERROR(str(kwargs['user_id']) + " is not a valid user on this system.\n"))
+			sys.exit(1)
 
 		host = kwargs['host']
 		username = kwargs['username']
@@ -36,9 +46,9 @@ class Command(BaseCommand):
 			sys.exit(1)
 
 		if mode == 'phone':
-			ct = import_calls_from_imap(host, username, password, inbox)
+			ct = import_calls_from_imap(user, host, username, password, inbox)
 		elif mode == 'sms':
-			ct = import_sms_from_imap(host, username, password, inbox)
+			ct = import_sms_from_imap(user, host, username, password, inbox)
 		else:
 			sys.stderr.write(self.style.ERROR("Invalid operation mode.\n"))
 			sys.exit(1)
