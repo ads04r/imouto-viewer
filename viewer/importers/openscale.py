@@ -26,7 +26,7 @@ def __parse_scale_csv(filepath):
 			ret.append(item)
 	return(ret)
 
-def import_openscale(filepath):
+def import_openscale(user, filepath):
 	"""
 	For users of the Android app OpenScale, this function takes a file exported by the app and
 	imports it into the Imouto Viewer database as DataReading objects for weight, fat percentage,
@@ -48,38 +48,38 @@ def import_openscale(filepath):
 			dt = tz.localize(datetime.datetime.strptime(ds, "%d.%m.%Y %H:%M"))
 
 		try:
-			weight = DataReading.objects.get(start_time=dt, end_time=dt, type='weight')
+			weight = DataReading.objects.get(user=user, start_time=dt, end_time=dt, type='weight')
 		except:
 			value = (float(item['weight']) * 1000) + 0.5
 			if value > 87000:
-				weight = DataReading(start_time=dt, end_time=dt, type='weight', value=int(value))
+				weight = DataReading(user=user, start_time=dt, end_time=dt, type='weight', value=int(value))
 				ret.append([str(dt), 'weight', str(float(weight.value) / 1000)])
 				weight.save()
 
 		try:
-			fat = DataReading.objects.get(start_time=dt, end_time=dt, type='fat')
+			fat = DataReading.objects.get(user=user, start_time=dt, end_time=dt, type='fat')
 		except:
 			value = float(item['fat']) + 0.5
 			if value > 10:
-				fat = DataReading(start_time=dt, end_time=dt, type='fat', value=int(value))
+				fat = DataReading(user=user, start_time=dt, end_time=dt, type='fat', value=int(value))
 				ret.append([str(dt), 'fat', str(fat.value) + "%"])
 				fat.save()
 
 		try:
-			muscle = DataReading.objects.get(start_time=dt, end_time=dt, type='muscle')
+			muscle = DataReading.objects.get(user=user, start_time=dt, end_time=dt, type='muscle')
 		except:
 			value = float(item['muscle']) + 0.5
 			if value > 10:
-				muscle = DataReading(start_time=dt, end_time=dt, type='muscle', value=int(value))
+				muscle = DataReading(user=user, start_time=dt, end_time=dt, type='muscle', value=int(value))
 				ret.append([str(dt), 'muscle', str(muscle.value) + "%"])
 				muscle.save()
 
 		try:
-			water = DataReading.objects.get(start_time=dt, end_time=dt, type='water')
+			water = DataReading.objects.get(user=user, start_time=dt, end_time=dt, type='water')
 		except:
 			value = float(item['water']) + 0.5
 			if value > 10:
-				water = DataReading(start_time=dt, end_time=dt, type='water', value=int(value))
+				water = DataReading(user=user, start_time=dt, end_time=dt, type='water', value=int(value))
 				ret.append([str(dt), 'water', str(water.value) + "%"])
 				water.save()
 	return ret
