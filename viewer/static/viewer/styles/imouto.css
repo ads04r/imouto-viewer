@@ -183,3 +183,5 @@ ol.eventstats li {
 }
 
 ol.eventstats > li + li:before { content: '| '; }
+
+img.user-image { border-radius: 0px !important; }
