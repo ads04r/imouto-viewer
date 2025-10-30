@@ -6,7 +6,7 @@ from viewer.models import RemoteInteraction
 import logging
 logger = logging.getLogger(__name__)
 
-def import_sms_from_imap(host, username, password, inbox='INBOX', countrycode='44'):
+def import_sms_from_imap(user, host, username, password, inbox='INBOX', countrycode='44'):
 	"""
 	For users using the Android app 'SMS Backup+', this function gets the user's text messages that have been stored on
 	an IMAP mail server by the app and imports them into Imouto Viewer as RemoteInteraction objects.
@@ -19,7 +19,10 @@ def import_sms_from_imap(host, username, password, inbox='INBOX', countrycode='4
 	:return: The number of new messages imported.
 	:rtype: int
 	"""
-	minmsg = RemoteInteraction.objects.filter(type='sms').order_by('-time')[0]
+	try:
+		minmsg = RemoteInteraction.objects.filter(user=user, type='sms').order_by('-time')[0]
+	except:
+		minmsg = RemoteInteraction.objects.filter(user=user).order_by('time')[0]
 	mindt = minmsg.time
 	minds = mindt.strftime("%-d-%b-%Y")
 
@@ -72,15 +75,15 @@ def import_sms_from_imap(host, username, password, inbox='INBOX', countrycode='4
 				incoming = False
 
 			try:
-				msg = RemoteInteraction.objects.get(type='sms', time=dt, address=number, incoming=incoming, title='', message=body)
+				msg = RemoteInteraction.objects.get(user=user, type='sms', time=dt, address=number, incoming=incoming, title='', message=body)
 			except:
-				msg = RemoteInteraction(type='sms', time=dt, address=number, incoming=incoming, title='', message=body)
+				msg = RemoteInteraction(user=user, type='sms', time=dt, address=number, incoming=incoming, title='', message=body)
 				ct = ct + 1
 				msg.save()
 
 	return ct
 
-def import_calls_from_imap(host, username, password, inbox='INBOX', countrycode='44'):
+def import_calls_from_imap(user, host, username, password, inbox='INBOX', countrycode='44'):
 	"""
 	For users using the Android app 'SMS Backup+', this function gets the user's phone call history that has been stored on
 	an IMAP mail server by the app and imports them into Imouto Viewer as RemoteInteraction objects.
@@ -94,9 +97,9 @@ def import_calls_from_imap(host, username, password, inbox='INBOX', countrycode=
 	:rtype: int
 	"""
 	try:
-		minmsg = RemoteInteraction.objects.filter(type='phone-call').order_by('-time')[0]
+		minmsg = RemoteInteraction.objects.filter(user=user, type='phone-call').order_by('-time')[0]
 	except:
-		minmsg = RemoteInteraction.objects.order_by('time')[0]
+		minmsg = RemoteInteraction.objects.filter(user=user).order_by('time')[0]
 	mindt = minmsg.time
 	minds = mindt.strftime("%-d-%b-%Y")
 
@@ -150,9 +153,9 @@ def import_calls_from_imap(host, username, password, inbox='INBOX', countrycode=
 				incoming = True
 
 			try:
-				msg = RemoteInteraction.objects.get(type='phone-call', time=dt, address=number, incoming=incoming, title='', message=body)
+				msg = RemoteInteraction.objects.get(user=user, type='phone-call', time=dt, address=number, incoming=incoming, title='', message=body)
 			except:
-				msg = RemoteInteraction(type='phone-call', time=dt, address=number, incoming=incoming, title='', message=body)
+				msg = RemoteInteraction(user=user, type='phone-call', time=dt, address=number, incoming=incoming, title='', message=body)
 				msg.save()
 				ct = ct + 1
 				msg.save()
