@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from viewer.models import Event, EventTag, PersonProperty, DataReading, RemoteInteraction, create_or_get_month
+from viewer.models import Photo, Event, EventWorkoutCategory, EventTag, PersonProperty, DataReading, RemoteInteraction, create_or_get_day, create_or_get_month
 import datetime, pytz
 
 class Dashboard():
@@ -24,6 +24,23 @@ class Dashboard():
 		y = int(datetime.datetime.now().year)
 		m = int(datetime.datetime.now().month)
 		return create_or_get_month(user=self.user, year=y, month=m)
+
+	def exercise(self):
+
+		workouts = []
+		workout_total = 0
+		dts = self.last_event - datetime.timedelta(days=7)
+		dte = self.last_event
+		for category in EventWorkoutCategory.objects.filter(user=self.user):
+			v = 0.0
+			for event in Event.objects.filter(user=self.user, end_time__gte=dts, start_time__lte=dte, workout_categories=category):
+				v = v + event.distance()
+			if v > 0:
+				workouts.append({'id': category.pk, 'label': str(category), 'distance': int(v)})
+				workout_total = workout_total + int(v)
+		for i in range(0, len(workouts)):
+			workouts[i]['prc'] = int(float(workouts[i]['distance']) / float(workout_total))
+		return workouts
 
 	def birthdays(self):
 
@@ -74,14 +91,33 @@ class Dashboard():
 		stats = {}
 		now = pytz.utc.localize(datetime.datetime.utcnow())
 
-		stats['messages'] = RemoteInteraction.objects.filter(user=self.user, type='sms', time__gte=(self.last_event - datetime.timedelta(days=7))).count()
-		stats['phone_calls'] = RemoteInteraction.objects.filter(user=self.user, type='phone-call', time__gte=(self.last_event - datetime.timedelta(days=7))).count()
+		stats['Messages'] = RemoteInteraction.objects.filter(user=self.user, type='sms', time__gte=(self.last_event - datetime.timedelta(days=7))).count()
+		stats['Phone Calls'] = RemoteInteraction.objects.filter(user=self.user, type='phone-call', time__gte=(self.last_event - datetime.timedelta(days=7))).count()
 
 		weights = DataReading.objects.filter(user=self.user, type='weight', start_time__gte=(self.last_event - datetime.timedelta(days=7)))
 		if weights.count() > 0:
 			total_weight = 0.0
 			for weight in weights:
 				total_weight = total_weight + (float(weight.value) / 1000)
-			stats['weight'] = (float(int((total_weight / float(weights.count())) * 100)) / 100)
+			stats['Average Weight'] = (float(int((total_weight / float(weights.count())) * 100)) / 100)
+
+		stats['Photos'] = Photo.objects.filter(user=self.user, time__gte=(self.last_event - datetime.timedelta(days=7))).count()
 
 		return stats
+
+	def feed(self):
+
+		ret = []
+		for i in range(0, 7):
+			dt = self.last_event.date() - datetime.timedelta(days=i)
+			day = create_or_get_day(self.user, dt)
+			if day is None:
+				continue
+			item = {"label": str(day), "events": [], "people": [], "places": []}
+			for event in day.events.exclude(location__pk=self.user.profile.home_location).order_by('start_time'):
+				if event.length < 300:
+					continue
+				item['events'].append(event)
+			item['people'] = list(day.people.filter(significant=True))
+			ret.append(item)
+		return ret

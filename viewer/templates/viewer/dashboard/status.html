@@ -1,14 +1,17 @@
 {% with dashboard.stats as stats %}
 
                 <div class="box box-primary">
-                    <div class="box-body profile">
 
-			<ul class="list-group list-group-unbordered">
+                    <div class="box-header"><h3 class="box-title">In the last 7 days...</h3></div>
+
+                    <div class="box-body table-responsive">
+
+			<table class="table table-condensed">
 {% for stat in stats.items %}
-				<li class="list-group-item"><b>{{ stat.0 }}</b>
-				<span class="pull-right">{{ stat.1 }}</span></li>
+				<tr><td><b>{{ stat.0 }}</b></td>
+				<td><span class="pull-right">{{ stat.1 }}</span></td></tr>
 {% endfor %}
-			</ul>
+			</table>
                     </div>
                 </div>
 
