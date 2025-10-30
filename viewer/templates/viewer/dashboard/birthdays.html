@@ -1,0 +1,30 @@
+{% with dashboard.birthdays as birthdays %}
+
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Upcoming Birthdays</h3>
+                    </div>
+                    <div class="box-body">
+                            <ul class="products-list product-list-in-box">
+                                
+{% for item in birthdays %}
+                                
+                                <li class="item">
+                                    <div class="product-img">
+                                        {% if item.0.image %}<img src="people/{{ item.0.uid }}_thumb.jpg"/>{% endif %}
+                                    </div>
+                                    <div class="product-info">
+                                        <a class="product-title personlink" href="#person_{{ item.0.uid }}">
+                                            {{ item.0.full_name }}</a> {% if item.2 %}<i>({{ item.2 }})</i>{% endif %}
+                                        <span class="product-description">
+                                            {{ item.1|date:"l jS F" }}</span>
+                                    </div>
+                                </li>
+                                
+{% endfor %}
+                                
+                            </ul>
+                    </div>
+                </div>
+
+{% endwith %}

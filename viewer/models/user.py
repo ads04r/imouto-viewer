@@ -13,6 +13,10 @@ def create_new_userprofile():
 	ret = {}
 	return ret
 
+def create_new_dashboard():
+	ret = [['calendar', 'status', 'tags'], ['feed']]
+	return ret
+
 class UserProfile(models.Model):
 	user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
 	date_of_birth = models.DateField(null=True, blank=True)
@@ -20,6 +24,12 @@ class UserProfile(models.Model):
 	image = models.ImageField(blank=True, null=True, upload_to=user_profile_image_upload_location)
 	rdf_namespace = models.URLField(null=True, blank=True)
 	settings = models.JSONField(default=create_new_userprofile, encoder=DjangoJSONEncoder)
+	dashboard = models.JSONField(default=create_new_dashboard, encoder=DjangoJSONEncoder)
+	@property
+	def dashboard_column_width(self):
+		if len(self.dashboard) == 0:
+			return 0
+		return int(12 / len(self.dashboard))
 	def thumbnail(self, size):
 		try:
 			im = Image.open(self.image.path)

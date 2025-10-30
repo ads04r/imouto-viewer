@@ -55,6 +55,7 @@ function homeScreen()
     $(".content-wrapper").load("./stats.html", function(response, status, xhr){
         if(status == 'error') { errorPage(xhr); return false; }
         initialiseGraphics();
+        loadDynamicCards();
     });
 }
 

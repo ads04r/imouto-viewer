@@ -23,17 +23,6 @@ def index(request):
 	logger.info("HTML frame requested")
 	return render(request, 'viewer/index.html', context)
 
-def dashboard(request):
-	logger.info("Dashboard requested")
-	context = {}
-	ret = render(request, 'viewer/pages/dashboard.html', context)
-	return ret
-
-def dashboard_json(request):
-	data = {}
-	response = HttpResponse(json.dumps(data, default=imouto_json_serializer), content_type='application/json')
-	return response
-
 def script(request):
 	context = {'tiles': 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', 'max_zoom': 17, 'home': home_location(request.user)}
 	if hasattr(settings, 'MAP_TILES'):
