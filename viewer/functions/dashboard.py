@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.db.models import Sum
 from viewer.models import Photo, Event, EventWorkoutCategory, EventTag, PersonProperty, DataReading, RemoteInteraction, create_or_get_day, create_or_get_month
 import datetime, pytz
 
@@ -24,6 +25,30 @@ class Dashboard():
 		y = int(datetime.datetime.now().year)
 		m = int(datetime.datetime.now().month)
 		return create_or_get_month(user=self.user, year=y, month=m)
+
+	def steps(self):
+
+		stepdata = []
+		total_steps = 0
+		for i in range(0, 7):
+			dtbase = self.last_event - datetime.timedelta(days=(7 - i))
+			try:
+				dt = dtbase.tzinfo.localize(datetime.datetime(dtbase.year, dtbase.month, dtbase.day, 0, 0, 0))
+			except:
+				dt = dtbase
+			obj = DataReading.objects.filter(user=self.user, type='step-count').filter(start_time__gte=dt, end_time__lt=(dt + datetime.timedelta(days=1))).aggregate(Sum('value'))
+			try:
+				steps = int(obj['value__sum'])
+			except:
+				steps = 0
+			total_steps = total_steps + steps
+
+			item = {}
+			item['label'] = dt.strftime("%a")
+			item['value'] = [steps]
+			stepdata.append(item)
+
+		return stepdata
 
 	def exercise(self):
 

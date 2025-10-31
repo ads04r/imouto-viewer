@@ -54,8 +54,7 @@ function homeScreen()
 {
     $(".content-wrapper").load("./stats.html", function(response, status, xhr){
         if(status == 'error') { errorPage(xhr); return false; }
-        initialiseGraphics();
-        loadDynamicCards();
+        loadDynamicCards(function(){ initialiseGraphics(); });
     });
 }
 
@@ -63,8 +62,7 @@ function anniversaryScreen()
 {
     $(".content-wrapper").load("./onthisday.html", function(response, status, xhr){
         if(status == 'error') { errorPage(xhr); return false; }
-        initialiseGraphics();
-        loadDynamicCards();
+        loadDynamicCards(function(){ initialiseGraphics(); });
     });
 }
 
@@ -1411,13 +1409,15 @@ function countryScreen(id)
     });
 }
 
-function loadDynamicCards()
+function loadDynamicCards(callback)
 {
-	$('.dynamic-card').each(function() {
-		var path = $(this).data('path');
-		$(this).html('<div class="row"><div class="col-xs-1 col-sm-3 col-md-5"></div><div class="col-xs-10 col-sm-6 col-md-2"><div class="box box-primary"><div class="box-body text-center"><i class="fa fa-spin fa-refresh"></i>&nbsp;Loading</div></div></div></div>');
-		$(this).load(path);
-	});
+	$.when(
+		$('.dynamic-card').each(function() {
+			var path = $(this).data('path');
+			$(this).html('<div class="row"><div class="col-xs-1 col-sm-3 col-md-5"></div><div class="col-xs-10 col-sm-6 col-md-2"><div class="box box-primary"><div class="box-body text-center"><i class="fa fa-spin fa-refresh"></i>&nbsp;Loading</div></div></div></div>');
+			$(this).load(path);
+		})
+	).then(function() { callback(); });
 }
 
 function initialiseGraphics()
@@ -2556,7 +2556,7 @@ $(document).ready(function()
             contentType: 'application/json',
             data: JSON.stringify(data),
             method: 'POST',
-            success: function(data) { console.log(data); }
+            success: function(data) {  }
         });
     });
     $("#add_achievement").on('shown.bs.modal', function() {
