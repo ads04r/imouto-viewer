@@ -14,8 +14,7 @@ def create_new_userprofile():
 	return ret
 
 def create_new_dashboard():
-	ret = [['calendar', 'status', 'tags'], ['feed']]
-	return ret
+	return [["calendar", "tags", "status", "exercise", "locations", "sleep"], ["birthdays", "feed"]]
 
 class UserProfile(models.Model):
 	user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
