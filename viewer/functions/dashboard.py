@@ -20,6 +20,16 @@ class Dashboard():
 			tags.append({'id': id, 'colour': str(tag.colour)})
 		return tags
 
+	def days(self):
+
+		ret = []
+		for i in range(0, 7):
+			dtbase = self.last_event.date() - datetime.timedelta(days=(7 - i))
+			day = create_or_get_day(self.user, dtbase)
+			if day:
+				ret.append(day)
+		return ret
+
 	def month(self):
 
 		y = int(datetime.datetime.now().year)

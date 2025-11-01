@@ -97,6 +97,7 @@
     background-color: rgba(0, 0, 0, 0);
     margin-bottom: 0px;
     border: solid 2px #CFCFCF;
+    height: 0.75em;
 }
 
 .sleep-bar .progress-bar

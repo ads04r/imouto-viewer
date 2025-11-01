@@ -1,0 +1,7 @@
+<div class="progress-group">
+	<div class="progress sleep-bar">
+{% for item in data %}
+		<div class="progress-bar" role="progressbar" aria-valuenow="{{ item.2 }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ item.2 }}%; background-color: {% if item.0 == 0 %}rgba(0, 0, 0, 0){% endif %}{% if item.0 == 1 %}#ABC1D8{% endif %}{% if item.0 == 2 %}#3C8DBC{% endif %}"></div>
+{% endfor %}
+	</div>
+</div>
