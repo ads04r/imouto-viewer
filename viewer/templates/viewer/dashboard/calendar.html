@@ -1,0 +1,16 @@
+{% load html_calendar %}
+
+{% with dashboard.month as month %}
+
+<div class="box box-primary">
+	<div class="box-header">
+		<h3 class="box-title">{{ month }}</h3>
+	</div>
+	<div class="box-body">
+
+		{{ month|calendar }}
+
+	</div>
+</div>
+
+{% endwith %}

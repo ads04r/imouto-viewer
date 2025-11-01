@@ -1,0 +1,19 @@
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Sleep Log</h3>
+                    </div>
+                    <div class="box-body no-padding">
+			<table class="table table-condensed">
+{% for day in dashboard.days reversed %}
+				<tr>
+					<td><nobr><a href="#{{ day.slug }}">{{ day }}</a></nobr></td>
+					{% if day.bed_time %}{% if day.tomorrow.wake_time %}
+					<td>{{ day.bed_time|date:"g:i" }}</td>
+					<td width="100%">{% with day.get_sleep_information.sleep.data as data %}{% include 'viewer/list-items/sleepline.html' %}{% endwith %}</td>
+					<td>{{ day.tomorrow.wake_time|date:"g:i" }}</td>
+					{% endif %}{% endif %}
+				</tr>
+{% endfor %}
+			</table>
+                    </div>
+                </div>

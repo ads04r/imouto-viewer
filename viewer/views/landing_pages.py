@@ -10,7 +10,7 @@ from viewer.models import Event, create_or_get_day
 from viewer.forms import EventForm, QuickEventForm
 
 from viewer.functions.locations import home_location
-from viewer.functions.utils import get_timeline_events, generate_dashboard, get_today, imouto_json_serializer, first_event_time
+from viewer.functions.utils import get_timeline_events, get_today, imouto_json_serializer, first_event_time
 
 import logging
 logger = logging.getLogger(__name__)
@@ -22,37 +22,6 @@ def index(request):
 		context['today'].yesterday.get_sleep_information() # Pre-cache so we never end up with any part-processed data
 	logger.info("HTML frame requested")
 	return render(request, 'viewer/index.html', context)
-
-def dashboard(request):
-	logger.info("Dashboard requested")
-	key = 'dashboard'
-	ret = cache.get(key)
-	if ret is None:
-		logger.debug("Generating dashboard")
-		data = generate_dashboard(request.user)
-		context = {'type':'view', 'data':data}
-		if len(data) == 0:
-			ret = render(request, 'viewer/pages/setup.html', context)
-		elif 'error' in data:
-			ret = render(request, 'viewer/pages/dashboard_error.html', context)
-		else:
-			ret = render(request, 'viewer/pages/dashboard.html', context)
-			cache.set(key, ret, timeout=86400)
-		logger.debug("Dashboard generated")
-	else:
-		logger.debug("Getting cached dashboard")
-	return ret
-
-def dashboard_json(request):
-	data = generate_dashboard()
-	if 'heart' in data:
-		data['heart'] = json.loads(data['heart'])
-	if 'steps' in data:
-		data['steps'] = json.loads(data['steps'])
-	if 'sleep' in data:
-		data['sleep'] = json.loads(data['sleep'])
-	response = HttpResponse(json.dumps(data, default=imouto_json_serializer), content_type='application/json')
-	return response
 
 def script(request):
 	context = {'tiles': 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', 'max_zoom': 17, 'home': home_location(request.user)}

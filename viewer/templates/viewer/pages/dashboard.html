@@ -3,7 +3,7 @@
 <section class="content-header">
     <h1>
         Summary
-        <small>This Week</small>
+        <small>Home</small>
     </h1>
     <ol class="breadcrumb">
         <li>Summary</li>
@@ -13,289 +13,25 @@
 <section class="content">
 
     <div class="container-fluid">
-        <div class="row">
-            <div class="col-xs-12 col-sm-6 col-md-3">
-                <div class="info-box bg-blue">
-                    <span class="info-box-icon"><i class="fa fa-road"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Steps</span>
-                        <span class="info-box-number">{{ data.stats.steps }}</span>
-{% if data.stats.walk_distance %}
-                        <span class="progress-description">{{ data.stats.walk_distance }} miles</span>
-{% endif %}
-                    </div>
-                </div>
-            </div>
-{% if data.stats.weight %}
-            <div class="col-xs-12 col-sm-6 col-md-3">
-                <div class="info-box bg-blue">
-                    <span class="info-box-icon">
-                        <i class="fa fa-balance-scale"></i>
-                    </span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">
-                            Weight</span>
-                        <span class="info-box-number">{{ data.stats.weight }} kg</span>
-                    </div>
-                </div>
-            </div>
-{% endif %}
-            <div class="col-xs-12 col-sm-6 col-md-3">
-                <div class="info-box bg-blue">
-                    <span class="info-box-icon"><i class="fa fa-comment-o"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Messages</span>
-                        <span class="info-box-number">{{ data.stats.messages }}</span>
-                    </div>
-                </div>
-            </div>
-{% if data.stats.weight == None %}
-            <div class="col-xs-12 col-sm-6 col-md-3">
-                <div class="info-box bg-blue">
-                    <span class="info-box-icon">
-                        <i class="fa fa-phone"></i>
-                    </span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">
-                            Phone Calls</span>
-                        <span class="info-box-number">{{ data.stats.phone_calls }}</span>
-                    </div>
-                </div>
-            </div>
-{% endif %}
-            <div class="col-xs-12 col-sm-6 col-md-3">
-                <div class="info-box bg-blue">
-                    <span class="info-box-icon"><i class="fa fa-camera-retro"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Photos</span>
-                        <span class="info-box-number">{{ data.stats.photos }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-xs-12 col-sm-6">
-{% if data.tags %}
-                <div class="box box-primary">
-                    <div class="box-body">
 
-{% for tag in data.tags %}
-                        <a href="#tag_{{ tag.id|safe }}"><span class="badge" style="background-color: {{ tag.colour }};">{{ tag.id|safe }}</span></a>
-{% endfor %}
+	<div class="row">
 
-                    </div>
-                </div>
-{% endif %}
-                <div class="box box-primary">
-                    <div class="box-body profile">
+{% for col in user.profile.dashboard %}
 
-			<ul class="list-group list-group-unbordered">
-{% for day in data.days %}
-				<li class="list-group-item"><a href="#{{ day.slug }}">{{ day }}</a>
-				<span class="pull-right">{% if day.average_mood == 5 %}<i class="fa fa-smile-o"></i>{% endif %}{% if day.average_mood == 4 %}<i class="fa fa-smile-o"></i>{% endif %}{% if day.average_mood == 3 %}<i class="fa fa-meh-o"></i>{% endif %}{% if day.average_mood == 2 %}<i class="fa fa-meh-o"></i>{% endif %}{% if day.average_mood == 1 %}<i class="fa fa-frown-o"></i>{% endif %}</span></li>
-{% endfor %}
-			</ul>
-                    </div>
-                    <div class="footer">
+		<div class="col-xs-{{ user.profile.dashboard_column_width }}">
 
-                        <div class="row">
-{% for year in data.years %}
-                                <div class="col-xs-3 col-sm-3">
-                                        <div class="description-block">
-                                                <h5 class="description-header"><a href="#year_{{ year }}">{{ year }}</a></h3>
-                                        </div>
-                                </div>
+	{% for panel in col %}
+
+			<div class="dynamic-card" data-path="dashboard/{{ panel }}.html"></div>
+
+	{% endfor %}
+
+		</div>
 
 {% endfor %}
-                        </div>
 
+	</div>
 
-                    </div>
-                </div>
-{% if data.workouts %}
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title">Exercise</h3>
-                    </div>
-                    <div class="box-body no-padding">
-			<table class="table table-condensed">
-{% for category in data.workouts %}
-				<tr>
-					<td><a href="#workout_{{ category.id }}">{{ category.label }}</a></td>
-					<td><span class="pull-right">{{ category.distance }} miles</span></td>
-				</tr>
-{% endfor %}
-			</table>
-                    </div>
-                </div>
-{% endif %}
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title">Steps</h3>
-                    </div>
-                    <div class="box-body">
-                        <div class="chart">
-                            <canvas class="bar-chart" style="height: 230px" data-data="{{ data.steps }}"></canvas>
-                        </div>
-                    </div>
-                </div>
-{% if data.heart %}
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title">Heart Rate</h3>
-                    </div>
-                    <div class="box-body">
-                        <div class="chart">
-                            <canvas class="bar-chart" style="height: 230px" data-legend="[&quot;>50% of max&quot;,&quot;>70% of max&quot;]" data-data="{{ data.heart }}"></canvas>
-                        </div>
-                    </div>
-                </div>
-{% endif %}
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title">Sleep</h3>
-                    </div>
-                    <div class="box-body">
-                        <div class="chart">
-                            <canvas class="bar-chart" style="height: 230px" data-legend="[&quot;Restless sleep&quot;,&quot;Deep sleep&quot;]" data-data="{{ data.sleep }}"></canvas>
-                        </div>                        
-                    </div>
-                </div>
-
-            </div>
-            <div class="col-xs-12 col-sm-6">
-{% if data.birthdays %}
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title">Upcoming Birthdays</h3>
-                    </div>
-                    <div class="box-body">
-                            <ul class="products-list product-list-in-box">
-                                
-{% for item in data.birthdays %}
-                                
-                                <li class="item">
-                                    <div class="product-img">
-                                        {% if item.0.image %}<img src="people/{{ item.0.uid }}_thumb.jpg"/>{% endif %}
-                                    </div>
-                                    <div class="product-info">
-                                        <a class="product-title personlink" href="#person_{{ item.0.uid }}">
-                                            {{ item.0.full_name }}</a> {% if item.2 %}<i>({{ item.2 }})</i>{% endif %}
-                                        <span class="product-description">
-                                            {{ item.1|date:"l jS F" }}</span>
-                                    </div>
-                                </li>
-                                
-{% endfor %}
-                                
-                            </ul>
-                    </div>
-                </div>
-{% endif %}
-{% if data.tasks %}
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title">Tasks due soon</h3>
-                    </div>
-                    <div class="box-body no-padding">
-			<table class="table table-condensed">
-{% for task in data.tasks %}
-				<tr>
-					<td>{{ task.caption }}</td>
-					<td><span class="pull-right"><small class="muted">Due {{ task.time_due|date:"l g:ia" }}</small></span></td>
-				</tr>
-{% endfor %}
-			</table>
-                    </div>
-                </div>
-{% endif %}
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title">People Encountered</h3>
-                    </div>
-                    <div class="box-body">
-                            <ul class="users-list clearfix">
-                                
-{% for item in data.people %}
-{% if item.image %}
-
-                                <li>
-                                    <img class="profile-user-img img-responsive" src="people/{{ item.uid }}_thumb.jpg"/>
-                                    <a class="users-list-name personlink" href="#person_{{ item.uid }}">
-                                        {{ item.full_name }}</a>
-                                </li>
-
-{% endif %}
-{% endfor %}
-{% for item in data.people %}
-{% if item.image == None %}
-
-                                <li>
-                                    <img class="profile-user-img img-responsive" src="{% static "viewer/graphics/unknown_person.jpg" %}">
-                                    <a class="users-list-name personlink" href="#person_{{ item.uid }}">
-                                        {{ item.full_name }}</a>
-                                </li>
-
-{% endif %}
-{% endfor %}
-                                
-                            </ul>
-                    </div>
-                </div>
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title">Places Visited</h3>
-                    </div>
-                    <div class="box-body">
-                            <ul class="products-list product-list-in-box">
-                                
-{% for item in data.places %}
-                                
-                                <li class="item">
-                                    <div class="product-img">
-                                        {% if item.image %}<img src="places/{{ item.uid }}_thumb.jpg"/>{% endif %}
-                                    </div>
-                                    <div class="product-info">
-                                        <a class="product-title placelink" href="#place_{{ item.uid }}">
-                                            {{ item }}</a>
-                                        <span class="product-description">
-                                            {{ item.address }}</span>
-                                    </div>
-                                </li>
-                                
-{% endfor %}
-                                
-                            </ul>
-                    </div>
-                </div>
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title">Messages</h3>
-                    </div>
-                    <div class="box-body">
-                            <ul class="products-list product-list-in-box">
-                                
-{% for item in data.contact %}
-                                
-                                <li class="item">
-                                    <div class="product-img">
-                                        {% if item.person.image %}<img src="people/{{ item.person.uid }}_thumb.jpg"/>{% endif %}
-                                    </div>
-                                    <div class="product-info">
-                                        <a class="product-title personlink" href="#person_{{ item.person.uid }}">
-                                            {{ item.person.full_name }}</a>
-                                        <span class="product-description">
-                                            {{ item.messages }} messages sent/received</span>
-                                    </div>
-                                </li>
-                                
-{% endfor %}
-                                
-                            </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
 </section>

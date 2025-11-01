@@ -1,0 +1,18 @@
+{% with dashboard.stats as stats %}
+
+                <div class="box box-primary">
+
+                    <div class="box-header"><h3 class="box-title">In the last 7 days...</h3></div>
+
+                    <div class="box-body table-responsive">
+
+			<table class="table table-condensed">
+{% for stat in stats.items %}
+				<tr><td><b>{{ stat.0 }}</b></td>
+				<td><span class="pull-right">{{ stat.1 }}</span></td></tr>
+{% endfor %}
+			</table>
+                    </div>
+                </div>
+
+{% endwith %}

@@ -8,6 +8,7 @@ urlpatterns = [
     path('script/imouto.js', views.script),
     path('stats.html', views.dashboard),
     path('stats.json', views.dashboard_json),
+    path('dashboard/<id>.html', views.dashboard_panel),
     path('onthisday.html', views.onthisday),
     path('life_grid.html', views.life_period),
     path('upload.html', views.importer),
