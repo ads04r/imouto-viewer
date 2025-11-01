@@ -148,7 +148,7 @@ class Dashboard():
 			day = create_or_get_day(self.user, dt)
 			if day is None:
 				continue
-			item = {"label": str(day), "events": [], "people": [], "places": []}
+			item = {"slug": str(day.slug), "label": str(day), "events": [], "people": [], "places": []}
 			for event in day.events.exclude(location__pk=self.user.profile.home_location).order_by('start_time'):
 				if event.length < 300:
 					continue
