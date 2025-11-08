@@ -13,7 +13,7 @@
 
                                 <li class="item">
                                     <div class="product-img"><a href="#event_{{ event.pk }}">
-					{% if event.cover_image %}
+					{% if event.cover_photo %}
 						<img src="photo/{{ event.cover_photo.pk }}_thumb.jpg" width="100" height="100"/>
 					{% elif event.location.image %}
 						<img src="places/{{ event.location.uid }}_thumb.jpg" width="100" height="100"/>
