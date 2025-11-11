@@ -19,6 +19,7 @@ def create_new_dashboard():
 class UserProfile(models.Model):
 	user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
 	date_of_birth = models.DateField(null=True, blank=True)
+	height = models.IntegerField(null=True)
 	home_location = models.IntegerField(default=0)
 	image = models.ImageField(blank=True, null=True, upload_to=user_profile_image_upload_location)
 	rdf_namespace = models.URLField(null=True, blank=True)
