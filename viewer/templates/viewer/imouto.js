@@ -58,6 +58,13 @@ function homeScreen()
     });
 }
 
+function profileScreen()
+{
+    $(".content-wrapper").load("./profile.html", function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
+    });
+}
+
 function anniversaryScreen()
 {
     $(".content-wrapper").load("./onthisday.html", function(response, status, xhr){
@@ -2493,6 +2500,7 @@ function pageRefresh()
     $(".control-sidebar").removeClass('control-sidebar-open');
 
     if(page == '') { homeScreen(); return true; }
+    if(page == 'profile') { profileScreen(); return true; }
     if(page == 'timeline') { timelineScreen(); return true; }
     if(page == 'files') { uploadScreen(); return true; }
     if(page == 'questionnaires') { questionIndexScreen(); return true; }

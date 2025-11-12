@@ -4,6 +4,7 @@ from . import views
 
 urlpatterns = [
     path('', views.index),
+    path('profile.html', views.user_profile),
     path('profile/<username>.jpg', views.user_thumbnail),
     path('script/imouto.js', views.script),
     path('stats.html', views.dashboard),

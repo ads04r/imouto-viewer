@@ -1,0 +1,35 @@
+<section class="content-header">
+    <h1>
+        {{ user.username }}
+        <small>Person</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="#people">People</a></li>
+        <li>{{ user.username }}</li>
+    </ol>
+</section>
+
+<section class="content">
+
+    <div class="row">
+        <div class="col-xs-12 col-sm-6 col-md-9">
+
+		<div class="box">
+			<div class="box-body">
+
+                              <table class="table table-hover">
+{% for field in form %}
+                                <tr class="form-row">
+                                  <td>{{ field.label_tag }}</td><td>{{ field }}</td>
+                                </tr>
+{% endfor %}
+                              </table>
+
+
+			</div>
+		</div>
+
+        </div>
+    </div>
+
+</section>

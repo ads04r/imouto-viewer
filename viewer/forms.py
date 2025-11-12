@@ -1,8 +1,18 @@
 from django.forms import ModelForm, ImageField, TextInput, Textarea, Select, DateInput, CheckboxInput, FileInput, URLInput, HiddenInput, CharField
-from viewer.models import Location, LocationCategory, Event, EventWorkoutCategory, LifePeriod, WatchedDirectory, Person, Questionnaire, QuestionnaireQuestion
+from viewer.models import Location, LocationCategory, Event, EventWorkoutCategory, LifePeriod, WatchedDirectory, Person, Questionnaire, QuestionnaireQuestion, UserProfile
 from django.db.models import Sum, Count
 from colorfield.fields import ColorWidget
 import datetime, pytz
+
+class UserForm(ModelForm):
+	class Meta:
+		model = UserProfile
+		fields = ['home_location', 'date_of_birth', 'height', 'image']
+		widgets = {
+			'date_of_birth': TextInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD'}),
+			'height': TextInput(attrs={'class': 'form-control'}),
+			'home_location': Select(choices=[(x.pk, x.label) for x in Location.objects.all()], attrs={'class': 'form-control'}),
+		}
 
 class LocationForm(ModelForm):
 	def __init__(self, *args, **kwargs):
