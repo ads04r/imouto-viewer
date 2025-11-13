@@ -42,7 +42,7 @@ def questionnaireview(request, id):
 					k = str(kk)
 					v = result['results'][k]
 					try:
-						item = DataReading(start_time=now, end_time=now, type=k, value=v)
+						item = DataReading(user=request.user, start_time=now, end_time=now, type=k, value=v)
 						item.save()
 					except:
 						item = None
