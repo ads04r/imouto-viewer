@@ -1455,10 +1455,7 @@ class Event(models.Model):
 			self.geo = ''
 			self.elevation = ''
 			self.speed = ''
-		if len(self.cached_health) <= 2:
-			health = self.__refresh_health(save=False)
-		else:
-			health = json.loads(self.cached_health)
+		health = self.__refresh_health(save=False)
 		if 'steps' in health:
 			self.cached_step_count = health['steps']
 		if 'speedavg' in health:
