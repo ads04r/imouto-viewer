@@ -110,7 +110,7 @@
                             <div class="post">
                                 <div class="user-block">
                                     <span class="username no-image">{{ event }}<a class="pull-right btn btn-primary btn-xs eventlink" href="#event_{{ event.id }}">View Event</a></span>
-                                    <span class="description no-image">{{ event.start_time|date:"D jS M Y, g:ia" }}{% if event.location %} | {{ event.length_string }}{% endif %}</span>
+                                    <span class="description no-image">{{ event.start_time_local|date:"D jS M Y, g:ia" }}{% if event.location %} | {{ event.length_string }}{% endif %}</span>
                                 </div>
 
                                 {% if event.description %}<p>{{ event.description }}</p>{% endif %}

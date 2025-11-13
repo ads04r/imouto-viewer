@@ -25,7 +25,7 @@
 {% if event.type == 'event' %}
 
                         <p><a href="#event_{{ event.id }}"><i class="fa fa-calendar"></i>&nbsp;{{ event.caption }}</a><br>
-                        <small class="muted">{{ event.start_time|date:"l jS F Y, g:ia" }}</small></p>
+                        <small class="muted">{{ event.start_time_local|date:"l jS F Y, g:ia" }}</small></p>
 
 {% endif %}
 {% endfor %}

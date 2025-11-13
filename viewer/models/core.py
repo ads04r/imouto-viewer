@@ -1187,6 +1187,32 @@ class Event(models.Model):
 		if hasattr(settings, 'RDF_NAMESPACE'):
 			return settings.RDF_NAMESPACE + 'event/' + str(self.pk)
 		return None
+	@cached_property
+	def longest_journey(self):
+		if self.type != 'life_event':
+			return None
+		logger.debug("Finding longest journey")
+		ret = None
+		dist = 0
+		for event in self.subevents().filter(type='journey'):
+			new_dist = event.distance()
+			if new_dist > dist:
+				ret = event
+				dist = new_dist
+		logger.debug("... " + str(ret))
+		return ret
+	@property
+	def countries(self):
+		"""
+		Every country visited in this event.
+		"""
+		return LocationCountry.objects.filter(locations__events__in=self.subevents()).exclude(locations__pk=self.user.profile.home_location).distinct()
+	@property
+	def cities(self):
+		"""
+		Every city visited in this event.
+		"""
+		return LocationCity.objects.filter(locations__events__in=self.subevents()).exclude(locations__pk=self.user.profile.home_location).distinct()
 	@property
 	def rdf_exclude(self):
 		"""Properties to exclude from RDF serialization."""
@@ -3194,12 +3220,20 @@ class Day(models.Model):
 		:return: A dict containing statistics about the wake and sleep activity for this particular day.
 		:rtype: dict
 		"""
+		event_zones = list(set([event.timezone for event in self.events.filter(type='loc_prox')]))
+		if len(event_zones) != 1:
+			event_zones = list(set([event.timezone for event in self.events.filter(type='journey')]))
+		if len(event_zones) == 1:
+			new_zone = str(event_zones[0])
+			if new_zone != self.timezone_str:
+				self.timezone_str = new_zone
+				self.save(update_fields=['timezone_str'])
 		dts, dte = self.__calculate_wake_time()
 		sleep_data = []
 		if dts is None:
 			return {} # If we don't have a wake time for this event, just return nothing. No data is better than wrong data.
 
-		data = {'date': dts.strftime("%a %-d %b %Y")}
+		data = {'date': dts.strftime("%a %-d %b %Y"), 'timezone': str(self.timezone)}
 		data['wake_up'] = dts.astimezone(self.timezone).strftime("%Y-%m-%d %H:%M:%S %z")
 		data['wake_up_local'] = dts.astimezone(self.timezone).strftime("%I:%M%p").lstrip("0").lower()
 		if not(dte is None):

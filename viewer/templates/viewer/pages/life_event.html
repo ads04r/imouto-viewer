@@ -19,6 +19,40 @@
 
 {% include 'viewer/cards/eventprofile.html' %}
 
+{% with countries=data.countries %}
+{% if countries %}
+
+        {% include 'viewer/cards/yearcountries.html' %}
+
+{% else %}
+
+        {% with cities=data.cities %}
+        {% if cities %}
+
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Cities visited</h3>
+                </div>
+                <div class="box-body no-padding">
+
+                        <table class="table table-condensed">
+        {% for city in cities %}
+                                <tr>
+                                        <td><b><a href="#{{ city.slug }}">{{ city }}</a></b></td>
+                                </tr>
+        {% endfor %}
+                        </table>
+
+                </div>
+            </div>
+
+        {% endif %}
+        {% endwith %}
+
+{% endif %}
+{% endwith %}
+
+
 {% if data.subevents.count > 0 %}
   {% include 'viewer/cards/eventsubevents.html' %}
 {% endif %}
@@ -43,6 +77,12 @@
 {% if data.workouts %}
   {% include 'viewer/cards/eventworkouts.html' %}
 {% endif %}
+
+{% with event=longest_journey %}
+{% if event %}
+  {% include 'viewer/cards/longest_journey.html' %}
+{% endif %}
+{% endwith %}
 
 {% if data.commits %}
   {% include 'viewer/cards/eventcommits.html' %}

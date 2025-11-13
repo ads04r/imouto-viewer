@@ -4,8 +4,8 @@
                     <span class="info-box-icon"><i class="fa fa-calendar-o"></i></span>
                     <div class="info-box-content">
                         <span class="info-box-text">{% if data.type == 'life_event' %}Start Date{% else %}Event Date{% endif %}</span>
-                        <span class="info-box-number"><a href="#day_{{ data.start_time|date:"Ymd" }}">{{ data.start_time|date:"jS F Y" }}</a></span>
-                        <span class="info-box-text">{{ data.start_time|date:"l, g:i a" }}</span>
+                        <span class="info-box-number"><a href="#day_{{ data.start_time_local|date:"Ymd" }}">{{ data.start_time_local|date:"jS F Y" }}</a></span>
+                        <span class="info-box-text">{{ data.start_time_local|date:"l, g:i a" }}</span>
                     </div>
                 </div>
 

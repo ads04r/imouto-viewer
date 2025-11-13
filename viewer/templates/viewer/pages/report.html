@@ -168,7 +168,7 @@
 			<span class="pull-right"><a href="#event_{{ event.id }}" class="btn btn-xs btn-primary">View Event</a></span>
                     </div>
                     <div class="box-body">
-			<small class="muted">{{ event.start_time|date:"l jS F" }}</small><br>
+			<small class="muted">{{ event.start_time_local|date:"l jS F" }}</small><br>
 			{{ event.description_html|safe }}
                     </div>
                 </div>

@@ -21,7 +21,7 @@
         {% if event.type == 'sleepover' %}<i class="fa fa-moon-o bg-black"></i>{% endif %}
         
         <div class="timeline-item">
-            <span class="time"><i class="fa fa-clock-o"></i> {{ event.start_time|date:"g:ia" }}</span>
+            <span class="time"><i class="fa fa-clock-o"></i> {{ event.start_time_local|date:"g:ia" }}</span>
             
             <h3 class="timeline-header no-border">{{ event }}</h3>
             <div class="timeline-body">

@@ -1,0 +1,38 @@
+{% load humanize %}
+
+                <div class="box box-primary" id="day_event_{{ event.pk }}">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Travel</h3>
+                    </div>
+                    <div class="box-body no-padding">
+
+                        <table class="table table-condensed">
+                        <tr>
+                                <td colspan="2">
+
+                {% include 'viewer/cards/event.html' %}
+
+                                </td>
+                        </tr>
+                        <tr>
+                                <th>Longest journey</th>
+                                <td><span class="pull-right"><a href="#event_{{ event.pk }}">{{ event.start_time_local|date:"l jS F" }}</a></span></td>
+                        </tr>
+                        <tr>
+                                <th>Longest journey length</th>
+                                <td><span class="pull-right">{{ event.distance }} miles</span></td>
+                        </tr>
+                        <tr>
+                                <th>Longest journey time</th>
+                                <td><span class="pull-right">{{ event.length_string }}</span></td>
+                        </tr>
+{% if month.distance %}
+                        <tr>
+                                <th>Total distance travelled</th>
+                                <td><span class="pull-right">{{ month.distance|intcomma }} miles</span></td>
+                        </tr>
+{% endif %}
+                        </table>
+                    </div>
+                </div>
+

@@ -1,4 +1,5 @@
 {% load static %}
+{% load tz %}
 
                 <div class="box box-primary">
                     <div class="box-body">
@@ -31,7 +32,7 @@
                     </ol>
                     {% endif %}
 
-					<small class="product-description muted">{{ event.start_time }}</small>
+					{% localtime off %}<small class="product-description muted">{{ event.start_time_local }}</small>{% endlocaltime %}
 
                                     </div>
                                 </li>

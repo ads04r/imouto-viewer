@@ -9,7 +9,7 @@
 
                             <tr>
                                 <td><a href="#event_{{ similarevent.pk }}">{{ similarevent.caption }}</a></td>
-                                <td class="pull-right">{{ similarevent.start_time|date:"jS F Y" }}</td>
+                                <td class="pull-right">{{ similarevent.start_time_local|date:"jS F Y" }}</td>
                             </tr>
 
 {% endfor %}

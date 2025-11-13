@@ -119,6 +119,9 @@ def event(request, eid):
 	template = 'viewer/pages/event.html'
 	if data.type=='life_event':
 		template = 'viewer/pages/life_event.html'
+		longest_journey = data.longest_journey
+		if longest_journey:
+			context['longest_journey'] = longest_journey
 	logger.debug("        Calling render for " + str(data))
 	return render(request, template, context)
 

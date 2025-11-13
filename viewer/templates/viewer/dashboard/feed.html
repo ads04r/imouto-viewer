@@ -24,7 +24,7 @@
 					{% endif %}
                                     </a></div>
                                     <div class="product-info">
-                                        <span class="label pull-right" style="background-color: #5c5c5c; ">{{ event.start_time|date:"g:i" }}</span>
+                                        <span class="label pull-right" style="background-color: #5c5c5c; ">{{ event.start_time_local|date:"g:i" }}</span>
                                         <a class="product-title eventlink" href="#event_{{ event.pk }}">
                                             {{ event.caption }}</a>
 					{% if event.description %}
