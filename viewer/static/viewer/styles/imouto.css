@@ -1,10 +1,6 @@
 .content-wrapper
 {
-    background-image: url("../graphics/trento.jpg");
-    background-size: cover;
-    background-position: top center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
+    background: #7f7f7f;
 }
 
 .content-header
@@ -188,3 +184,74 @@ ol.eventstats > li + li:before { content: '| '; }
 img.user-image { border-radius: 0px !important; }
 
 .box { border-radius: 0px !important; }
+
+.btn {
+	border-radius: 0px !important;
+	border: solid 2px #CFCFCF;
+}
+
+.badge,.label {
+	border-radius: 0px !important;
+	border: solid 1px #444444;
+	-moz-box-shadow: 5px 5px 5px #dddddd;
+	-webkit-box-shadow: 5px 5px 5px #dddddd;
+	box-shadow: 5px 5px 5px #dddddd;
+	margin-bottom: 5px;
+}
+
+.product-list-in-box > .item {
+	border-bottom: 1px solid #cfcfcf;
+}
+
+.box .border-right {
+  border-right: 1px solid #cfcfcf;
+}
+.box .border-left {
+  border-left: 1px solid #cfcfcf;
+}
+.box-header.with-border {
+  border-bottom: 1px solid #cfcfcf;
+}
+.box-footer {
+  border-top: 1px solid #cfcfcf;
+}
+.timeline > li > .timeline-item > .timeline-header {
+  border-bottom: 1px solid #cfcfcf;
+}
+.nav-tabs-custom > .nav-tabs {
+  border-bottom-color: #cfcfcf;
+}
+.nav-tabs-custom > .nav-tabs > li.active > a {
+  border-left-color: #cfcfcf;
+  border-right-color: #cfcfcf;
+}
+.nav-tabs-custom > .nav-tabs.pull-right > li:first-of-type.active > a {
+  border-left-color: #cfcfcf;
+}
+.product-list-in-box > .item {
+  border-bottom: 1px solid #cfcfcf;
+}
+.table > thead > tr > th,
+.table > tbody > tr > th,
+.table > tfoot > tr > th,
+.table > thead > tr > td,
+.table > tbody > tr > td,
+.table > tfoot > tr > td {
+  border-top: 1px solid #cfcfcf;
+}
+.table > thead > tr > th {
+  border-bottom: 2px solid #cfcfcf;
+}
+.table-bordered {
+  border: 1px solid #cfcfcf;
+}
+.table-bordered > thead > tr > th,
+.table-bordered > tbody > tr > th,
+.table-bordered > tfoot > tr > th,
+.table-bordered > thead > tr > td,
+.table-bordered > tbody > tr > td,
+.table-bordered > tfoot > tr > td {
+  border: 1px solid #cfcfcf;
+}
+
+.nav-tabs, .nav-tabs-custom { border-radius: 0px !important; }

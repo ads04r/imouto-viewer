@@ -5,11 +5,11 @@
                       <div class="day-stats"{% if day.average_mood %} data-mood="{{ day.average_mood }}"{% endif %}></div>
                       <div class="text-center">
                         <div class="btn-group">
-                            <a href="#{{ day.yesterday.slug }}" class="btn btn-default">Previous</a>
+                            <a href="#{{ day.yesterday.slug }}" class="btn btn-default"><i class="fa fa-arrow-circle-left"></i>&nbsp;Previous</a>
 {% if day.tomorrow %}
-                            <a href="#{{ day.tomorrow.slug }}" class="btn btn-default">Next</a>
+                            <a href="#{{ day.tomorrow.slug }}" class="btn btn-default">Next&nbsp;<i class="fa fa-arrow-circle-right"></i></a>
 {% else %}
-                            <a href="#{{ day.tomorrow.slug }}" class="btn btn-default" disabled>Next</a>
+                            <a href="#{{ day.tomorrow.slug }}" class="btn btn-default" disabled>Next&nbsp;<i class="fa fa-arrow-circle-right"></i></a>
 {% endif %}
                         </div>
                       </div>
