@@ -16,6 +16,7 @@ build_docs
 commit_docs
 upload_docs
 nohup.out
+.vscode
 
 -static/viewer
 -static/viewer/script/.gitkeep
