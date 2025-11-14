@@ -30,7 +30,7 @@ from viewer.staticcharts import generate_pie_chart, generate_donut_chart
 from viewer.functions.file_uploads import user_thumbnail_upload_location, photo_thumbnail_upload_location, location_thumbnail_upload_location, year_pdf_upload_location, report_wordcloud_upload_location, report_graph_upload_location, event_staticmap_upload_location, tag_staticmap_upload_location, year_wordcloud_upload_location
 from viewer.functions.rdf import get_wikipedia_abstract
 
-import random, datetime, pytz, json, markdown, re, os, overpy, holidays
+import random, datetime, pytz, json, markdown, re, os, overpy, holidays, flag
 
 import logging
 logger = logging.getLogger(__name__)
@@ -129,6 +129,16 @@ class LocationCountry(models.Model):
 		The unique 'slug id' for this LocationCountry object, as would be displayed after the '#' in the URL bar.
 		"""
 		return("country_" + str(self.a2).lower())
+	@property
+	def national_flag(self):
+		"""
+		Returns a unicode character representing the national flag of the country in question. Returns empty string if none.
+		"""
+		try:
+			ret = flag.flag(self.a2.upper())
+		except:
+			ret = ""
+		return ret
 	@property
 	def description(self):
 		"""
@@ -1255,11 +1265,15 @@ class Event(models.Model):
 		dt = None
 		for x in self.data_readings('step-count').order_by('start_time'):
 			if dt is None:
-				dt = x.start_time
-				ret.append({"x": dt.strftime("%Y-%m-%dT%H:%M:%S"), "y": 0})
+				ret.append({"x": x.start_time.strftime("%Y-%m-%dT%H:%M:%S"), "y": 0})
+			if x.start_time == dt:
+				continue
+			dt = x.start_time
 			steps = steps + x.value
 			ret.append({"x": x.end_time.strftime("%Y-%m-%dT%H:%M:%S"), "y": steps})
 		return ret
+
+
 	@property
 	def steps_list_json(self):
 		return json.dumps(self.steps_list)
@@ -3050,8 +3064,10 @@ class Day(models.Model):
 		dt = None
 		for x in self.data_readings('step-count').order_by('start_time'):
 			if dt is None:
-				dt = x.start_time
-				ret.append({"x": dt.strftime("%Y-%m-%dT%H:%M:%S"), "y": 0})
+				ret.append({"x": x.start_time.strftime("%Y-%m-%dT%H:%M:%S"), "y": 0})
+			if x.start_time == dt:
+				continue
+			dt = x.start_time
 			steps = steps + x.value
 			ret.append({"x": x.end_time.strftime("%Y-%m-%dT%H:%M:%S"), "y": steps})
 		return ret

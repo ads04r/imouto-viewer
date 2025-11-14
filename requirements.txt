@@ -31,6 +31,7 @@ docspec==2.2.1
 docspec-python==2.2.1
 docstring-parser==0.11
 docutils==0.17.1
+emoji-country-flag==2.1.0
 et-xmlfile==1.1.0
 ExifRead==2.1.2
 extruct==0.17.0

@@ -8,6 +8,7 @@
 {% for country in countries %}
                                 <tr>
                                         <td><a href="#{{ country.slug }}"><b>{{ country }}</b></a></td>
+                                        <td><span class="pull-right">{{ country.national_flag }}</span></td>
                                 </tr>
 {% endfor %}
                         </table>
