@@ -1236,7 +1236,7 @@ function daySummary(date)
 		var i;
 
 		for(i = 0; i < data.length; i++){
-			if(data[i].image) { html = html + '<a href="#person_' + data[i].id + '"><img class="img-circle img-bordered-sm" width="50" height="50" src="people/' + data[i].id + '_thumb.jpg"></a>'; }
+			if(data[i].image) { html = html + '<a href="#person_' + data[i].id + '"><img class="img-bordered-sm" width="50" height="50" src="people/' + data[i].id + '_thumb.jpg"></a> '; }
 		}
 
 		if(html != '') {
