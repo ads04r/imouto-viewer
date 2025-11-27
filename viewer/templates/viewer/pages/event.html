@@ -66,9 +66,6 @@
 {% if data.health.heart != None %}
   {% include 'viewer/cards/eventheartgraph.html' %}
 {% endif %}
-{% if data.health.cadence != None %}
-  {% include 'viewer/cards/eventcadencegraph.html' %}
-{% endif %}
 {% endif %}
 
 {% with steps=data.steps_list_json %}

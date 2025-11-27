@@ -204,6 +204,10 @@ def event_addfileevent(request):
 		catid = str(request.POST['workout_type'])
 	except:
 		catid = ''
+	try:
+		tid = str(request.POST['transit_method'])
+	except:
+		tid = ''
 	imported_file = get_object_or_404(ImportedFile, pk=file_id)
 	caption = 'Journey'
 	if len(catid) > 0:
@@ -214,6 +218,12 @@ def event_addfileevent(request):
 		if len(location_text) > 0:
 			caption = caption + ' in ' + location_text
 	event = Event(user=request.user, caption=caption, start_time=imported_file.earliest_timestamp, end_time=imported_file.latest_timestamp, type='journey', location=None, description='')
+	if len(tid) > 0:
+		try:
+			t = TransitMethod.objects.get(user=request.user, id=tid)
+		except:
+			t = None
+		event.transit_method = t
 	event.save()
 	if len(catid) > 0:
 		for category in EventWorkoutCategory.objects.filter(user=request.user, id=catid):

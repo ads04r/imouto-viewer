@@ -4,7 +4,7 @@
 	<form action="events/add_file_event" method="POST">
             <div class="modal-body">
 
-                <label for="join_events">Event timespan:</label>
+                <label for="add_file_event">Event timespan:</label>
 		<select class="form-control" id="add_file_event" name="add_file_event">
 {% for f in imported_files %}
 {% if f.activity %}
@@ -22,6 +22,15 @@
                                       <option value="{{ category.id }}">{{ category.label }}</option>
 {% endfor %}
                 </select>
+
+                <label for="id_file_workout_type">Transit type:</label>
+                <select id="id_file_workout_type" class="form-control" name="transit_method">
+                                      <option selected="selected" value="">---------</option>
+{% for method in transit %}
+                                      <option value="{{ method.id }}">{{ method.label }}</option>
+{% endfor %}
+                </select>
+
 {% csrf_token %}
 
                 
