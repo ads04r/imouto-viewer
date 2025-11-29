@@ -79,9 +79,9 @@ def health(request, pageid):
 		if request.method == 'POST':
 			ret = json.loads(request.body)
 			dt = datetime.datetime.now(pytz.utc)
-			datapoint = DataReading(type='bp_sys', start_time=dt, end_time=dt, value=ret['bp_sys_val'])
+			datapoint = DataReading(user=request.user, type='bp_sys', start_time=dt, end_time=dt, value=ret['bp_sys_val'])
 			datapoint.save()
-			datapoint = DataReading(type='bp_dia', start_time=dt, end_time=dt, value=ret['bp_dia_val'])
+			datapoint = DataReading(user=request.user, type='bp_dia', start_time=dt, end_time=dt, value=ret['bp_dia_val'])
 			datapoint.save()
 			response = HttpResponse(json.dumps(ret), content_type='application/json')
 			return response
@@ -94,7 +94,7 @@ def health(request, pageid):
 			value = float(ret['weight_val'])
 			value_unit = float(ret['weight_unit'])
 			value_grams = value * value_unit
-			datapoint = DataReading(type='weight', start_time=dt, end_time=dt, value=value_grams)
+			datapoint = DataReading(user=request.user, type='weight', start_time=dt, end_time=dt, value=value_grams)
 			datapoint.save()
 			response = HttpResponse(json.dumps(ret), content_type='application/json')
 			return response
@@ -115,9 +115,9 @@ def health(request, pageid):
 		if request.method == 'POST':
 			ret = json.loads(request.body)
 			dt = pytz.utc.localize(datetime.datetime.utcnow())
-			datapoint = DataReading(type='hads-a', start_time=dt, end_time=dt, value=ret['anxiety'])
+			datapoint = DataReading(user=request.user, type='hads-a', start_time=dt, end_time=dt, value=ret['anxiety'])
 			datapoint.save()
-			datapoint = DataReading(type='hads-d', start_time=dt, end_time=dt, value=ret['depression'])
+			datapoint = DataReading(user=request.user, type='hads-d', start_time=dt, end_time=dt, value=ret['depression'])
 			datapoint.save()
 			response = HttpResponse(json.dumps(ret), content_type='application/json')
 			return response
