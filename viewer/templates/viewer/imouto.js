@@ -1,4 +1,6 @@
-{% load static %}var map;
+{% load static %}
+
+var map;
 var timers = [];
 
 function createTimer(callback, delay)
@@ -14,6 +16,38 @@ function clearTimers()
 		var x = timers.pop();
 		window.clearInterval(x);
 	}
+}
+
+function array_shuffle(array)
+{
+	for (var i = array.length - 1; i > 0; i--)
+	{
+		var j = Math.floor(Math.random() * (i + 1));
+		var temp = array[i];
+		array[i] = array[j];
+		array[j] = temp;
+	}
+}
+
+function mapToAddress(map, query)
+{
+        var url = './address.json';
+        var data = {'query': query};
+        $.ajax({
+            url: url,
+            dataType: 'json',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            method: 'POST',
+            success: function(data) {
+		if(data.length == 4) {
+			var c1 = L.latLng(parseFloat(data[0]), parseFloat(data[2]))
+			var c2 = L.latLng(parseFloat(data[1]), parseFloat(data[3]))
+			var bounds = L.latLngBounds(c1, c2);
+			map.fitBounds(bounds);
+		}
+            }
+        });
 }
 
 function errorPage(e)
@@ -44,158 +78,6 @@ function errorPage(e)
     html = html + '</div>';
     html = html + '</section>'
     $(".content-wrapper").html(html);
-}
-
-function homeScreen()
-{
-    $(".content-wrapper").load("./stats.html", function(response, status, xhr){
-        if(status == 'error') { errorPage(xhr); return false; }
-        loadDynamicCards(function(){ initialiseGraphics(); });
-    });
-}
-
-function profileScreen()
-{
-    $(".content-wrapper").load("./profile.html", function(response, status, xhr){
-        if(status == 'error') { errorPage(xhr); return false; }
-    });
-}
-
-function anniversaryScreen()
-{
-    $(".content-wrapper").load("./onthisday.html", function(response, status, xhr){
-        if(status == 'error') { errorPage(xhr); return false; }
-        loadDynamicCards(function(){ initialiseGraphics(); });
-    });
-}
-
-function lifeGridScreen()
-{
-    $(".content-wrapper").load("./life_grid.html", function(response, status, xhr){
-        if(status == 'error') { errorPage(xhr); return false; }
-
-
-	$("input.life-grid-category").on('change', function(){
-		var c = $(this).data('category');
-		var checked = $(this).is(':checked');
-		$('td.category-' + c).each(function(){
-			var cols = $(this).data('colours').split(',');
-			var i;
-			for(i = 0; i < cols.length; i++)
-			{
-				var t = cols[i].split('|');
-				if(t.length == 2)
-				{
-					if(t[0] == c)
-					{
-						if(checked)
-						{
-							$(this).css('background-color', t[1]);
-						} else {
-							$(this).css('background-color', '');
-						}
-					}
-				}
-			}
-		});
-	});
-    });
-}
-
-function uploadScreen()
-{
-    $(".content-wrapper").load("./upload.html", function(response, status, xhr){
-
-        if(status == 'error') { errorPage(xhr); return false; }
-
-	$('#watcheddir-save-form-button').on('click', function() {
-		$('#watcheddir-edit').submit();
-	});
-	$('.delete-watched-directory').on('click', function() {
-		var id = $(this).data('wd-id');
-		var label = $(this).data('wd-label');
-		var url = "watched_directory/" + id + ".html";
-		var form = $('#delete-wd-form');
-		$('#wd-update-id').val(id);
-		$('#wd-update-label').html(label);
-		form.attr('action', url);
-		$('#delete-wd').modal('show');
-		$('.delete-wd-button').on('click', function() {
-			form.submit();
-		});
-	});
-	createTimer(updateUploadStats, 1000);
-	createTimer(updateUploadQueue, 5000);
-	updateUploadStats();
-	updateUploadQueue();
-
-    });
-}
-
-function importWebScreen()
-{
-    $(".content-wrapper").load("./import-web.html", function(response, status, xhr){
-
-        if(status == 'error') { errorPage(xhr); return false; }
-
-	$('#importformurl').on('keypress', function(e)
-	{
-		var key = e.which;
-		if(key == 13) { $('a#importfromweb').click(); return false; }
-	});
-
-	$('#importfromweb').on('click', function()
-	{
-		var url = $('#importformurl').val();
-		var waittext = '<tr class="founddata" data-data="{}"><td><i class="fa fa-refresh fa-spin"></i> Loading...</td></tr>';
-		$('table#founddata-table').html(waittext);
-		importrdf(url, function(data)
-		{
-			items = [];
-			for(var i = 0; i < data.length; i++)
-			{
-				var item = data[i];
-				if(item.label)
-				{
-					var title = item.label[0];
-					if(item.type == 'Location') { title = '<i class="fa fa-map-marker"></i> ' + title; }
-					if(item.type == 'Person') { title = '<i class="fa fa-user"></i> ' + title; }
-					var elemtd = $("<td>" + title + "</td>");
-					var elemtr = $("<tr>", {'class': 'founddata', 'data-data': JSON.stringify(item)});
-					elemtr.append(elemtd);
-					items.push(elemtr);
-				}
-			}
-			if(items.length == 0) { $('table#founddata-table').html('<tr class="founddata" data-data="{}"><td>No data found.</td></tr>'); } else { $('table#founddata-table').html(''); }
-			for(var i = 0; i < items.length; i++)
-			{
-				$('table#founddata-table').append(items[i]);
-			}
-			$('.founddata').on('click', function(){
-				var data = $(this).data('data');
-				if(data != '')
-				{
-					var label = '';
-					var html = '';
-					for(var i in data)
-					{
-						if(i == 'type') { continue; }
-						if(i.startsWith('wiki')) { continue; }
-						html = html + '<tr><td>' + i + '</td><td>';
-						for(var j = 0; j < data[i].length; j++)
-						{
-							if(i == 'label') { label = data[i][j]; }
-							html = html + data[i][j] + '<br/>';
-						}
-						html = html + '</td></tr>';
-					}
-					if(html != '') { $("#import-summary-window").html('<div class="box box-primary"><div class="box-header with-border"><h3 class="box-title">' + label + '</h3></div><div class="box-body no-padding"><table class="table table-condensed">' + html + '</table></div></div>'); }
-				}
-			});
-		});
-	});
-
-    });
 }
 
 function updateReportQueue()
@@ -397,141 +279,10 @@ function onMapClick(e)
     $('#id_lon').val(lon);
 }
 
-function timelineScreen()
-{
-    $(".content-wrapper").load("./timeline.html", function(response, status, xhr)
-    {
-        if(status == 'error') { errorPage(xhr); return false; }
-
-        $("#event-delete-button").on('click', function()
-        {
-            var id="#li_event_" + $("#delete-id").val();
-            var url="events/" + $("#delete-id").val() + "/delete";
-
-            $(id).remove();
-            $("#timeline_event_delete").modal('hide');
-
-            $.ajax({
-                url: url,
-                dataType: 'json',
-                method: 'POST',
-                success: function(data) { }
-            });
-            
-        });
-        
-        $(window).on('scroll', function()
-        {
-            checkTimelineScroll();
-        });
-        for(i = 0; i < 10; i++)
-        {
-            loadTimelineSegment();
-        }
-    });
-}
-
 function updateReportYearSelect(year)
 {
 	$('#id_label').val(year);
 	$('#new-report-generate-year').val(year);
-}
-
-function reportsScreen()
-{
-    $(".content-wrapper").load("./reports.html", function(response, status, xhr){
-        if(status == 'error') { errorPage(xhr); return false; }
-        var year = $("#generate-life-report-year").val();
-        updateReportYearSelect(year);
-        $(document).on('change', "#generate-life-report-year", function() {
-            var year = $(this).val();
-            updateReportYearSelect(year);
-        });
-        $("#report-save-form-button").on('click', function(){
-            $("#report-edit").submit();
-        });
-        $(".report-delete-form-button").on('click', function(){
-
-            var id = $(this).data('report-id');
-            var url = "reports/" + id + "/delete";
-
-            $("#report_box_" + id).remove();
-            $("#admin_report_delete_" + id).modal('hide');
-
-            $.ajax({
-                url: url,
-                dataType: 'json',
-                method: 'POST',
-                success: function(data) { }
-            });
-        });
-	createTimer(updateReportQueue, 5000);
-	updateReportQueue();
-    });
-}
-
-function reportScreen(id, page='misc')
-{
-    var url = "./reports/" + id + ".html";
-    if(page.length > 0) { url = "./reports/" + id + "/" + page + ".html"; }
-    $(".content-wrapper").load(url, function(response, status, xhr){
-        if(status == 'error') { errorPage(xhr); return false; }
-        $('.report-graph').each(function() {
-            var canvas = $(this);
-            var type = canvas.data('type');
-            var data = canvas.data('data');
-            if(type == 'donut') { makeDonutChart(canvas[0].getContext('2d'), data[1], data[0]); }
-        });
-        makeMap();
-    });
-}
-
-function questionIndexScreen()
-{
-    var url = "./questionnaires.html";
-    $(".content-wrapper").load(url, function(response, status, xhr){
-        if(status == 'error') { errorPage(xhr); return false; }
-        $("#q-save-form-button").on('click', function(){
-            $("#q-edit").submit();
-        });
-        $(".q-delete-form-button").on('click', function(){
-
-            var id = $(this).data('q-id');
-            var url = "questionnaires/" + id + "/delete";
-
-            $("#q_box_id_" + id).remove();
-            $("#admin_q_delete_" + id).modal('hide');
-
-            $.ajax({
-                url: url,
-                dataType: 'json',
-                method: 'POST',
-                success: function(data) { }
-            });
-        });
-    });
-}
-
-function questionEditScreen(id)
-{
-    var url = "./questionnaires/" + id + ".html";
-    $(".content-wrapper").load(url, function(response, status, xhr){
-        if(status == 'error') { errorPage(xhr); return false; }
-        $('#questionnairesubmit').on('click', function(){
-            $('#questionnaireform').submit();
-        });
-    });
-}
-
-function array_shuffle(array)
-{
-	for (var i = array.length - 1; i > 0; i--)
-	{
-		var j = Math.floor(Math.random() * (i + 1));
-		var temp = array[i];
-		array[i] = array[j];
-		array[j] = temp;
-	}
 }
 
 function dayHeartReport(date)
@@ -716,139 +467,6 @@ function daySleepReport(date)
 
 }
 
-function healthReportScreen(page)
-{
-    $(".content-wrapper").load("./health/" + page + ".html", function(response, status, xhr){
-        if(status == 'error') { errorPage(xhr); return false; }
-	if(page == 'exercise')
-	{
-		$('.cmd-delete-exercise').on('click', function(e)
-		{
-			var id = $(this).data('id');
-			var label = $(this).data('label');
-			var events = parseInt($(this).data('events'));
-		        var url="workout/" + id + "/delete";
-
-			$('#workout-delete-warning').html('Are you sure you want to delete "' + label + '"?');
-			$('#workout-delete-subwarning').html('<small>This workout type contains ' + events + ' events.</small>');
-			$("#admin_workout_delete").modal('show');
-
-		        $("#workout-delete-button").on('click', function()
-		        {
-
-		            $.ajax({
-		                url: url,
-		                dataType: 'json',
-		                method: 'POST',
-		                success: function(data) { window.location.reload(false); }
-		            });
-
-		        });
-
-			return false;
-		});
-
-		$('#workout-save-form-button').on('click', function(e)
-		{
-	            $("#workout-edit").submit();
-		});
-	}
-        if(page == 'heart')
-        {
-            var dt = new Date();
-            dt.setDate(dt.getDate() - 1);
-            var dsy = String(dt.getFullYear());
-            var dsm = String(dt.getMonth() + 1);
-            var dsd = String(dt.getDate());
-            var ds = dsy + dsm.padStart(2, '0') + dsd.padStart(2, '0');
-            dayHeartReport(ds);
-        }
-        if(page == 'sleep')
-        {
-        }
-        if(page == 'mentalhealth')
-        {
-        }
-        $("#data-submit-button").on('click', function()
-        {
-            var url = $("form").attr('action');
-            var data = {}
-            $("form input").each(function() {
-                k = $(this).attr('name');
-                v = $(this).val();
-                if(!(k === undefined)) { data[k] = v; }
-            });
-            $("form select").each(function() {
-                k = $(this).attr('name');
-                v = $(this).val();
-                if(!(k === undefined)) { data[k] = v; }
-            });
-            $.ajax({
-                url: url,
-                dataType: 'json',
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                method: 'POST',
-                success: function() {
-                    window.location.reload(false);
-                }
-            });
-            return false;
-        });
-        initialiseGraphics();
-    });
-}
-
-function eventsScreen()
-{
-    $(".content-wrapper").load("./events.html", function(response, status, xhr)
-    {
-
-        if(status == 'error') { errorPage(xhr); return false; }
-
-        var date = new Date();
-        var d = date.getDate(),
-            m = date.getMonth(),
-            y = date.getFullYear();
-        $('#calendar').fullCalendar({
-           header: {
-               left: 'prev,next today',
-               center: 'title',
-               right: 'month,agendaWeek,agendaDay'
-           },
-           buttonText: {
-               today: 'today',
-               month: 'month',
-               week: 'week',
-               day: 'day'
-           },
-           events: {
-               url: 'events.json'
-           },
-           editable: false,
-           droppable: false, // this allows things to be dropped onto the calendar !!!
-           contentHeight: "auto",
-           dayClick: function(date, jsEvent, view) {
-               url = "#day_" + date.format("YYYYMMDD");
-               window.location = url;
-           }
-
-        });
-        $("#event-save-form-button").on('click', function()
-        {
-            $("form#event-edit").submit();
-            return false;
-        })
-        $("#period-save-form-button").on('click', function(){
-            $("#period-edit").submit();
-            return false;
-        });
-        var colpicker = new JSColor($("#id_colour")[0], {});
-	//colpicker.show();
-
-    });
-}
-
 function updateReportStatus()
 {
     var id = $("#year-report-generation-progress").data('year');
@@ -859,127 +477,6 @@ function updateReportStatus()
             $("#createyearreport").modal('show');
             return false;
 	});
-    });
-}
-
-function yearScreen(id)
-{
-    $(".content-wrapper").load("./years/" + id + ".html", function(response, status, xhr)
-    {
-        if(status == 'error') { errorPage(xhr); return false; }
-        $('.report-graph').each(function() {
-            var canvas = $(this);
-            var type = canvas.data('type');
-            var data = canvas.data('data');
-            if(type == 'donut') { makeDonutChart(canvas[0].getContext('2d'), data[1], data[0]); }
-        });
-        $("#addyearstatsubmit").on('click', function() { $("#addyearstatform").submit(); return false; });
-        $('.addyearstat').on('click', function() {
-          var category = $(this).data('category');
-          $("#statcategoryid").val(category);
-          $("#statname").val("");
-          $("#statvalue").val("");
-          $("#stattext").val("");
-          $("#addyearstat").modal('show');
-          return false;
-        });
-        initialiseGraphics();
-        $('#generateyearpdfsubmit').on('click', function() { $('#generateyearpdfform').submit(); return false; });
-        createTimer(updateReportStatus, 1000);
-	updateReportStatus()
-    });
-}
-
-function monthScreen(id)
-{
-    $(".content-wrapper").load("./months/" + id + ".html", function(response, status, xhr)
-    {
-        if(status == 'error') { errorPage(xhr); return false; }
-        initialiseGraphics();
-        makeMap();
-    });
-}
-
-function dayScreen(id)
-{
-    $(".content-wrapper").load("./days/" + id + ".html", function(response, status, xhr)
-    {
-        if(status == 'error') { errorPage(xhr); return false; }
-
-        initialiseGraphics();
-
-        $("a.eventdelete").on('click', function()
-        {
-            var id = $(this).data('event-id');
-            $("#delete-id").val(id);
-
-            $("#timeline_event_delete").modal('show');
-
-            return false;
-        });
-
-        $("#event-delete-button").on('click', function()
-        {
-            var id="#day_event_" + $("#delete-id").val();
-            var url="events/" + $("#delete-id").val() + "/delete";
-
-            $(id).remove();
-            $("#timeline_event_delete").modal('hide');
-
-            $.ajax({
-                url: url,
-                dataType: 'json',
-                method: 'POST',
-                success: function(data) { }
-            });
-
-        });
-
-        daySummary(id);
-	$("#amenityselect").on('change', function() {
-		var ll = JSON.parse($("#amenityselect").val());
-		if(ll.length == 2) { updateSelectMap(ll[0], ll[1], false); }
-	 });
-	var initll = JSON.parse($("#amenityselect").val());
-	if(initll == null) { initll = []; }
-	if(initll.length == 2) { updateSelectMap(initll[0], initll[1], false); }
-        var heightstring = parseInt(window.innerHeight * 0.6) + 'px';
-        $('#mapselect').css('min-height', heightstring);
-        makeMap();
-
-        {% if home.lat %}var lat = {{ home.lat }};{% else %}var lat = 0.0;{% endif %}
-        {% if home.lon %}var lon = {{ home.lon }};{% else %}var lon = 0.0;{% endif %}
-        var map = L.map('mapselect', {center: [lat, lon], zoom: 13});
-{% if '.pbf' in tiles %}
-        L.vectorGrid.protobuf('tile/{z}/{x}/{y}.pbf').addTo(map);
-{% else %}
-        L.tileLayer('{{ tiles }}', {
-            attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
-            maxZoom: {{ max_zoom }}
-        }).addTo(map);
-{% endif %}
-        //$('#id_lat').val(lat);
-        //$('#id_lon').val(lon);
-        map.on('click', onLocEventMapClick);
-
-        // The following block is required because we've foolishly put a leaflet map in a tab in a modal.
-        $("#day_locevent_add").on('shown.bs.modal', function() 
-        {
-            map.invalidateSize();
-        });
-        $("a[href='#loc']").on('shown.bs.tab', function() 
-        {
-            map.invalidateSize();
-        });
-
-        $("#event-save-form-button").on('click', function()
-        {
-            $("form#event-edit").submit();
-            return false;
-        })
-
-	activateImageEditor();
-
     });
 }
 
@@ -1243,173 +740,6 @@ function daySummary(date)
                 }
             }
         });
-}
-
-function peopleScreen()
-{
-    $(".content-wrapper").load("./people.html", function(response, status, xhr)
-    {
-        if(status == 'error') { errorPage(xhr); return false; }
-        $(".save-form-button").on('click', function()
-        {
-            $("#person-add").submit();
-            return true;
-        });
-    });
-}
-
-function personScreen(id)
-{
-    $(".content-wrapper").load("./people/" + id + ".html", function(response, status, xhr){
-        if(status == 'error')
-        {
-            errorPage(xhr);
-            return false;
-        }
-        $(".save-form-button").on('click', function()
-        {
-            $("#person-add").submit();
-            return true;
-        });
-        $(".save-property-form-button").on('click', function()
-        {
-            $("#personproperty-key").prop('disabled', false);
-            $("#person-property-add").submit();
-            return true;
-        });
-        $("#person-property-delete-button").on('click', function()
-        {
-            $("#person-property-delete").submit();
-            return true;
-        });
-        $(".admin-people-property-edit").on('click', function()
-        {
-            var id = $(this).data('id');
-            var valuearray = [];
-            var value = '';
-            if(id == '')
-            {
-                $("#append-option").val(1);
-                $("#personproperty-key").prop('disabled', false);
-            } else {
-                valuearray = $(this).data('value');
-                value = valuearray.join('\n');
-                $("#append-option").val(0);
-                $("#personproperty-key").prop('disabled', true);
-            }
-            $("#personproperty-key").val(id);
-            $("#personproperty-value").val(value);
-            return true;
-        });
-        $(".admin-people-property-delete").on('click', function()
-        {
-            var id = $(this).data('id');
-            $("#delete-id").val(id);
-            return true;
-        });
-        activateImageEditor();
-    });
-}
-
-function mapToAddress(map, query)
-{
-        var url = './address.json';
-        var data = {'query': query};
-        $.ajax({
-            url: url,
-            dataType: 'json',
-            contentType: 'application/json',
-            data: JSON.stringify(data),
-            method: 'POST',
-            success: function(data) {
-		if(data.length == 4) {
-			var c1 = L.latLng(parseFloat(data[0]), parseFloat(data[2]))
-			var c2 = L.latLng(parseFloat(data[1]), parseFloat(data[3]))
-			var bounds = L.latLngBounds(c1, c2);
-			map.fitBounds(bounds);
-		}
-            }
-        });
-}
-
-function placesScreen(id)
-{
-    $(".content-wrapper").load("./places.html", function(response, status, xhr){
-
-        if(status == 'error') { errorPage(xhr); return false; }
-
-        {% if home.lat %}var lat = {{ home.lat }};{% else %}var lat = 0.0;{% endif %}
-        {% if home.lon %}var lon = {{ home.lon }};{% else %}var lon = 0.0;{% endif %}
-        var heightstring = parseInt(window.innerHeight * 0.5) + 'px';
-        $('#mapselect').css('min-height', heightstring);
-        var map = L.map('mapselect', {center: [lat, lon], zoom: 13});
-{% if '.pbf' in tiles %}
-        L.vectorGrid.protobuf('tile/{z}/{x}/{y}.pbf').addTo(map);
-{% else %}
-        L.tileLayer('{{ tiles }}', {
-            attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
-            maxZoom: {{ max_zoom }}
-        }).addTo(map);
-{% endif %}
-        $('#id_lat').val(lat);
-        $('#id_lon').val(lon);
-        map.on('click', onMapClick);
-        
-        // The following block is required because we've foolishly put a leaflet map in a tab in a modal.
-        $("a[href='#loc']").on('shown.bs.tab', function() 
-        {
-            map.invalidateSize();
-        });
-        
-        $(".save-form-button").on('click', function()
-        {
-            $("#place-add").submit();
-            return true;
-        });
-
-	$("#id_address").on('blur', function() { mapToAddress(map, $(this).val()) });
-    });
-}
-
-function placeScreen(id)
-{
-    $(".content-wrapper").load("./places/" + id + ".html", function(response, status, xhr){
-        if(status == 'error') { errorPage(xhr); return false; }
-        makeMap();
-        initialiseGraphics();
-        $(".save-form-button").on('click', function()
-        {
-            $("#place-add").submit();
-            return true;
-        });
-    });
-}
-
-function placeCategoryScreen(id)
-{
-    $(".content-wrapper").load("./places/categories/" + id + ".html", function(response, status, xhr){
-        if(status == 'error') { errorPage(xhr); return false; }
-        $(".save-form-button").on('click', function()
-        {
-            $("#placecat-add").submit();
-            return true;
-        });
-    });
-}
-
-function cityScreen(id)
-{
-    $(".content-wrapper").load("./cities/" + id + ".html", function(response, status, xhr){
-        if(status == 'error') { errorPage(xhr); return false; }
-        makeMap();
-    });
-}
-
-function countryScreen(id)
-{
-    $(".content-wrapper").load("./countries/" + id + ".html", function(response, status, xhr){
-        if(status == 'error') { errorPage(xhr); return false; }
-    });
 }
 
 function loadDynamicCards(callback)
@@ -1714,6 +1044,112 @@ function makeMap()
     });
 }
 
+function splitEvent(event, splittime)
+{
+	var dt = new Date(splittime);
+	var ds = dt.toLocaleTimeString();
+	document.body.style.cursor = 'default';
+	if(splittime.includes(':'))
+	{
+		$('span.split-time').html(ds);
+		$('input#split-time').val(splittime);
+		$('#event_split_modal').modal('show');
+	}
+}
+
+function initialiseJourneyMap(mapdiv)
+{
+    var mapid = mapdiv.attr('id');
+    var eventid = mapdiv.data('event-id');
+    var pinlis = mapdiv.find('span');
+    var url = './events/' + eventid + '.json';
+    for(var i = 0; i < pinlis.length; i++)
+    {
+        pins[i] = pinlis[i].dataset;
+    }
+        mapdiv.html("");
+        map = L.map(mapid, {
+            center: [50.93540, -1.39638],
+            zoom: 13
+        });
+{% if '.pbf' in tiles %}
+        L.vectorGrid.protobuf('tile/{z}/{x}/{y}.pbf').addTo(map);
+{% else %}
+        L.tileLayer('{{ tiles }}', {
+            attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
+            maxZoom: {{ max_zoom }}
+        }).addTo(map);
+{% endif %}
+        $.ajax({
+            url: url,
+            dataType: 'json',
+            success: function(data) {
+                var polylinedesc = data['journey'];
+                var c = polylinedesc.length;
+                var i = 0;
+                latlngs = [];
+                for(i = 0; i < c; i++)
+                {
+                    var polyline = L.polyline(polylinedesc[i], {color: '#0000FF'}).addTo(map);
+                    latlngs.push(polyline);
+                }
+                            map.fitBounds(polylinedesc);
+            }
+        });
+}
+
+function eventPeopleDeleteName(id)
+{
+	$('.person_delete').each(function() {
+		if($(this).data('id') == id) { $(this).remove(); }
+	});
+	return false;
+}
+
+function search(query, callback)
+{
+            var url = './search.json';
+            var data = {'query': query};
+            $.ajax({
+                url: url,
+                dataType: 'json',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                method: 'POST',
+                success: callback
+            });
+}
+
+function importrdf(uri, callback)
+{
+            var url = './import-web.json';
+            var data = {'url': uri};
+            $.ajax({
+                url: url,
+                dataType: 'json',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                method: 'POST',
+                success: callback
+            });
+}
+
+function typingDelay(callback, ms)
+{
+        var timer = 0;
+        return function()
+        {
+                var context = this, args = arguments;
+                clearTimeout(timer);
+                timer = setTimeout(function()
+                {
+                        callback.apply(context, args);
+                }, ms || 0);
+        }
+}
+
+// Chart building functions
+
 function makeDonutChart(donutChartCanvas, data, labels)
 {
     var donutChart = new Chart(donutChartCanvas);
@@ -1830,19 +1266,6 @@ function makeSleepAreaChart(canvas, datasets)
 
 	var chart = new Chart(canvas, config);
 	chart.update();
-}
-
-function splitEvent(event, splittime)
-{
-	var dt = new Date(splittime);
-	var ds = dt.toLocaleTimeString();
-	document.body.style.cursor = 'default';
-	if(splittime.includes(':'))
-	{
-		$('span.split-time').html(ds);
-		$('input#split-time').val(splittime);
-		$('#event_split_modal').modal('show');
-	}
 }
 
 function makeLineChart(lineChartCanvas, data, colstr, timeline=false)
@@ -2080,21 +1503,501 @@ function makeBarChart(barChartCanvas, data, legend)
     barChart = new Chart(barChartCanvas, {type: 'bar', data: barChartData, options: barChartOptions});
 }
 
-function initialiseJourneyMap(mapdiv)
+// Open the various page types
+
+function homeScreen()
 {
-    var mapid = mapdiv.attr('id');
-    var eventid = mapdiv.data('event-id');
-    var pinlis = mapdiv.find('span');
-    var url = './events/' + eventid + '.json';
-    for(var i = 0; i < pinlis.length; i++)
+    $(".content-wrapper").load("./stats.html", function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
+        loadDynamicCards(function(){ initialiseGraphics(); });
+    });
+}
+
+function profileScreen()
+{
+    $(".content-wrapper").load("./profile.html", function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
+    });
+}
+
+function anniversaryScreen()
+{
+    $(".content-wrapper").load("./onthisday.html", function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
+        loadDynamicCards(function(){ initialiseGraphics(); });
+    });
+}
+
+function lifeGridScreen()
+{
+    $(".content-wrapper").load("./life_grid.html", function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
+
+
+	$("input.life-grid-category").on('change', function(){
+		var c = $(this).data('category');
+		var checked = $(this).is(':checked');
+		$('td.category-' + c).each(function(){
+			var cols = $(this).data('colours').split(',');
+			var i;
+			for(i = 0; i < cols.length; i++)
+			{
+				var t = cols[i].split('|');
+				if(t.length == 2)
+				{
+					if(t[0] == c)
+					{
+						if(checked)
+						{
+							$(this).css('background-color', t[1]);
+						} else {
+							$(this).css('background-color', '');
+						}
+					}
+				}
+			}
+		});
+	});
+    });
+}
+
+function uploadScreen()
+{
+    $(".content-wrapper").load("./upload.html", function(response, status, xhr){
+
+        if(status == 'error') { errorPage(xhr); return false; }
+
+	$('#watcheddir-save-form-button').on('click', function() {
+		$('#watcheddir-edit').submit();
+	});
+	$('.delete-watched-directory').on('click', function() {
+		var id = $(this).data('wd-id');
+		var label = $(this).data('wd-label');
+		var url = "watched_directory/" + id + ".html";
+		var form = $('#delete-wd-form');
+		$('#wd-update-id').val(id);
+		$('#wd-update-label').html(label);
+		form.attr('action', url);
+		$('#delete-wd').modal('show');
+		$('.delete-wd-button').on('click', function() {
+			form.submit();
+		});
+	});
+	createTimer(updateUploadStats, 1000);
+	createTimer(updateUploadQueue, 5000);
+	updateUploadStats();
+	updateUploadQueue();
+
+    });
+}
+
+function importWebScreen()
+{
+    $(".content-wrapper").load("./import-web.html", function(response, status, xhr){
+
+        if(status == 'error') { errorPage(xhr); return false; }
+
+	$('#importformurl').on('keypress', function(e)
+	{
+		var key = e.which;
+		if(key == 13) { $('a#importfromweb').click(); return false; }
+	});
+
+	$('#importfromweb').on('click', function()
+	{
+		var url = $('#importformurl').val();
+		var waittext = '<tr class="founddata" data-data="{}"><td><i class="fa fa-refresh fa-spin"></i> Loading...</td></tr>';
+		$('table#founddata-table').html(waittext);
+		importrdf(url, function(data)
+		{
+			items = [];
+			for(var i = 0; i < data.length; i++)
+			{
+				var item = data[i];
+				if(item.label)
+				{
+					var title = item.label[0];
+					if(item.type == 'Location') { title = '<i class="fa fa-map-marker"></i> ' + title; }
+					if(item.type == 'Person') { title = '<i class="fa fa-user"></i> ' + title; }
+					var elemtd = $("<td>" + title + "</td>");
+					var elemtr = $("<tr>", {'class': 'founddata', 'data-data': JSON.stringify(item)});
+					elemtr.append(elemtd);
+					items.push(elemtr);
+				}
+			}
+			if(items.length == 0) { $('table#founddata-table').html('<tr class="founddata" data-data="{}"><td>No data found.</td></tr>'); } else { $('table#founddata-table').html(''); }
+			for(var i = 0; i < items.length; i++)
+			{
+				$('table#founddata-table').append(items[i]);
+			}
+			$('.founddata').on('click', function(){
+				var data = $(this).data('data');
+				if(data != '')
+				{
+					var label = '';
+					var html = '';
+					for(var i in data)
+					{
+						if(i == 'type') { continue; }
+						if(i.startsWith('wiki')) { continue; }
+						html = html + '<tr><td>' + i + '</td><td>';
+						for(var j = 0; j < data[i].length; j++)
+						{
+							if(i == 'label') { label = data[i][j]; }
+							html = html + data[i][j] + '<br/>';
+						}
+						html = html + '</td></tr>';
+					}
+					if(html != '') { $("#import-summary-window").html('<div class="box box-primary"><div class="box-header with-border"><h3 class="box-title">' + label + '</h3></div><div class="box-body no-padding"><table class="table table-condensed">' + html + '</table></div></div>'); }
+				}
+			});
+		});
+	});
+
+    });
+}
+
+function timelineScreen()
+{
+    $(".content-wrapper").load("./timeline.html", function(response, status, xhr)
     {
-        pins[i] = pinlis[i].dataset;
-    }
-        mapdiv.html("");
-        map = L.map(mapid, {
-            center: [50.93540, -1.39638],
-            zoom: 13
+        if(status == 'error') { errorPage(xhr); return false; }
+
+        $("#event-delete-button").on('click', function()
+        {
+            var id="#li_event_" + $("#delete-id").val();
+            var url="events/" + $("#delete-id").val() + "/delete";
+
+            $(id).remove();
+            $("#timeline_event_delete").modal('hide');
+
+            $.ajax({
+                url: url,
+                dataType: 'json',
+                method: 'POST',
+                success: function(data) { }
+            });
+            
         });
+        
+        $(window).on('scroll', function()
+        {
+            checkTimelineScroll();
+        });
+        for(i = 0; i < 10; i++)
+        {
+            loadTimelineSegment();
+        }
+    });
+}
+
+function reportsScreen()
+{
+    $(".content-wrapper").load("./reports.html", function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
+        var year = $("#generate-life-report-year").val();
+        updateReportYearSelect(year);
+        $(document).on('change', "#generate-life-report-year", function() {
+            var year = $(this).val();
+            updateReportYearSelect(year);
+        });
+        $("#report-save-form-button").on('click', function(){
+            $("#report-edit").submit();
+        });
+        $(".report-delete-form-button").on('click', function(){
+
+            var id = $(this).data('report-id');
+            var url = "reports/" + id + "/delete";
+
+            $("#report_box_" + id).remove();
+            $("#admin_report_delete_" + id).modal('hide');
+
+            $.ajax({
+                url: url,
+                dataType: 'json',
+                method: 'POST',
+                success: function(data) { }
+            });
+        });
+	createTimer(updateReportQueue, 5000);
+	updateReportQueue();
+    });
+}
+
+function reportScreen(id, page='misc')
+{
+    var url = "./reports/" + id + ".html";
+    if(page.length > 0) { url = "./reports/" + id + "/" + page + ".html"; }
+    $(".content-wrapper").load(url, function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
+        $('.report-graph').each(function() {
+            var canvas = $(this);
+            var type = canvas.data('type');
+            var data = canvas.data('data');
+            if(type == 'donut') { makeDonutChart(canvas[0].getContext('2d'), data[1], data[0]); }
+        });
+        makeMap();
+    });
+}
+
+function questionIndexScreen()
+{
+    var url = "./questionnaires.html";
+    $(".content-wrapper").load(url, function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
+        $("#q-save-form-button").on('click', function(){
+            $("#q-edit").submit();
+        });
+        $(".q-delete-form-button").on('click', function(){
+
+            var id = $(this).data('q-id');
+            var url = "questionnaires/" + id + "/delete";
+
+            $("#q_box_id_" + id).remove();
+            $("#admin_q_delete_" + id).modal('hide');
+
+            $.ajax({
+                url: url,
+                dataType: 'json',
+                method: 'POST',
+                success: function(data) { }
+            });
+        });
+    });
+}
+
+function questionEditScreen(id)
+{
+    var url = "./questionnaires/" + id + ".html";
+    $(".content-wrapper").load(url, function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
+        $('#questionnairesubmit').on('click', function(){
+            $('#questionnaireform').submit();
+        });
+    });
+}
+
+function eventsScreen()
+{
+    $(".content-wrapper").load("./events.html", function(response, status, xhr)
+    {
+
+        if(status == 'error') { errorPage(xhr); return false; }
+
+        var date = new Date();
+        var d = date.getDate(),
+            m = date.getMonth(),
+            y = date.getFullYear();
+        $('#calendar').fullCalendar({
+           header: {
+               left: 'prev,next today',
+               center: 'title',
+               right: 'month,agendaWeek,agendaDay'
+           },
+           buttonText: {
+               today: 'today',
+               month: 'month',
+               week: 'week',
+               day: 'day'
+           },
+           events: {
+               url: 'events.json'
+           },
+           editable: false,
+           droppable: false, // this allows things to be dropped onto the calendar !!!
+           contentHeight: "auto",
+           dayClick: function(date, jsEvent, view) {
+               url = "#day_" + date.format("YYYYMMDD");
+               window.location = url;
+           }
+
+        });
+        $("#event-save-form-button").on('click', function()
+        {
+            $("form#event-edit").submit();
+            return false;
+        })
+        $("#period-save-form-button").on('click', function(){
+            $("#period-edit").submit();
+            return false;
+        });
+        var colpicker = new JSColor($("#id_colour")[0], {});
+	//colpicker.show();
+
+    });
+}
+
+function healthReportScreen(page)
+{
+    $(".content-wrapper").load("./health/" + page + ".html", function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
+	if(page == 'exercise')
+	{
+		$('.cmd-delete-exercise').on('click', function(e)
+		{
+			var id = $(this).data('id');
+			var label = $(this).data('label');
+			var events = parseInt($(this).data('events'));
+		        var url="workout/" + id + "/delete";
+
+			$('#workout-delete-warning').html('Are you sure you want to delete "' + label + '"?');
+			$('#workout-delete-subwarning').html('<small>This workout type contains ' + events + ' events.</small>');
+			$("#admin_workout_delete").modal('show');
+
+		        $("#workout-delete-button").on('click', function()
+		        {
+
+		            $.ajax({
+		                url: url,
+		                dataType: 'json',
+		                method: 'POST',
+		                success: function(data) { window.location.reload(false); }
+		            });
+
+		        });
+
+			return false;
+		});
+
+		$('#workout-save-form-button').on('click', function(e)
+		{
+	            $("#workout-edit").submit();
+		});
+	}
+        if(page == 'heart')
+        {
+            var dt = new Date();
+            dt.setDate(dt.getDate() - 1);
+            var dsy = String(dt.getFullYear());
+            var dsm = String(dt.getMonth() + 1);
+            var dsd = String(dt.getDate());
+            var ds = dsy + dsm.padStart(2, '0') + dsd.padStart(2, '0');
+            dayHeartReport(ds);
+        }
+        if(page == 'sleep')
+        {
+        }
+        if(page == 'mentalhealth')
+        {
+        }
+        $("#data-submit-button").on('click', function()
+        {
+            var url = $("form").attr('action');
+            var data = {}
+            $("form input").each(function() {
+                k = $(this).attr('name');
+                v = $(this).val();
+                if(!(k === undefined)) { data[k] = v; }
+            });
+            $("form select").each(function() {
+                k = $(this).attr('name');
+                v = $(this).val();
+                if(!(k === undefined)) { data[k] = v; }
+            });
+            $.ajax({
+                url: url,
+                dataType: 'json',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                method: 'POST',
+                success: function() {
+                    window.location.reload(false);
+                }
+            });
+            return false;
+        });
+        initialiseGraphics();
+    });
+}
+
+function yearScreen(id)
+{
+    $(".content-wrapper").load("./years/" + id + ".html", function(response, status, xhr)
+    {
+        if(status == 'error') { errorPage(xhr); return false; }
+        $('.report-graph').each(function() {
+            var canvas = $(this);
+            var type = canvas.data('type');
+            var data = canvas.data('data');
+            if(type == 'donut') { makeDonutChart(canvas[0].getContext('2d'), data[1], data[0]); }
+        });
+        $("#addyearstatsubmit").on('click', function() { $("#addyearstatform").submit(); return false; });
+        $('.addyearstat').on('click', function() {
+          var category = $(this).data('category');
+          $("#statcategoryid").val(category);
+          $("#statname").val("");
+          $("#statvalue").val("");
+          $("#stattext").val("");
+          $("#addyearstat").modal('show');
+          return false;
+        });
+        initialiseGraphics();
+        $('#generateyearpdfsubmit').on('click', function() { $('#generateyearpdfform').submit(); return false; });
+        createTimer(updateReportStatus, 1000);
+	updateReportStatus()
+    });
+}
+
+function monthScreen(id)
+{
+    $(".content-wrapper").load("./months/" + id + ".html", function(response, status, xhr)
+    {
+        if(status == 'error') { errorPage(xhr); return false; }
+        initialiseGraphics();
+        makeMap();
+    });
+}
+
+function dayScreen(id)
+{
+    $(".content-wrapper").load("./days/" + id + ".html", function(response, status, xhr)
+    {
+        if(status == 'error') { errorPage(xhr); return false; }
+
+        initialiseGraphics();
+
+        $("a.eventdelete").on('click', function()
+        {
+            var id = $(this).data('event-id');
+            $("#delete-id").val(id);
+
+            $("#timeline_event_delete").modal('show');
+
+            return false;
+        });
+
+        $("#event-delete-button").on('click', function()
+        {
+            var id="#day_event_" + $("#delete-id").val();
+            var url="events/" + $("#delete-id").val() + "/delete";
+
+            $(id).remove();
+            $("#timeline_event_delete").modal('hide');
+
+            $.ajax({
+                url: url,
+                dataType: 'json',
+                method: 'POST',
+                success: function(data) { }
+            });
+
+        });
+
+        daySummary(id);
+	$("#amenityselect").on('change', function() {
+		var ll = JSON.parse($("#amenityselect").val());
+		if(ll.length == 2) { updateSelectMap(ll[0], ll[1], false); }
+	 });
+	var initll = JSON.parse($("#amenityselect").val());
+	if(initll == null) { initll = []; }
+	if(initll.length == 2) { updateSelectMap(initll[0], initll[1], false); }
+        var heightstring = parseInt(window.innerHeight * 0.6) + 'px';
+        $('#mapselect').css('min-height', heightstring);
+        makeMap();
+
+        {% if home.lat %}var lat = {{ home.lat }};{% else %}var lat = 0.0;{% endif %}
+        {% if home.lon %}var lon = {{ home.lon }};{% else %}var lon = 0.0;{% endif %}
+        var map = L.map('mapselect', {center: [lat, lon], zoom: 13});
 {% if '.pbf' in tiles %}
         L.vectorGrid.protobuf('tile/{z}/{x}/{y}.pbf').addTo(map);
 {% else %}
@@ -2103,30 +2006,175 @@ function initialiseJourneyMap(mapdiv)
             maxZoom: {{ max_zoom }}
         }).addTo(map);
 {% endif %}
-        $.ajax({
-            url: url,
-            dataType: 'json',
-            success: function(data) {
-                var polylinedesc = data['journey'];
-                var c = polylinedesc.length;
-                var i = 0;
-                latlngs = [];
-                for(i = 0; i < c; i++)
-                {
-                    var polyline = L.polyline(polylinedesc[i], {color: '#0000FF'}).addTo(map);
-                    latlngs.push(polyline);
-                }
-                            map.fitBounds(polylinedesc);
-            }
+        //$('#id_lat').val(lat);
+        //$('#id_lon').val(lon);
+        map.on('click', onLocEventMapClick);
+
+        // The following block is required because we've foolishly put a leaflet map in a tab in a modal.
+        $("#day_locevent_add").on('shown.bs.modal', function() 
+        {
+            map.invalidateSize();
         });
+        $("a[href='#loc']").on('shown.bs.tab', function() 
+        {
+            map.invalidateSize();
+        });
+
+        $("#event-save-form-button").on('click', function()
+        {
+            $("form#event-edit").submit();
+            return false;
+        })
+
+	activateImageEditor();
+
+    });
 }
 
-function eventPeopleDeleteName(id)
+function peopleScreen()
 {
-	$('.person_delete').each(function() {
-		if($(this).data('id') == id) { $(this).remove(); }
-	});
-	return false;
+    $(".content-wrapper").load("./people.html", function(response, status, xhr)
+    {
+        if(status == 'error') { errorPage(xhr); return false; }
+        $(".save-form-button").on('click', function()
+        {
+            $("#person-add").submit();
+            return true;
+        });
+    });
+}
+
+function personScreen(id)
+{
+    $(".content-wrapper").load("./people/" + id + ".html", function(response, status, xhr){
+        if(status == 'error')
+        {
+            errorPage(xhr);
+            return false;
+        }
+        $(".save-form-button").on('click', function()
+        {
+            $("#person-add").submit();
+            return true;
+        });
+        $(".save-property-form-button").on('click', function()
+        {
+            $("#personproperty-key").prop('disabled', false);
+            $("#person-property-add").submit();
+            return true;
+        });
+        $("#person-property-delete-button").on('click', function()
+        {
+            $("#person-property-delete").submit();
+            return true;
+        });
+        $(".admin-people-property-edit").on('click', function()
+        {
+            var id = $(this).data('id');
+            var valuearray = [];
+            var value = '';
+            if(id == '')
+            {
+                $("#append-option").val(1);
+                $("#personproperty-key").prop('disabled', false);
+            } else {
+                valuearray = $(this).data('value');
+                value = valuearray.join('\n');
+                $("#append-option").val(0);
+                $("#personproperty-key").prop('disabled', true);
+            }
+            $("#personproperty-key").val(id);
+            $("#personproperty-value").val(value);
+            return true;
+        });
+        $(".admin-people-property-delete").on('click', function()
+        {
+            var id = $(this).data('id');
+            $("#delete-id").val(id);
+            return true;
+        });
+        activateImageEditor();
+    });
+}
+
+function placesScreen(id)
+{
+    $(".content-wrapper").load("./places.html", function(response, status, xhr){
+
+        if(status == 'error') { errorPage(xhr); return false; }
+
+        {% if home.lat %}var lat = {{ home.lat }};{% else %}var lat = 0.0;{% endif %}
+        {% if home.lon %}var lon = {{ home.lon }};{% else %}var lon = 0.0;{% endif %}
+        var heightstring = parseInt(window.innerHeight * 0.5) + 'px';
+        $('#mapselect').css('min-height', heightstring);
+        var map = L.map('mapselect', {center: [lat, lon], zoom: 13});
+{% if '.pbf' in tiles %}
+        L.vectorGrid.protobuf('tile/{z}/{x}/{y}.pbf').addTo(map);
+{% else %}
+        L.tileLayer('{{ tiles }}', {
+            attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
+            maxZoom: {{ max_zoom }}
+        }).addTo(map);
+{% endif %}
+        $('#id_lat').val(lat);
+        $('#id_lon').val(lon);
+        map.on('click', onMapClick);
+        
+        // The following block is required because we've foolishly put a leaflet map in a tab in a modal.
+        $("a[href='#loc']").on('shown.bs.tab', function() 
+        {
+            map.invalidateSize();
+        });
+        
+        $(".save-form-button").on('click', function()
+        {
+            $("#place-add").submit();
+            return true;
+        });
+
+	$("#id_address").on('blur', function() { mapToAddress(map, $(this).val()) });
+    });
+}
+
+function placeScreen(id)
+{
+    $(".content-wrapper").load("./places/" + id + ".html", function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
+        makeMap();
+        initialiseGraphics();
+        $(".save-form-button").on('click', function()
+        {
+            $("#place-add").submit();
+            return true;
+        });
+    });
+}
+
+function placeCategoryScreen(id)
+{
+    $(".content-wrapper").load("./places/categories/" + id + ".html", function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
+        $(".save-form-button").on('click', function()
+        {
+            $("#placecat-add").submit();
+            return true;
+        });
+    });
+}
+
+function cityScreen(id)
+{
+    $(".content-wrapper").load("./cities/" + id + ".html", function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
+        makeMap();
+    });
+}
+
+function countryScreen(id)
+{
+    $(".content-wrapper").load("./countries/" + id + ".html", function(response, status, xhr){
+        if(status == 'error') { errorPage(xhr); return false; }
+    });
 }
 
 function tagsScreen()
@@ -2397,48 +2445,6 @@ function eventScreen(id)
         });
 
     });
-}
-
-function search(query, callback)
-{
-            var url = './search.json';
-            var data = {'query': query};
-            $.ajax({
-                url: url,
-                dataType: 'json',
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                method: 'POST',
-                success: callback
-            });
-}
-
-function importrdf(uri, callback)
-{
-            var url = './import-web.json';
-            var data = {'url': uri};
-            $.ajax({
-                url: url,
-                dataType: 'json',
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                method: 'POST',
-                success: callback
-            });
-}
-
-function typingDelay(callback, ms)
-{
-        var timer = 0;
-        return function()
-        {
-                var context = this, args = arguments;
-                clearTimeout(timer);
-                timer = setTimeout(function()
-                {
-                        callback.apply(context, args);
-                }, ms || 0);
-        }
 }
 
 function pageRefresh()
