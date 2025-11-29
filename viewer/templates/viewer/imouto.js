@@ -1,8 +1,4 @@
 {% load static %}var map;
-var quiz;
-var quiz_score_a;
-var quiz_score_d;
-
 var timers = [];
 
 function createTimer(callback, delay)
