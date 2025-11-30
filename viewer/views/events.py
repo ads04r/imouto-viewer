@@ -285,6 +285,8 @@ def eventsplit(request, eid):
 		raise Http404()
 	ret = id
 	dt = dateutil.parser.parse(request.POST['split-time'])
+	if dt.tzinfo is None:
+		dt = pytz.timezone(settings.TIME_ZONE).localize(dt)
 	mode = int(request.POST['split-split'])
 	data = get_object_or_404(Event, pk=id)
 	cache.delete(cache_key)
