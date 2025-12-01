@@ -37,7 +37,7 @@ ExifRead==2.1.2
 extruct==0.17.0
 feedparser==6.0.11
 fit-tool==0.9.13
-fonttools==4.53.1
+fonttools==4.61.0
 frechetdist==0.6
 geographiclib==1.52
 geopy==1.20.0
