@@ -55,7 +55,7 @@ class UserProfile(models.Model):
 		birth_year = self.date_of_birth.year
 		birthday_this_year = datetime.date(today.year, self.date_of_birth.month, self.date_of_birth.day)
 		if birthday_this_year < today:
-			return now.year - birth_year
+			return today.year - birth_year
 		return (today.year - birth_year) - 1
 	def __str__(self):
 		return str(self.user)
