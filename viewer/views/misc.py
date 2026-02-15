@@ -81,6 +81,14 @@ def locman_process(request):
 	response = HttpResponse(json.dumps(get_location_manager_process_queue(request.user)), content_type='application/json')
 	return response
 
+def locman_import_html(request):
+	context = get_location_manager_import_queue(request.user)
+	return render(request, 'viewer/cards/locman_import.html', context)
+
+def locman_process_html(request):
+	context = get_location_manager_process_queue(request.user)
+	return render(request, 'viewer/cards/locman_process.html', context)
+
 def importer(request):
 	context = {'progress': get_location_manager_import_queue(request.user), 'form': WatchedDirectoryForm(), 'paths': WatchedDirectory.objects.filter(user=request.user)}
 	return render(request, 'viewer/pages/import.html', context)

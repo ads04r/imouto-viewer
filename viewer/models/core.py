@@ -79,9 +79,9 @@ def create_or_get_month(user, month, year):
 def create_or_get_year(user, year):
 
 	try:
-		ret = Year.objects.get(year=year)
+		ret = Year.objects.get(year=year, user=user)
 	except:
-		ret = Year(year=year)
+		ret = Year(year=year, user=user)
 		ret.save()
 	return ret
 
@@ -2101,6 +2101,8 @@ class Year(models.Model):
 			if item['category'] == '':
 				continue
 			if item['category'] in ret:
+				continue
+			if item['category'] in ['health', 'travel']: # We have special views for these two
 				continue
 			ret.append(item['category'])
 		return ret

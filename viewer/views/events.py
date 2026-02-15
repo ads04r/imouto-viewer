@@ -139,7 +139,14 @@ def event_music(request, eid):
 	for item in music:
 		item['time'] = item['time'].strftime("%H:%M")
 		ret.append(item)
-	response = HttpResponse(json.dumps(ret), content_type='application/json')
+	return ret
+
+def event_music_html(request, eid):
+	context = {'type':'card', 'id': eid, 'data': event_music(request, eid)}
+	return render(request, 'viewer/cards/eventmusic.html', context)
+
+def event_music_json(request, eid):
+	response = HttpResponse(json.dumps(event_music(request, eid)), content_type='application/json')
 	return response
 
 def event_addjourney(request):

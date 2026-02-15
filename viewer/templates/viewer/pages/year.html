@@ -87,6 +87,10 @@
 
 {% endfor %}
 
+{% include 'viewer/cards/year_health.html' %}
+
+{% include 'viewer/cards/year_travel.html' %}
+
 {% for category in year.get_stat_categories %}
 
                 <div class="box box-primary" id="day_event_{{ event.pk }}">
@@ -124,8 +128,8 @@
 {% for property in properties %}
 {% if property.category == category %}
 	<tr>
-		<td width="100%">{{ property.key }}</td>
-		<td><nobr><strong>{{ property.value }}</strong>{% if property.description %}&nbsp;<small>&nbsp;({{ property.description }})</small>{% endif %}</nobr></td>
+		<td width="100%"><strong>{{ property.key }}</strong></td>
+		<td><nobr>{{ property.value }}{% if property.description %}&nbsp;<small>&nbsp;({{ property.description }})</small>{% endif %}</nobr></td>
 	</tr>
 {% endif %}
 {% endfor %}

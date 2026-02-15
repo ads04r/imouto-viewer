@@ -96,7 +96,14 @@ def day_music(request, ds):
 	for item in get_moonshine_tracks(request.user, dts, dte):
 		item['time'] = item['time'].strftime("%H:%M")
 		data.append(item)
-	response = HttpResponse(json.dumps(data), content_type='application/json')
+	return data
+
+def day_music_html(request, ds):
+	context = {'type':'card', 'id': ds, 'data': day_music(request, ds)}
+	return render(request, 'viewer/cards/daymusic.html', context)
+
+def day_music_json(request, ds):
+	response = HttpResponse(json.dumps(day_music(request, ds)), content_type='application/json')
 	return response
 
 def day_weight(request, ds):

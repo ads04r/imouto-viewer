@@ -1,0 +1,25 @@
+{% if data %}
+
+<div data-day="{{ id }}" class="hidden-xs day-music-summary">
+    <div class="box box-primary">
+        <div class="box-header">
+            <h3 class="box-title">Today's Music</h3>
+        </div>
+        <div class="box-body">
+            <div class="table-responsive">
+                <table class="table table-sm no-margin">
+                    <tbody>
+    {% for item in data %}
+                        <tr>
+                            <td>{{ item.time }}</td>
+                            <td>{{ item.title }}<br><small class="muted">{{ item.artists.0.name }}</small></td>
+                        </tr>
+    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endif %}

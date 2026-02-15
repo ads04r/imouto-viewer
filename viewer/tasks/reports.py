@@ -237,14 +237,14 @@ def generate_report(user_id, title, year):
 	report.save(update_fields=['report_prc'])
 
 @background(schedule=0, queue='reports')
-def generate_report_pdf(year):
+def generate_report_pdf(user_id, year):
 	"""
 	A background task for generating a PDF from a Year object
 
 	:param year: The calendar year with which to make a report
 	"""
 
-	report = create_or_get_year(year)
+	report = create_or_get_year(user_id, year)
 	if report.cached_pdf:
 		report.cached_pdf.delete()
 		report.save(update_fields=['cached_pdf'])

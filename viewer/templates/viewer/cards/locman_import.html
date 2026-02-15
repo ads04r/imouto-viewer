@@ -1,0 +1,16 @@
+{% for item in tasks %}
+
+<div class="post">
+    <div class="user-block">
+{% if item.running %}
+        <span class="pull-right"><span class="badge" style="background-color: #007F00;">RUNNING</span></span>
+{% endif %}
+{% if item.has_error %}
+        <span class="pull-right"><span class="badge" style="background-color: #FF0000;">ERROR</span></span>
+{% endif %}
+        <span class="username no-image">{{ item.parameters.0.0 }} [{{ item.parameters.0.1 }}]</span>
+        <span class="description no-image">{{ item.time|date:"%H:%M" }}</span>
+    </div>
+</div>
+
+{% endfor %}

@@ -43,8 +43,6 @@ def import_gitea_history(user, since=None):
 	:return: A list of the new GitCommit objects that have been added.
 	:rtype: list(GitCommit)
 	"""
-	if not 'USER_GITHUB' in user.profile.settings:
-		return []
 	try:
 		username = user.profile.settings['GITEA_USER']
 	except AttributeError:

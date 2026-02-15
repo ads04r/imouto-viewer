@@ -80,57 +80,6 @@ function errorPage(e)
     $(".content-wrapper").html(html);
 }
 
-function updateReportQueue()
-{
-	var url = "report_queue.json";
-
-	$.ajax({
-		url: url,
-		dataType: 'json',
-		method: 'GET',
-		success: function(data) {
-
-			var html = '';
-
-			for(i = 0; i < data.length; i++)
-			{
-				var item = data[i];
-				var title = '';
-				var type = '';
-				var task = item.name;
-				var icon = '';
-				var url = '';
-
-				var task_name = item.name.split('.');
-
-				if(item.error) { icon = '<i class="fa fa-warning text-danger"></i>'; }
-				if(item.running) { icon = '<i class="fa fa-play-circle text-success"></i>'; }
-				if(item.event)
-				{
-					title = item.event.caption;
-					type = task_name[task_name.length - 1];
-					url = '#event_' + item.event.id;
-				}
-				if(item.report)
-				{
-					title = item.report.label;
-					type = task_name[task_name.length - 1];
-					if(item.report.id > 0) { url = '#report_' + item.report.id; }
-				}
-
-				html = html + '<tr><td>' + icon + '</td><td>' + title + '<br><small>' + type + '</small></td><td>';
-				if(url.length > 0) { html = html + '<a class="btn btn-primary btn-xs eventlink" href="' + url + '">Read&nbsp;more</a>'; }
-				html = html + '</td></tr>';
-			}
-
-			if(html.length > 0) { html = '<div class="box"><div class="box-header"><h3 class="box-title">In progress</h3></div><div class="box-body no-padding"><table class="table table-condensed">' + html + '</table></div></div>'; }
-
-			$("#report-queue").html(html);
-
-		}
-	});
-}
-
 function updateUploadQueue()
 {
     var url = "import";
@@ -141,30 +90,30 @@ function updateUploadQueue()
         method: 'GET',
         success: function(data) {
 
-		var tasks = data.tasks;
-		var html = "";
+            var tasks = data.tasks;
+            var html = "";
 
-		for(i = 0; i < tasks.length; i++)
-		{
-			var item = tasks[i];
-			var dt = new Date(item.time * 1000);
-			var filename = item.parameters[0][0];
-			var source = item.parameters[0][1];
-			var path = filename.split('/');
-			var running = item.running;
-			var error = item.has_error;
+            for(i = 0; i < tasks.length; i++)
+            {
+                var item = tasks[i];
+                var dt = new Date(item.time * 1000);
+                var filename = item.parameters[0][0];
+                var source = item.parameters[0][1];
+                var path = filename.split('/');
+                var running = item.running;
+                var error = item.has_error;
 
-			html = html + '<div class="post">';
-			html = html + '<div class="user-block">';
-			if(running){ html = html + '<span class="pull-right"><span class="badge" style="background-color: #007F00;">RUNNING</span></span>'; }
-			if(error){ html = html + '<span class="pull-right"><span class="badge" style="background-color: #FF0000;">ERROR</span></span>'; }
-			html = html + '<span class="username no-image">' + path[path.length - 1] + ' [' + source + ']</span>';
-			html = html + '<span class="description no-image">' + dt.toLocaleString() + '</span>';
-			html = html + '</div>';
-			html = html + '</div>';
-		}
+                html = html + '<div class="post">';
+                html = html + '<div class="user-block">';
+                if(running){ html = html + '<span class="pull-right"><span class="badge" style="background-color: #007F00;">RUNNING</span></span>'; }
+                if(error){ html = html + '<span class="pull-right"><span class="badge" style="background-color: #FF0000;">ERROR</span></span>'; }
+                html = html + '<span class="username no-image">' + path[path.length - 1] + ' [' + source + ']</span>';
+                html = html + '<span class="description no-image">' + dt.toLocaleString() + '</span>';
+                html = html + '</div>';
+                html = html + '</div>';
+            }
 
-		$("#import-queue").html(html);
+            $("#import-queue").html(html);
         }
     });
 }
@@ -677,45 +626,14 @@ function daySummary(date)
             }
         });
         $.ajax({
-            url: './days/' + date + '/music.json',
+            url: './days/' + date + '/music.html',
             method: 'GET',
             success: function(data) {
 
-		var html = "";
-
-		if(data.length > 0){
-
-			html = html + "<div class=\"box box-primary\">";
-			html = html + "<div class=\"box-header\">";
-			html = html + "<h3 class=\"box-title\">Today's Music</h3>";
-			html = html + "</div>";
-
-			html = html + "<div class=\"box-body\">";
-			html = html + "<div class=\"table-responsive\">";
-			html = html + "<table class=\"table table-sm no-margin\">";
-
-			for(i = 0; i < data.length; i++){
-				var artists = '';
-				for(j = 0; j < data[i].artists.length; j++)
-				{
-					if(artists != '') { artists = artists + ', '; }
-					artists = artists + data[i].artists[j].name;
-				}
-				html = html + "<tr><td>" + data[i].time + "</td><td>" + data[i].title + '<br><small class="muted">' + artists + '</small></td></tr>';
-			}
-
-			html = html + "</table>";
-			html = html + "</div>";
-
-			html = html + "</div>";
-			html = html + "</div>";
-
-		}
-
-		if(html != '') {
+		if(data.length > 0) {
                     $(".day-music-summary").each(function(){
                         var checkid = $(this).data("day");
-                        if(checkid == date) { $(this).html(html); }
+                        if(checkid == date) { $(this).html(data); }
                     });
                 }
             }
@@ -1691,55 +1609,6 @@ function timelineScreen()
     });
 }
 
-function reportsScreen()
-{
-    $(".content-wrapper").load("./reports.html", function(response, status, xhr){
-        if(status == 'error') { errorPage(xhr); return false; }
-        var year = $("#generate-life-report-year").val();
-        updateReportYearSelect(year);
-        $(document).on('change', "#generate-life-report-year", function() {
-            var year = $(this).val();
-            updateReportYearSelect(year);
-        });
-        $("#report-save-form-button").on('click', function(){
-            $("#report-edit").submit();
-        });
-        $(".report-delete-form-button").on('click', function(){
-
-            var id = $(this).data('report-id');
-            var url = "reports/" + id + "/delete";
-
-            $("#report_box_" + id).remove();
-            $("#admin_report_delete_" + id).modal('hide');
-
-            $.ajax({
-                url: url,
-                dataType: 'json',
-                method: 'POST',
-                success: function(data) { }
-            });
-        });
-	createTimer(updateReportQueue, 5000);
-	updateReportQueue();
-    });
-}
-
-function reportScreen(id, page='misc')
-{
-    var url = "./reports/" + id + ".html";
-    if(page.length > 0) { url = "./reports/" + id + "/" + page + ".html"; }
-    $(".content-wrapper").load(url, function(response, status, xhr){
-        if(status == 'error') { errorPage(xhr); return false; }
-        $('.report-graph').each(function() {
-            var canvas = $(this);
-            var type = canvas.data('type');
-            var data = canvas.data('data');
-            if(type == 'donut') { makeDonutChart(canvas[0].getContext('2d'), data[1], data[0]); }
-        });
-        makeMap();
-    });
-}
-
 function questionIndexScreen()
 {
     var url = "./questionnaires.html";
@@ -2396,49 +2265,14 @@ function eventScreen(id)
         $("#event-delete-button").on('click', function(){ $("#event-event-delete").submit(); });
 	activateImageEditor();
         $.ajax({
-            url: './events/' + id + '/music.json',
+            url: './events/' + id + '/music.html',
             method: 'GET',
             success: function(data) {
 
-		var html = "";
-
-		if(data.length > 0){
-
-			html = html + "<div class=\"box box-primary\">";
-			html = html + "<div class=\"box-header\">";
-			html = html + "<h3 class=\"box-title\">Music Played</h3>";
-			html = html + "</div>";
-
-			html = html + "<div class=\"box-body\">";
-			html = html + "<div class=\"table-responsive\">";
-			html = html + "<table class=\"table table-inline\">";
-
-			html = html + "<thead><tr><th>Time</th><th>Track</th></tr></thead>";
-			html = html + "<tbody>";
-
-			for(i = 0; i < data.length; i++){
-				var artists = '';
-				for(j = 0; j < data[i].artists.length; j++)
-				{
-					if(artists != '') { artists = artists + ', '; }
-					artists = artists + data[i].artists[j].name;
-				}
-				html = html + "<tr><td>" + data[i].time + "</td><td>" + artists + ' - ' + data[i].title + '</td></tr>';
-			}
-
-			html = html + "</tbody>";
-			html = html + "</table>";
-			html = html + "</div>";
-
-			html = html + "</div>";
-			html = html + "</div>";
-
-		}
-
-		if(html != '') {
+                if(data.length > 0) {
                     $(".event-music-summary").each(function(){
                         var checkid = $(this).data("event");
-                        if(checkid == id) { $(this).html(html); }
+                        if(checkid == id) { $(this).html(data); }
                     });
                 }
             }
@@ -2507,7 +2341,6 @@ function pageRefresh()
     if(page == 'files') { uploadScreen(); return true; }
     if(page == 'questionnaires') { questionIndexScreen(); return true; }
     if(page == 'import-web') { importWebScreen(); return true; }
-    if(page == 'reports') { reportsScreen(); return true; }
     if(page == 'onthisday') { anniversaryScreen(); return true; }
     if(page == 'life-grid') { lifeGridScreen(); return true; }
 
@@ -2571,7 +2404,7 @@ $(document).ready(function()
     });
     $("#add_achievement").on('shown.bs.modal', function() {
         var now = new Date();
-	var ds = now.getFullYear() + '-' + ((now.getMonth() + 1).toString().padStart(2, '0')) + '-' + (now.getDate().toString().padStart(2, '0')) + ' ' + (now.getHours().toString().padStart(2, '0')) + ':' + (now.getMinutes().toString().padStart(2, '0')) + ':' + (now.getSeconds().toString().padStart(2, '0'))
+	    var ds = now.getFullYear() + '-' + ((now.getMonth() + 1).toString().padStart(2, '0')) + '-' + (now.getDate().toString().padStart(2, '0')) + ' ' + (now.getHours().toString().padStart(2, '0')) + ':' + (now.getMinutes().toString().padStart(2, '0')) + ':' + (now.getSeconds().toString().padStart(2, '0'));
         $("#achievement_date").val(ds);
         $("#achievement_title").focus();
     });

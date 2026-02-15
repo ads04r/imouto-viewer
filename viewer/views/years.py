@@ -26,7 +26,7 @@ def year(request, ds):
 				raise Http404
 			obj.caption = title
 			obj.save(update_fields=['caption'])
-			generate_report_pdf(year)
+			generate_report_pdf(request.user.pk, year)
 			return HttpResponseRedirect('../#year_' + str(year))
 		if 'statname' in request.POST:
 			key = request.POST['statname']
@@ -62,7 +62,7 @@ def year(request, ds):
 				if task_year == obj.year:
 					active_task = task
 			if active_task is None:
-				generate_report("", obj.year)
+				generate_report(request.user.pk, "", obj.year)
 	return render(request, template, context)
 
 def year_wordcloud(request, ds):
