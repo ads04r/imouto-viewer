@@ -14,7 +14,7 @@ def __parse_scale_csv(filepath):
 		csv_reader = csv.reader(csv_file, delimiter=',')
 		for row in csv_reader:
 			if len(headers) == 0:
-				headers = row
+				headers = [x.lower() for x in row]
 				continue
 			i = len(headers)
 			j = len(row)
@@ -26,7 +26,7 @@ def __parse_scale_csv(filepath):
 			ret.append(item)
 	return(ret)
 
-def import_openscale(user, filepath):
+def import_openscale(user, filepath, unit='g'):
 	"""
 	For users of the Android app OpenScale, this function takes a file exported by the app and
 	imports it into the Imouto Viewer database as DataReading objects for weight, fat percentage,
@@ -41,7 +41,12 @@ def import_openscale(user, filepath):
 
 	data = __parse_scale_csv(filepath)
 	for item in data:
-		ds = item['dateTime']
+		if (('date' in item) & ('time' in item)):
+			t = item['time'].split(':')
+			if len(t) >= 2:
+				ds = item['date'] + ' ' + t[0] + ':' + t[1]
+		if 'datetime' in item:
+			ds = item['datetime']
 		try:
 			dt = tz.localize(datetime.datetime.strptime(ds, "%Y-%m-%d %H:%M"))
 		except:
@@ -50,37 +55,67 @@ def import_openscale(user, filepath):
 		try:
 			weight = DataReading.objects.get(user=user, start_time=dt, end_time=dt, type='weight')
 		except:
-			value = (float(item['weight']) * 1000) + 0.5
+			value = (float(item['weight'])) + 0.5
+			if unit == 'kg':
+				value = (float(item['weight']) * 1000) + 0.5
+			if unit == 'st':
+				value = (float(item['weight']) * 6350) + 0.5
+			if unit == 'lbs':
+				value = (float(item['weight']) * 453.6) + 0.5
+			
 			if value > 87000:
 				weight = DataReading(user=user, start_time=dt, end_time=dt, type='weight', value=int(value))
 				ret.append([str(dt), 'weight', str(float(weight.value) / 1000)])
 				weight.save()
 
-		try:
-			fat = DataReading.objects.get(user=user, start_time=dt, end_time=dt, type='fat')
-		except:
-			value = float(item['fat']) + 0.5
-			if value > 10:
-				fat = DataReading(user=user, start_time=dt, end_time=dt, type='fat', value=int(value))
-				ret.append([str(dt), 'fat', str(fat.value) + "%"])
-				fat.save()
+		if 'fat' in item:
+			try:
+				fat = DataReading.objects.get(user=user, start_time=dt, end_time=dt, type='fat')
+			except:
+				value = float(item['fat']) + 0.5
+				if value > 10:
+					fat = DataReading(user=user, start_time=dt, end_time=dt, type='fat', value=int(value))
+					ret.append([str(dt), 'fat', str(fat.value) + "%"])
+					fat.save()
+		if 'body_fat' in item:
+			try:
+				fat = DataReading.objects.get(user=user, start_time=dt, end_time=dt, type='fat')
+			except:
+				value = float(item['body_fat']) + 0.5
+				if value > 10:
+					fat = DataReading(user=user, start_time=dt, end_time=dt, type='fat', value=int(value))
+					ret.append([str(dt), 'fat', str(fat.value) + "%"])
+					fat.save()
 
-		try:
-			muscle = DataReading.objects.get(user=user, start_time=dt, end_time=dt, type='muscle')
-		except:
-			value = float(item['muscle']) + 0.5
-			if value > 10:
-				muscle = DataReading(user=user, start_time=dt, end_time=dt, type='muscle', value=int(value))
-				ret.append([str(dt), 'muscle', str(muscle.value) + "%"])
-				muscle.save()
+		if 'muscle' in item:
+			try:
+				muscle = DataReading.objects.get(user=user, start_time=dt, end_time=dt, type='muscle')
+			except:
+				value = float(item['muscle']) + 0.5
+				if value > 10:
+					muscle = DataReading(user=user, start_time=dt, end_time=dt, type='muscle', value=int(value))
+					ret.append([str(dt), 'muscle', str(muscle.value) + "%"])
+					muscle.save()
 
-		try:
-			water = DataReading.objects.get(user=user, start_time=dt, end_time=dt, type='water')
-		except:
-			value = float(item['water']) + 0.5
-			if value > 10:
-				water = DataReading(user=user, start_time=dt, end_time=dt, type='water', value=int(value))
-				ret.append([str(dt), 'water', str(water.value) + "%"])
-				water.save()
+		if 'water' in item:
+			try:
+				water = DataReading.objects.get(user=user, start_time=dt, end_time=dt, type='water')
+			except:
+				value = float(item['water']) + 0.5
+				if value > 10:
+					water = DataReading(user=user, start_time=dt, end_time=dt, type='water', value=int(value))
+					ret.append([str(dt), 'water', str(water.value) + "%"])
+					water.save()
+
+		if 'bmi' in item:
+			try:
+				bmi = DataReading.objects.get(user=user, start_time=dt, end_time=dt, type='bmi')
+			except:
+				value = float(item['bmi'])
+				if value > 10:
+					bmi = DataReading(user=user, start_time=dt, end_time=dt, type='bmi', value=int(value + 0.5))
+					ret.append([str(dt), 'bmi', str(bmi.value) + "%"])
+					bmi.save()
+
 	return ret
 

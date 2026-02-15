@@ -11,7 +11,8 @@ class Command(BaseCommand):
 	"""
 	def add_arguments(self, parser):
 
-		parser.add_argument("-i", "--input", action="store", dest="input_file", default="", help="A file, exported from OpenScale.")
+		parser.add_argument("-i", "--input", action="store", dest="input_file", default="", help="A CSV file, exported from OpenScale.")
+		parser.add_argument("-m", "--units", action="store", dest="units", required=True, choices=['kg', 'lbs', 'st'], help="Which unit of measurement the OpenScale export file is using for body weight.")
 		parser.add_argument("-u", "--user", action="store", dest="user_id", required=True, help="which user are we working with?")
 
 	def handle(self, *args, **kwargs):
@@ -33,7 +34,7 @@ class Command(BaseCommand):
 			sys.exit(1)
 
 		ret = {}
-		for item in import_openscale(user, uploaded_file):
+		for item in import_openscale(user, uploaded_file, kwargs['units']):
 			type = item[1]
 			if not(type in ret):
 				ret[type] = 0
