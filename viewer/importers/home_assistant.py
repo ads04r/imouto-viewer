@@ -56,60 +56,53 @@ def import_home_assistant_readings(user, entity_id, reading_type, days=7, multip
 			ret.append(reading)
 	return ret
 
-def import_home_assistant_events(user, entity_id, event_type, days=1):
-	"""
-	Imports data from a Home Assistant log directly into Imouto Viewer as Event objects. This
-	function checks for existing data from a previous import, so the function may be called
-	repeatedly without filling up the events table with duplicated data. This function requires
-	the settings HOME_ASSISTANT_URL and HOME_ASSISTANT_TOKEN to be set.
+def import_home_assistant_events(user, entity_id, reading_type, state, days=1):
 
-	:param entity_id: The entity ID within Home Assistant whose data you would like to import (eg light.kitchen_light)
-	:param reading_type: The reading type to be used within Imouto Viewer. This can be anything you like but should be unique to this entity.
-	:param days: The number of days worth of data to import.
-	:return: A list of the newly imported Event objects, an empty list if nothing was done.
-	:rtype: list
-	"""
 	dte = pytz.utc.localize(datetime.datetime.utcnow())
 	dts = dte - datetime.timedelta(days=days)
 	name = ''
 	try:
-		url = settings.HOME_ASSISTANT_URL.lstrip('/') + '/history/period/' + dts.strftime("%Y-%m-%d") + 'T' + dts.strftime("%H:%M:%S")
+		url = user.profile.settings['HOME_ASSISTANT_URL'].lstrip('/') + '/history/period/' + dts.strftime("%Y-%m-%d") + 'T' + dts.strftime("%H:%M:%S")
 	except AttributeError:
 		url = ''
 	try:
-		token = settings.HOME_ASSISTANT_TOKEN
+		token = user.profile.settings['HOME_ASSISTANT_TOKEN']
 	except AttributeError:
 		token = ''
-	data = []
+	periods = []
 	ret = []
 	if url == '':
 		return ret
 	if token == '':
 		return ret
-	if event_type == '':
+	if reading_type == '':
+		return ret
+	if state == '':
 		return ret
 	last_item = {'state': ''}
-	r = requests.get(url, headers={'Authorization': 'Bearer ' + token}, params={'filter_entity_id': entity_id, 'minimal_response': True, 'end_time': dte.strftime("%Y-%m-%d") + 'T' + dte.strftime("%H:%M:%S")})
-	for item in json.loads(r.text):
-		for subitem in item:
-			if not(isinstance(subitem, (dict))):
-				continue
-			if 'attributes' in subitem:
-				if 'friendly_name' in subitem['attributes']:
-					name = subitem['attributes']['friendly_name']
-			if((last_item['state'] == 'on') & (subitem['state'] == 'off')):
-				data.append({'from': dateparse(last_item['last_changed']), 'to': dateparse(subitem['last_changed'])})
+	with requests.get(url, headers={'Authorization': 'Bearer ' + token}, params={'filter_entity_id': entity_id, 'minimal_response': True, 'end_time': dte.strftime("%Y-%m-%d") + 'T' + dte.strftime("%H:%M:%S")}) as r:
+		data = r.json()
+	period = {'start_time': '', 'end_time': ''}
+	for group in data:
+		for item in group:
+			if item['state'] == state:
+				if period['start_time'] == '':
+					period['start_time'] = item['last_changed']
+			else:
+				if period['start_time'] != '':
+					period['end_time'] = item['last_changed']
+					periods.append(period)
+					period = {'start_time': '', 'end_time': ''}
 
-			last_item = subitem
-	if name == '':
-		name = entity_id + ' event'
-	for item in data:
+	for item in periods:
+		dts = dateparse(item['start_time'])
+		dte = dateparse(item['end_time'])
 		try:
-			event = Event.objects.get(user=user, start_time=item['from'], end_time=item['to'], type=event_type)
+			reading = DataReading.objects.get(user=user, start_time=dts, end_time=dte, type=reading_type)
 		except:
-			event = Event(user=user, start_time=item['from'], end_time=item['to'], type=event_type, caption=name)
-			event.save()
-		ret.append(event)
+			reading = DataReading(user=user, start_time=dts, end_time=dte, type=reading_type, value=0)
+			reading.save()
+		ret.append(reading)
 	return ret
 
 def import_home_assistant_presence(user, uid, entity_id, days=7):
@@ -128,11 +121,11 @@ def import_home_assistant_presence(user, uid, entity_id, days=7):
 	dte = datetime.datetime.utcnow()
 	dts = dte - datetime.timedelta(days=days)
 	try:
-		url = settings.HOME_ASSISTANT_URL.lstrip('/') + '/history/period/' + dts.strftime("%Y-%m-%d") + 'T' + dts.strftime("%H:%M:%S")
+		url = user.profile.settings['HOME_ASSISTANT_URL'].lstrip('/') + '/history/period/' + dts.strftime("%Y-%m-%d") + 'T' + dts.strftime("%H:%M:%S")
 	except AttributeError:
 		url = ''
 	try:
-		token = settings.HOME_ASSISTANT_TOKEN
+		token = user.profile.settings['HOME_ASSISTANT_TOKEN']
 	except AttributeError:
 		token = ''
 	home = home_location(user)

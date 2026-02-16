@@ -49,7 +49,7 @@ class Command(BaseCommand):
 				sys.stderr.write(self.style.SUCCESS(str(ct) + " data readings of type " + item[1] + " added.\n"))
 
 		for item in events:
-			ret = import_home_assistant_events(user, item[0], item[1], days=2)
+			ret = import_home_assistant_events(user, item[0], item[1], item[2], days=2)
 			ct = len(ret)
 			if ct > 0:
-				sys.stderr.write(self.style.SUCCESS(str(ct) + " events of type " + item[1] + " added.\n"))
+				sys.stderr.write(self.style.SUCCESS(str(ct) + " data readings of type " + item[1] + " added.\n"))
